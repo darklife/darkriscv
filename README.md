@@ -14,7 +14,9 @@ small code have lots of impressive features:
 - uses only 2 blockRAMs (one for instruction, one for data)
 - uses only 1118 LUTs (Spartan-6 LUTs)
 
-Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the project 
+Of course, there are lots of missing features, but they will be soved in future.
+
+Finally, since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the project 
 is based in the Xilinx ISE 14.4 for Linux. However, no explicit references for Xilinx
 elements are done and all logic is inferred directly from Verilog, which means
 that the project is easily portable to any other FPGA families.
