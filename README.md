@@ -10,7 +10,7 @@ However, although the code is small when compared with other RISC-V implementati
 small code have lots of impressive features:
 
 - implements most of the RISC-V RV32I instructions
-- works up to 80MHz and can peaks up to 1 instruction/clock
+- works up to 80MHz and can peaks 1 instruction/clock most of time!
 - uses only 2 blockRAMs (one for instruction, one for data)
 - uses only 1118 LUTs (Spartan-6 LUTs)
 
@@ -19,6 +19,6 @@ is based in the Xilinx ISE 14.4 for Linux. However, no explicit references for X
 elements are done and all logic is inferred directly from Verilog, which means
 that the project is easily portable to any other FPGA families.
 
-Feel free to make suggestions and good hacking!
+Feel free to make suggestions and good hacking! o/
 
 Marcelo
