@@ -1,4 +1,4 @@
-# DarkRISCV
+# darkriscv
 Open source RISC-V implemented from scratch in one night!
 
 Developed in one single night (somewhere between 2am and 8am), the *darkriscv* 
