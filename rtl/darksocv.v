@@ -34,8 +34,8 @@
 
 module darksocv
 (
-    input        CLK, // external clock
-    input        RES, // external reset
+    input        CLK,   // host clock
+    input        RES,   // host reset
 
     inout [31:0] HDATAO, // host data input/output 
     input [31:0] HDADDR, // host addr input
@@ -53,29 +53,20 @@ module darksocv
 
     // memory initialization
 
+    // TODO: add control register in order to the external
+    // host can control the darkriscv as a slave processor.
+
     integer i;
     
     initial
     begin
         for(i=0;i!=512;i=i+1)
         begin
-            case(i)
-                0: IDATA[i] = 32'h00000013; // nop
-                1: IDATA[i] = 32'h000000B3; // x1 = 0
-                2: IDATA[i] = 32'h00000133; // x2 = 0
-                3: IDATA[i] = 32'h000001b3; // x3 = 0
-                4: IDATA[i] = 32'h00118193; // inc x3 :loop
-                5: IDATA[i] = 32'h00118193; // inc x3
-                6: IDATA[i] = 32'h00118193; // inc x3
-                7: IDATA[i] = 32'h00118193; // inc x3
-                8: IDATA[i] = 32'hFE0008E3; // b loop
-                9: IDATA[i] = 32'h000001b3; // x3 = 0 (to test the delayed branch)        
-                default: 
-                   IDATA[i] = 32'h00000013; // nop
-            endcase
-            
+            IDATA[i] = 0;
             DDATA[i] = 0;
-        end     
+        end
+        
+        $readmemh("../src/darksocv.hex",IDATA);
     end
     
     reg [1:0] RESFF;
@@ -100,7 +91,13 @@ module darksocv
                     HDADDR[31] ? IDATAFF : 
                                  DDATAFF;
 
-    // riscv memory interface
+    // darkriscv memory interface
+    
+    // TODO:
+    // the darkriscv core works a full clock ahead in the case of instruction 
+    // memory, but does not work in the same way in the case of data memmory. in this case,
+    // we need work 1/2 clock delayed. Althohgh works well with smaller clocks, this scheme 
+    // must be fixed in the future in order to increase the clock frequency.
 
     wire [31:0] IADDR;
     wire [31:0] DADDR;    
@@ -113,27 +110,47 @@ module darksocv
     always@(posedge CLK)
     begin
         IDATAFF2 <= IDATA[IADDR[11:2]];
-        DATAIFF2 <= DDATA[DADDR[11:2]];
+    end
     
+    reg [7:0] XFIFO; // UART TX FIFO
+    
+    always@(negedge CLK)
+    begin
+        DATAIFF2 <= DDATA[DADDR[11:2]];
+        
         if(WR)
         begin
-            DDATA[DADDR[11:2]] <= DATAO;
+            if(DADDR[31]==0)
+            begin
+                DDATA[DADDR[11:2]] <= DATAO;
+            end
+
+            if(DADDR[31]==1)
+            begin
+                XFIFO <= DATAO[7:0]; // dummy UART
+            end
+        
+            $display("WR: %x at %x",DATAO,DADDR);
         end
     end
 
     // darkriscv
 
-    darkriscv darkriscv0 (
-        CLK,
-        RESFF[1],
-        RESFF[1],
-        IDATAFF2,
-        IADDR,
-        DATAIFF2,
-        DATAO,
-        DADDR,
-        WR,
-        RD,
-        DEBUG);
+    // TODO: replace the HLT by DTACK-like signals separated for 
+    // instruction and data, and make the bus interface more 68k-like.
+    // add support for multiple cores! \o/
+
+    darkriscv core0 (
+        .CLK(CLK),
+        .RES(RESFF[1]),
+        .HLT(RESFF[1]),
+        .IDATA(IDATAFF2),
+        .IADDR(IADDR),
+        .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM
+        .DATAO(DATAO),
+        .DADDR(DADDR),
+        .WR(WR),
+        .RD(RD),
+        .DEBUG(DEBUG));
 
 endmodule

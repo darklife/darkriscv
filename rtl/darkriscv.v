@@ -40,19 +40,22 @@ module darkriscv
     output     [31:0] IADDR, // instruction addr bus
     
     input      [31:0] DATAI, // data bus (input)
-    output reg [31:0] DATAO, // data bus (output)
-    output reg [31:0] DADDR, // addr bus
+    output     [31:0] DATAO, // data bus (output)
+    output     [31:0] DADDR, // addr bus
     
-    output reg        WR,    // write enable
-    output reg        RD,    // read enable 
+    output            WR,    // write enable
+    output            RD,    // read enable 
     
     output [3:0]  DEBUG      // old-school osciloscope based debug! :)
 );
 
+    // flush instriction pipeline    
+    reg FLUSH = 1;
+
     // idata is break apart as described in the RV32I specification
 
-    wire [6:0] OPCODE = IDATA[6:0];
-    wire [4:0] DPTR   = IDATA[11:7];
+    wire [6:0] OPCODE = FLUSH ? 0 : IDATA[6:0];
+    wire [4:0] DPTR   = RES ? 2 : IDATA[11:7];
     wire [2:0] FCT3   = IDATA[14:12];
     wire [4:0] S1PTR  = IDATA[19:15];
     wire [4:0] S2PTR  = IDATA[24:20];
@@ -94,10 +97,12 @@ module darkriscv
     wire    FCC = OPCODE==7'b0001111; //FCT3
     wire    CCC = OPCODE==7'b1110011; //FCT3
 
+    reg [31:0] PC;		    // 32-bit program counter
     reg [31:0] REG [0:31];	// general-purpose 32x32-bit registers
-    reg [31:0] PC;		// 32-bit program counter
 
-    initial REG[0] = 0;		// makes the simulation looks better!
+    integer i;
+    
+    initial for(i=0;i!=32;i=i+1) REG[i] = 0;		// makes the simulation looks better!
 
     // source-1 and source-1 register selection, with impicit 0 value in the x0:
 
@@ -145,20 +150,24 @@ module darkriscv
                           FCT3==0 ? U1REG==U2REG : 
                           FCT3==1 ? U1REG!=U2REG : 
                                     0);
-    
-    reg FLUSH=0; // pipeline flush
-        
+            
     always@(posedge CLK)
     begin
-        if(HLT||FLUSH)
+        if(HLT)
         begin
-            FLUSH <= FLUSH ? FLUSH-1'b1 : 1'b0; // clear the interlock flush
-            PC  <= RES ? 0 : PC; // reset is possible only when HLT is active
+            if(RES)
+            begin
+                PC        <= 0;  // initial program counter
+                FLUSH     <= 1;  // initial pipeline configuration
+                REG[DPTR] <= 2048; // initial stack pointer
+            end
         end
         else
         begin
-            REG[DPTR] <= AUIPC ? PC+SIMM : 
-                         JAL||JALR ? PC+4 :
+            FLUSH <= (JAL||JALR||BMUX) ? 1 : 0;     // flush the pipeline!
+            
+            REG[DPTR] <= AUIPC ? PC+SIMM :          // register bank update
+                         JAL||JALR ? PC :
                          LUI ? SIMM :
                          LCC ? LDATA :
                          MCC ? MDATA : 
@@ -166,23 +175,22 @@ module darkriscv
                          CCC ? CDATA : 
                                REG[DPTR];
         
-            PC <= JAL||JALR ? SIMM : 
+            PC <= JAL  ? PC+SIMM-4 : // program counter update
+                  JALR ? JALRSUM : 
                   BMUX ? PC+SIMM : 
                   PC+4;
-                        
-            FLUSH <= (JAL||JALR||BMUX||LCC||SCC); // flush the pipeline!
-
-            // IO and memory interface
-
-            DATAO <= U2REG;
-            DADDR <= U1REG + SIMM;
-            RD <= LCC;
-            WR <= SCC;            
-        end        
+        end
     end
+
+    // IO and memory interface
+
+    assign DATAO = (SCC||LCC) ? U2REG : 0;
+    assign DADDR = (SCC||LCC) ? U1REG + SIMM : 0;
+    assign RD = LCC;
+    assign WR = SCC;
 
     assign IADDR = PC;
         
-    assign DEBUG = { HLT, FLUSH, WR, RD };
+    assign DEBUG = { RES, FLUSH, WR, RD };
 
 endmodule
