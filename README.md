@@ -1,9 +1,9 @@
-# darkriscv
+# DarkRISCV
 Open source RISC-V implemented from scratch in one night!
 
 #### Introduction
 
-Developed in magic night of 19 Aug, 2018, between 2am and 8am, the *darkriscv* 
+Developed in a magic night of 19 Aug, 2018 (between 2am and 8am) the *darkriscv* 
 is a very, very experimental implementation of the risc-v instruction set. 
 
 The general concept is based in my other early RISC processors, composed by a 
@@ -24,8 +24,6 @@ the *darkriscv* has lots of impressive features:
 
 Of course, there are lots of missing features and problems, but they will be 
 solved in future. Feel free to make suggestions and good hacking! o/
-
-Marcelo Samsoniuk
 
 #### Implementation Notes
 
