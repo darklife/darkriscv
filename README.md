@@ -1,6 +1,8 @@
 # darkriscv
 Open source RISC-V implemented from scratch in one night!
 
+#### Introduction
+
 Developed in magic night of 19 Aug, 2018, between 2am and 8am, the *darkriscv* 
 is a very, very experimental implementation of the risc-v instruction set. 
 
@@ -25,7 +27,7 @@ solved in future. Feel free to make suggestions and good hacking! o/
 
 Marcelo Samsoniuk
 
-# Additional Implementation Notes
+#### Implementation Notes
 
 Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the project 
 is currently based in the Xilinx ISE 14.4 for Linux. However, no explicit references for 
@@ -51,9 +53,9 @@ with *picorv32*, the last one is more heavly pipelined and can reach a clock
 *darkriscv* is in the very early stage of development. 
 
 As long the motivation around the *darkriscv* is replace some 680x0 and coldfire 
-processors, my target is try keep the initial performance of ~80MIPS in a Spartan-6 LX4.
+processors, my target is try keep the performance of ~80MIPS in a Spartan-6 LX4.
 
-# Directory description
+#### Directory description
 
 - ise: the ISE project files (xise and ucf)
 - rtl: the source for the core and soc
