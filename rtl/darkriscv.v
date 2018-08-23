@@ -34,7 +34,6 @@ module darkriscv
 (
     input             CLK,   // clock
     input             RES,   // reset
-    input             HLT,   // halt
     
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
@@ -50,12 +49,13 @@ module darkriscv
 );
 
     // flush instriction pipeline    
+    
     reg FLUSH = 1;
 
     // idata is break apart as described in the RV32I specification
 
     wire [6:0] OPCODE = FLUSH ? 0 : IDATA[6:0];
-    wire [4:0] DPTR   = RES ? 2 : IDATA[11:7];
+    wire [4:0] DPTR   = RES   ? 2 : IDATA[11:7];
     wire [2:0] FCT3   = IDATA[14:12];
     wire [4:0] S1PTR  = IDATA[19:15];
     wire [4:0] S2PTR  = IDATA[24:20];
@@ -153,33 +153,23 @@ module darkriscv
             
     always@(posedge CLK)
     begin
-        if(HLT)
-        begin
-            if(RES)
-            begin
-                PC        <= 0;  // initial program counter
-                FLUSH     <= 1;  // initial pipeline configuration
-                REG[DPTR] <= 2048; // initial stack pointer
-            end
-        end
-        else
-        begin
-            FLUSH <= (JAL||JALR||BMUX) ? 1 : 0;     // flush the pipeline!
-            
-            REG[DPTR] <= AUIPC ? PC+SIMM :          // register bank update
-                         JAL||JALR ? PC :
-                         LUI ? SIMM :
-                         LCC ? LDATA :
-                         MCC ? MDATA : 
-                         RCC ? RDATA : 
-                         CCC ? CDATA : 
-                               REG[DPTR];
+        FLUSH <= (JAL||JALR||BMUX||RES) ? 1 : 0;     // flush the pipeline!
         
-            PC <= JAL  ? PC+SIMM-4 : // program counter update
-                  JALR ? JALRSUM : 
-                  BMUX ? PC+SIMM : 
-                  PC+4;
-        end
+        REG[DPTR] <= RES ? 2048 : 
+                     AUIPC ? PC+SIMM :          // register bank update
+                     JAL||JALR ? PC :
+                     LUI ? SIMM :
+                     LCC ? LDATA :
+                     MCC ? MDATA : 
+                     RCC ? RDATA : 
+                     CCC ? CDATA : 
+                           REG[DPTR];
+    
+        PC <= RES  ? 0 :
+              JAL  ? PC+SIMM-4 : // program counter update
+              JALR ? JALRSUM : 
+              BMUX ? PC+SIMM : 
+              PC+4;
     end
 
     // IO and memory interface

@@ -67,6 +67,7 @@ module darksocv
         end
         
         $readmemh("../src/darksocv.hex",IDATA);
+        $readmemh("../src/darksocv.hex",DDATA);
     end
     
     reg [1:0] RESFF;
@@ -142,8 +143,7 @@ module darksocv
 
     darkriscv core0 (
         .CLK(CLK),
-        .RES(RESFF[1]),
-        .HLT(RESFF[1]),
+        .RES(RESFF[1]),        
         .IDATA(IDATAFF2),
         .IADDR(IADDR),
         .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM
