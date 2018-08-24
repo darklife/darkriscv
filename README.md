@@ -23,7 +23,11 @@ the *darkriscv* has lots of impressive features:
 - uses only around 1000 LUTs
 
 Of course, there are lots of missing features and problems, but they will be 
-solved in future. Feel free to make suggestions and good hacking! o/
+solved in the future. After the last update, some missing features are now
+working fine, such as the load/store w/ 8/16/32-bit support and lots of
+fixes regarding the jal/jalr/bcc group of instructions.
+
+Feel free to make suggestions and good hacking! o/
 
 ## Implementation Notes
 
@@ -52,6 +56,17 @@ with *picorv32*, the last one is more heavly pipelined and can reach a clock
 
 As long the motivation around the *darkriscv* is replace some 680x0 and coldfire 
 processors, my target is try keep the performance of ~80MIPS in a Spartan-6 LX4.
+Unfortunately, after some fixes, I found that a dual-stage pipeline prevents
+that the RAM memmory can be handled correctly the load instruction. This
+means that the RAM memory must be fully combinational (which means small
+memories can work at ~80MHz) or synchronous to the negative edge (which
+limits the performance to ~50MHz).
+
+In order to bypass this problem, the pipeline must be updated from 2 stages
+to at least 3 states, with an additional stage between the pre-fetch and
+execute stages, in order to stop the pipeline when a load/store instruction
+is found end enable a variable cycle access (probably 2 cycles when the
+access is cached and n cycles when not cached).
 
 ## Directory description
 
