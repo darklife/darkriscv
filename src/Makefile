@@ -40,7 +40,7 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
 
 CFLAGS = -Wall -O3 -fomit-frame-pointer
 AFLAGS = 
-LFLAGS = -Ttext=0
+LFLAGS = -Ttext=0 -Map=$(PROJ).map
 OFLAGS = -O binary
 DFLAGS = -d
 
@@ -50,18 +50,18 @@ all:
 	make darksocv.hex
 
 clean:
-	rm *.s *.o darksocv.bin darksocv.hex darksocv.bin.lst
+	-rm *.s *.o $(PROJ).{bin,hex,lst,map}
 
 %.o: %.c
-	$(CC) $(CFLAGS) -S $< -o $@.s
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -S $< # -o $@.s
+	$(CC) $(CFLAGS) -c $< # -o $@
 
 darksocv.o: $(OBJS)
 	$(LD) $(LFLAGS) $(OBJS) -o $@
 
 darksocv.bin: darksocv.o
 	$(OC) $(OFLAGS) $< $@
-	$(OD) $(DFLAGS) $< > $@.lst
+	$(OD) $(DFLAGS) $< > $(PROG).lst
 
 darksocv.hex: darksocv.bin
 	hexdump -ve '1/4 "%08x\n"' $< > $@

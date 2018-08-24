@@ -28,11 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-void _start(void)
-{
-  while(1) main();
-}
-
 void putchar(char c)
 {
   volatile int *uart = (int *)0x80000000;

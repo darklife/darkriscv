@@ -154,8 +154,8 @@ module darkriscv
 
     wire [31:0] MDATA = FCT3==0 ? U1REG+SIMM :
                         FCT3==1 ? U1REG<<S2PTR :
-                        FCT3==2 ? U1REG<SIMM?1:0 :
-                        FCT3==3 ? U1REG<UIMM?1:0 :
+                        FCT3==2 ? S1REG<SIMM?1:0 : // signed
+                        FCT3==3 ? U1REG<UIMM?1:0 : //unsigned
                         FCT3==5 ? (IDATA[30] ? U1REG>>>S2PTR : U1REG>>S2PTR) :                        
                         FCT3==4 ? U1REG^SIMM :
                         FCT3==6 ? U1REG|SIMM :
