@@ -79,3 +79,8 @@ access is cached and n cycles when not cached).
 At the moment, the *darksoc* is not so relevant and the only function is
 provide support for the instruction and data memories, as well some related
 glue-logic.
+
+I found that the xise file lacks some configurations regarding the correct 
+visualization of some reports, although they are present in the tmp directory... 
+probably I forgot include some additional configuration files and I will try fix 
+this problem later.
