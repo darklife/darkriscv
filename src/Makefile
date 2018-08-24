@@ -38,7 +38,7 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-CFLAGS = -Wall # -O3 -fomit-frame-pointer
+CFLAGS = -Wall -O3 -fomit-frame-pointer
 AFLAGS = 
 LFLAGS = -Ttext=0
 OFLAGS = -O binary

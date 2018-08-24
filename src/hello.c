@@ -30,16 +30,6 @@
 
 void _start(void)
 {
-  volatile int *test = (int *)0; // sram@0
-  
-  *test++ = 12345678; // wr test
-  *test-- = 87654321; // wr test
-
-  int i = *test++; // dummy
-  int j = *test--;   // dummy
-  
-  *test = i+j;
-
   while(1) main();
 }
 
@@ -54,9 +44,11 @@ void putchar(char c)
 void puts(char *p)
 {
   while(*p) putchar(*p++);
+  putchar('\n');
+  putchar('\r');
 }
 
 void main(void)
 {
-  puts("hello world!\n\r");
+  puts("hello world!");
 }

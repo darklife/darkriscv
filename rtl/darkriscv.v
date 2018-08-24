@@ -31,7 +31,10 @@
 `timescale 1ns / 1ps
 
 module darkriscv
-(
+#(
+    parameter [31:0] RESET_PC = 0,
+    parameter [31:0] RESET_SP = 4096
+) (
     input             CLK,   // clock
     input             RES,   // reset
     
@@ -97,6 +100,7 @@ module darkriscv
     wire    FCC = OPCODE==7'b0001111; //FCT3
     wire    CCC = OPCODE==7'b1110011; //FCT3
 
+    reg [31:0] NXPC;        // 32-bit look-ahead program counter
     reg [31:0] PC;		    // 32-bit program counter
     reg [31:0] REG [0:31];	// general-purpose 32x32-bit registers
 
@@ -111,7 +115,39 @@ module darkriscv
     wire          [31:0] U1REG = S1PTR ? REG[S1PTR] : 0;
     wire          [31:0] U2REG = S2PTR ? REG[S2PTR] : 0;
     
-    wire [31:0] LDATA = DATAI;  // the load instruction is not fully implemented yet
+    // L-group of instructions (OPCODE==7'b0000011)
+
+    wire [31:0] LDATA = FCT3==0 ? ( DADDR[1:0]==3 ? { DATAI[31] ? ALL1[31:24]:ALL0[31:24] , DATAI[31:24] } : 
+                                    DADDR[1:0]==2 ? { DATAI[23] ? ALL1[31:24]:ALL0[31:24] , DATAI[23:16] } : 
+                                    DADDR[1:0]==1 ? { DATAI[15] ? ALL1[31:24]:ALL0[31:24] , DATAI[15: 8] } :
+                                                    { DATAI[ 7] ? ALL1[31:24]:ALL0[31:24] , DATAI[ 7: 0] } 
+                                                    
+                                                    ) :
+                        FCT3==1 ? ( DADDR[1]==1   ? { DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
+                                                    { DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
+                        FCT3==2 ? DATAI :
+                        
+                        FCT3==4 ? ( DADDR[1:0]==3 ? { ALL0[31:24] , DATAI[31:24] } : 
+                                    DADDR[1:0]==2 ? { ALL0[31:24] , DATAI[23:16] } : 
+                                    DADDR[1:0]==1 ? { ALL0[31:24] , DATAI[15: 8] } :
+                                                    { ALL0[31:24] , DATAI[ 7: 0] } ) :
+                                                    
+                                  ( DADDR[1]==1   ? { ALL0[31:16] , DATAI[31:16] } :
+                                                    { ALL0[31:16] , DATAI[15: 0] } );
+
+    // S-group of instructions (OPCODE==7'b0100011)
+
+    wire [31:0] SDATA = //!SCC ? 0 : 
+                        FCT3==0 ? ( DADDR[1:0]==3 ? { U2REG[ 7: 0], ALL0 [23:0] } : 
+                                    DADDR[1:0]==2 ? { ALL0 [31:24], U2REG[ 7:0], ALL0[15:0] } : 
+                                    DADDR[1:0]==1 ? { ALL0 [31:16], U2REG[ 7:0], ALL0[7:0] } :
+                                                    { ALL0 [31: 8], U2REG[ 7:0] } ) :
+                        FCT3==1 ? ( DADDR[1]==1   ? { U2REG[15: 0], ALL0 [15:0] } :
+                                                    { ALL0 [31:16], U2REG[15:0] } ) :
+                                  U2REG;
+
+    // C-group not implemented yet!
+    
     wire [31:0] CDATA = 0;	// status register istructions not implemented yet
 
     // M-group of instructions (OPCODE==7'b0010011)
@@ -138,9 +174,7 @@ module darkriscv
                         FCT3==7 ? U1REG&U2REG :                        
                                   0;
                                   
-    wire [31:0] JALRSUM = U1REG+SIMM; // 32-bit sum for J-instruction
-
-    // B-group of instructions (OPCODE==7'b1100011)
+    // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
                           FCT3==4 ? S1REG>=S2REG : // signed
@@ -150,14 +184,17 @@ module darkriscv
                           FCT3==0 ? U1REG==U2REG : 
                           FCT3==1 ? U1REG!=U2REG : 
                                     0);
+
+    wire        JREQ = (JAL||JALR||BMUX);
+    wire [31:0] JVAL = SIMM + (JALR ? U1REG : PC);
             
     always@(posedge CLK)
     begin
-        FLUSH <= (JAL||JALR||BMUX||RES) ? 1 : 0;     // flush the pipeline!
+        FLUSH <= (JAL||JALR||BMUX||RES);    // flush the pipeline!
         
-        REG[DPTR] <= RES ? 2048 : 
-                     AUIPC ? PC+SIMM :          // register bank update
-                     JAL||JALR ? PC :
+        REG[DPTR] <= RES ? RESET_SP :               // register bank update
+                     AUIPC ? NXPC+SIMM :            
+                     JAL||JALR ? NXPC :
                      LUI ? SIMM :
                      LCC ? LDATA :
                      MCC ? MDATA : 
@@ -165,21 +202,19 @@ module darkriscv
                      CCC ? CDATA : 
                            REG[DPTR];
     
-        PC <= RES  ? 0 :
-              JAL  ? PC+SIMM-4 : // program counter update
-              JALR ? JALRSUM : 
-              BMUX ? PC+SIMM : 
-              PC+4;
+        NXPC <= RES ? RESET_PC : JREQ ? JVAL : NXPC+4;  // program counter (pre-fetch)
+        
+        PC   <= RES ? RESET_PC : NXPC;                  // program counter        
     end
 
     // IO and memory interface
 
-    assign DATAO = (SCC||LCC) ? U2REG : 0;
+    assign DATAO = SCC ? SDATA /*U2REG*/ : 0;
     assign DADDR = (SCC||LCC) ? U1REG + SIMM : 0;
     assign RD = LCC;
     assign WR = SCC;
 
-    assign IADDR = PC;
+    assign IADDR = NXPC;
         
     assign DEBUG = { RES, FLUSH, WR, RD };
 

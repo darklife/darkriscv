@@ -80,12 +80,12 @@ module darksocv
     
         if(HWR)
         begin
-            if(HDADDR[31]) IDATA[HDADDR[9:0]] <= HDATAO;
-            else           DDATA[HDADDR[9:0]] <= HDATAO;
+            if(HDADDR[31]) IDATA[HDADDR[8:0]] <= HDATAO;
+            else           DDATA[HDADDR[8:0]] <= HDATAO;
         end
         
-        IDATAFF <= IDATA[HDADDR[9:0]];
-        DDATAFF <= DDATA[HDADDR[9:0]];       
+        IDATAFF <= IDATA[HDADDR[8:0]];
+        DDATAFF <= DDATA[HDADDR[8:0]];       
     end
 
     assign HDATAO =       !HRD ? 32'hzzzzzzzz : 
@@ -110,28 +110,28 @@ module darksocv
 
     always@(posedge CLK)
     begin
-        IDATAFF2 <= IDATA[IADDR[11:2]];
+        IDATAFF2 <= IDATA[IADDR[10:2]];
     end
     
-    reg [7:0] XFIFO; // UART TX FIFO
+    reg [31:0] XFIFO; // UART TX FIFO
     
     always@(negedge CLK)
     begin
-        DATAIFF2 <= DDATA[DADDR[11:2]];
+        DATAIFF2 <= DDATA[DADDR[10:2]];
         
         if(WR)
         begin
             if(DADDR[31]==0)
             begin
-                DDATA[DADDR[11:2]] <= DATAO;
+                DDATA[DADDR[10:2]] <= DATAO;
             end
 
             if(DADDR[31]==1)
             begin
-                XFIFO <= DATAO[7:0]; // dummy UART
+                XFIFO <= DATAO[31:0]; // dummy UART
             end
         
-            $display("WR: %x at %x",DATAO,DADDR);
+            //$display("WR: %c at %x",DATAO,DADDR);
         end
     end
 
@@ -141,16 +141,23 @@ module darksocv
     // instruction and data, and make the bus interface more 68k-like.
     // add support for multiple cores! \o/
 
-    darkriscv core0 (
+    darkriscv
+    #(
+        .RESET_PC(0),
+        .RESET_SP(4096)        
+    ) 
+    core0 
+    (
         .CLK(CLK),
         .RES(RESFF[1]),        
         .IDATA(IDATAFF2),
         .IADDR(IADDR),
-        .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM
+        .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM        
         .DATAO(DATAO),
         .DADDR(DADDR),
         .WR(WR),
         .RD(RD),
-        .DEBUG(DEBUG));
+        .DEBUG(DEBUG)
+    );
 
 endmodule
