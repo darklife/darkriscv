@@ -202,9 +202,9 @@ module darkriscv
                      CCC ? CDATA : 
                            REG[DPTR];
     
-        NXPC <= RES ? RESET_PC : JREQ ? JVAL : NXPC+4;  // program counter (pre-fetch)
+        NXPC <= RES ? RESET_PC-4 : JREQ ? JVAL : NXPC+4;  // program counter (pre-fetch)
         
-        PC   <= RES ? RESET_PC : NXPC;                  // program counter        
+        PC   <= RES ? NXPC; // program counter        
     end
 
     // IO and memory interface
