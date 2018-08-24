@@ -204,7 +204,7 @@ module darkriscv
     
         NXPC <= RES ? RESET_PC-4 : JREQ ? JVAL : NXPC+4;  // program counter (pre-fetch)
         
-        PC   <= RES ? NXPC; // program counter        
+        PC   <= NXPC; // program counter        
     end
 
     // IO and memory interface
