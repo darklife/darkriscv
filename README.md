@@ -51,8 +51,7 @@ https://github.com/cliffordwolf/picorv32
 One interesting fact is that although the *darkriscv* is 3x more efficient when compared
 with *picorv32*, the last one is more heavly pipelined and can reach a clock
 2x faster. This means that the *darkriscv* is 1.5x faster than the
-*picorv32*, but this result is very preliminary and not really so usefull, as long the 
-*darkriscv* is in the very early stage of development. 
+*picorv32*, but in limited conditions (use of a small LUT-ram instead of blockRAM). 
 
 As long the motivation around the *darkriscv* is replace some 680x0 and coldfire 
 processors, my target is try keep the performance of ~80MIPS in a Spartan-6 LX4.
