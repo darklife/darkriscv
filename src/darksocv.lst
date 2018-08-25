@@ -1,0 +1,57 @@
+
+darksocv.o:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00000000 <main>:
+   0:	000006b7          	lui	a3,0x0
+   4:	06800613          	li	a2,104
+   8:	0b868693          	addi	a3,a3,184 # b8 <puts+0x50>
+   c:	80000737          	lui	a4,0x80000
+  10:	00168693          	addi	a3,a3,1
+  14:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  18:	fe079ee3          	bnez	a5,14 <main+0x14>
+  1c:	00c72023          	sw	a2,0(a4)
+  20:	0006c603          	lbu	a2,0(a3)
+  24:	fe0616e3          	bnez	a2,10 <main+0x10>
+  28:	80000737          	lui	a4,0x80000
+  2c:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  30:	fe079ee3          	bnez	a5,2c <main+0x2c>
+  34:	00a00793          	li	a5,10
+  38:	00f72023          	sw	a5,0(a4)
+  3c:	80000737          	lui	a4,0x80000
+  40:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  44:	fe079ee3          	bnez	a5,40 <main+0x40>
+  48:	00d00793          	li	a5,13
+  4c:	00f72023          	sw	a5,0(a4)
+  50:	00008067          	ret
+
+00000054 <putchar>:
+  54:	80000737          	lui	a4,0x80000
+  58:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  5c:	fe079ee3          	bnez	a5,58 <putchar+0x4>
+  60:	00a72023          	sw	a0,0(a4)
+  64:	00008067          	ret
+
+00000068 <puts>:
+  68:	00054683          	lbu	a3,0(a0)
+  6c:	02068063          	beqz	a3,8c <puts+0x24>
+  70:	80000737          	lui	a4,0x80000
+  74:	00150513          	addi	a0,a0,1
+  78:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  7c:	fe079ee3          	bnez	a5,78 <puts+0x10>
+  80:	00d72023          	sw	a3,0(a4)
+  84:	00054683          	lbu	a3,0(a0)
+  88:	fe0696e3          	bnez	a3,74 <puts+0xc>
+  8c:	80000737          	lui	a4,0x80000
+  90:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  94:	fe079ee3          	bnez	a5,90 <puts+0x28>
+  98:	00a00793          	li	a5,10
+  9c:	00f72023          	sw	a5,0(a4)
+  a0:	80000737          	lui	a4,0x80000
+  a4:	00072783          	lw	a5,0(a4) # 80000000 <__global_pointer$+0x7fffe738>
+  a8:	fe079ee3          	bnez	a5,a4 <puts+0x3c>
+  ac:	00d00793          	li	a5,13
+  b0:	00f72023          	sw	a5,0(a4)
+  b4:	00008067          	ret
