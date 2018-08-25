@@ -66,7 +66,11 @@ execute stages, in order to stop the pipeline when a load/store instruction
 is found and enable a variable access length between 2 and n cycles, according
 to the cache state (hit/miss) and according to the external memory speed.
 
-## Directory description
+For my surprise, after lots of years working only with big-endian architectures, I found 
+that the risc-v is a little-endian architecture! I am not sure the implementation is correct, 
+but it appears to be working without problems!
+
+## Directory description and future work
 
 - ise: the ISE project files (xise and ucf)
 - rtl: the source for the core and soc
