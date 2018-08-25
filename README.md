@@ -70,13 +70,15 @@ For my surprise, after lots of years working only with big-endian architectures,
 that the risc-v is a little-endian architecture! I am not sure the implementation is correct, 
 but it appears to be working without problems!
 
-## Directory description and future work
+## Directory Description
 
 - ise: the ISE project files (xise and ucf)
 - rtl: the source for the core and soc
 - sim: the simulation to test the soc
 - src: the source code for the test firmware (hello.c)
 - tmp: the ISE working directory (you need to create it!)
+
+## Future Work
 
 At the moment, the *darksoc* is not so relevant and the only function is
 provide support for the instruction and data memories, as well some related
