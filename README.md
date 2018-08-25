@@ -53,7 +53,23 @@ regarding the bus is that the blockRAM requires two cycles in order to dump
 the data, one clock to register the address and another clock to register de
 data. In the case of *darkriscv* this is a problem and the current
 workaround is set the blockRAMs to work in the opposite edge clock, which is
-not so good, but works.
+not so good, but works. In some sense, it is equivalent to say that the 
+*darkriscv* have a pipeline with 1 + 2x1/2 stages:
+
+- 1/2 stage for instruction pre-fetch
+- 1/2 stage for static instruction decodification
+- 1 stage for decodification and execution
+
+Except in the case of load/store, which uses 2x1/2 stages:
+
+- 1/2 stage for instruction pre-fetch
+- 1/2 stage for static instruction decodification
+- 1/2 stage for decodification and execution
+- 1/2 state for data read
+
+When working only with positive edge of clock, the performance increases 
+from 75 to 100MHz, but one wait-state will be required for the bus, which means
+that the final performance decreases from 75MIPS to 50MIPS.
 
 For my surprise, after lots of years working only with big-endian
 architectures, I found that the risc-v is a little-endian architecture!  I
