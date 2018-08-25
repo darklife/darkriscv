@@ -76,6 +76,18 @@ architectures, I found that the risc-v is a little-endian architecture!  I
 am not sure the implementation is correct, but it appears to be working
 without problems!
 
+Additional performance results (synthesis estimatives onlly) for other xilinx
+devices available in the ISE:
+
+- spartan-3e:	47MHz
+- spartan-6: 	75MHz
+- artix-7: 	133MHz
+- virtex-6: 	137MHz
+- kintex-7: 	167MHz
+
+Just for curiosity, the spartan-3e model 100 costs 12 usd (octopart) and the
+*darkriscv* uses 86% of the FPGA capacity.
+
 ## Development Tools (gcc)
 
 About the compiler, I am working with the experimental gcc 9.0.0 for riscv
