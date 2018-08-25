@@ -23,14 +23,14 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="2"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="2"/>
     </file>
-    <file xil_pn:name="darksocv.ucf" xil_pn:type="FILE_UCF">
-      <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
-    </file>
     <file xil_pn:name="../sim/darksimv.v" xil_pn:type="FILE_VERILOG">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="3"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="12"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="12"/>
       <association xil_pn:name="PostTranslateSimulation" xil_pn:seqID="12"/>
+    </file>
+    <file xil_pn:name="darksocv.ucf" xil_pn:type="FILE_UCF">
+      <association xil_pn:name="Implementation" xil_pn:seqID="66"/>
     </file>
   </files>
 
@@ -360,7 +360,7 @@
   </properties>
 
   <bindings>
-    <binding xil_pn:location="/darksimv" xil_pn:name="darksocv.ucf"/>
+    <binding xil_pn:location="/darksocv" xil_pn:name="darksocv.ucf"/>
   </bindings>
 
   <libraries/>

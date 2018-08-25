@@ -30,6 +30,20 @@
 
 `timescale 1ns / 1ps
 
+// opcodes
+
+`define LUI     7'b0110111
+`define AUIPC   7'b0010111
+`define JAL     7'b1101111
+`define JALR    7'b1100111
+`define BCC     7'b1100011
+`define LCC     7'b0000011
+`define SCC     7'b0100011
+`define MCC     7'b0010011
+`define RCC     7'b0110011
+`define FCC     7'b0001111
+`define CCC     7'b1110011
+
 module darkriscv
 #(
     parameter [31:0] RESET_PC = 0,
@@ -40,10 +54,12 @@ module darkriscv
     
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
+    input             IHIT,  // instruction cache hit
     
     input      [31:0] DATAI, // data bus (input)
     output     [31:0] DATAO, // data bus (output)
     output     [31:0] DADDR, // addr bus
+    input             DHIT,  // data cache hit
     
     output            WR,    // write enable
     output            RD,    // read enable 
@@ -55,14 +71,21 @@ module darkriscv
     
     reg FLUSH = 1;
 
-    // idata is break apart as described in the RV32I specification
+    // IDATA is break apart as described in the RV32I specification
 
-    wire [6:0] OPCODE = FLUSH ? 0 : IDATA[6:0];
-    wire [4:0] DPTR   = RES   ? 2 : IDATA[11:7];
-    wire [2:0] FCT3   = IDATA[14:12];
-    wire [4:0] S1PTR  = IDATA[19:15];
-    wire [4:0] S2PTR  = IDATA[24:20];
-    wire [6:0] FCT7   = IDATA[31:25];    
+    reg [31:0] XIDATA;
+
+    wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
+    wire [4:0] DPTR   = RES   ? 2 : XIDATA[11:7];
+    wire [2:0] FCT3   = XIDATA[14:12];
+    wire [4:0] S1PTR  = XIDATA[19:15];
+    wire [4:0] S2PTR  = XIDATA[24:20];
+    wire [6:0] FCT7   = XIDATA[31:25];
+
+    always@(posedge CLK)
+    begin
+        XIDATA <= IDATA;
+    end
     
     // dummy 32-bit words w/ all-0s and all-1s: 
 
@@ -70,22 +93,33 @@ module darkriscv
     wire [31:0] ALL1  = -1;
 
     // signal extended immediate, according to the instruction type:
-    
-    wire [31:0] SIMM   = SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                         BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                         JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                         LUI||
-                         AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                 { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
 
+    reg [31:0] SIMM;
+    
+    always@(posedge CLK)
+    begin    
+        SIMM  <= IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                 IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                 IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                 IDATA[6:0]==`LUI||
+                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                      { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
+    end
+    
     // non-signal extended immediate, according to the instruction type:
 
-    wire [31:0] UIMM   = SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                         BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                         JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                         LUI||
-                         AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                 { ALL0[31:12], IDATA[31:20] }; // i-type
+    reg [31:0] UIMM;
+    
+    always@(posedge CLK)
+    begin
+        UIMM  <= IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                 IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                 IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                 IDATA[6:0]==`LUI||
+                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                      { ALL0[31:12], IDATA[31:20] }; // i-type
+    end
+    
     // main opcode decoder:
                                 
     wire    LUI = OPCODE==7'b0110111;
@@ -142,13 +176,13 @@ module darkriscv
     // I-group (merged M/R-groups OPCODE==7'b0x10011
 
     wire signed [31:0] SOP2 = MCC ? SIMM : S2REG; // signed
-    wire        [31:0] UOP2 = MCC ? UIMM : FCT3==0 && IDATA[30] ? -U2REG : U2REG; // unsigned
+    wire        [31:0] UOP2 = MCC ? UIMM : FCT3==0 && FCT7[5] ? -U2REG : U2REG; // unsigned
 
     wire [31:0] MRDATA = FCT3==0 ? U1REG+UOP2 :
                          FCT3==1 ? U1REG<<UOP2[4:0] :
                          FCT3==2 ? S1REG<SOP2?1:0 : // signed
                          FCT3==3 ? U1REG<UOP2?1:0 : //unsigned
-                         FCT3==5 ? (IDATA[30] ? U1REG>>>UOP2[4:0] : U1REG>>UOP2[4:0]) :
+                         FCT3==5 ? (FCT7[5] ? U1REG>>>UOP2[4:0] : U1REG>>UOP2[4:0]) :
                          FCT3==4 ? U1REG^UOP2 :
                          FCT3==6 ? U1REG|UOP2 :
                          FCT3==7 ? U1REG&UOP2 :                           
@@ -169,7 +203,7 @@ module darkriscv
     wire [31:0] JVAL = SIMM + (JALR ? U1REG : PC);
             
     always@(posedge CLK)
-    begin
+    begin    
         FLUSH <= (JAL||JALR||BMUX||RES);    // flush the pipeline!
         
         REG[DPTR] <= RES ? RESET_SP :               // register bank update
@@ -181,8 +215,14 @@ module darkriscv
                      RCC ? MRDATA : 
                      CCC ? CDATA : 
                            REG[DPTR];
-    
-        NXPC <= RES ? RESET_PC-4 : JREQ ? JVAL : NXPC+4;  // program counter (pre-fetch)
+        
+        if(IHIT) // instruction cache hit
+        begin
+            NXPC <=               RES ? RESET_PC-4 : // reset
+                                 JREQ ? JVAL : // jmp/bra
+                    (LCC||SCC)&&!DHIT ? NXPC : // load/store w/ cache miss
+                                        NXPC+4;  // program counter (pre-fetch)
+        end
         
         PC   <= NXPC; // program counter        
     end

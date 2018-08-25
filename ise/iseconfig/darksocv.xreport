@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <report-views version="2.0" >
  <header>
-  <DateModified>2018-08-25T01:00:05</DateModified>
+  <DateModified>2018-08-25T11:07:48</DateModified>
   <ModuleName>darksocv</ModuleName>
-  <SummaryTimeStamp>2018-08-25T00:56:36</SummaryTimeStamp>
+  <SummaryTimeStamp>2018-08-25T11:06:44</SummaryTimeStamp>
   <SavedFilePath>/home/marcelo/Documents/Verilog/darkriscv/darkriscv/ise/iseconfig/darksocv.xreport</SavedFilePath>
   <ImplementationReportsDirectory>/home/marcelo/Documents/Verilog/darkriscv/darkriscv/tmp/</ImplementationReportsDirectory>
   <DateInitialized>2018-08-24T20:23:55</DateInitialized>

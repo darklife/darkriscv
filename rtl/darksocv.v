@@ -93,12 +93,6 @@ module darksocv
                                  DDATAFF;
 
     // darkriscv memory interface
-    
-    // TODO:
-    // the darkriscv core works a full clock ahead in the case of instruction 
-    // memory, but does not work in the same way in the case of data memmory. in this case,
-    // we need work 1/2 clock delayed. Althohgh works well with smaller clocks, this scheme 
-    // must be fixed in the future in order to increase the clock frequency.
 
     wire [31:0] IADDR;
     wire [31:0] DADDR;    
@@ -107,17 +101,21 @@ module darksocv
 
     reg [31:0] IDATAFF2 = 0;
     reg [31:0] DATAIFF2 = 0;
-
-    always@(posedge CLK)
-    begin
-        IDATAFF2 <= IDATA[IADDR[10:2]];
-    end
     
     reg [31:0] XFIFO; // UART TX FIFO
     
+    // as long blockRAM read is delayed, *both* RAM and ROM must work in negative edge!
+    
+    reg IHIT = 0;
+    reg DHIT = 0;
+    
     always@(negedge CLK)
     begin
+        IDATAFF2 <= IDATA[IADDR[10:2]];
         DATAIFF2 <= DDATA[DADDR[10:2]];
+        
+        DHIT <= 1; // !DHIT;
+        IHIT <= 1; //!IHIT;
         
         if(WR)
         begin
@@ -151,9 +149,11 @@ module darksocv
         .RES(RESFF[1]),        
         .IDATA(IDATAFF2),
         .IADDR(IADDR),
+        .IHIT(IHIT),
         .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM        
         .DATAO(DATAO),
         .DADDR(DADDR),
+        .DHIT(DHIT),
         .WR(WR),
         .RD(RD),
         .DEBUG(DEBUG)
