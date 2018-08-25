@@ -78,6 +78,14 @@ but it appears to be working without problems!
 - src: the source code for the test firmware (hello.c)
 - tmp: the ISE working directory (you need to create it!)
 
+The *ise* directory contains the xise project file to be open in the Xilinx ISE 14.x 
+and  the project is assembled in a way that all files are loaded. The ISE will ask about
+a missing *tmp* directory, just click in *Create* and the directory will be created. 
+Although a *ucf* file is provided, the the FPGA is not wired in any particular configuration. 
+Anyway, as long the project is open, is possible build the FPGA or simulate. The simulation
+will show some waveforms and is possible check the XFIFO port in the top level for
+debug information (the hello.c code prints the string "hello world!" in the XFIFO).
+
 ## Future Work
 
 At the moment, the *darksoc* is not so relevant and the only function is
