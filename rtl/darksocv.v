@@ -125,8 +125,7 @@ module darksocv
             begin
                 DDATA[DADDR[10:2]] <= DATAO;
             end
-
-            if(DADDR[31]==1)
+            else
             begin
                 XFIFO <= DATAO[31:0]; // dummy UART
             end

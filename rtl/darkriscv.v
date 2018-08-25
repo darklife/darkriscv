@@ -51,7 +51,7 @@ module darkriscv
     output [3:0]  DEBUG      // old-school osciloscope based debug! :)
 );
 
-    // flush instriction pipeline    
+    // flush instruction pipeline    
     
     reg FLUSH = 1;
 
@@ -117,63 +117,43 @@ module darkriscv
     
     // L-group of instructions (OPCODE==7'b0000011)
 
-    wire [31:0] LDATA = FCT3==0 ? ( DADDR[1:0]==3 ? { DATAI[31] ? ALL1[31:24]:ALL0[31:24] , DATAI[31:24] } : 
-                                    DADDR[1:0]==2 ? { DATAI[23] ? ALL1[31:24]:ALL0[31:24] , DATAI[23:16] } : 
-                                    DADDR[1:0]==1 ? { DATAI[15] ? ALL1[31:24]:ALL0[31:24] , DATAI[15: 8] } :
-                                                    { DATAI[ 7] ? ALL1[31:24]:ALL0[31:24] , DATAI[ 7: 0] } 
-                                                    
-                                                    ) :
-                        FCT3==1 ? ( DADDR[1]==1   ? { DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
-                                                    { DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
-                        FCT3==2 ? DATAI :
-                        
-                        FCT3==4 ? ( DADDR[1:0]==3 ? { ALL0[31:24] , DATAI[31:24] } : 
-                                    DADDR[1:0]==2 ? { ALL0[31:24] , DATAI[23:16] } : 
-                                    DADDR[1:0]==1 ? { ALL0[31:24] , DATAI[15: 8] } :
-                                                    { ALL0[31:24] , DATAI[ 7: 0] } ) :
-                                                    
-                                  ( DADDR[1]==1   ? { ALL0[31:16] , DATAI[31:16] } :
-                                                    { ALL0[31:16] , DATAI[15: 0] } );
+    wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31:24]:ALL0[31:24] , DATAI[31:24] } : 
+                                             DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31:24]:ALL0[31:24] , DATAI[23:16] } : 
+                                             DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31:24]:ALL0[31:24] , DATAI[15: 8] } :
+                                                             { FCT3==0&&DATAI[ 7] ? ALL1[31:24]:ALL0[31:24] , DATAI[ 7: 0] } ) :
+                        FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
+                                                             { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
+                                             DATAI;
 
     // S-group of instructions (OPCODE==7'b0100011)
 
-    wire [31:0] SDATA = //!SCC ? 0 : 
-                        FCT3==0 ? ( DADDR[1:0]==3 ? { U2REG[ 7: 0], ALL0 [23:0] } : 
+    wire [31:0] SDATA = FCT3==0 ? ( DADDR[1:0]==3 ? { U2REG[ 7: 0], ALL0 [23:0] } : 
                                     DADDR[1:0]==2 ? { ALL0 [31:24], U2REG[ 7:0], ALL0[15:0] } : 
                                     DADDR[1:0]==1 ? { ALL0 [31:16], U2REG[ 7:0], ALL0[7:0] } :
                                                     { ALL0 [31: 8], U2REG[ 7:0] } ) :
                         FCT3==1 ? ( DADDR[1]==1   ? { U2REG[15: 0], ALL0 [15:0] } :
                                                     { ALL0 [31:16], U2REG[15:0] } ) :
-                                  U2REG;
+                                    U2REG;
 
     // C-group not implemented yet!
     
     wire [31:0] CDATA = 0;	// status register istructions not implemented yet
 
-    // M-group of instructions (OPCODE==7'b0010011)
+    // I-group (merged M/R-groups OPCODE==7'b0x10011
 
-    wire [31:0] MDATA = FCT3==0 ? U1REG+SIMM :
-                        FCT3==1 ? U1REG<<S2PTR :
-                        FCT3==2 ? S1REG<SIMM?1:0 : // signed
-                        FCT3==3 ? U1REG<UIMM?1:0 : //unsigned
-                        FCT3==5 ? (IDATA[30] ? U1REG>>>S2PTR : U1REG>>S2PTR) :                        
-                        FCT3==4 ? U1REG^SIMM :
-                        FCT3==6 ? U1REG|SIMM :
-                        FCT3==7 ? U1REG&SIMM :                           
-                                  0;
+    wire signed [31:0] SOP2 = MCC ? SIMM : S2REG; // signed
+    wire        [31:0] UOP2 = MCC ? UIMM : FCT3==0 && IDATA[30] ? -U2REG : U2REG; // unsigned
 
-    // R-group of instructions (OPCODE==7'b0110011)
-                        
-    wire [31:0] RDATA = FCT3==0 ? (IDATA[30] ? U1REG-U2REG : U1REG+U2REG) :
-                        FCT3==1 ? U1REG<<U2REG[4:0] :
-                        FCT3==2 ? S1REG<S2REG?1:0 : // signed
-                        FCT3==3 ? U1REG<U2REG?1:0 : // unsigned
-                        FCT3==5 ? (IDATA[30] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
-                        FCT3==4 ? U1REG^U2REG :                        
-                        FCT3==6 ? U1REG|U2REG :
-                        FCT3==7 ? U1REG&U2REG :                        
-                                  0;
-                                  
+    wire [31:0] MRDATA = FCT3==0 ? U1REG+UOP2 :
+                         FCT3==1 ? U1REG<<UOP2[4:0] :
+                         FCT3==2 ? S1REG<SOP2?1:0 : // signed
+                         FCT3==3 ? U1REG<UOP2?1:0 : //unsigned
+                         FCT3==5 ? (IDATA[30] ? U1REG>>>UOP2[4:0] : U1REG>>UOP2[4:0]) :
+                         FCT3==4 ? U1REG^UOP2 :
+                         FCT3==6 ? U1REG|UOP2 :
+                         FCT3==7 ? U1REG&UOP2 :                           
+                                   0;
+
     // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
@@ -197,8 +177,8 @@ module darkriscv
                      JAL||JALR ? NXPC :
                      LUI ? SIMM :
                      LCC ? LDATA :
-                     MCC ? MDATA : 
-                     RCC ? RDATA : 
+                     MCC ? MRDATA : 
+                     RCC ? MRDATA : 
                      CCC ? CDATA : 
                            REG[DPTR];
     
@@ -209,8 +189,8 @@ module darkriscv
 
     // IO and memory interface
 
-    assign DATAO = SCC ? SDATA /*U2REG*/ : 0;
-    assign DADDR = (SCC||LCC) ? U1REG + SIMM : 0;
+    assign DATAO = SDATA; // SCC ? SDATA : 0;
+    assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
     assign RD = LCC;
     assign WR = SCC;
 
