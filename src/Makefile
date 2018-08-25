@@ -44,10 +44,11 @@ LFLAGS = -Ttext=0 -Map=$(PROJ).map
 OFLAGS = -O binary
 DFLAGS = -d
 
+PROJ = darksocv
 OBJS = hello.o
 
 all:
-	make darksocv.hex
+	make $(PROJ).hex
 
 clean:
 	-rm *.s *.o $(PROJ).{bin,hex,lst,map}
@@ -56,12 +57,12 @@ clean:
 	$(CC) $(CFLAGS) -S $< # -o $@.s
 	$(CC) $(CFLAGS) -c $< # -o $@
 
-darksocv.o: $(OBJS)
+$(PROJ).o: $(OBJS)
 	$(LD) $(LFLAGS) $(OBJS) -o $@
 
-darksocv.bin: darksocv.o
+$(PROJ).bin: $(PROJ).o
 	$(OC) $(OFLAGS) $< $@
-	$(OD) $(DFLAGS) $< > $(PROG).lst
+	$(OD) $(DFLAGS) $< > $(PROJ).lst
 
-darksocv.hex: darksocv.bin
+$(PROJ).hex: $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' $< > $@
