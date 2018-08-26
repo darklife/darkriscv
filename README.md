@@ -4,18 +4,18 @@ Open source RISC-V implemented from scratch in one night!
 ## Introduction
 
 Developed in a magic night of 19 Aug, 2018 (between 2am and 8am) the
-*darkriscv* is a very, very experimental implementation of the risc-v
-instruction set. Nowaways, after one week, the *darkriscv* reached a high
+*darkriscv* is a very, very experimental implementation of the RISC-V
+instruction set. Nowadays, after one week, the *darkriscv* reached a high
 quality result, in a way that the "hello world" compiled by the gcc is 
 working fine!
 
 The general concept is based in my other early RISC processors and composed 
 by a simplified two stage pipeline where a instruction is fetch from a
 instruction memory in the first clock and decoded/executed in the second
-clock. The pipeline is overlaped without interlocks, in a way the
+clock. The pipeline is overlapped without interlocks, in a way the
 *darkriscv* can reach the performance of one instruction per clock most of
 time (the exception is after a branch, where the pipeline is flushed).  As
-adition, the code is very compact, with around two hundred lines of verilog
+addition, the code is very compact, with around two hundred lines of Verilog
 code.
 
 Although the code is small and crude when compared with other RISC-V
@@ -26,7 +26,7 @@ implementations, the *darkriscv* has lots of impressive features:
 - uses only 2 blockRAMs: one for instruction and another one for data
 - uses only around 1000 LUTs (spartan-6)
 - working fine in a real spartan-6 lx9 after one week of development
-- working fine with gcc 9.0.0 for riscv (no patches required!)
+- working fine with gcc 9.0.0 for RISC-V (no patches required!)
 
 Feel free to make suggestions and good hacking! o/
 
@@ -40,12 +40,12 @@ any other FPGA families.
 
 One interesting fact is that although the *darkriscv* is 3x more efficient
 when compared with *picorv32* (1 vs 3 clocks per instruction), the last one
-is more heavly pipelined and can reach a clock 2x faster (75MHz vs 150MHz). 
+is more heavily pipelined and can reach a clock 2x faster (75MHz vs 150MHz). 
 Anyway, this means that the *darkriscv* is 1.5x faster than the *picorv32*
 (75MIPS vs 50MIPS).  As long the motivation around the *darkriscv* is
-replace some 680x0 and coldfire processors, the performance of 75MIPS is
+replace some 680x0 and Coldfire processors, the performance of 75MIPS is
 good enough for me. Due to the way that the bus is designed, the *picorv32*
-works in a simila way to a 68020 or 68030 with an asynchronous bus and the
+works in a similar way to a 68020 or 68030 with an asynchronous bus and the
 *darkriscv* works like a 68040 with a synchronous bus. 
 
 Sometimes this is good, sometimes not so good...  Unfortunately, the problem
@@ -57,14 +57,14 @@ not so good, but works. In some sense, it is equivalent to say that the
 *darkriscv* have a pipeline with 1 + 2x1/2 stages:
 
 - 1/2 stage for instruction pre-fetch
-- 1/2 stage for static instruction decodification
-- 1 stage for decodification and execution
+- 1/2 stage for static instruction decode
+- 1 stage for decode and execution
 
 Except in the case of load/store, which uses 2x1/2 stages:
 
 - 1/2 stage for instruction pre-fetch
-- 1/2 stage for static instruction decodification
-- 1/2 stage for decodification and execution
+- 1/2 stage for static instruction decode
+- 1/2 stage for decode and execution
 - 1/2 state for data read
 
 When working only with positive edge of clock, the performance increases 
@@ -72,42 +72,42 @@ from 75 to 100MHz, but one wait-state will be required for the bus, which means
 that the final performance decreases from 75MIPS to 50MIPS.
 
 For my surprise, after lots of years working only with big-endian
-architectures, I found that the risc-v is a little-endian architecture!  I
+architectures, I found that the RISC-V is a little-endian architecture!  I
 am not sure the implementation is correct, but it appears to be working
 without problems!
 
-Additional performance results (synthesis estimatives onlly) for other xilinx
+Additional performance results (synthesis only) for other Xilinx
 devices available in the ISE:
 
-- spartan-3e:	47MHz
-- spartan-6: 	75MHz
-- artix-7: 	133MHz
-- virtex-6: 	137MHz
-- kintex-7: 	167MHz
+- Spartan-3e:	47MHz
+- Spartan-6: 	75MHz
+- Artix-7: 	133MHz
+- Virtex-6: 	137MHz
+- Kintex-7: 	167MHz
 
-Just for curiosity, the spartan-3e model 100 costs 12 usd (octopart) and the
+Just for curiosity, the spartan-3e model 100 costs 12$ (octopart.com) and the
 *darkriscv* uses 86% of the FPGA capacity.
 
 ## Development Tools (gcc)
 
-About the compiler, I am working with the experimental gcc 9.0.0 for riscv
+About the compiler, I am working with the experimental gcc 9.0.0 for RISC-V
 (no patches or updates are required for the *darkriscv*, as long the gcc
 appears to no use some missing features).  Although is possible use the
-compiler set available in the oficial risc-v site, our colleagues from
+compiler set available in the oficial RISC-V site, our colleagues from
 lowRISC pointed a more clever way to build the toolchain:
 
 https://www.lowrisc.org/blog/2017/09/building-upstream-risc-v-gccbinutilsnewlib-the-quick-and-dirty-way/
 
 Finally, as long the *darkriscv* is not yet fully tested, sometimes is a
 very good idea compare the code execution with another stable reference and
-I am working with the excelent project *picorv32*:
+I am working with the project *picorv32*:
 
 https://github.com/cliffordwolf/picorv32
 
-Maybe the most complex issue is the memmory design. Of course, it is a gcc
+Maybe the most complex issue is the memory design. Of course, it is a gcc
 issue and it is not even a problem, in fact, is the way that the software
-guyz works when linking the code and data! As long the early version of
-*darkriscv* does not include support for a unified code and data memmory,
+guys works when linking the code and data! As long the early version of
+*darkriscv* does not include support for a unified code and data memory,
 the ROM and RAM must be loaded with the same code generated by the gcc,
 which is sometimes confusing to make work.
 
@@ -119,7 +119,7 @@ which is sometimes confusing to make work.
 - src: the source code for the test firmware (hello.c)
 - tmp: the ISE working directory (you need to create it!)
 
-The *ise* directory contains the xise project file to be open in the Xilinx
+The *ise* directory contains the *xise* project file to be open in the Xilinx
 ISE 14.x and the project is assembled in a way that all files are loaded. 
 The ISE will ask about a missing *tmp* directory, just click in *Create* and
 the directory will be created.  Although a *ucf* file is provided, the the
@@ -131,9 +131,9 @@ world!" in the XFIFO).
 
 ## Future Work
 
-At the moment, the *darksoc* is not so relevant and the only function is
+At the moment, the *darksocv* is not so relevant and the only function is
 provide support for the instruction and data memories, as well some related
-glue-logic.  the proposal in the future is implement in the soc the cache
+glue-logic.  the proposal in the future is implement in the SoC the cache
 feature in order to make possible connect the *darkriscv* to external
 memories, as well make possible connect multiple *darkriscv* cores in a SMP
 configuration.
