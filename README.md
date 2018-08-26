@@ -27,6 +27,7 @@ implementations, the *darkriscv* has lots of impressive features:
 - uses only around 1000 LUTs (spartan-6)
 - working fine in a real spartan-6 lx9 after one week of development
 - working fine with gcc 9.0.0 for RISC-V (no patches required!)
+- flexible harvard architecture
 
 Feel free to make suggestions and good hacking! o/
 
@@ -71,6 +72,11 @@ When working only with positive edge of clock, the performance increases
 from 75 to 100MHz, but one wait-state will be required for the bus, which means
 that the final performance decreases from 75MIPS to 50MIPS.
 
+After some work, the *darkriscv* supports a variable number of wait-states
+between 0 and n. Although is possible work with memories in the positive
+edge of clock by inserting one wait-state, the performance in this case
+decreases from 1 instruction per clock to 0.5 instructions per clock.
+
 For my surprise, after lots of years working only with big-endian
 architectures, I found that the RISC-V is a little-endian architecture!  I
 am not sure the implementation is correct, but it appears to be working
@@ -85,7 +91,9 @@ devices available in the ISE:
 - Virtex-6: 	137MHz
 - Kintex-7: 	167MHz
 
-Just for curiosity, the spartan-3e model 100 costs 12$ (octopart.com) and the
+Of course, the above numbers always change according to the logic around the
+*darkriscv*, which means that numbers are just an approximation.  Just for
+curiosity, the spartan-3e model 100 costs 12$ (octopart.com) and the
 *darkriscv* uses 86% of the FPGA capacity.
 
 ## Development Tools (gcc)
@@ -134,6 +142,6 @@ world!" in the XFIFO).
 At the moment, the *darksocv* is not so relevant and the only function is
 provide support for the instruction and data memories, as well some related
 glue-logic.  the proposal in the future is implement in the SoC the cache
-feature in order to make possible connect the *darkriscv* to external
+feature in order to make possible connect the *darkriscv* to large external
 memories, as well make possible connect multiple *darkriscv* cores in a SMP
 configuration.

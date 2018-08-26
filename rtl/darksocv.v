@@ -101,21 +101,29 @@ module darksocv
 
     reg [31:0] IDATAFF2 = 0;
     reg [31:0] DATAIFF2 = 0;
-    
-    reg [31:0] XFIFO; // UART TX FIFO
+        
+    reg [31:0] XFIFO = 0; // UART TX FIFO
+
+    wire [7:0] UART = XFIFO[7:0];
     
     // as long blockRAM read is delayed, *both* RAM and ROM must work in negative edge!
     
-    reg IHIT = 0;
-    reg DHIT = 0;
-    
+    reg [3:0] IWAIT = 0;
+    reg [3:0] DWAIT = 0;
+
+    // example: variable 16-byte aligned cache miss/hit w/ 3 wait-states
+    // the wait-state for instruction and data can be actived in any random order.
+
+    always@(negedge CLK) 
+    begin
+        //IWAIT <= RESFF[1] ? -1 : IWAIT ? IWAIT-1 :     IWAIT==0&&IADDR[3:0]==0 ? 2 : 0; // i-cache wait-state
+        //DWAIT <= RESFF[1] ? -1 : DWAIT ? DWAIT-1 : RD&&DWAIT==0&&DADDR[3:0]==0 ? 2 : 0; // d-cache wait-state    
+    end
+
     always@(negedge CLK)
     begin
-        IDATAFF2 <= IDATA[IADDR[10:2]];
+        IDATAFF2 <= IDATA[IADDR[10:2]];   
         DATAIFF2 <= DDATA[DADDR[10:2]];
-        
-        DHIT <= 1; // !DHIT;
-        IHIT <= 1; //!IHIT;
         
         if(WR)
         begin
@@ -125,7 +133,7 @@ module darksocv
             end
             else
             begin
-                XFIFO <= DATAO[31:0]; // dummy UART
+                XFIFO <= DATAO[31:0]; // dummy UART            
             end
         
             //$display("WR: %c at %x",DATAO,DADDR);
@@ -147,13 +155,12 @@ module darksocv
     (
         .CLK(CLK),
         .RES(RESFF[1]),        
+        .HLT(IWAIT||DWAIT||XFIFO==32'hdeadbeef),
         .IDATA(IDATAFF2),
-        .IADDR(IADDR),
-        .IHIT(IHIT),
+        .IADDR(IADDR),        
         .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM        
         .DATAO(DATAO),
-        .DADDR(DADDR),
-        .DHIT(DHIT),
+        .DADDR(DADDR),        
         .WR(WR),
         .RD(RD),
         .DEBUG(DEBUG)

@@ -51,15 +51,14 @@ module darkriscv
 ) (
     input             CLK,   // clock
     input             RES,   // reset
+    input             HLT,   // halt
     
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
-    input             IHIT,  // instruction cache hit
     
     input      [31:0] DATAI, // data bus (input)
     output     [31:0] DATAO, // data bus (output)
     output     [31:0] DADDR, // addr bus
-    input             DHIT,  // data cache hit
     
     output            WR,    // write enable
     output            RD,    // read enable 
@@ -67,30 +66,28 @@ module darkriscv
     output [3:0]  DEBUG      // old-school osciloscope based debug! :)
 );
 
-    // flush instruction pipeline    
-    
-    reg FLUSH = 1;
+    // dummy 32-bit words w/ all-0s and all-1s: 
+
+    wire [31:0] ALL0  = 0;
+    wire [31:0] ALL1  = -1;
+
+    reg FLUSH = 1;  // flush instruction pipeline 
 
     // IDATA is break apart as described in the RV32I specification
 
     reg [31:0] XIDATA;
 
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [4:0] DPTR   = RES   ? 2 : XIDATA[11:7];
+    wire [4:0] DPTR   = XIDATA[11: 7];
     wire [2:0] FCT3   = XIDATA[14:12];
     wire [4:0] S1PTR  = XIDATA[19:15];
     wire [4:0] S2PTR  = XIDATA[24:20];
     wire [6:0] FCT7   = XIDATA[31:25];
 
     always@(posedge CLK)
-    begin
-        XIDATA <= IDATA;
-    end
-    
-    // dummy 32-bit words w/ all-0s and all-1s: 
-
-    wire [31:0] ALL0  = 0;
-    wire [31:0] ALL1  = -1;
+    begin        
+        XIDATA <= RES ? { ALL0[31:12], 5'd2, ALL0[6:0] } : HLT ? XIDATA : IDATA;
+    end   
 
     // signal extended immediate, according to the instruction type:
 
@@ -98,7 +95,8 @@ module darkriscv
     
     always@(posedge CLK)
     begin    
-        SIMM  <= IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+        SIMM  <= RES ? 0 : HLT ? SIMM :
+                 IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
                  IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
                  IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
                  IDATA[6:0]==`LUI||
@@ -112,7 +110,8 @@ module darkriscv
     
     always@(posedge CLK)
     begin
-        UIMM  <= IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+        UIMM  <= RES ? 0: HLT ? UIMM :
+                 IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
                  IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
                  IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
                  IDATA[6:0]==`LUI||
@@ -138,16 +137,15 @@ module darkriscv
     reg [31:0] PC;		    // 32-bit program counter
     reg [31:0] REG [0:31];	// general-purpose 32x32-bit registers
 
-    integer i;
-    
-    initial for(i=0;i!=32;i=i+1) REG[i] = 0;		// makes the simulation looks better!
+    integer i; 
+    initial for(i=0;i!=32;i=i+1) REG[i] = i ? 32'dz : 0; // makes the simulation looks better!
 
-    // source-1 and source-1 register selection, with impicit 0 value in the x0:
+    // source-1 and source-1 register selection
 
-    wire signed   [31:0] S1REG = S1PTR ? REG[S1PTR] : 0;
-    wire signed   [31:0] S2REG = S2PTR ? REG[S2PTR] : 0;
-    wire          [31:0] U1REG = S1PTR ? REG[S1PTR] : 0;
-    wire          [31:0] U2REG = S2PTR ? REG[S2PTR] : 0;
+    wire signed   [31:0] S1REG = REG[S1PTR];
+    wire signed   [31:0] S2REG = REG[S2PTR];
+    wire          [31:0] U1REG = REG[S1PTR];
+    wire          [31:0] U2REG = REG[S2PTR];
     
     // L-group of instructions (OPCODE==7'b0000011)
 
@@ -178,7 +176,7 @@ module darkriscv
     wire signed [31:0] SOP2 = MCC ? SIMM : S2REG; // signed
     wire        [31:0] UOP2 = MCC ? UIMM : FCT3==0 && FCT7[5] ? -U2REG : U2REG; // unsigned
 
-    wire [31:0] MRDATA = FCT3==0 ? U1REG+UOP2 :
+    wire [31:0] MRDATA = FCT3==0 ? U1REG+SOP2 :
                          FCT3==1 ? U1REG<<UOP2[4:0] :
                          FCT3==2 ? S1REG<SOP2?1:0 : // signed
                          FCT3==3 ? U1REG<UOP2?1:0 : //unsigned
@@ -204,27 +202,27 @@ module darkriscv
             
     always@(posedge CLK)
     begin    
-        FLUSH <= (JAL||JALR||BMUX||RES);    // flush the pipeline!
+        FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
+                       (JAL||JALR||BMUX||RES);  // flush the pipeline!
+
+        REG[DPTR] <=   RES ? RESET_SP  :        // reset sp
+                       HLT ? REG[DPTR] :        // halt
+                     !DPTR ? 0 :                // x0 = 0, always!
+                     AUIPC ? NXPC+SIMM :
+                      JAL||
+                      JALR ? NXPC :
+                       LUI ? SIMM :
+                       LCC ? LDATA :
+                       MCC ? MRDATA : 
+                       RCC ? MRDATA : 
+                       CCC ? CDATA : 
+                             REG[DPTR];
         
-        REG[DPTR] <= RES ? RESET_SP :               // register bank update
-                     AUIPC ? NXPC+SIMM :            
-                     JAL||JALR ? NXPC :
-                     LUI ? SIMM :
-                     LCC ? LDATA :
-                     MCC ? MRDATA : 
-                     RCC ? MRDATA : 
-                     CCC ? CDATA : 
-                           REG[DPTR];
-        
-        if(IHIT) // instruction cache hit
-        begin
-            NXPC <=               RES ? RESET_PC-4 : // reset
-                                 JREQ ? JVAL : // jmp/bra
-                    (LCC||SCC)&&!DHIT ? NXPC : // load/store w/ cache miss
-                                        NXPC+4;  // program counter (pre-fetch)
-        end
-        
-        PC   <= NXPC; // program counter        
+        NXPC <=   RES ? RESET_PC : HLT ? NXPC :   // reset and halt
+                 JREQ ? JVAL :                    // jmp/bra
+                        NXPC+4;                   // normal flow
+
+        PC   <= RES ? RESET_PC : HLT ? PC : NXPC; // current program counter
     end
 
     // IO and memory interface
