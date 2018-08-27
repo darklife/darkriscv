@@ -190,10 +190,10 @@ module darkriscv
     // M-group of instructions (OPCODE==7'b0010011)
 
     wire [31:0] MDATA = FCT3==0 ? U1REG+SIMM :
-                        FCT3==1 ? U1REG<<S2PTR :
+                        FCT3==1 ? U1REG<<UIMM[4:0] :
                         FCT3==2 ? S1REG<SIMM?1:0 : // signed
                         FCT3==3 ? U1REG<UIMM?1:0 : // unsigned
-                        FCT3==5 ? (XIDATA[30] ? U1REG>>>S2PTR : U1REG>>S2PTR) :                        
+                        FCT3==5 ? (FCT7[5] ? U1REG>>>UIMM[4:0] : U1REG>>UIMM[4:0]) :
                         FCT3==4 ? U1REG^SIMM :
                         FCT3==6 ? U1REG|SIMM :
                         FCT3==7 ? U1REG&SIMM :                           
@@ -202,11 +202,11 @@ module darkriscv
 
     // R-group of instructions (OPCODE==7'b0110011)
                         
-    wire [31:0] RDATA = FCT3==0 ? (XIDATA[30] ? U1REG-U2REG : U1REG+U2REG) :
+    wire [31:0] RDATA = FCT3==0 ? (FCT7[5] ? U1REG-U2REG : U1REG+U2REG) :
                         FCT3==1 ? U1REG<<U2REG[4:0] :
                         FCT3==2 ? S1REG<S2REG?1:0 : // signed
                         FCT3==3 ? U1REG<U2REG?1:0 : // unsigned
-                        FCT3==5 ? (XIDATA[30] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
+                        FCT3==5 ? (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
                         FCT3==4 ? U1REG^U2REG :                        
                         FCT3==6 ? U1REG|U2REG :
                         FCT3==7 ? U1REG&U2REG :                        
