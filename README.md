@@ -102,7 +102,9 @@ the cache controller added. Of course, the shared bus and the external
 memory will add extra overhead, as well wait-states. In the tests I used
 only the blockRAM to simulate a unified memory with 3-wait-states. As long
 the instruction and data cache filling must share the same bus, the data
-operations are done before the instruction operation. 
+operations are done before the instruction operation and then the next 
+instruction is fetched. I am not sure this scheme is fully safe, but the 
+"hello world" code is working fine.
 
 In fact, when running the "hello world" code we get the following results:
 
@@ -172,3 +174,8 @@ glue-logic. The proposal in the future is implement in the SoC the cache
 feature in order to make possible connect the *darkriscv* to large external
 memories, as well make possible connect multiple *darkriscv* cores in a SMP
 configuration.
+
+One possible update for the future is integrate the cache controller in 
+the core, in a way is possible a better flow control. Currently, the only
+interface between the core and the cache controller is the sinal HLT, which
+is the same signal for instruction and data.
