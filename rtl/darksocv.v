@@ -212,11 +212,19 @@ module darksocv
 
     wire [7:0] UART = XFIFO[7:0];
 
+    reg WRX = 0;
+
     always@(negedge CLK)
-    begin
+    begin        
         if(WR&&DADDR[31])
-        begin
+        begin        
             XFIFO <= DATAO[31:0];
+            
+            // print the UART output to console! :)
+            if(DATAI[7:0]!=13)
+            begin
+                $write("%c",DATAO[7:0]);
+            end
         end
     end
 
