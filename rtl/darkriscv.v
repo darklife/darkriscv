@@ -172,7 +172,7 @@ module darkriscv
     wire [31:0] CDATA = 0;	// status register istructions not implemented yet
 
     // I-group (merged M/R-groups OPCODE==7'b0x10011
-
+/*
     wire signed [31:0] SOP2 = MCC ? SIMM : S2REG; // signed
     wire        [31:0] UOP2 = MCC ? UIMM : FCT3==0 && FCT7[5] ? -U2REG : U2REG; // unsigned
 
@@ -185,6 +185,32 @@ module darkriscv
                          FCT3==6 ? U1REG|UOP2 :
                          FCT3==7 ? U1REG&UOP2 :                           
                                    0;
+*/
+
+    // M-group of instructions (OPCODE==7'b0010011)
+
+    wire [31:0] MDATA = FCT3==0 ? U1REG+SIMM :
+                        FCT3==1 ? U1REG<<S2PTR :
+                        FCT3==2 ? S1REG<SIMM?1:0 : // signed
+                        FCT3==3 ? U1REG<UIMM?1:0 : // unsigned
+                        FCT3==5 ? (XIDATA[30] ? U1REG>>>S2PTR : U1REG>>S2PTR) :                        
+                        FCT3==4 ? U1REG^SIMM :
+                        FCT3==6 ? U1REG|SIMM :
+                        FCT3==7 ? U1REG&SIMM :                           
+                                  0;
+
+
+    // R-group of instructions (OPCODE==7'b0110011)
+                        
+    wire [31:0] RDATA = FCT3==0 ? (XIDATA[30] ? U1REG-U2REG : U1REG+U2REG) :
+                        FCT3==1 ? U1REG<<U2REG[4:0] :
+                        FCT3==2 ? S1REG<S2REG?1:0 : // signed
+                        FCT3==3 ? U1REG<U2REG?1:0 : // unsigned
+                        FCT3==5 ? (XIDATA[30] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
+                        FCT3==4 ? U1REG^U2REG :                        
+                        FCT3==6 ? U1REG|U2REG :
+                        FCT3==7 ? U1REG&U2REG :                        
+                                  0;
 
     // J/B-group of instructions (OPCODE==7'b1100011)
     
@@ -213,8 +239,8 @@ module darkriscv
                       JALR ? NXPC :
                        LUI ? SIMM :
                        LCC ? LDATA :
-                       MCC ? MRDATA : 
-                       RCC ? MRDATA : 
+                       MCC ? MDATA : 
+                       RCC ? RDATA : 
                        CCC ? CDATA : 
                              REG[DPTR];
         
