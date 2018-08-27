@@ -38,7 +38,7 @@ module darksimv;
     
     reg [3:0] RES = -1;
 
-    initial while(1) #(500e3/80e3) CLK = !CLK; // clock speed of 80MHz
+    initial while(1) #(500e3/50e3) CLK = !CLK; // clock speed of 80MHz
 
     always@(posedge CLK) RES <= RES ? RES-1 : 0;
 

@@ -71,18 +71,18 @@ LOAD hello.o
 .iplt
  *(.iplt)
 
-.text           0x0000000000000000      0x10c
+.text           0x0000000000000000       0xec
  *(.text.unlikely .text.*_unlikely .text.unlikely.*)
  *(.text.exit .text.exit.*)
  *(.text.startup .text.startup.*)
  *(.text.hot .text.hot.*)
  *(.text .stub .text.* .gnu.linkonce.t.*)
- .text          0x0000000000000000       0x38 boot.o
+ .text          0x0000000000000000       0x18 boot.o
                 0x0000000000000000                _start
- .text          0x0000000000000038       0xd4 hello.o
-                0x0000000000000038                putchar
-                0x0000000000000080                puts
-                0x00000000000000e0                main
+ .text          0x0000000000000018       0xd4 hello.o
+                0x0000000000000018                putchar
+                0x0000000000000060                puts
+                0x00000000000000c0                main
  *(.gnu.warning)
 
 .fini
@@ -91,9 +91,9 @@ LOAD hello.o
                 [!provide]                        PROVIDE (_etext = .)
                 [!provide]                        PROVIDE (etext = .)
 
-.rodata         0x000000000000010c        0xd
+.rodata         0x00000000000000ec        0xd
  *(.rodata .rodata.* .gnu.linkonce.r.*)
- .rodata        0x000000000000010c        0xd hello.o
+ .rodata        0x00000000000000ec        0xd hello.o
 
 .rodata1
  *(.rodata1)
@@ -120,7 +120,7 @@ LOAD hello.o
 
 .exception_ranges
  *(.exception_ranges .exception_ranges*)
-                0x0000000000001119                . = DATA_SEGMENT_ALIGN (CONSTANT (MAXPAGESIZE), CONSTANT (COMMONPAGESIZE))
+                0x00000000000010f9                . = DATA_SEGMENT_ALIGN (CONSTANT (MAXPAGESIZE), CONSTANT (COMMONPAGESIZE))
 
 .eh_frame
  *(.eh_frame)
@@ -135,7 +135,7 @@ LOAD hello.o
 .exception_ranges
  *(.exception_ranges .exception_ranges*)
 
-.tdata          0x0000000000001119        0x0
+.tdata          0x00000000000010f9        0x0
                 [!provide]                        PROVIDE (__tdata_start = .)
  *(.tdata .tdata.* .gnu.linkonce.td.*)
 
@@ -143,18 +143,18 @@ LOAD hello.o
  *(.tbss .tbss.* .gnu.linkonce.tb.*)
  *(.tcommon)
 
-.preinit_array  0x0000000000001119        0x0
+.preinit_array  0x00000000000010f9        0x0
                 [!provide]                        PROVIDE (__preinit_array_start = .)
  *(.preinit_array)
                 [!provide]                        PROVIDE (__preinit_array_end = .)
 
-.init_array     0x0000000000001119        0x0
+.init_array     0x00000000000010f9        0x0
                 [!provide]                        PROVIDE (__init_array_start = .)
  *(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*))
  *(.init_array EXCLUDE_FILE(*crtend?.o *crtend.o *crtbegin?.o *crtbegin.o) .ctors)
                 [!provide]                        PROVIDE (__init_array_end = .)
 
-.fini_array     0x0000000000001119        0x0
+.fini_array     0x00000000000010f9        0x0
                 [!provide]                        PROVIDE (__fini_array_start = .)
  *(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*))
  *(.fini_array EXCLUDE_FILE(*crtend?.o *crtend.o *crtbegin?.o *crtbegin.o) .dtors)
@@ -183,12 +183,12 @@ LOAD hello.o
 
 .dynamic
  *(.dynamic)
-                0x0000000000001119                . = DATA_SEGMENT_RELRO_END (., 0x0)
+                0x00000000000010f9                . = DATA_SEGMENT_RELRO_END (., 0x0)
 
-.data           0x0000000000001119        0x0
+.data           0x00000000000010f9        0x0
  *(.data .data.* .gnu.linkonce.d.*)
- .data          0x0000000000001119        0x0 boot.o
- .data          0x0000000000001119        0x0 hello.o
+ .data          0x00000000000010f9        0x0 boot.o
+ .data          0x00000000000010f9        0x0 hello.o
 
 .data1
  *(.data1)
@@ -199,37 +199,37 @@ LOAD hello.o
  *(.got)
  *(.igot)
 
-.sdata          0x0000000000001119        0x0
-                0x0000000000001919                __global_pointer$ = (. + 0x800)
+.sdata          0x00000000000010f9        0x0
+                0x00000000000018f9                __global_pointer$ = (. + 0x800)
  *(.srodata.cst16)
  *(.srodata.cst8)
  *(.srodata.cst4)
  *(.srodata.cst2)
  *(.srodata .srodata.*)
  *(.sdata .sdata.* .gnu.linkonce.s.*)
-                0x0000000000001119                _edata = .
+                0x00000000000010f9                _edata = .
                 [!provide]                        PROVIDE (edata = .)
-                0x0000000000001119                . = .
-                0x0000000000001119                __bss_start = .
+                0x00000000000010f9                . = .
+                0x00000000000010f9                __bss_start = .
 
 .sbss
  *(.dynsbss)
  *(.sbss .sbss.* .gnu.linkonce.sb.*)
  *(.scommon)
 
-.bss            0x0000000000001119        0x0
+.bss            0x00000000000010f9        0x0
  *(.dynbss)
  *(.bss .bss.* .gnu.linkonce.b.*)
- .bss           0x0000000000001119        0x0 boot.o
- .bss           0x0000000000001119        0x0 hello.o
+ .bss           0x00000000000010f9        0x0 boot.o
+ .bss           0x00000000000010f9        0x0 hello.o
  *(COMMON)
-                0x0000000000001119                . = ALIGN ((. != 0x0)?0x4:0x1)
-                0x000000000000111c                . = ALIGN (0x4)
-                0x000000000000111c                . = SEGMENT_START ("ldata-segment", .)
-                0x000000000000111c                . = ALIGN (0x4)
-                0x000000000000111c                _end = .
+                0x00000000000010f9                . = ALIGN ((. != 0x0)?0x4:0x1)
+                0x00000000000010fc                . = ALIGN (0x4)
+                0x00000000000010fc                . = SEGMENT_START ("ldata-segment", .)
+                0x00000000000010fc                . = ALIGN (0x4)
+                0x00000000000010fc                _end = .
                 [!provide]                        PROVIDE (end = .)
-                0x000000000000111c                . = DATA_SEGMENT_END (.)
+                0x00000000000010fc                . = DATA_SEGMENT_END (.)
 
 .stab
  *(.stab)

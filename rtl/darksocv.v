@@ -32,6 +32,8 @@
 
 // pseudo-soc for testing purposes
 
+`define CACHE_CONTROLLER 1
+
 module darksocv
 (
     input        CLK,   // host clock
@@ -45,29 +47,33 @@ module darksocv
     output [3:0]  DEBUG  // old-school oscilloscope debug
 );
 
-    reg [31:0] IDATA [0:511];  // instruction memory
-    reg [31:0] IDATAFF;
+`ifndef CACHE_CONTROLLER
+    reg [31:0] ROM [0:511]; 
+    reg [31:0] ROMFF;
+`endif
 
-    reg [31:0] DDATA [0:511];  // data memory
-    reg [31:0] DDATAFF;
+    reg [31:0] RAM [0:511];  // global memory
+    reg [31:0] RAMFF;
 
     // memory initialization
 
-    // TODO: add control register in order to the external
-    // host can control the darkriscv as a slave processor.
-
     integer i;
-    
     initial
     begin
         for(i=0;i!=512;i=i+1)
-        begin
-            IDATA[i] = 0;
-            DDATA[i] = 0;
+        begin        
+            RAM[i] = 32'dz;
         end
         
-        $readmemh("../src/darksocv.hex",IDATA);
-        $readmemh("../src/darksocv.hex",DDATA);
+        $readmemh("../src/darksocv.hex",RAM);
+`ifndef CACHE_CONTROLLER
+        for(i=0;i!=512;i=i+1)
+        begin        
+            ROM[i] = 32'dz;
+        end
+        
+        $readmemh("../src/darksocv.hex",ROM);
+`endif        
     end
     
     reg [1:0] RESFF;
@@ -77,66 +83,140 @@ module darksocv
     always@(posedge CLK)
     begin
         RESFF <= RESFF<<1 | RES;
-    
+        
         if(HWR)
         begin
-            if(HDADDR[31]) IDATA[HDADDR[8:0]] <= HDATAO;
-            else           DDATA[HDADDR[8:0]] <= HDATAO;
+            RAM[HDADDR[10:2]] <= HDATAO;
         end
         
-        IDATAFF <= IDATA[HDADDR[8:0]];
-        DDATAFF <= DDATA[HDADDR[8:0]];       
+        RAMFF <= RAM[HDADDR[10:2]];
     end
 
-    assign HDATAO =       !HRD ? 32'hzzzzzzzz : 
-                    HDADDR[31] ? IDATAFF : 
-                                 DDATAFF;
+    assign HDATAO = !HRD ? 32'hzzzzzzzz : RAMFF;
 
-    // darkriscv memory interface
+    // darkriscv cache interface
 
     wire [31:0] IADDR;
-    wire [31:0] DADDR;    
+    wire [31:0] DADDR;
+    wire [31:0] IDATA;    
     wire [31:0] DATAO;        
+    wire [31:0] DATAI;
     wire WR,RD;
+    
+`ifdef CACHE_CONTROLLER
+    // instruction cache
 
-    reg [31:0] IDATAFF2 = 0;
-    reg [31:0] DATAIFF2 = 0;
+    reg  [55:0] ICACHE [0:63]; // instruction cache
+    reg  [63:0] ITAG = 0;      // instruction cache tag
+    
+    wire [5:0]  IPTR    = IADDR[7:2];
+    wire [55:0] ICACHEO = ICACHE[IPTR];
+    wire [31:0] ICACHED = ICACHEO[31: 0]; // data
+    wire [31:8] ICACHEA = ICACHEO[55:32]; // address
+    
+    wire IHIT = ITAG[IPTR] && ICACHEA==IADDR[31:8];
+
+    // data cache
+
+    reg  [55:0] DCACHE [0:63]; // data cache
+    reg  [63:0] DTAG = 0;      // data cache tag
+
+    wire [5:0]  DPTR    = DADDR[7:2];
+    wire [55:0] DCACHEO = DCACHE[DPTR];
+    wire [31:0] DCACHED = DCACHEO[31: 0]; // data
+    wire [31:8] DCACHEA = DCACHEO[55:32]; // address
+
+    wire DHIT = RD ? DTAG[DPTR] && DCACHEA==DADDR[31:8] : 1;
+
+    // cache fill
+
+    reg [31:0] RAMFF2;
+    reg        WTAG    = 0;
+    reg [31:0] WCACHEA = 0;
+    
+    reg  FFX = 0;
+    reg FFX2 = 0;
+
+    wire [31:0] AFILL = (!DHIT||!WHIT) ? DADDR : IADDR;
+
+    wire WHIT = WR&&!DADDR[31] ? WTAG&&WCACHEA==DADDR : 1;
+
+    always@(negedge CLK)
+    begin
+        RAMFF2 <= RAM[AFILL[10:2]];
+
+        if(FFX2)
+        begin
+            FFX2 <= 0;
+            FFX  <= 0;
+        end
+        else
+        if(!DHIT)
+        begin
+            DCACHE[DPTR] <= { DADDR[31:8], RAMFF2 };
+            FFX          <= 1;
+            DTAG[DPTR]   <= FFX; // cached!
+            FFX2         <= FFX;
+        end        
+        else
+        if(!WHIT)
+        begin
+            RAM [AFILL[10:2]] <= DATAO; // write-through
+            
+            FFX          <= 1;
+            WCACHEA      <= DADDR;
+            DCACHE[DPTR] <= { DADDR[31:8], DATAO };
+            DTAG[DPTR]   <= FFX; // cached!
+            WTAG         <= FFX;
+            FFX2         <= FFX;
+        end
+        else
+        if(!IHIT)
+        begin
+            ICACHE[IPTR] <= { IADDR[31:8], RAMFF2 };
+            FFX          <= 1;
+            ITAG[IPTR]   <= FFX; // cached!
+            FFX2         <= FFX;
+        end
+    end
+    
+    assign DATAI = DADDR[31] ? 0 : DCACHED;
+    assign IDATA = ICACHED;
+`else
+    reg [31:0] ROMFF2;
+    reg [31:0] RAMFF2;
+    
+    wire IHIT=1;
+    wire DHIT=1;
+    wire WHIT=1;
+    
+    always@(negedge CLK)
+    begin
+        ROMFF2 <= ROM[IADDR[10:2]];
+        RAMFF2 <= RAM[DADDR[10:2]];
+   
+        if(WR&&!DADDR[31])
+        begin
+            RAM[DADDR[10:2]] <= DATAO;
+        end
+    end    
+    
+    assign DATAI = DADDR[31] ? 0 : RAMFF2;
+    assign IDATA = ROMFF2;
+`endif
+
+
+    // io for debug
         
     reg [31:0] XFIFO = 0; // UART TX FIFO
 
     wire [7:0] UART = XFIFO[7:0];
-    
-    // as long blockRAM read is delayed, *both* RAM and ROM must work in negative edge!
-    
-    reg [3:0] IWAIT = 0;
-    reg [3:0] DWAIT = 0;
-
-    // example: variable 16-byte aligned cache miss/hit w/ 3 wait-states
-    // the wait-state for instruction and data can be actived in any random order.
-
-    always@(negedge CLK) 
-    begin
-        //IWAIT <= RESFF[1] ? -1 : IWAIT ? IWAIT-1 :     IWAIT==0&&IADDR[3:0]==0 ? 2 : 0; // i-cache wait-state
-        //DWAIT <= RESFF[1] ? -1 : DWAIT ? DWAIT-1 : RD&&DWAIT==0&&DADDR[3:0]==0 ? 2 : 0; // d-cache wait-state    
-    end
 
     always@(negedge CLK)
     begin
-        IDATAFF2 <= IDATA[IADDR[10:2]];   
-        DATAIFF2 <= DDATA[DADDR[10:2]];
-        
-        if(WR)
+        if(WR&&DADDR[31])
         begin
-            if(DADDR[31]==0)
-            begin
-                DDATA[DADDR[10:2]] <= DATAO;
-            end
-            else
-            begin
-                XFIFO <= DATAO[31:0]; // dummy UART            
-            end
-        
-            //$display("WR: %c at %x",DATAO,DADDR);
+            XFIFO <= DATAO[31:0];
         end
     end
 
@@ -149,16 +229,16 @@ module darksocv
     darkriscv
     #(
         .RESET_PC(0),
-        .RESET_SP(4096)        
+        .RESET_SP(2048)        
     ) 
     core0 
     (
         .CLK(CLK),
         .RES(RESFF[1]),        
-        .HLT(IWAIT||DWAIT||XFIFO==32'hdeadbeef),
-        .IDATA(IDATAFF2),
-        .IADDR(IADDR),        
-        .DATAI(DADDR[31] ? 0 : DATAIFF2), // UART vs. RAM        
+        .HLT(!IHIT||!DHIT||!WHIT),
+        .IDATA(IDATA),
+        .IADDR(IADDR),
+        .DATAI(DATAI), // UART vs. RAM        
         .DATAO(DATAO),
         .DADDR(DADDR),        
         .WR(WR),

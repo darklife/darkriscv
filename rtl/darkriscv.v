@@ -138,7 +138,7 @@ module darkriscv
     reg [31:0] REG [0:31];	// general-purpose 32x32-bit registers
 
     integer i; 
-    initial for(i=0;i!=32;i=i+1) REG[i] = i ? 32'dz : 0; // makes the simulation looks better!
+    initial for(i=0;i!=32;i=i+1) REG[i] = 0; // makes the simulation looks better!
 
     // source-1 and source-1 register selection
 

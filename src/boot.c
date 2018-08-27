@@ -41,8 +41,6 @@ void _start(void)
    */
      
   main();
-  
-  // halt the processor:
-  
-  *((volatile int *)0x80000000) = 0xdeadbeef;
+
+  while(1);  
 }

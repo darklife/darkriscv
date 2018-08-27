@@ -92,9 +92,36 @@ devices available in the ISE:
 - Kintex-7: 	167MHz
 
 Of course, the above numbers always change according to the logic around the
-*darkriscv*, which means that numbers are just an approximation.  Just for
+*darkriscv*, which means that numbers are just an approximation. Just for
 curiosity, the spartan-3e model 100 costs 12$ (octopart.com) and the
 *darkriscv* uses 86% of the FPGA capacity.
+
+In the first implementation, the cache controller reduces the performance by
+around 30%, which means that the 75MHz core will run only with 50MHz with
+the cache controller added. Of course, the shared bus and the external
+memory will add extra overhead, as well wait-states. In the tests I used
+only the blockRAM to simulate a unified memory with 3-wait-states. As long
+the instruction and data cache filling must share the same bus, the data
+operations are done before the instruction operation. 
+
+In fact, when running the "hello world" code we get the following results:
+
+- darkriscv@75MHz -cache -wait-states: 6.040us
+- darkriscv@50MHZ +cache +wait-states: 13.84us
+
+As long the code is very small and fits entirely in the cache: the code is
+almost all cached after 3.7us and the data after 3.0us. As long the
+*darkriscv* uses a write through scheme, the write operations always
+require 3-wait-states. According to the "hello world" test, the version with
+cache controller is 50% worst, but it is probably better than always insert
+wait states regarding an slow external memory.
+
+In the case, we have 3 wait states at 50MHz, which means a memory working
+at around 16MHz. In the case of the *darkriscv* clocked at 75MHz, we need
+probably 5 wait states, which results in a theorical performance of around 30us
+to run the "hello world" test. This means that the *darkriscv* w/ cache
+controller running at 50MHz and 3 wait states is more than 2x faster than a
+*darkriscv* w/o cache controller running at 75MHz and with 5 wait states.
 
 ## Development Tools (gcc)
 
@@ -141,7 +168,7 @@ world!" in the XFIFO).
 
 At the moment, the *darksocv* is not so relevant and the only function is
 provide support for the instruction and data memories, as well some related
-glue-logic.  the proposal in the future is implement in the SoC the cache
+glue-logic. The proposal in the future is implement in the SoC the cache
 feature in order to make possible connect the *darkriscv* to large external
 memories, as well make possible connect multiple *darkriscv* cores in a SMP
 configuration.
