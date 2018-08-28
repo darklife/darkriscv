@@ -44,6 +44,17 @@
 `define FCC     7'b0001111
 `define CCC     7'b1110011
 
+// pipeline stages:
+// 
+// 2-stages: core and memory in different clock edges result in less clock performance, but
+// less losses when the program counter changes (pipeline flush = 1 clock). Works like a 4-stage
+// pipeline and remember the 68040 clock scheme.
+// 
+// 3-stages: core and memory in the same clock edge result in more clock performance, but
+// more losses when the program counter changes (pipeline flush = 2 clocks).
+    
+`define STAGE3
+
 module darkriscv
 #(
     parameter [31:0] RESET_PC = 0,
@@ -71,8 +82,8 @@ module darkriscv
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
 
-    reg FLUSH = 1;  // flush instruction pipeline 
-
+    reg [1:0] FLUSH;  // flush instruction pipeline 
+    
     // IDATA is break apart as described in the RV32I specification
 
     reg [31:0] XIDATA;
@@ -133,8 +144,10 @@ module darkriscv
     wire    FCC = OPCODE==7'b0001111; //FCT3
     wire    CCC = OPCODE==7'b1110011; //FCT3
 
-    reg [31:0] NXPC;        // 32-bit look-ahead program counter
-    reg [31:0] PC;		    // 32-bit program counter
+    reg [31:0] NXPC2;       // 32-bit program counter t+2
+    reg [31:0] NXPC;        // 32-bit program counter t+1
+    reg [31:0] PC;		    // 32-bit program counter t+0
+    
     reg [31:0] REG [0:31];	// general-purpose 32x32-bit registers
 
     integer i; 
@@ -227,10 +240,16 @@ module darkriscv
     wire [31:0] JVAL = SIMM + (JALR ? U1REG : PC);
             
     always@(posedge CLK)
-    begin    
+    begin
+`ifdef STAGE3
+
+        FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt
+                       FLUSH ? FLUSH-1 : 
+                       (JAL||JALR||BMUX||RES) ? 2 : 0;  // flush the pipeline!
+`else
         FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
                        (JAL||JALR||BMUX||RES);  // flush the pipeline!
-
+`endif
         REG[DPTR] <=   RES ? RESET_SP  :        // reset sp
                        HLT ? REG[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
@@ -243,12 +262,35 @@ module darkriscv
                        RCC ? RDATA : 
                        CCC ? CDATA : 
                              REG[DPTR];
+
+`ifdef STAGE3
+
+        NXPC <= RES ? RESET_PC : HLT ? NXPC : NXPC2;
         
-        NXPC <=   RES ? RESET_PC : HLT ? NXPC :   // reset and halt
+        NXPC2 <=  RES ? RESET_PC : HLT ? NXPC2 :   // reset and halt
                  JREQ ? JVAL :                    // jmp/bra
-                        NXPC+4;                   // normal flow
+                        NXPC2+4;                   // normal flow
+`else
+        NXPC <= RES ? RESET_PC : HLT ? NXPC :   // reset and halt
+              JREQ ? JVAL :                   // jmp/bra
+                     NXPC+4;                   // normal flow
+`endif
 
         PC   <= RES ? RESET_PC : HLT ? PC : NXPC; // current program counter
+
+`ifdef DEBUG
+        if(PC=4)                $display("pipeline stages=%d",     STAGES);
+        if(OPCODE[6:0]==`LUI)   $display("%08x: %08x %08x lui",    PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`AUIPC) $display("%08x: %08x %08x auipc",  PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`JAL)   $display("%08x: %08x %08x jal",    PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`JALR)  $display("%08x: %08x %08x jalr",   PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`BCC)   $display("%08x: %08x %08x bcc",    PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`LCC)   $display("%08x: %08x %08x lcc",    PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`SCC)   $display("%08x: %08x %08x scc",    PC,XIDATA,OPCODE);
+        if(OPCODE[6:0]==`MCC)   $display("%08x: %08x %08x mcc",    PC,XIDATA,OPCODE);        
+        if(OPCODE[6:0]==`RCC)   $display("%08x: %08x %08x rcc",    PC,XIDATA,OPCODE);                
+        if(OPCODE[6:0]==0)      $display("%08x: %08x %08x flush",  PC,XIDATA,OPCODE);                
+`endif        
     end
 
     // IO and memory interface
@@ -257,9 +299,12 @@ module darkriscv
     assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
     assign RD = LCC;
     assign WR = SCC;
-
+`ifdef STAGE3
+    assign IADDR = NXPC2;
+`else
     assign IADDR = NXPC;
-        
+`endif        
+
     assign DEBUG = { RES, FLUSH, WR, RD };
 
 endmodule

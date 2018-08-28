@@ -33,6 +33,7 @@
 // pseudo-soc for testing purposes
 
 `define CACHE_CONTROLLER 1
+//`define STAGE3           1
 
 module darksocv
 (
@@ -83,6 +84,16 @@ module darksocv
     always@(posedge CLK)
     begin
         RESFF <= RESFF<<1 | RES;
+        
+        if(^RESFF)
+        begin
+`ifdef CACHE_CONTROLLER        
+            $display("cache controller active");
+`endif
+`ifdef STAGE3
+            $display("3-stage pipeline active");
+`endif        
+        end
         
         if(HWR)
         begin
@@ -141,7 +152,7 @@ module darksocv
 
     wire WHIT = WR&&!DADDR[31] ? WTAG&&WCACHEA==DADDR : 1;
 
-    always@(negedge CLK)
+    always@(posedge CLK)
     begin
         RAMFF2 <= RAM[AFILL[10:2]];
 
@@ -190,7 +201,9 @@ module darksocv
     wire DHIT=1;
     wire WHIT=1;
     
-    always@(negedge CLK)
+    //always@(negedge CLK) ROMFF2 <= ROM[IADDR[10:2]];
+    
+    always@(posedge CLK)
     begin
         ROMFF2 <= ROM[IADDR[10:2]];
         RAMFF2 <= RAM[DADDR[10:2]];
@@ -214,7 +227,7 @@ module darksocv
 
     reg WRX = 0;
 
-    always@(negedge CLK)
+    always@(posedge CLK)
     begin        
         if(WR&&DADDR[31])
         begin        
@@ -237,11 +250,15 @@ module darksocv
     darkriscv
     #(
         .RESET_PC(0),
-        .RESET_SP(2048)        
+        .RESET_SP(2048)
     ) 
     core0 
     (
+`ifdef STAGE3   
         .CLK(CLK),
+`else
+        .CLK(!CLK),
+`endif         
         .RES(RESFF[1]),        
         .HLT(!IHIT||!DHIT||!WHIT),
         .IDATA(IDATA),

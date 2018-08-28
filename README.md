@@ -108,7 +108,7 @@ instruction is fetched. I am not sure this scheme is fully safe, but the
 
 In fact, when running the "hello world" code we get the following results:
 
-- darkriscv@75MHz -cache -wait-states: 6.040us
+- darkriscv@75MHz -cache -wait-states:  6.40us
 - darkriscv@50MHZ +cache +wait-states: 13.84us
 
 As long the code is very small and fits entirely in the cache: the code is
@@ -124,6 +124,26 @@ probably 5 wait states, which results in a theorical performance of around 30us
 to run the "hello world" test. This means that the *darkriscv* w/ cache
 controller running at 50MHz and 3 wait states is more than 2x faster than a
 *darkriscv* w/o cache controller running at 75MHz and with 5 wait states.
+
+Additional tests with a modified *darkriscv* with true 3-stage pipeline:
+
+- 1st. stage: instruction pre-fetch (no operation other than cache)
+- 2nd. stage: instruction "static" decode (no register or memory read here!)
+- 3rt. stage: instruction execution (register/memory read/write)
+
+The clock improved from 50MHz to 75MHz running with the cache
+controller and from 75 to 90MHz running without the cache controller.
+
+Unfortunately, the extra stage means that the pipeline flush changes from 1
+clock to 2 clocks, which means longer delays to refill the pipeline. As
+result, the 3-stage pipeline version produced the following result in the
+hello world code:
+
+- darkrisc@75MHz +cache +wait-states: 9.37us
+
+In my opinion, this is a very good result! Unfortunately, at this moment the
+the 3-stage pipeline does not work in the scenario with no external cache 
+controller.
 
 ## Development Tools (gcc)
 
