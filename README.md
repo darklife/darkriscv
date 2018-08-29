@@ -44,7 +44,7 @@ The main motivation for the *darkriscv* is create a migration path for
 some projects around the 680x0/coldfire family. My first approach was check
 around for some softcores and, after lots of tests, I found the *picorv32* 
 and the all the ecosystem around the RISC-V. Although a very good option 
-to directly replace the 680x0 familfy, the *picorv32* may be not powerful
+to directly replace the 680x0 family, the *picorv32* may be not powerful
 enough to replace some coldfire processors.
 
 The main problem around the *picorv32* is that most instructions requires 
@@ -58,7 +58,7 @@ execute the first instructions correctly at 75MHz and with one clock
 per instruction, which resembles a fast and nice 68040! wow! :)
 
 The RV32I specification itself is really impressive and easy 
-to implement (see [1], page 16). Of course, tehre are some drawbacks, such 
+to implement (see [1], page 16). Of course, there are some drawbacks, such 
 as the funny little-endian bus (opposed to the network oriented big-endian 
 bus found  in the 680x0 family), but after some empirical tests it is easy 
 to make work.
@@ -67,8 +67,8 @@ The initial design was very simple, with a 2-stage pipeline composed by
 the instruction pre-fetch and the instruction execution. In the pre-fetch
 side, there is program counter always working one clock ahead. In the 
 execution side we found all decoding, register bank read, arithmetic and
-logic operations, register bank write and IO opertions. As long the 2 stages
-are overlaped, the result is a continous flow of instructions at the 
+logic operations, register bank write and IO operations. As long the 2 stages 
+overlap, the result is a continuous flow of instructions at the 
 rate of 1 clock per instruction and around 75MIPS.
 
 This means that when comparing with the *picorv32* running at 150MHz and
@@ -84,7 +84,7 @@ blockRAM is that two clocks are required to readback the memory: one clock
 to register the address and another to register the data. External memories
 requires lots of clocks.
 
-My fist solution was use two different clock edges: one edge for the *darkriscv* 
+My first solution was use two different clock edges: one edge for the *darkriscv* 
 and another edge for the memory/bus interface.
 
 In this case the processor with a 2-stage pipeline works like a 2\*0.5+1-stage pipeline:
@@ -101,7 +101,7 @@ two different stages, working as a 4\*0.5-stage pipeline:
 - 1/2 stage for execution and address generation
 - 1/2 stage for data read/write
 
-In normal conditions, this is not recomended because decreases the performance
+In normal conditions, this is not recommended because decreases the performance
 by a 2x factor, but in the case of *darkriscv* the performance is always limited
 by the combinational logic regarding the instruction execution. 
 
@@ -118,9 +118,9 @@ Although is possible use the *darkriscv* directly connected to at least two
 blockRAM memories (one for instruction and another for data) working in the opposite
 clock edge and and deterministically keep a very good performance of 1 clock per
 instruction most of time at 75MHz, the most useful configuration is use a cache 
-controller. In this case, is possible use large multimegabyte memories with lots 
+controller. In this case, is possible use large multi-megabyte memories with lots 
 of wait-states and, at same time, reach a peak performance of 1 clock per instruction 
-when the instructios and data are already cached. Of course, the cache controller 
+when the instructions and data are already cached. Of course, the cache controller 
 impact the performance, reducing the clock from 75MHz to 50MHz and inserting lots of
 wait-states in the cache filling cycles.
 
@@ -130,7 +130,7 @@ work with a real 3-stage pipeline:
 
 - 1st stage: instruction pre-fetch (no operation other than cache)
 - 2nd stage: instruction decode (no register or memory read here!)
-- 3rt stage: instruction execution (register/memory read/write)
+- 3rd stage: instruction execution (register/memory read/write)
 
 Of course, this is not solution for the load/store problem... the probably solution
 is increase the pipeline to 4-stages, spliting the 3rd. stage in a read/write
@@ -205,7 +205,7 @@ separation between the instruction and data blocks!
 
 When the cache controller is activated, the cache controller provides separate
 memories for instruction and data, but provides a interface for a more 
-convenctional von neuman memory architecture.
+conventional von neumann memory architecture.
 
 In both cases, a proper designed linker script probably solves the problem!
 
@@ -218,7 +218,7 @@ In both cases, a proper designed linker script probably solves the problem!
 - tmp: empty, but the ISE will create lots of files here)
 
 The *ise* directory contains the *xise* project file to be open in the Xilinx
-ISE 14.x and the project is assembled in a way that all files are reasily loaded. 
+ISE 14.x and the project is assembled in a way that all files are readily loaded. 
 
 Although a *ucf* file is provided in order to generate a complete build, the 
 FPGA is NOT wired in any particular configuration and you must add the pins
