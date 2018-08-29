@@ -1,33 +1,33 @@
 # DarkRISCV
-Open source RISC-V implemented from scratch in one night!
+Opensource RISC-V implemented from scratch in one night!
 
 ## Introduction
 
-Developed in a magic night of 19 Aug, 2018 (between 2am and 8am) the
-*darkriscv* is a very, very experimental implementation of the RISC-V
-instruction set. Nowadays, after one week, the *darkriscv* reached a high
-quality result, in a way that the "hello world" compiled by the gcc is 
-working fine!
+Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
+*darkriscv* is a very experimental implementation of the opensource RISC-V
+instruction set. Nowadays, after one week of work, the *darkriscv* reached a 
+very good quality result, in a way that the "hello world" compiled by the 
+standard riscv-elf-gcc is working fine!
 
 The general concept is based in my other early RISC processors and composed 
 by a simplified two stage pipeline where a instruction is fetch from a
-instruction memory in the first clock and decoded/executed in the second
+instruction memory in the first clock and then decoded/executed in the second
 clock. The pipeline is overlapped without interlocks, in a way the
-*darkriscv* can reach the performance of one instruction per clock most of
-time (the exception is after a branch, where the pipeline is flushed).  As
-addition, the code is very compact, with around two hundred lines of Verilog
-code.
+*darkriscv* can reach the performance of one clock per instruction most 
+of time (the exception is after a branch, where the pipeline is flushed and 
+one clock is lost).  As addition, the code is very compact, with around two 
+hundred lines of obfuscated but beautiful Verilog code.
 
-Although the code is small and crude when compared with other RISC-V
-implementations, the *darkriscv* has lots of impressive features:
+Although the code is small and crude when compared with other RISC-V implementations, 
+the *darkriscv* has lots of impressive features:
 
 - implements most of the RISC-V RV32I instruction set
-- works up to 75MHz and reach 1 instruction/clock most of time
-- uses only 2 blockRAMs: one for instruction and another one for data
-- uses only around 1000 LUTs (spartan-6)
-- working fine in a real spartan-6 lx9 after one week of development
-- working fine with gcc 9.0.0 for RISC-V (no patches required!)
-- flexible harvard architecture
+- works up to 75MHz and sustain 1 clock per instruction most of time
+- flexible harvard architecture (easy to integrate a cache controller)
+- works fine in a real spartan-6 lx9 after one week of development
+- works fine with gcc 9.0.0 for RISC-V (no patches required!)
+- uses only around 1000 LUTs (spartan-6, core only)
+- and the best feature: BSD license
 
 Feel free to make suggestions and good hacking! o/
 
@@ -37,53 +37,69 @@ Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the
 project is currently based in the Xilinx ISE 14.4 for Linux.  However, no
 explicit references for Xilinx elements are done and all logic is inferred
 directly from Verilog, which means that the project is easily portable to
-any other FPGA families.
+other FPGA families and easily portable to other environments.
 
-One interesting fact is that although the *darkriscv* is 3x more efficient
-when compared with *picorv32* (1 vs 3 clocks per instruction), the last one
-is more heavily pipelined and can reach a clock 2x faster (75MHz vs 150MHz). 
-Anyway, this means that the *darkriscv* is 1.5x faster than the *picorv32*
-(75MIPS vs 50MIPS).  As long the motivation around the *darkriscv* is
-replace some 680x0 and Coldfire processors, the performance of 75MIPS is
-good enough for me. Due to the way that the bus is designed, the *picorv32*
-works in a similar way to a 68020 or 68030 with an asynchronous bus and the
-*darkriscv* works like a 68040 with a synchronous bus. 
+The main motivation for the *darkriscv* is create a migration path for 
+some projects around the 680x0/coldfire family. My first approach was check
+around for some softcores and, after lots of tests, I found the *picorv32* 
+and the all the ecosystem around the RISC-V. Although a very good option 
+to directly replace the 680x0 familfy, the *picorv32* may be not powerful
+enough to replace some coldfire processors.
 
-Sometimes this is good, sometimes not so good...  Unfortunately, the problem
-regarding the bus is that the blockRAM requires two cycles in order to dump
-the data, one clock to register the address and another clock to register de
-data. In the case of *darkriscv* this is a problem and the current
-workaround is set the blockRAMs to work in the opposite edge clock, which is
-not so good, but works. In some sense, it is equivalent to say that the 
-*darkriscv* have a pipeline with 1 + 2x1/2 stages:
+The main problem around the *picorv32* is that most instructions requires 
+3 or 4 clocks per instruction, which resembles the 68020 in some ways, but 
+running at 150MHz. Anyway, with 3 clocks per instruction, the peak 
+performance is around 50MIPS only. As long I had some good experience with
+experimental RISC cores, I started code the *darkriscv* only to check the
+level of complexity. For my surprise, in the first night I mapped almost all
+instructions of the RV32I specification and the *darkriscv* started to 
+execute the first instructions correctly at 75MHz and with one clock 
+per instruction.
+
+The initial design was very simple, with a 2-stage pipeline composed by 
+the instruction pre-fetch and the instruction execution. In the pre-fetch
+side, there is program counter always working one clock ahead. In the 
+execution side we found all decoding, register bank read, arithmetic and
+logic operations, register bank write and IO opertions. As long the 2 stages
+are overlaped, the result is a continous flow of instructions at the 
+rate of 1 clock per instruction and around 75MIPS.
+
+This means that when comparing with the *picorv32* running at 150MHz and
+with 3 clocks per instruction, the *darkriscv* at 75MHz and 1 clock per
+instruction is 50% faster.
+
+Unfortunately, I had a small problem with the load instruction: the 1 stage
+execution needs faster external memory! This is not a problem for my early RISC
+processors, which used small and faster LUT-based memories, but in the case
+of *darkriscv* the proposal was a more flexible design, in a way is possible
+use blockRAM-based caches and slow external memories. The problem with the 
+blockRAM is that two clocks are required to readback the memory: one clock 
+to register the address and another to register the data. External memories
+requires lots of clocks.
+
+My fist solution was use two different clock edges: one edge for the *darkriscv* 
+and another edge for the memory/bus interface.
+
+In this case the processor with a 2-stage pipeline works like a 2\*0.5+1-stage pipeline:
 
 - 1/2 stage for instruction pre-fetch
 - 1/2 stage for static instruction decode
-- 1 stage for decode and execution
+- 1 stage for instruction execution
 
-Except in the case of load/store, which uses 2x1/2 stages:
+In the special case of load/store instructions, the last stage is divided in 
+two different stages, working as a 4\*0.5-stage pipeline:
 
 - 1/2 stage for instruction pre-fetch
 - 1/2 stage for static instruction decode
-- 1/2 stage for decode and execution
-- 1/2 state for data read
+- 1/2 stage for execution and address generation
+- 1/2 stage for data read/write
 
-When working only with positive edge of clock, the performance increases 
-from 75 to 100MHz, but one wait-state will be required for the bus, which means
-that the final performance decreases from 75MIPS to 50MIPS.
+In normal conditions, this is not recomended because decreases the performance
+by a 2x factor, but in the case of *darkriscv* the performance is always limited
+by the combinational logic regarding the instruction execution. 
 
-After some work, the *darkriscv* supports a variable number of wait-states
-between 0 and n. Although is possible work with memories in the positive
-edge of clock by inserting one wait-state, the performance in this case
-decreases from 1 instruction per clock to 0.5 instructions per clock.
-
-For my surprise, after lots of years working only with big-endian
-architectures, I found that the RISC-V is a little-endian architecture!  I
-am not sure the implementation is correct, but it appears to be working
-without problems!
-
-Additional performance results (synthesis only) for other Xilinx
-devices available in the ISE:
+As reference, here some additional performance results (synthesis only) for 
+other Xilinx devices available in the ISE:
 
 - Spartan-3e:	47MHz
 - Spartan-6: 	75MHz
@@ -91,67 +107,50 @@ devices available in the ISE:
 - Virtex-6: 	137MHz
 - Kintex-7: 	167MHz
 
-Of course, the above numbers always change according to the logic around the
-*darkriscv*, which means that numbers are just an approximation. Just for
-curiosity, the spartan-3e model 100 costs 12$ (octopart.com) and the
-*darkriscv* uses 86% of the FPGA capacity.
+Although is possible use the *darkriscv* directly connected to at least two
+blockRAM memories (one for instruction and another for data) working in the opposite
+clock edge and and deterministically keep a very good performance of 1 clock per
+instruction most of time at 75MHz, the most useful configuration is use a cache 
+controller. In this case, is possible use large multimegabyte memories with lots 
+of wait-states and, at same time, reach a peak performance of 1 clock per instruction 
+when the instructios and data are already cached. Of course, the cache controller 
+impact the performance, reducing the clock from 75MHz to 50MHz and inserting lots of
+wait-states in the cache filling cycles.
 
-In the first implementation, the cache controller reduces the performance by
-around 30%, which means that the 75MHz core will run only with 50MHz with
-the cache controller added. Of course, the shared bus and the external
-memory will add extra overhead, as well wait-states. In the tests I used
-only the blockRAM to simulate a unified memory with 3-wait-states. As long
-the instruction and data cache filling must share the same bus, the data
-operations are done before the instruction operation and then the next 
-instruction is fetched. I am not sure this scheme is fully safe, but the 
-"hello world" code is working fine.
+Well, in order to bypass this performance limitation, the most logic step is 
+increase the number of states. In this case, the *darkriscv* have the option to 
+work with a real 3-stage pipeline:
 
-In fact, when running the "hello world" code we get the following results:
+- 1st stage: instruction pre-fetch (no operation other than cache)
+- 2nd stage: instruction decode (no register or memory read here!)
+- 3rt stage: instruction execution (register/memory read/write)
 
-- darkriscv@75MHz -cache -wait-states:  6.40us
-- darkriscv@50MHZ +cache +wait-states: 13.84us
+Of course, this is not solution for the load/store problem... the probably solution
+is increase the pipeline to 4-stages, spliting the 3rd. stage in a read/write
+stage. Although possible, this step adds some confusion, as long requires 
+additional logic in order to interlock the pipeline when one instruction in the
+3.rd stage uses a result from another instruction in the 4.th stage. However, with 
+the cache controller, the 3-stage pipeline works pretty well and I guess is
+possible add some fixes in the future in order to make it more flexible.
 
-As long the code is very small and fits entirely in the cache: the code is
-almost all cached after 3.7us and the data after 3.0us. As long the
-*darkriscv* uses a write through scheme, the write operations always
-require 3-wait-states. According to the "hello world" test, the version with
-cache controller is 50% worst, but it is probably better than always insert
-wait states regarding an slow external memory.
+In fact, when running the "hello world" code we have the following results:
 
-In the case, we have 3 wait states at 50MHz, which means a memory working
-at around 16MHz. In the case of the *darkriscv* clocked at 75MHz, we need
-probably 5 wait states, which results in a theorical performance of around 30us
-to run the "hello world" test. This means that the *darkriscv* w/ cache
-controller running at 50MHz and 3 wait states is more than 2x faster than a
-*darkriscv* w/o cache controller running at 75MHz and with 5 wait states.
+- darkriscv@75MHz -cache -wait-states 2-stage pipeline 2-phase clock:  6.40us
+- darkriscv@75MHz +cache +wait-states 3-stage pipeline 1-phase clock:  9.37us
+- darkriscv@50MHz +cache +wait-states 2-stage pipeline 2-phase clock: 13.84us
 
-Additional tests with a modified *darkriscv* with true 3-stage pipeline:
-
-- 1st. stage: instruction pre-fetch (no operation other than cache)
-- 2nd. stage: instruction "static" decode (no register or memory read here!)
-- 3rt. stage: instruction execution (register/memory read/write)
-
-The clock improved from 50MHz to 75MHz running with the cache
-controller and from 75 to 90MHz running without the cache controller.
-
-Unfortunately, the extra stage means that the pipeline flush changes from 1
-clock to 2 clocks, which means longer delays to refill the pipeline. As
-result, the 3-stage pipeline version produced the following result in the
-hello world code:
-
-- darkrisc@75MHz +cache +wait-states: 9.37us
-
-In my opinion, this is a very good result! Unfortunately, at this moment the
-the 3-stage pipeline does not work in the scenario with no external cache 
-controller.
+Although the first configuration reaches the best performance, the second 
+configuration is probably the most realistic at this time!
 
 ## Development Tools (gcc)
 
-About the compiler, I am working with the experimental gcc 9.0.0 for RISC-V
-(no patches or updates are required for the *darkriscv*, as long the gcc
-appears to no use some missing features).  Although is possible use the
-compiler set available in the oficial RISC-V site, our colleagues from
-lowRISC pointed a more clever way to build the toolchain:
+About the gcc compiler, I am working with the experimental gcc 9.0.0 for 
+RISC-V. No patches or updates are required for the *darkriscv* other than the 
+-march=rv32i. Although the fence* and crg* instructions are not implemented, the gcc
+appears to not use of that instructions and they are not available in the core.  
+
+Although is possible use the compiler set available in the oficial RISC-V site, 
+our colleagues from *lowRISC* project pointed a more clever way to build the toolchain:
 
 https://www.lowrisc.org/blog/2017/09/building-upstream-risc-v-gccbinutilsnewlib-the-quick-and-dirty-way/
 
@@ -174,47 +173,73 @@ Basically:
 	export PATH=$PATH:/usr/local/share/gcc-riscv32-unknown-elf/bin/
 	riscv32-unknown-elf-gcc -v
 
+and everything will magically work! (:
+
 Finally, as long the *darkriscv* is not yet fully tested, sometimes is a
-very good idea compare the code execution with another stable reference and
-I am working with the project *picorv32*:
+very good idea compare the code execution with another stable reference!
+
+In this case, I am working with the project *picorv32*:
 
 https://github.com/cliffordwolf/picorv32
 
-Maybe the most complex issue is the memory design. Of course, it is a gcc
-issue and it is not even a problem, in fact, is the way that the software
-guys works when linking the code and data! As long the early version of
-*darkriscv* does not include support for a unified code and data memory,
-the ROM and RAM must be loaded with the same code generated by the gcc,
-which is sometimes confusing to make work.
+When I have some time, I will try create a more well organized support in order 
+to easily test both the *darkriscv* and *picorv32* in the same cache, memory
+and IO sub-systems, in order to make possible select the core according to the
+desired features, for example, use the *darkriscv* for more performance or *picorv32* 
+for more features.
+
+About the software, the most complex issue is make the memory design match 
+with the linker layout. Of course, it is a gcc issue and it is not even a problem, 
+in fact, is the way that the software guys works when linking the code and data! 
+
+In the most simplified version, directly connected to blockRAMs, the 
+*darkriscv* is a pure harvard architecture processor and will requires the 
+separation between the instruction and data blocks!
+
+When the cache controller is activated, the cache controller provides separate
+memories for instruction and data, but provides a interface for a more 
+convenctional von neuman memory architecture.
+
+In both cases, a proper designed linker script probably solves the problem!
 
 ## Directory Description
 
-- ise: the ISE project files (xise and ucf)
-- rtl: the source for the core and soc
-- sim: the simulation to test the soc
-- src: the source code for the test firmware (hello.c)
-- tmp: the ISE working directory (you need to create it!)
+- ise: the ISE project and configuration files (xise, ucf, etc)
+- rtl: the source for the core and the test SoC
+- sim: the simulation to test the core and the SoC
+- src: the source code for the test firmware (hello.c, boot.c, etc)
+- tmp: empty, but the ISE will create lots of files here)
 
 The *ise* directory contains the *xise* project file to be open in the Xilinx
-ISE 14.x and the project is assembled in a way that all files are loaded. 
-The ISE will ask about a missing *tmp* directory, just click in *Create* and
-the directory will be created.  Although a *ucf* file is provided, the the
-FPGA is not wired in any particular configuration.  Anyway, as long the
-project is open, is possible build the FPGA or simulate.  The simulation
-will show some waveforms and is possible check the XFIFO port in the top
-level for debug information (the hello.c code prints the string "hello
-world!" in the XFIFO).
+ISE 14.x and the project is assembled in a way that all files are reasily loaded. 
 
-## Future Work
+Although a *ucf* file is provided in order to generate a complete build, the 
+FPGA is NOT wired in any particular configuration and you must add the pins
+regarding your FPGA board! Anyway, although not wired, the build always gives 
+you a good  estimation about the FPGA utilization and about the timing.
+
+The simulation, in the other hand will show some waveforms and is possible 
+check the *darkriscv* operation when running the example code. The hello.c code 
+prints the string "hello world!" in console and also in the UART register 
+located in the SoC. In the future I will provide a real UART logic in order
+to test the *darkriscv* in a real FPGA.
+
+## DarkSoC and Future Work
 
 At the moment, the *darksocv* is not so relevant and the only function is
-provide support for the instruction and data memories, as well some related
-glue-logic. The proposal in the future is implement in the SoC the cache
-feature in order to make possible connect the *darkriscv* to large external
-memories, as well make possible connect multiple *darkriscv* cores in a SMP
-configuration.
+provide support for the cache controller as well some basic glue-logic. The proposal 
+in the future is make possible connect the *darkriscv* to large external
+memories, as well make possible connect multiple *darkriscv* cores in a 
+SMP configuration and maybe provide Ethernet communication.
 
-One possible update for the future is integrate the cache controller in 
+Another possible update for the future is integrate the cache controller in 
 the core, in a way is possible a better flow control. Currently, the only
 interface between the core and the cache controller is the sinal HLT, which
-is the same signal for instruction and data.
+is the same signal for instruction and data. I guess the update from a 2/3-stage 
+pipeline to a 4-stage pipeline without interlock of the pipeline is possible with a
+forward scheme, but I am not sure yet how implement this.
+
+A good update, for sure, can be replace the current LUT-based cache by a 
+blockRAM-based cache, but I am not sure is so easy (I will investigate it!).
+
+Again: feel free to make suggestions and good hacking! o/
