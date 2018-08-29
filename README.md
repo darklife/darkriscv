@@ -5,9 +5,10 @@ Opensource RISC-V implemented from scratch in one night!
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
 *darkriscv* is a very experimental implementation of the opensource RISC-V
-instruction set. Nowadays, after one week of work, the *darkriscv* reached a 
-very good quality result, in a way that the "hello world" compiled by the 
-standard riscv-elf-gcc is working fine!
+instruction set. Nowadays, after one week of exciting sleepless nights of 
+work (which explains the lots of typos you will found ahead), the *darkriscv* 
+reached a very good quality result, in a way that the "hello world" compiled 
+by the standard riscv-elf-gcc is working fine! :)
 
 The general concept is based in my other early RISC processors and composed 
 by a simplified two stage pipeline where a instruction is fetch from a
@@ -54,7 +55,13 @@ experimental RISC cores, I started code the *darkriscv* only to check the
 level of complexity. For my surprise, in the first night I mapped almost all
 instructions of the RV32I specification and the *darkriscv* started to 
 execute the first instructions correctly at 75MHz and with one clock 
-per instruction.
+per instruction, which resembles a fast and nice 68040! wow! :)
+
+The RV32I specification itself is really impressive and easy 
+to implement (see [1], page 16). Of course, tehre are some drawbacks, such 
+as the funny little-endian bus (opposed to the network oriented big-endian 
+bus found  in the 680x0 family), but after some empirical tests it is easy 
+to make work.
 
 The initial design was very simple, with a 2-stage pipeline composed by 
 the instruction pre-fetch and the instruction execution. In the pre-fetch
@@ -243,3 +250,7 @@ A good update, for sure, can be replace the current LUT-based cache by a
 blockRAM-based cache, but I am not sure is so easy (I will investigate it!).
 
 Again: feel free to make suggestions and good hacking! o/
+
+References:
+
+[1] https://www.amazon.com/RISC-V-Reader-Open-Architecture-Atlas/dp/099924910X
