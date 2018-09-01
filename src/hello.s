@@ -46,9 +46,9 @@ puts:
 	lw	a5,-20(s0)
 	lbu	a5,0(a5)
 	bnez	a5,.L5
-	li	a0,10
-	call	putchar
 	li	a0,13
+	call	putchar
+	li	a0,10
 	call	putchar
 	nop
 	lw	ra,28(sp)

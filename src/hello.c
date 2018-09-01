@@ -39,8 +39,8 @@ void putchar(char c)
 void puts(char *p)
 {
   while(*p) putchar(*p++);
-  putchar('\n');
   putchar('\r');
+  putchar('\n');
 }
 
 void main(void)
