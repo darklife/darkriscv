@@ -265,7 +265,7 @@ Fabiano Silos (technology guru and darkriscv beta tester), Guilherme Barile
 Alasdair Allan (technology guru, posted an article about the darkriscv [3])
 and Gareth Halfacree (technology guru, posted an article about the darkriscv
 [3].  Special thanks to all people who directly and indirectly contributed
-to this project, including the company I work to.
+to this project, including the company I work for.
 
 ## References
 
