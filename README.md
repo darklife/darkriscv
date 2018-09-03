@@ -271,7 +271,10 @@ to this project, including the company I work to.
 ## References
 
 [1] https://www.amazon.com/RISC-V-Reader-Open-Architecture-Atlas/dp/099924910X
+
 [2] https://news.ycombinator.com/item?id=17852876
+
 [3] https://blog.hackster.io/the-rise-of-the-dark-risc-v-ddb49764f392
+
 [4] https://abopen.com/news/darkriscv-an-overnight-bsd-licensed-risc-v-implementation/
 
