@@ -138,14 +138,13 @@ option to work with a real 3-stage pipeline:
 - 2nd stage: instruction decode (no register or memory read here!)
 - 3rd stage: instruction execution (register/memory read/write)
 
-Of course, this is not solution for the load/store problem...  the probably
-solution is increase the pipeline to 4-stages, spliting the 3rd.  stage in a
-read/write stage.  Although possible, this step adds some confusion, as long
-requires additional logic in order to interlock the pipeline when one
-instruction in the 3.rd stage uses a result from another instruction in the
-4.th stage.  However, with the cache controller, the 3-stage pipeline works
-pretty well and I guess is possible add some fixes in the future in order to
-make it more flexible.
+Of course, this is not solution for the load/store problem... the probably solution
+is increase the pipeline to 4-stages, splitting the 3rd. stage in a read/write
+stage. Although possible, this step adds some confusion, as long requires 
+additional logic in order to interlock the pipeline when one instruction in the
+3.rd stage uses a result from another instruction in the 4.th stage. However, with 
+the cache controller, the 3-stage pipeline works pretty well and I guess is
+possible add some fixes in the future in order to make it more flexible.
 
 In fact, when running the "hello world" code we have the following results:
 
