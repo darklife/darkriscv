@@ -40,8 +40,13 @@ module darksimv;
 
     initial while(1) #(500e3/75e3) CLK = !CLK; // clock speed of 80MHz
 
+    initial #(12e3) $finish;
+
     always@(posedge CLK) RES <= RES ? RES-1 : 0;
 
-    darksocv darksocv(CLK,|RES);
+    wire [31:0] dummyin = 0;
+    wire [3:0] dummyout;
+
+    darksocv darksocv(CLK,|RES,dummyin, dummyin, dummyin[0], dummyin[0], dummyout);
 
 endmodule
