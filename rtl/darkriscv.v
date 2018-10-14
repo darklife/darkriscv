@@ -162,10 +162,10 @@ module darkriscv
     
     // L-group of instructions (OPCODE==7'b0000011)
 
-    wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31:24]:ALL0[31:24] , DATAI[31:24] } : 
-                                             DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31:24]:ALL0[31:24] , DATAI[23:16] } : 
-                                             DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31:24]:ALL0[31:24] , DATAI[15: 8] } :
-                                                             { FCT3==0&&DATAI[ 7] ? ALL1[31:24]:ALL0[31:24] , DATAI[ 7: 0] } ) :
+    wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
+                                             DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
+                                             DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
+                                                             { FCT3==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } ):
                         FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
                                                              { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
                                              DATAI;
