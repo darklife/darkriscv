@@ -241,6 +241,20 @@ code prints the string "hello world!" in console and also in the UART
 register located in the SoC.  In the future I will provide a real UART logic
 in order to test the *darkriscv* in a real FPGA.
 
+## Simulation
+
+The main simulation tool for *darkriscv* is the iSIM from Xilinx ISE 14.7,
+but the Icarus simulator is also supported via the Makefile in the *sim*
+directory (the changes regarding Icarus are active when the symbol
+__ICARUS__ is detected). I also included a workaround for ModelSim, as 
+pointed by our friend HYF (the changes regarding ModelSim are active when the 
+symbol MODEL_TECH is detected).
+
+The currently simulation only runs the "hello world" code, which is not a
+complete test and left lots of instructions uncovered (such as the aiupc
+instruction, also pointed by our friend HYF). I hope a more complete test
+will be possible in the future.
+
 ## Future Work!
 
 As long some people are curious about the future of the *darkriscv*, I
@@ -251,9 +265,7 @@ prepared a picture with a possible roadmap for the future:
 The core with RV32I is implemented and the cache controller with LUTRAM is
 also implemented, but need some fixes in order to work fine.  The next steps
 are include support for RV64I and RV128I in the core, as well make available
-a SoC with support for external SRAM and UART.  All other features are for
-the short future (H2/2018), except the NoC (network on chip), which is more
-complex and I think will be available only in H1/2019.
+a SoC with support for external SRAM and UART.
 
 ## The Friends of DarkRISCV!
 
@@ -276,4 +288,3 @@ to this project, including the company I work for.
 [3] https://blog.hackster.io/the-rise-of-the-dark-risc-v-ddb49764f392
 
 [4] https://abopen.com/news/darkriscv-an-overnight-bsd-licensed-risc-v-implementation/
-
