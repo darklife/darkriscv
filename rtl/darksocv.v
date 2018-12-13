@@ -33,7 +33,7 @@
 // pseudo-soc for testing purposes
 
 `define CACHE_CONTROLLER 1
-//`define STAGE3           1
+`define STAGE3           1
 
 module darksocv
 (
@@ -270,5 +270,16 @@ module darksocv
         .RD(RD),
         .DEBUG(DEBUG)
     );
+
+
+`ifdef __ICARUS__
+
+  initial
+  begin
+    $dumpfile("darkriscv.vcd");
+    $dumpvars(0, core0);
+  end
+
+`endif
 
 endmodule
