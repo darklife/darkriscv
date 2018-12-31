@@ -32,8 +32,8 @@
 
 // pseudo-soc for testing purposes
 
-`define CACHE_CONTROLLER 1
-`define STAGE3           1
+//`define CACHE_CONTROLLER 1
+//`define STAGE3           1
 
 module darksocv
 (
@@ -113,6 +113,7 @@ module darksocv
     wire [31:0] DATAO;        
     wire [31:0] DATAI;
     wire WR,RD;
+    wire [3:0] BE;
     
 `ifdef CACHE_CONTROLLER
     // instruction cache
@@ -210,7 +211,12 @@ module darksocv
    
         if(WR&&!DADDR[31])
         begin
-            RAM[DADDR[10:2]] <= DATAO;
+            //individual byte/word/long selection, thanks to HYF!
+			if(BE[0]) RAM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+			if(BE[1]) RAM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+			if(BE[2]) RAM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+			if(BE[3]) RAM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];            
+            //RAM[DADDR[10:2]] <= DATAO;            
         end
     end    
     
@@ -266,6 +272,7 @@ module darksocv
         .DATAI(DATAI), // UART vs. RAM        
         .DATAO(DATAO),
         .DADDR(DADDR),        
+        .BE(BE),
         .WR(WR),
         .RD(RD),
         .DEBUG(DEBUG)

@@ -53,7 +53,7 @@
 // 3-stages: core and memory in the same clock edge result in more clock performance, but
 // more losses when the program counter changes (pipeline flush = 2 clocks).
     
-`define STAGE3
+//`define STAGE3
 
 module darkriscv
 #(
@@ -70,6 +70,8 @@ module darkriscv
     input      [31:0] DATAI, // data bus (input)
     output     [31:0] DATAO, // data bus (output)
     output     [31:0] DADDR, // addr bus
+    
+    output     [ 3:0] BE,   // byte enable
     
     output            WR,    // write enable
     output            RD,    // read enable 
@@ -238,12 +240,12 @@ module darkriscv
     // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
-                          FCT3==4 ? S1REG>=S2REG : // signed
-                          FCT3==5 ? S1REG<=S2REG : // signed
-                          FCT3==6 ? U1REG>=U2REG : // unsigned
-                          FCT3==7 ? U1REG<=U2REG : // unsigned
-                          FCT3==0 ? U1REG==U2REG : 
-                          FCT3==1 ? U1REG!=U2REG : 
+                          FCT3==4 ? S1REG< S2REG : // blt
+                          FCT3==5 ? S1REG>=S2REG : // bge
+                          FCT3==6 ? U1REG< U2REG : // bltu
+                          FCT3==7 ? U1REG>=U2REG : // bgeu
+                          FCT3==0 ? U1REG==U2REG : // beq
+                          FCT3==1 ? U1REG!=U2REG : // bne
                                     0);
 
     wire        JREQ = (JAL||JALR||BMUX);
@@ -263,7 +265,7 @@ module darkriscv
         REG[DPTR] <=   RES ? RESET_SP  :        // reset sp
                        HLT ? REG[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
-                     AUIPC ? NXPC+SIMM :
+                     AUIPC ? PC+SIMM :
                       JAL||
                       JALR ? NXPC :
                        LUI ? SIMM :
@@ -309,6 +311,15 @@ module darkriscv
     assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
     assign RD = LCC;
     assign WR = SCC;
+    
+    // based in the Scc and Lcc   
+    assign BE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
+                                     DADDR[1:0]==2 ? 4'b0100 : 
+                                     DADDR[1:0]==1 ? 4'b0010 :
+                                                     4'b0001 ) :
+                FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
+                                                     4'b0011 ) :
+                                                     4'b1111; // sw/lw
 `ifdef STAGE3
     assign IADDR = NXPC2;
 `else
