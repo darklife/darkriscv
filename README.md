@@ -6,7 +6,7 @@ Opensource RISC-V implemented from scratch in one night!
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
 *darkriscv* is a very experimental implementation of the opensource RISC-V
 instruction set. Nowadays, after weeks of exciting sleepless nights of 
-work (which explains the lots of typos you will found ahead), the *darkriscv* 
+work and the help of lots of colleagues, the *darkriscv* 
 reached a very good quality result, in a way that the "hello world" compiled 
 by the standard riscv-elf-gcc is working fine! :)
 
@@ -29,35 +29,38 @@ implementations, the *darkriscv* has lots of impressive features:
 - works fine in a real spartan-6 lx9
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
 - uses only around 1000 LUTs (spartan-6, core only)
-- and the best feature: BSD license
+- BSD license: can be used anywhere with no restrictions!
 
 Feel free to make suggestions and good hacking! o/
 
 ## Implementation Notes
 
 Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the
-project is currently based in the Xilinx ISE 14.4 for Linux.  However, no
-explicit references for Xilinx elements are done and all logic is inferred
-directly from Verilog, which means that the project is easily portable to
-other FPGA families and easily portable to other environments (I will add
-support for other FPGAs and tools in the future).
+project is currently based in the Xilinx ISE 14.7 for Linux, which is the 
+latest available ISE.  However, there is no explicit reference for Xilinx 
+elements and all logic is inferred directly from Verilog, which means that 
+the project is easily portable to other FPGA families and easily portable to 
+other environments (I will try add support for other FPGAs and tools in the 
+future).
 
 The main motivation for the *darkriscv* is create a migration path for some
-projects around the 680x0/coldfire family.  My first approach was check
-around for some softcores and, after lots of tests, I found the *picorv32*
-and the all the ecosystem around the RISC-V.  Although a very good option to
-directly replace the 680x0 family, the *picorv32* may be not powerful enough
-to replace some coldfire processors.
-
+projects around the 680x0/coldfire family. Although there are lots of 680x0
+cores available, I found no core with a good relationship between performance 
+(more than 50MHz) and logic use (~1000LUTs). After lots of tests, I found the 
+*picorv32* core and the all the ecosystem around the RISC-V. Although the
+*picorv32* is a very good option to directly replace the 680x0 family, it is 
+not powerful enough to replace some coldfire processors (more than 75MIPS). 
 The main problem around the *picorv32* is that most instructions requires 3
 or 4 clocks per instruction, which resembles the 68020 in some ways, but
 running at 150MHz.  Anyway, with 3 clocks per instruction, the peak
-performance is around 50MIPS only.  As long I had some good experience with
-experimental RISC cores, I started code the *darkriscv* only to check the
-level of complexity.  For my surprise, in the first night I mapped almost
-all instructions of the RV32I specification and the *darkriscv* started to
-execute the first instructions correctly at 75MHz and with one clock per
-instruction, which resembles a fast and nice 68040!  wow!  :)
+performance is around 50MIPS only.  
+
+As long I had some good experience with experimental RISC cores, I started 
+code the *darkriscv* only to check the level of complexity.  For my surprise, 
+in the first night I mapped almost all instructions of the RV32I specification 
+and the *darkriscv* started to execute the first instructions correctly at 
+75MHz and with one clock per instruction, which resembles a fast and nice 
+68040!  wow!  :)
 
 The RV32I specification itself is really impressive and easy to implement
 (see [1], page 16).  Of course, there are some drawbacks, such as the funny
@@ -253,7 +256,7 @@ symbol MODEL_TECH is detected).
 The currently simulation only runs the "hello world" code, which is not a
 complete test and left lots of instructions uncovered (such as the aiupc
 instruction, also pointed by our friend HYF). I hope a more complete test
-will be possible in the future.
+will be possible in the future (see issue #9 for more details!).
 
 ## Future Work!
 
