@@ -2,80 +2,78 @@
 	.option nopic
 	.text
 	.align	2
-	.globl	putchar
-	.type	putchar, @function
-putchar:
-	addi	sp,sp,-48
-	sw	s0,44(sp)
-	addi	s0,sp,48
-	mv	a5,a0
-	sb	a5,-33(s0)
-	li	a5,-2147483648
-	sw	a5,-20(s0)
-	nop
-.L2:
-	lw	a5,-20(s0)
-	lw	a5,0(a5)
-	bnez	a5,.L2
-	lbu	a4,-33(s0)
-	lw	a5,-20(s0)
-	sw	a4,0(a5)
-	nop
-	lw	s0,44(sp)
-	addi	sp,sp,48
-	jr	ra
-	.size	putchar, .-putchar
-	.align	2
-	.globl	puts
-	.type	puts, @function
-puts:
-	addi	sp,sp,-32
-	sw	ra,28(sp)
-	sw	s0,24(sp)
-	addi	s0,sp,32
-	sw	a0,-20(s0)
-	j	.L4
-.L5:
-	lw	a5,-20(s0)
-	addi	a4,a5,1
-	sw	a4,-20(s0)
-	lbu	a5,0(a5)
-	mv	a0,a5
-	call	putchar
-.L4:
-	lw	a5,-20(s0)
-	lbu	a5,0(a5)
-	bnez	a5,.L5
-	li	a0,13
-	call	putchar
-	li	a0,10
-	call	putchar
-	nop
-	lw	ra,28(sp)
-	lw	s0,24(sp)
-	addi	sp,sp,32
-	jr	ra
-	.size	puts, .-puts
-	.section	.rodata
-	.align	2
-.LC0:
-	.string	"hello world!"
-	.text
-	.align	2
 	.globl	main
 	.type	main, @function
 main:
-	addi	sp,sp,-16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	addi	s0,sp,16
-	lui	a5,%hi(.LC0)
-	addi	a0,a5,%lo(.LC0)
+	addi	sp,sp,-64
+	sw	ra,60(sp)
+	sw	s0,56(sp)
+	sw	s1,52(sp)
+	sw	s2,48(sp)
+	sw	s3,44(sp)
+	sw	s4,40(sp)
+	sw	s5,36(sp)
+	sw	s6,32(sp)
+	lui	a0,%hi(.LC0)
+	addi	a0,a0,%lo(.LC0)
 	call	puts
-	nop
-	lw	ra,12(sp)
-	lw	s0,8(sp)
-	addi	sp,sp,16
-	jr	ra
+	lui	s2,%hi(.LC1)
+	lui	s1,%hi(.LC2)
+	lui	s6,%hi(.LC3)
+	lui	s0,%hi(.LC4)
+	lui	s5,%hi(.LC6)
+	lui	s4,%hi(.LC5)
+	lui	s3,%hi(io)
+	j	.L2
+.L7:
+	addi	a0,s6,%lo(.LC3)
+	call	printf
+	j	.L3
+.L4:
+	addi	a0,s5,%lo(.LC6)
+	call	puts
+.L2:
+	addi	a0,s2,%lo(.LC1)
+	call	printf
+	li	a1,32
+	mv	a0,sp
+	call	gets
+	addi	a1,s1,%lo(.LC2)
+	mv	a0,sp
+	call	strcmp
+	beqz	a0,.L7
+.L3:
+	addi	a1,s0,%lo(.LC4)
+	mv	a0,sp
+	call	strcmp
+	bnez	a0,.L4
+	addi	a0,s4,%lo(.LC5)
+	call	puts
+	lw	a5,%lo(io)(s3)
+	lw	a4,8(a5)
+	addi	a3,a4,1
+	sw	a3,8(a5)
+	sw	a4,8(a5)
+	j	.L2
 	.size	main, .-main
+	.section	.rodata.str1.4,"aMS",@progbits,1
+	.align	2
+.LC0:
+	.string	"Welcome to DarkRISCV!"
+	.zero	2
+.LC1:
+	.string	"> "
+	.zero	1
+.LC2:
+	.string	"clear"
+	.zero	2
+.LC3:
+	.string	"\033[H\033[2J"
+.LC4:
+	.string	"led"
+.LC5:
+	.string	"led."
+	.zero	3
+.LC6:
+	.string	"command: not found."
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

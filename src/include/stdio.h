@@ -28,37 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "io.h"
-#include "stdio.h"
-
-int main(void)
-{
-  printf("Welcome to DarkRISCV!\n");
-
-  char buffer[32];
-
-  // main loop
-
-  while(1)
-  {
-    printf("> ");
-    
-    gets(buffer,sizeof(buffer));
-
-    if(!strcmp(buffer,"clear"))
-    {
-        printf("\33[H\33[2J");
-    }
-    if(!strcmp(buffer,"led"))
-    {
-        printf("led.\n");
-        io->led = io->led++;
-    }
-    else
-    {
-        printf("command: not found.\n"); // ,buffer);
-    }
-  }
-
-  return 0;
-}
+int getchar(void);
+int putchar(int c);
+void gets(char *p,int s);
+void putstr(char *p);
+int puts(char *p);
+int printf(char *fmt,...);
+int strcmp(char *s1, char *s2);
+int putx(int);

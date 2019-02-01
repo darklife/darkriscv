@@ -26,10 +26,29 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-NET "CLK" TNM_NET = CLK;
+#NET "CLK" TNM_NET = CLK;
 
 # without cache controller
 #TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
 
 # with cache controller
-TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
+#TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
+
+# AVNET board LX9 microboard
+
+NET XCLK            LOC = K15 | PERIOD = 66MHz HIGH 50%;
+
+NET XRES            LOC = V4  | PULLDOWN;
+
+NET UART_RXD        LOC = R7;
+NET UART_TXD        LOC = T7;
+
+NET LED[3]          LOC = P4;
+NET LED[2]          LOC = L6;
+NET LED[1]          LOC = F5;
+NET LED[0]          LOC = C2;
+
+NET DEBUG[3]        LOC = H12; # J4-1
+NET DEBUG[2]        LOC = G13; # J4-2
+NET DEBUG[1]        LOC = E16; # J4-3
+NET DEBUG[0]        LOC = E18; # J4-4

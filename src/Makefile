@@ -38,14 +38,17 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-CFLAGS = -Wall # -O3 -fomit-frame-pointer -march=rv32i
+CFLAGS = -Wall -I./include -O1 -fomit-frame-pointer -march=rv32i
 AFLAGS = 
-LFLAGS = -Ttext=0 -Map=$(PROJ).map
+#LFLAGS = -Ttext=0 -Map=$(PROJ).map
+LFLAGS = -T$(PROJ).ld -Map=$(PROJ).map
+
 OFLAGS = -O binary
 DFLAGS = -d
 
 PROJ = darksocv
-OBJS = boot.o hello.o
+OBJS = boot.o stdio.o hello.o
+ASMS = boot.s stdio.s hello.s
 
 all:
 	make $(PROJ).hex
@@ -53,11 +56,13 @@ all:
 clean:
 	-rm *.s *.o $(PROJ).{bin,hex,lst,map}
 
-%.o: %.c
-	$(CC) $(CFLAGS) -S $< # -o $@.s
-	$(CC) $(CFLAGS) -c $< # -o $@
+%.o: %.s
+	$(AS) $(AFLAGS) -c $< -o $@
 
-$(PROJ).o: $(OBJS)
+%.s: %.c
+	$(CC) $(CFLAGS) -S $< -o $@
+
+$(PROJ).o: $(ASMS) $(OBJS)
 	$(LD) $(LFLAGS) $(OBJS) -o $@
 
 $(PROJ).bin: $(PROJ).o

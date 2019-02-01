@@ -258,17 +258,13 @@ complete test and left lots of instructions uncovered (such as the aiupc
 instruction, also pointed by our friend HYF). I hope a more complete test
 will be possible in the future (see issue #9 for more details!).
 
-## Future Work!
+## Development Boards
 
-As long some people are curious about the future of the *darkriscv*, I
-prepared a picture with a possible roadmap for the future:
-
-![](roadmap.png)
-
-The core with RV32I is implemented and the cache controller with LUTRAM is
-also implemented, but need some fixes in order to work fine.  The next steps
-are include support for RV64I and RV128I in the core, as well make available
-a SoC with support for external SRAM and UART.
+Currently, the only supported board is the Avnet Microboard LX9, which is
+equiped with a Xilinx Spartan-6 LX9 board running at 66MHz, a 115200 bps
+UART and on-chip ROM/RAM.  Support for Ethernet and multiple cores is under
+development and, in a general way, the port for other Spartan-6 boards with
+similar featuers is very easy.
 
 ## The Friends of DarkRISCV!
 

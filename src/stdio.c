@@ -31,34 +31,107 @@
 #include "io.h"
 #include "stdio.h"
 
-int main(void)
+// putchar and getchar uses the "low-level" io
+
+int getchar(void)
 {
-  printf("Welcome to DarkRISCV!\n");
+  while((io->uart_stat&2)==0); // uart empty, wait...
+  
+  return io->uart_fifo;
+}
 
-  char buffer[32];
-
-  // main loop
-
-  while(1)
+int putchar(int c)
+{
+  if(c=='\n')
   {
-    printf("> ");
-    
-    gets(buffer,sizeof(buffer));
-
-    if(!strcmp(buffer,"clear"))
-    {
-        printf("\33[H\33[2J");
-    }
-    if(!strcmp(buffer,"led"))
-    {
-        printf("led.\n");
-        io->led = io->led++;
-    }
-    else
-    {
-        printf("command: not found.\n"); // ,buffer);
-    }
+    while(io->uart_stat&1); // uart busy, wait...
+    io->uart_fifo = '\r';  
   }
+  
+  while(io->uart_stat&1); // uart busy, wait...
+  return io->uart_fifo = c;
+}
 
-  return 0;
+// high-level functions uses the getchar/putchar
+
+void gets(char *p,int s)
+{
+  register int c;
+
+  while(--s)
+  {
+    c=getchar();
+    
+    if(c=='\n'||c=='\r') break;
+     
+    putchar((*p++ = c));
+  }
+  putchar('\n');
+  *p=0;
+}
+
+void putstr(char *p)
+{
+  while(*p) putchar(*p++);
+}
+
+int puts(char *p)
+{
+  while(*p) putchar(*p++);
+  return putchar('\n');
+}
+
+int hex(int i)
+{
+    return i+((i<=9)?'0':'a');
+}
+
+int putx(int i)
+{
+    char *hex="0123456789abcdef";
+
+    if(i>16777216)
+    {
+        putchar(hex[(i>>28)&15]);
+        putchar(hex[(i>>24)&15]);
+    }
+    if(i>65536)
+    {
+        putchar(hex[(i>>20)&15]);
+        putchar(hex[(i>>16)&15]);
+    }    
+    if(i>256)
+    {
+        putchar(hex[(i>>12)&15]);
+        putchar(hex[(i>>8)&15]);
+    }
+
+    putchar(hex[(i>>4)&15]);
+    putchar(hex[(i>>0)&15]);
+
+    return i;
+}
+
+int printf(char *fmt,...)
+{
+    register char **stk;
+
+    for(stk=&fmt;*fmt;fmt++)
+    {
+        if(fmt[0]=='%')
+        {
+                 if(fmt[1]=='s') putstr((char *)*++stk);
+            else if(fmt[1]=='x') putx((int)*++stk);
+            else putchar(*fmt);
+        }
+        else putchar(*fmt);
+    }
+    return 0;
+}
+
+int strcmp(char *s1, char *s2)
+{
+    while(*s1 && *s2 && (*s1==*s2)) { s1++; s2++; }
+    
+    return (*s1-*s2);
 }

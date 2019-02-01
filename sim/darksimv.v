@@ -38,15 +38,17 @@ module darksimv;
     
     reg [3:0] RES = -1;
 
-    initial while(1) #(500e3/75e3) CLK = !CLK; // clock speed of 80MHz
+    initial while(1) #(500e3/40e3) CLK = !CLK; // clock speed of 80MHz
 
-    initial #(12e3) $finish;
+    initial #(12e6) $finish;
 
     always@(posedge CLK) RES <= RES ? RES-1 : 0;
 
-    wire [31:0] dummyin = 0;
-    wire [3:0] dummyout;
+    wire TX,RX;
 
-    darksocv darksocv(CLK,|RES,dummyin, dummyin, dummyin[0], dummyin[0], dummyout);
+    wire [3:0] LED;
+    wire [3:0] DEBUG;
+
+    darksocv darksocv(CLK,|RES,RX,TX,LED,DEBUG);
 
 endmodule

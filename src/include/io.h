@@ -28,37 +28,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "io.h"
-#include "stdio.h"
+// io map
 
-int main(void)
-{
-  printf("Welcome to DarkRISCV!\n");
+struct DARKIO {
 
-  char buffer[32];
+    volatile int uart_stat;
+    volatile int uart_fifo;
+    volatile int led;
+};
 
-  // main loop
-
-  while(1)
-  {
-    printf("> ");
-    
-    gets(buffer,sizeof(buffer));
-
-    if(!strcmp(buffer,"clear"))
-    {
-        printf("\33[H\33[2J");
-    }
-    if(!strcmp(buffer,"led"))
-    {
-        printf("led.\n");
-        io->led = io->led++;
-    }
-    else
-    {
-        printf("command: not found.\n"); // ,buffer);
-    }
-  }
-
-  return 0;
-}
+extern struct DARKIO *io;
