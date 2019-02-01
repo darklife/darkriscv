@@ -28,11 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "io.h"
-#include "stdio.h"
+#include <stdio.h>
 
 extern int main(void);
 struct DARKIO *io;
+
+//#define RLEGEN 1
 
 void _start(void)
 {
@@ -49,6 +50,7 @@ void _start(void)
 
    io = (struct DARKIO *) 0x80000000; // io start here!
 
+#ifdef RLEGEN
 
   // https://github.com/riscv/riscv-pk/blob/master/bbl/riscv_logo.txt
   // https://github.com/riscv/riscv-pk/blob/master/LICENSE.riscv_logo.txt
@@ -104,6 +106,8 @@ void _start(void)
 
   printf("press any key to continue...");
   getchar();
+
+#endif
   
   char rle_logo[] = { 
       0x20, 0x0e, 0x76, 0x20, 0x0a, 0x01, 0x20, 0x12, 0x76, 0x1c, 0x0a,

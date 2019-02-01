@@ -14,38 +14,38 @@ RW               0x0000000040000000 0x0000000000001000
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x590
+.text           0x0000000000000000      0x504
  boot.o(.text)
- .text          0x0000000000000000      0x154 boot.o
+ .text          0x0000000000000000       0xd0 boot.o
                 0x0000000000000000                _start
  *(.text)
- .text          0x0000000000000154      0x384 stdio.o
-                0x0000000000000154                getchar
-                0x0000000000000170                putchar
-                0x00000000000001b4                gets
-                0x0000000000000238                putstr
-                0x0000000000000270                puts
-                0x00000000000002b0                hex
-                0x00000000000002cc                putx
-                0x00000000000003cc                printf
-                0x00000000000004a8                strcmp
- .text          0x00000000000004d8       0xb8 hello.o
-                0x00000000000004d8                main
+ .text          0x00000000000000d0      0x384 stdio.o
+                0x00000000000000d0                getchar
+                0x00000000000000ec                putchar
+                0x0000000000000130                gets
+                0x00000000000001b4                putstr
+                0x00000000000001ec                puts
+                0x000000000000022c                hex
+                0x0000000000000248                putx
+                0x0000000000000348                printf
+                0x0000000000000424                strcmp
+ .text          0x0000000000000454       0xb0 hello.o
+                0x0000000000000454                main
  *(.rodata)
 
-.rodata.str1.4  0x0000000000000590      0x5a4
+.rodata.str1.4  0x0000000000000504      0x170
  .rodata.str1.4
-                0x0000000000000590      0x549 boot.o
- *fill*         0x0000000000000ad9        0x3 
+                0x0000000000000504      0x115 boot.o
+ *fill*         0x0000000000000619        0x3 
  .rodata.str1.4
-                0x0000000000000adc       0x11 stdio.o
- *fill*         0x0000000000000aed        0x3 
+                0x000000000000061c       0x11 stdio.o
+ *fill*         0x000000000000062d        0x3 
  .rodata.str1.4
-                0x0000000000000af0       0x44 hello.o
+                0x0000000000000630       0x44 hello.o
                                          0x4c (size before relaxing)
 
-.rela.dyn       0x0000000000000b34        0x0
- .rela.text     0x0000000000000b34        0x0 boot.o
+.rela.dyn       0x0000000000000674        0x0
+ .rela.text     0x0000000000000674        0x0 boot.o
 
 .data           0x0000000040000000        0x0
  *(.data)

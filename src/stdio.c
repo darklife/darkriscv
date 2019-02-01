@@ -28,7 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "io.h"
 #include "stdio.h"
 
 // putchar and getchar uses the "low-level" io

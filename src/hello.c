@@ -28,8 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "io.h"
-#include "stdio.h"
+#include <stdio.h>
 
 int main(void)
 {
@@ -51,8 +50,10 @@ int main(void)
     }
     if(!strcmp(buffer,"led"))
     {
+        volatile int *led = (int *)0x80000008;
+    
         printf("led.\n");
-        io->led = io->led++;
+        *led += 1;
     }
     else
     {
