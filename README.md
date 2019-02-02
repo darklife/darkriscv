@@ -219,7 +219,37 @@ When the cache controller is activated, the cache controller provides
 separate memories for instruction and data, but provides a interface for a
 more conventional von neumann memory architecture.
 
-In both cases, a proper designed linker script probably solves the problem!
+In both cases, a proper designed linker script (darksocv.ld) probably solves 
+the problem! the current memory map in the linker script is the follow:
+
+- 0x00000000: 4KB ROM 
+- 0x40000000: 4KB RAM
+- 0x80000000: UART status
+- 0x80000004: UART xmit/recv buffer
+- 0x80000008: LED buffer
+
+The problem here is that the ROM memory is connected to the instruction 
+bus only, which means that the data bus does not have access to the ROM memory, 
+which stores the .rodata segment. The workaround here is load a ROM copy in 
+to the RAM memory, in a way that the .rodata is available in the data bus 
+too, but this solution requires far more memory.
+
+Another problem is that the .data segment is not working as expected. The
+normal behaviour is that the .data payload is stored in the trailing of the
+.text segment (or .rodata), i a way that a memcpy() can move the payload 
+from the ROM to the RAM. This is not a good solution because duplicates the
+payload. Anyway, as long the ROM and RAM are in different segments, there
+is no way to memcpy() the payload.
+
+In the other hand, the .data in the place is possible, but the compiler tries
+fill the 1GB gap between the ROM and RAM with zeros. Maybe the solution in this
+case is reduce the RAM address in order to generate a smaller binary. As long
+the binary is generated, it can be split in two parts, one with the ROM 
+payload (with the .text segment) and another with the RAM payload (including 
+the .rodata and .data).
+
+The RAM memory also contains the .bss area (after the .data and initialized 
+with zero) and the stack area at the address 0x7fffffff.
 
 ## Directory Description
 
@@ -262,9 +292,12 @@ will be possible in the future (see issue #9 for more details!).
 
 Currently, the only supported board is the Avnet Microboard LX9, which is
 equiped with a Xilinx Spartan-6 LX9 board running at 66MHz, a 115200 bps
-UART and on-chip ROM/RAM.  Support for Ethernet and multiple cores is under
-development and, in a general way, the port for other Spartan-6 boards with
-similar featuers is very easy.
+UART, LED support and on-chip 4KB ROM and 4KB RAM.  Support for Ethernet and multiple cores 
+is under development and, in a general way, the port for other Spartan-6 
+boards with similar featuers is very easy.
+
+A small shell is available with some basic examples, such as the clear command 
+to clear the screen and the led command to switch the led configuration.
 
 ## The Friends of DarkRISCV!
 
