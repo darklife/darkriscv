@@ -59,7 +59,7 @@ MAP = $(TMP)/darksocv_map.ncd
 RTLS = ../rtl/darksocv.v ../rtl/darkriscv.v
 UCFS = ../ise/darksocv.ucf
 PRJS = ../ise/darksocv.prj
-BOOT = ../src/darksocv.hex
+BOOT = ../src/darksocv.rom ../src/darksocv.ram
 
 default: all
 

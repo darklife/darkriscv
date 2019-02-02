@@ -11,9 +11,6 @@ _start:
 	sw	s1,292(sp)
 	sw	s2,288(sp)
 	sw	s3,284(sp)
-	lui	a5,%hi(io)
-	li	a4,-2147483648
-	sw	a4,%lo(io)(a5)
 	lui	a5,%hi(.LC0)
 	addi	a5,a5,%lo(.LC0)
 	mv	a4,sp
@@ -64,7 +61,6 @@ _start:
 .L7:
 	j	.L7
 	.size	_start, .-_start
-	.comm	io,4,4
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC1:

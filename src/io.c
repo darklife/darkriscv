@@ -30,36 +30,4 @@
 
 #include <stdio.h>
 
-int main(void)
-{
-  printf("Welcome to DarkRISCV!\n");
-
-  char buffer[32];
-
-  // main loop
-
-  while(1)
-  {
-    printf("> ");
-    
-    gets(buffer,sizeof(buffer));
-
-    if(!strcmp(buffer,"clear"))
-    {
-        printf("\33[H\33[2J");
-    }
-    if(!strcmp(buffer,"led"))
-    {
-        volatile int *led = (int *)0x80000008;
-    
-        printf("led.\n");
-        *led += 1;
-    }
-    else
-    {
-        printf("command: not found.\n"); // ,buffer);
-    }
-  }
-
-  return 0;
-}
+volatile struct DARKIO io;

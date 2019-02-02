@@ -4,14 +4,14 @@
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 # 
-## Redistributions of source code must retain the above copyright notice, this
+# * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
 # 
-## Redistributions in binary form must reproduce the above copyright notice,
+# * Redistributions in binary form must reproduce the above copyright notice,
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 # 
-## Neither the name of the copyright holder nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
 # 
@@ -38,36 +38,41 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-CFLAGS = -Wall -I./include -O1 -fomit-frame-pointer -march=rv32i
-AFLAGS = 
-#LFLAGS = -Ttext=0 -Map=$(PROJ).map
-LFLAGS = -T$(PROJ).ld -Map=$(PROJ).map
+CCFLAGS = -Wall -I./include -O1 -fomit-frame-pointer -march=rv32i
+ASFLAGS = 
+LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
-OFLAGS = -O binary
-DFLAGS = -d
+MEMSIZE = 4096
+
+OCFLAGS = -O binary
+ODFLAGS = -d
 
 PROJ = darksocv
-OBJS = boot.o stdio.o hello.o
-ASMS = boot.s stdio.s hello.s
+OBJS = boot.o stdio.o main.o io.o
+ASMS = boot.s stdio.s main.s io.s
 
 all:
-	make $(PROJ).hex
+	make $(PROJ).rom
+	make $(PROJ).ram
 
 clean:
-	-rm *.s *.o $(PROJ).{bin,hex,lst,map}
+	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom}
 
 %.o: %.s
-	$(AS) $(AFLAGS) -c $< -o $@
+	$(AS) $(ASFLAGS) -c $< -o $@
 
-%.s: %.c
-	$(CC) $(CFLAGS) -S $< -o $@
+%.s: %.c $(PROJ).ld
+	$(CC) $(CCFLAGS) -S $< -o $@
 
 $(PROJ).o: $(ASMS) $(OBJS)
-	$(LD) $(LFLAGS) $(OBJS) -o $@
+	$(LD) $(LDFLAGS) $(OBJS) -o $@
 
 $(PROJ).bin: $(PROJ).o
-	$(OC) $(OFLAGS) $< $@
-	$(OD) $(DFLAGS) $< > $(PROJ).lst
+	$(OC) $(OCFLAGS) $< $@
+	$(OD) $(ODFLAGS) $< > $(PROJ).lst
 
-$(PROJ).hex: $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' $< > $@
+$(PROJ).rom: $(PROJ).bin
+	hexdump -ve '1/4 "%08x\n"' -n $(MEMSIZE) $< > $@
+
+$(PROJ).ram: $(PROJ).bin
+	hexdump -ve '1/4 "%08x\n"' -s $(MEMSIZE) $< > $@

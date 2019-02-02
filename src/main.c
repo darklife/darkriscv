@@ -28,27 +28,87 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-`timescale 1ns / 1ps
+#include <stdio.h>
 
-// clock and reset logic
+int main(void)
+{
+  char  buffer[32];
 
-module darksimv;
+  printf("Welcome to DarkRISCV!\n");
 
-    reg CLK = 1;
+  // main loop
+
+  while(1)
+  {
+    printf("> ");
     
-    reg [3:0] RES = -1;
+    gets(buffer,sizeof(buffer));
 
-    initial while(1) #(500e3/40e3) CLK = !CLK; // clock speed of 80MHz
+    if(!strcmp(buffer,"clear"))
+    {
+        printf("\33[H\33[2J");
+    }
+    else
+    if(!strcmp(buffer,"led"))
+    {
+        printf("led switch.\n");
+        io.led++;
+    }
+    else
+    if(!strcmp(buffer,"heap"))
+    {
+        char *p=(char *)0x1000;
+        int i,j;
+        
+        for(i=0;i!=16;i++)
+        {
+            for(j=0;j!=32;j++)
+            {
+                putx(p[j]);
+                putchar(' ');
+            }     
+            
+            for(j=0;j!=32;j++)
+            {
+                if(p[j]>=32&&p[j]<127)
+                    putchar(p[j]);
+                else
+                    putchar('.');
+            }
+            putchar('\n');
+            p+=32;
+        }
+    }
+    else
+    if(!strcmp(buffer,"stack"))
+    {
+        char *p=(char *)(0x2000-(32*16));
+        int i,j;
+        
+        for(i=0;i!=16;i++)
+        {
+            for(j=0;j!=32;j++)
+            {
+                putx(p[j]);
+                putchar(' ');
+            }     
+            
+            for(j=0;j!=32;j++)
+            {
+                if(p[j]>=32&&p[j]<127)
+                    putchar(p[j]);
+                else
+                    putchar('.');
+            }
+            putchar('\n');
+            p+=32;
+        }
+    }
+    else
+    {
+        printf("command: not found.\n"); // ,buffer);
+    }
+  }
 
-    initial #(250e6) $finish;
-
-    always@(posedge CLK) RES <= RES ? RES-1 : 0;
-
-    wire TX,RX;
-
-    wire [3:0] LED;
-    wire [3:0] DEBUG;
-
-    darksocv darksocv(CLK,|RES,RX,TX,LED,DEBUG);
-
-endmodule
+  return 0;
+}

@@ -28,12 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+//#define RLEGEN 1
+
 #include <stdio.h>
 
 extern int main(void);
-struct DARKIO *io;
-
-//#define RLEGEN 1
 
 void _start(void)
 {
@@ -47,8 +46,6 @@ void _start(void)
    * you need ensure the boot.o(.text) is the first block in the rom!
    *
    */
-
-   io = (struct DARKIO *) 0x80000000; // io start here!
 
 #ifdef RLEGEN
 

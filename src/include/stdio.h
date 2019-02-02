@@ -30,12 +30,12 @@
 
 struct DARKIO {
 
-    volatile int uart_stat;
-    volatile int uart_fifo;
-    volatile int led;
+    int uart_stat;
+    int uart_fifo;
+    int led;
 };
 
-extern struct DARKIO *io;
+extern volatile struct DARKIO io;
 
 int getchar(void);
 int putchar(int c);

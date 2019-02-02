@@ -5,13 +5,14 @@
 	.globl	getchar
 	.type	getchar, @function
 getchar:
-	lui	a5,%hi(io)
-	lw	a4,%lo(io)(a5)
+	lui	a4,%hi(io)
 .L2:
-	lw	a5,0(a4)
+	lw	a5,%lo(io)(a4)
 	andi	a5,a5,2
 	beqz	a5,.L2
-	lw	a0,4(a4)
+	lui	a5,%hi(io)
+	addi	a5,a5,%lo(io)
+	lw	a0,4(a5)
 	ret
 	.size	getchar, .-getchar
 	.align	2
@@ -21,23 +22,25 @@ putchar:
 	li	a5,10
 	beq	a0,a5,.L10
 .L5:
-	lui	a5,%hi(io)
-	lw	a4,%lo(io)(a5)
+	lui	a4,%hi(io)
 .L7:
-	lw	a5,0(a4)
+	lw	a5,%lo(io)(a4)
 	andi	a5,a5,1
 	bnez	a5,.L7
-	sw	a0,4(a4)
+	lui	a5,%hi(io)
+	addi	a5,a5,%lo(io)
+	sw	a0,4(a5)
 	ret
 .L10:
-	lui	a5,%hi(io)
-	lw	a4,%lo(io)(a5)
+	lui	a4,%hi(io)
 .L6:
-	lw	a5,0(a4)
+	lw	a5,%lo(io)(a4)
 	andi	a5,a5,1
 	bnez	a5,.L6
-	li	a5,13
-	sw	a5,4(a4)
+	lui	a5,%hi(io)
+	addi	a5,a5,%lo(io)
+	li	a4,13
+	sw	a4,4(a5)
 	j	.L5
 	.size	putchar, .-putchar
 	.align	2
@@ -216,66 +219,19 @@ putx:
 	.globl	printf
 	.type	printf, @function
 printf:
-	addi	sp,sp,-80
-	sw	ra,44(sp)
-	sw	s0,40(sp)
-	sw	s1,36(sp)
-	sw	s2,32(sp)
-	sw	s3,28(sp)
-	sw	s4,24(sp)
-	sw	a0,12(sp)
-	sw	a1,52(sp)
-	sw	a2,56(sp)
-	sw	a3,60(sp)
-	sw	a4,64(sp)
-	sw	a5,68(sp)
-	sw	a6,72(sp)
-	sw	a7,76(sp)
-	mv	a4,a0
-	lbu	a0,0(a0)
-	beqz	a0,.L39
-	addi	s1,sp,12
-	li	s0,37
-	li	s2,115
-	li	s3,120
-	j	.L44
-.L47:
-	addi	s4,s1,4
-	lw	a0,4(s1)
+	addi	sp,sp,-48
+	sw	ra,12(sp)
+	sw	a1,20(sp)
+	sw	a2,24(sp)
+	sw	a3,28(sp)
+	sw	a4,32(sp)
+	sw	a5,36(sp)
+	sw	a6,40(sp)
+	sw	a7,44(sp)
 	call	putstr
-	mv	s1,s4
-	j	.L42
-.L48:
-	addi	s4,s1,4
-	lw	a0,4(s1)
-	call	putx
-	mv	s1,s4
-	j	.L42
-.L40:
-	call	putchar
-.L42:
-	lw	a5,12(sp)
-	addi	a4,a5,1
-	sw	a4,12(sp)
-	lbu	a0,1(a5)
-	beqz	a0,.L39
-.L44:
-	bne	a0,s0,.L40
-	lbu	a5,1(a4)
-	beq	a5,s2,.L47
-	beq	a5,s3,.L48
-	mv	a0,s0
-	call	putchar
-	j	.L42
-.L39:
 	li	a0,0
-	lw	ra,44(sp)
-	lw	s0,40(sp)
-	lw	s1,36(sp)
-	lw	s2,32(sp)
-	lw	s3,28(sp)
-	lw	s4,24(sp)
-	addi	sp,sp,80
+	lw	ra,12(sp)
+	addi	sp,sp,48
 	jr	ra
 	.size	printf, .-printf
 	.align	2
@@ -283,16 +239,16 @@ printf:
 	.type	strcmp, @function
 strcmp:
 	lbu	a5,0(a0)
-	beqz	a5,.L51
-.L50:
+	beqz	a5,.L42
+.L41:
 	lbu	a4,0(a1)
-	beqz	a4,.L51
-	bne	a4,a5,.L51
+	beqz	a4,.L42
+	bne	a4,a5,.L42
 	addi	a0,a0,1
 	addi	a1,a1,1
 	lbu	a5,0(a0)
-	bnez	a5,.L50
-.L51:
+	bnez	a5,.L41
+.L42:
 	lbu	a0,0(a1)
 	sub	a0,a5,a0
 	ret

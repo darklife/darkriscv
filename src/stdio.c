@@ -34,21 +34,21 @@
 
 int getchar(void)
 {
-  while((io->uart_stat&2)==0); // uart empty, wait...
+  while((io.uart_stat&2)==0); // uart empty, wait...
   
-  return io->uart_fifo;
+  return io.uart_fifo;
 }
 
 int putchar(int c)
 {
   if(c=='\n')
   {
-    while(io->uart_stat&1); // uart busy, wait...
-    io->uart_fifo = '\r';  
+    while(io.uart_stat&1); // uart busy, wait...
+    io.uart_fifo = '\r';  
   }
   
-  while(io->uart_stat&1); // uart busy, wait...
-  return io->uart_fifo = c;
+  while(io.uart_stat&1); // uart busy, wait...
+  return io.uart_fifo = c;
 }
 
 // high-level functions uses the getchar/putchar
@@ -87,7 +87,7 @@ int hex(int i)
 
 int putx(int i)
 {
-    char *hex="0123456789abcdef";
+    register char *hex="0123456789abcdef";
 
     if(i>16777216)
     {
@@ -113,7 +113,7 @@ int putx(int i)
 
 int printf(char *fmt,...)
 {
-    register char **stk;
+/*    register char **stk;
 
     for(stk=&fmt;*fmt;fmt++)
     {
@@ -124,7 +124,9 @@ int printf(char *fmt,...)
             else putchar(*fmt);
         }
         else putchar(*fmt);
-    }
+    }*/
+    
+    putstr(fmt);
     return 0;
 }
 

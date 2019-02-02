@@ -99,14 +99,14 @@ module darksocv
             RAM[i] = 32'd0;
         end
         
-        $readmemh("../src/darksocv.hex",RAM);
+        $readmemh("../src/darksocv.ram",RAM);
 `ifndef CACHE_CONTROLLER
         for(i=0;i!=1024;i=i+1)
         begin        
             ROM[i] = 32'd0;
         end
         
-        $readmemh("../src/darksocv.hex",ROM);
+        $readmemh("../src/darksocv.rom",ROM);
 `endif        
     end
     
@@ -252,7 +252,7 @@ module darksocv
     
     always@(posedge CLK)
     begin   
-        if(WR&&DADDR[31]==0)
+        if(WR&&DADDR[31]==0&&DADDR[12]==1)
         begin
             //individual byte/word/long selection, thanks to HYF!
             RAM[DADDR[11:2]] <= { BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF2[3 * 8 + 7: 3 * 8],
@@ -400,7 +400,7 @@ module darksocv
     darkriscv
     #(
         .RESET_PC(0),
-        .RESET_SP(32'h80000000)
+        .RESET_SP(32'h00002000)
     ) 
     core0 
     (
