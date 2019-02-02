@@ -72,7 +72,7 @@ $(PROJ).bin: $(PROJ).o
 	$(OD) $(ODFLAGS) $< > $(PROJ).lst
 
 $(PROJ).rom: $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' -n $(MEMSIZE) $< > $@
+	hexdump -ve '1/4 "%08x\n"' -n $(MEMSIZE) $< | grep -v 00000000 > $@
 
 $(PROJ).ram: $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' -s $(MEMSIZE) $< > $@
