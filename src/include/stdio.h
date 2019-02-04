@@ -28,15 +28,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-struct DARKIO {
-
-    int uart_stat;
-    int uart_fifo;
-    int led;
-};
-
-extern volatile struct DARKIO io;
-
 int getchar(void);
 int putchar(int c);
 void gets(char *p,int s);
@@ -44,4 +35,4 @@ void putstr(char *p);
 int puts(char *p);
 int printf(char *fmt,...);
 int strcmp(char *s1, char *s2);
-int putx(int);
+unsigned putx(unsigned);

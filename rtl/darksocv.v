@@ -238,35 +238,34 @@ module darksocv
     wire DHIT=1;
     wire WHIT=1;
 
-    //reg [31:0] ROMFF2; // for some reason, the ROM is correctly inferred as a blockram!
+    reg [31:0] ROMFF2;
     reg [31:0] RAMFF2;
     
     always@(negedge CLK)
     begin
-        //ROMFF2 <= ROM[IADDR[10:2]];
+        ROMFF2 <= ROM[IADDR[11:2]];
         RAMFF2 <= RAM[DADDR[11:2]];
     end
 
-    wire [31:0] ROMFF2 = ROM[IADDR[11:2]];
+    //wire [31:0] ROMFF2 = ROM[IADDR[11:2]];
     //wire [31:0] RAMFF2 = RAM[DADDR[11:2]];
+
+    reg [31:0] ROMBUG = 0;
     
     always@(posedge CLK)
     begin   
         if(WR&&DADDR[31]==0&&DADDR[12]==1)
         begin
-            //individual byte/word/long selection, thanks to HYF!
-            RAM[DADDR[11:2]] <= { BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF2[3 * 8 + 7: 3 * 8],
-                                  BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF2[2 * 8 + 7: 2 * 8],
-                                  BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF2[1 * 8 + 7: 1 * 8],
-                                  BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF2[0 * 8 + 7: 0 * 8]
-                                };
-                                                                                                                                                                                                                                
-            //if(BE[0]) RAM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
-            //if(BE[1]) RAM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-            //if(BE[2]) RAM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-            //if(BE[3]) RAM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];            
-            //RAM[DADDR[10:2]] <= DATAO;            
+            //individual byte/word/long selection, thanks to HYF!                                                                                                                                                                                                                                
+            if(BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+            if(BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+            if(BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+            if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];            
         end
+        
+        // weird bug appears to be related to the "sw ra,12(sp)" instruction.
+        //if(WR&&DADDR[31]==0&&DADDR[12]==0)
+        //    ROMBUG <= IADDR;
     end    
     
     assign DATAI = DADDR[31] ? IOMUX  : RAMFF2;
@@ -384,10 +383,10 @@ module darksocv
                       UART_XSTATE==7 ? 0 : 
                                        1;
                                        
-    assign IOMUX = DADDR[3:0]==0 ? { 30'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK } :
-                   DADDR[3:0]==4 ? { 24'd0, UART_RFIFO } : 
-                   DADDR[3:0]==8 ? { 28'd0, LEDFF } : 
-                                   0;
+    assign IOMUX = DADDR[3:2]==0 ? { 30'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK } :
+                   DADDR[3:2]==1 ? { 24'd0, UART_RFIFO } : 
+                                   { 28'd0, LEDFF }; 
+                                   //{ ROMBUG };
 
     // darkriscv
 
@@ -404,16 +403,12 @@ module darksocv
     ) 
     core0 
     (
-`ifdef STAGE3   
         .CLK(CLK),
-`else
-        .CLK(CLK),
-`endif         
-        .RES(RESFF[1]),        
+        .RES(RESFF[1]),
         .HLT(!IHIT||!DHIT||!WHIT),
         .IDATA(IDATA),
         .IADDR(IADDR),
-        .DATAI(DATAI), // UART vs. RAM        
+        .DATAI(DATAI),
         .DATAO(DATAO),
         .DADDR(DADDR),        
         .BE(BE),
@@ -422,23 +417,16 @@ module darksocv
         .DEBUG(KDEBUG)
     );
 
-
 `ifdef __ICARUS__
-
   initial
   begin
     $dumpfile("darkriscv.vcd");
     $dumpvars(0, core0);
   end
-
 `endif
 
 `ifdef AVNET_MICROBOARD_LX9
-    assign LED = LEDFF; /*{ UART_TXD, 
-                   UART_RXD, 
-                   UART_XREQ^UART_XACK, 
-                   UART_RREQ^UART_RACK };*/                  
-
+    assign LED   = LEDFF;
     assign DEBUG = { WR, RD, UART_RREQ^UART_RACK, UART_RXD };
 `else
     assign DEBUG = KDEBUG;

@@ -2,7 +2,7 @@
 Allocating common symbols
 Common symbol       size              file
 
-io                  0xc               io.o
+io                  0x10              io.o
 
 Memory Configuration
 
@@ -15,57 +15,66 @@ IO               0x0000000080000000 0x0000000000000010 rw !x
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x594
+.text           0x0000000000000000      0x3a4
  boot.o(.text)
- .text          0x0000000000000000       0xc4 boot.o
+ .text          0x0000000000000000       0x14 boot.o
                 0x0000000000000000                _start
  *(.text)
- .text          0x00000000000000c4        0x0 io.o
- .text          0x00000000000000c4      0x2ec stdio.o
-                0x00000000000000c4                getchar
-                0x00000000000000e4                putchar
-                0x0000000000000130                gets
-                0x00000000000001b4                putstr
-                0x00000000000001ec                puts
-                0x000000000000022c                hex
-                0x0000000000000248                putx
-                0x0000000000000348                printf
-                0x0000000000000380                strcmp
- .text          0x00000000000003b0      0x1e4 main.o
-                0x00000000000003b0                main
+ .text          0x0000000000000014        0x0 io.o
+ .text          0x0000000000000014      0x310 stdio.o
+                0x0000000000000014                getchar
+                0x0000000000000030                putchar
+                0x000000000000006c                gets
+                0x00000000000000e4                puts
+                0x000000000000011c                putx
+                0x0000000000000204                printf
+                0x00000000000002d8                strcmp
+                0x0000000000000300                memcpy
+ .text          0x0000000000000324        0x0 main.o
+ .text          0x0000000000000324       0x80 hello.o
+                0x0000000000000324                hello
 
-.data           0x0000000000001000      0x184
+.text.startup   0x00000000000003a4      0x220
+ .text.startup  0x00000000000003a4      0x220 main.o
+                0x00000000000003a4                main
+
+.data           0x0000000000001000      0x1a0
  *(.data)
  .data          0x0000000000001000        0x0 boot.o
  .data          0x0000000000001000        0x0 io.o
  .data          0x0000000000001000        0x0 stdio.o
  .data          0x0000000000001000        0x0 main.o
+ .data          0x0000000000001000        0x0 hello.o
  *(.bss)
  .bss           0x0000000000001000        0x0 boot.o
  .bss           0x0000000000001000        0x0 io.o
  .bss           0x0000000000001000        0x0 stdio.o
  .bss           0x0000000000001000        0x0 main.o
+ .bss           0x0000000000001000        0x0 hello.o
  *(.rela*)
  .rela.text     0x0000000000001000        0x0 boot.o
+ .rela.text.startup
+                0x0000000000001000        0x0 boot.o
  *(.rodata*)
  .rodata.str1.4
-                0x0000000000001000      0x115 boot.o
- *fill*         0x0000000000001115        0x3 
+                0x0000000000001000       0x11 stdio.o
+ *fill*         0x0000000000001011        0x3 
  .rodata.str1.4
-                0x0000000000001118       0x11 stdio.o
- *fill*         0x0000000000001129        0x3 
+                0x0000000000001014       0x7a main.o
+ *fill*         0x000000000000108e        0x2 
  .rodata.str1.4
-                0x000000000000112c       0x58 main.o
-                                         0x60 (size before relaxing)
+                0x0000000000001090      0x110 hello.o
+                                        0x115 (size before relaxing)
 
-.io             0x0000000080000000        0xc
+.io             0x0000000080000000       0x10
  io.o(COMMON)
- COMMON         0x0000000080000000        0xc io.o
+ COMMON         0x0000000080000000       0x10 io.o
                 0x0000000080000000                io
 LOAD boot.o
 LOAD stdio.o
 LOAD main.o
 LOAD io.o
+LOAD hello.o
 OUTPUT(darksocv.o elf32-littleriscv)
 
 .comment        0x0000000000000000       0x29
@@ -74,3 +83,4 @@ OUTPUT(darksocv.o elf32-littleriscv)
  .comment       0x0000000000000029       0x2a io.o
  .comment       0x0000000000000029       0x2a stdio.o
  .comment       0x0000000000000029       0x2a main.o
+ .comment       0x0000000000000029       0x2a hello.o

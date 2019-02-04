@@ -28,71 +28,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include <io.h>
-#include <stdio.h>
+struct DARKIO {
 
-int main(void)
-{
-  char  buffer[32];
+    int uart_stat;
+    int uart_fifo;
+    int led;
+    int bug;
+};
 
-  printf("Welcome to DarkRISCV!\n");
-
-  // main loop
-
-  while(1)
-  {
-    printf("> ");
-    
-    gets(buffer,sizeof(buffer));
-
-    if(!strcmp(buffer,"clear"))
-    {
-        printf("\33[H\33[2J");
-    }
-    else
-    if(!strcmp(buffer,"led"))
-    {
-        printf("led = %x\n",++io.led);
-    }
-    else
-    if(!strcmp(buffer,"bug"))
-    {
-        printf("bug = %x\n",io.bug);
-    }
-    else
-    if(!strcmp(buffer,"heap"))
-    {
-        char *p=(char *)0x1000;
-        int i,j;
-        
-        for(i=0;i!=16;i++)
-        {
-            for(j=0;j!=32;j++) printf("%x ",p[j]);
-            for(j=0;j!=32;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
-            putchar('\n');
-            p+=32;
-        }
-    }
-    else
-    if(!strcmp(buffer,"stack"))
-    {
-        char *p=(char *)(0x2000-(32*16));
-        int i,j;
-        
-        for(i=0;i!=16;i++)
-        {
-            for(j=0;j!=32;j++) printf("%x ",p[j]);
-            for(j=0;j!=32;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
-            putchar('\n');
-            p+=32;
-        }
-    }
-    else
-    if(buffer[0])
-    {
-        printf("command: [%s] not found.\n",buffer);
-    }
-  }
-
-  return 0;
-}
+extern volatile struct DARKIO io;

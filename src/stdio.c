@@ -28,7 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include "stdio.h"
+#include <io.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 // putchar and getchar uses the "low-level" io
 
@@ -69,23 +71,13 @@ void gets(char *p,int s)
   *p=0;
 }
 
-void putstr(char *p)
-{
-  while(*p) putchar(*p++);
-}
-
 int puts(char *p)
 {
   while(*p) putchar(*p++);
   return putchar('\n');
 }
 
-int hex(int i)
-{
-    return i+((i<=9)?'0':'a');
-}
-
-int putx(int i)
+unsigned putx(unsigned i)
 {
     register char *hex="0123456789abcdef";
 
@@ -113,20 +105,22 @@ int putx(int i)
 
 int printf(char *fmt,...)
 {
-/*    register char **stk;
+    va_list ap;
 
-    for(stk=&fmt;*fmt;fmt++)
+    for(va_start(ap, fmt);*fmt;fmt++)
     {
-        if(fmt[0]=='%')
+        if(*fmt=='%')
         {
-                 if(fmt[1]=='s') putstr((char *)*++stk);
-            else if(fmt[1]=='x') putx((int)*++stk);
+            fmt++;
+                 if(*fmt=='s') printf(va_arg(ap,char *));
+            else if(*fmt=='x') putx(va_arg(ap,int));
             else putchar(*fmt);
         }
         else putchar(*fmt);
-    }*/
-    
-    putstr(fmt);
+    }
+
+    va_end(ap);
+
     return 0;
 }
 
@@ -135,4 +129,13 @@ int strcmp(char *s1, char *s2)
     while(*s1 && *s2 && (*s1==*s2)) { s1++; s2++; }
     
     return (*s1-*s2);
+}
+
+char *memcpy(char *dptr,char *sptr,int len)
+{
+    char *ret = dptr;
+
+    while(len--) *dptr++ = *sptr++;
+
+    return ret;
 }
