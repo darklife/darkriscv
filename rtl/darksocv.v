@@ -35,6 +35,22 @@
 //`define CACHE_CONTROLLER 1
 //`define STAGE3           1
 
+`ifdef __ICARUS__
+    `define SIMULATION 1
+`endif
+
+`ifdef XILINX_ISIM
+    `define SIMULATION 2
+`endif
+
+`ifdef MODEL_TECH
+    `define SIMULATION 3
+`endif
+
+`ifdef XILINX_SIMULATOR
+    `define SIMULATION 4
+`endif
+
 `define AVNET_MICROBOARD_LX9
 
 // weird clock calculations for microboard running at 66MHz:
@@ -264,8 +280,8 @@ module darksocv
         end
         
         // weird bug appears to be related to the "sw ra,12(sp)" instruction.
-        //if(WR&&DADDR[31]==0&&DADDR[12]==0)
-        //    ROMBUG <= IADDR;
+        if(WR&&DADDR[31]==0&&DADDR[12]==0)
+            ROMBUG <= IADDR;
     end    
     
     assign DATAI = DADDR[31] ? IOMUX  : RAMFF2;
@@ -298,9 +314,9 @@ module darksocv
             case(DADDR[3:0])
                 4:  begin
                         UART_XFIFO <= DATAO[7:0];
-`ifdef __ICARUS__
+`ifdef SIMULATION
                         // print the UART output to console! :)
-                        if(DATAI[7:0]!=13)
+                        if(DATAO[7:0]!=13)
                         begin
                             $write("%c",DATAO[7:0]);
                         end            
@@ -385,8 +401,8 @@ module darksocv
                                        
     assign IOMUX = DADDR[3:2]==0 ? { 30'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK } :
                    DADDR[3:2]==1 ? { 24'd0, UART_RFIFO } : 
-                                   { 28'd0, LEDFF }; 
-                                   //{ ROMBUG };
+                   DADDR[3:2]==2 ? { 28'd0, LEDFF } : 
+                                   { ROMBUG };
 
     // darkriscv
 

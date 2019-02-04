@@ -97,9 +97,25 @@ module darkriscv
     wire [4:0] S2PTR  = XIDATA[24:20];
     wire [6:0] FCT7   = XIDATA[31:25];
 
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XFCC, XCCC;
+
     always@(posedge CLK)
     begin        
         XIDATA <= RES ? { ALL0[31:12], 5'd2, ALL0[6:0] } : HLT ? XIDATA : IDATA;
+        
+        XLUI   <= RES ? 0 : HLT ? XLUI   : IDATA[6:0]==`LUI;
+        XAUIPC <= RES ? 0 : HLT ? XAUIPC : IDATA[6:0]==`AUIPC;
+        XJAL   <= RES ? 0 : HLT ? XJAL   : IDATA[6:0]==`JAL;
+        XJALR  <= RES ? 0 : HLT ? XJALR  : IDATA[6:0]==`JALR;        
+
+        XBCC   <= RES ? 0 : HLT ? XBCC   : IDATA[6:0]==`BCC;
+        XLCC   <= RES ? 0 : HLT ? XLCC   : IDATA[6:0]==`LCC;
+        XSCC   <= RES ? 0 : HLT ? XSCC   : IDATA[6:0]==`SCC;
+        XMCC   <= RES ? 0 : HLT ? XMCC   : IDATA[6:0]==`MCC;
+
+        XRCC   <= RES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
+        XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
+        XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
     end   
 
     // signal extended immediate, according to the instruction type:
@@ -134,19 +150,23 @@ module darkriscv
     
     // main opcode decoder:
                                 
-    wire    LUI = OPCODE==7'b0110111;
-    wire  AUIPC = OPCODE==7'b0010111;
-    wire    JAL = OPCODE==7'b1101111;
-    wire   JALR = OPCODE==7'b1100111;
-    wire    BCC = OPCODE==7'b1100011; //FCT3
-    wire    LCC = OPCODE==7'b0000011; //FCT3
-    wire    SCC = OPCODE==7'b0100011; //FCT3
-    wire    MCC = OPCODE==7'b0010011; //FCT3
-    wire    RCC = OPCODE==7'b0110011; //FCT3
-    wire    FCC = OPCODE==7'b0001111; //FCT3
-    wire    CCC = OPCODE==7'b1110011; //FCT3
+    wire    LUI = FLUSH ? 0 : XLUI;   // OPCODE==7'b0110111;
+    wire  AUIPC = FLUSH ? 0 : XAUIPC; // OPCODE==7'b0010111;
+    wire    JAL = FLUSH ? 0 : XJAL;   // OPCODE==7'b1101111;
+    wire   JALR = FLUSH ? 0 : XJALR;  // OPCODE==7'b1100111;
+    
+    wire    BCC = FLUSH ? 0 : XBCC; // OPCODE==7'b1100011; //FCT3
+    wire    LCC = FLUSH ? 0 : XLCC; // OPCODE==7'b0000011; //FCT3
+    wire    SCC = FLUSH ? 0 : XSCC; // OPCODE==7'b0100011; //FCT3
+    wire    MCC = FLUSH ? 0 : XMCC; // OPCODE==7'b0010011; //FCT3
+    
+    wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
+    wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
+    wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
+`ifdef STAGE3
     reg [31:0] NXPC2;       // 32-bit program counter t+2
+`endif
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
     
@@ -159,6 +179,7 @@ module darkriscv
 
     wire signed   [31:0] S1REG = REG[S1PTR];
     wire signed   [31:0] S2REG = REG[S2PTR];
+    
     wire          [31:0] U1REG = REG[S1PTR];
     wire          [31:0] U2REG = REG[S2PTR];
     
@@ -186,23 +207,30 @@ module darkriscv
     
     wire [31:0] CDATA = 0;	// status register istructions not implemented yet
 
-    // I-group (merged M/R-groups OPCODE==7'b0x10011
-/*
-    wire signed [31:0] SOP2 = MCC ? SIMM : S2REG; // signed
-    wire        [31:0] UOP2 = MCC ? UIMM : FCT3==0 && FCT7[5] ? -U2REG : U2REG; // unsigned
+    // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
 
-    wire [31:0] MRDATA = FCT3==0 ? U1REG+SOP2 :
-                         FCT3==1 ? U1REG<<UOP2[4:0] :
-                         FCT3==2 ? S1REG<SOP2?1:0 : // signed
-                         FCT3==3 ? U1REG<UOP2?1:0 : //unsigned
-                         FCT3==5 ? (FCT7[5] ? U1REG>>>UOP2[4:0] : U1REG>>UOP2[4:0]) :
-                         FCT3==4 ? U1REG^UOP2 :
-                         FCT3==6 ? U1REG|UOP2 :
-                         FCT3==7 ? U1REG&UOP2 :                           
+    wire signed [31:0] S2REGX = XMCC ? SIMM : S2REG;
+    wire        [31:0] U2REGX = XMCC ? UIMM : U2REG;
+
+`ifdef MODEL_TECH
+    wire [31:0] RMDATA_FCT3EQ5 = FCT7[5]==0||U1REG[31]==0 ? U1REG>>U2REGX[4:0] : // workaround for modelsim
+                                -((-U1REG)>>U2REGX[4:0]);
+`else
+    wire [31:0] RMDATA_FCT3EQ5 = (FCT7[5] ? U1REG>>>U2REGX[4:0] : U1REG>>U2REGX[4:0]);
+`endif                        
+    wire [31:0] RMDATA = FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REGX : U1REG+S2REGX) :
+                         FCT3==1 ? U1REG<<U2REGX[4:0] :
+                         FCT3==2 ? S1REG<S2REGX?1:0 : // signed
+                         FCT3==3 ? U1REG<U2REGX?1:0 : // unsigned
+                         FCT3==5 ? RMDATA_FCT3EQ5 : // (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
+                         FCT3==4 ? U1REG^S2REGX :                        
+                         FCT3==6 ? U1REG|S2REGX :
+                         FCT3==7 ? U1REG&S2REGX :                        
                                    0;
-*/
 
-    // M-group of instructions (OPCODE==7'b0010011)
+/*
+    // M-group of instructions (OPCODE==7'b0010011), merged w/ RDATA!
+
 `ifdef MODEL_TECH
     wire [31:0] MDATA_FCT3EQ5 = FCT7[5]==0||U1REG[31]==0 ? U1REG>>UIMM[4:0] : // workaround for modelsim
                                 -((-U1REG)>>UIMM[4:0]);
@@ -219,15 +247,15 @@ module darkriscv
                         FCT3==7 ? U1REG&SIMM :                           
                                   0;
 
-
     // R-group of instructions (OPCODE==7'b0110011)
+    
 `ifdef MODEL_TECH
     wire [31:0] RDATA_FCT3EQ5 = FCT7[5]==0||U1REG[31]==0 ? U1REG>>U2REG[4:0] : // workaround for modelsim
                                 -((-U1REG)>>U2REG[4:0]);
 `else
     wire [31:0] RDATA_FCT3EQ5 = (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]);
 `endif                        
-    wire [31:0] RDATA = FCT3==0 ? (FCT7[5] ? U1REG-U2REG : U1REG+U2REG) :
+    wire [31:0] RDATA = FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REG : U1REG+U2REG) :
                         FCT3==1 ? U1REG<<U2REG[4:0] :
                         FCT3==2 ? S1REG<S2REG?1:0 : // signed
                         FCT3==3 ? U1REG<U2REG?1:0 : // unsigned
@@ -236,7 +264,7 @@ module darkriscv
                         FCT3==6 ? U1REG|U2REG :
                         FCT3==7 ? U1REG&U2REG :                        
                                   0;
-
+*/
     // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
@@ -270,8 +298,9 @@ module darkriscv
                       JALR ? NXPC :
                        LUI ? SIMM :
                        LCC ? LDATA :
-                       MCC ? MDATA : 
-                       RCC ? RDATA : 
+                  MCC||RCC ? RMDATA:
+                       //MCC ? MDATA :
+                       //RCC ? RDATA : 
                        CCC ? CDATA : 
                              REG[DPTR];
 
