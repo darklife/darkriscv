@@ -30,10 +30,13 @@
 
 `timescale 1ns / 1ps
 
-// pseudo-soc for testing purposes
+// the following defines are user defined:
 
-//`define CACHE_CONTROLLER 1
-//`define STAGE3           1
+`define AVNET_MICROBOARD_LX9        // board definition
+//`define __ICACHE__ 1              // instruction cache
+//`define __DCACHE__ 1              // data cache
+
+// the following defines are automatically defined:
 
 `ifdef __ICARUS__
     `define SIMULATION 1
@@ -51,9 +54,7 @@
     `define SIMULATION 4
 `endif
 
-`define AVNET_MICROBOARD_LX9
-
-// weird clock calculations for microboard running at 66MHz:
+// weird clock calculations for avnet microboard running at 66MHz:
 
 `ifdef AVNET_MICROBOARD_LX9
 
@@ -64,6 +65,7 @@
 module darksocv
 (
 `ifdef AVNET_MICROBOARD_LX9
+
     input        XCLK,       // 40MHz external clock
     input        XRES,       // external reset
     
@@ -72,16 +74,7 @@ module darksocv
             
     output [3:0] LED,       // on-board leds
     output [3:0] DEBUG      // osciloscope
-`else
-    input        CLK,   // host clock
-    input        RES,   // host reset
 
-    inout [31:0] HDATAO, // host data input/output 
-    input [31:0] HDADDR, // host addr input
-    input        HWR,    // host wr enalbe
-    input        HRD,    // host rd enable
-
-    output [3:0]  DEBUG  // old-school oscilloscope debug
 `endif
 );
 
@@ -95,15 +88,11 @@ module darksocv
 
     wire CLK = XCLK;
     wire RES = IRES[7];
-`endif
 
-`ifndef CACHE_CONTROLLER
-    reg [31:0] ROM [0:1023]; 
-    reg [31:0] ROMFF;
 `endif
-
-    reg [31:0] RAM [0:1023];  // global memory
-    reg [31:0] RAMFF;
+    
+    reg [31:0] ROM [0:1023]; // ro memory
+    reg [31:0] RAM [0:1023]; // rw memory
 
     // memory initialization
 
@@ -112,64 +101,30 @@ module darksocv
     begin
         for(i=0;i!=1024;i=i+1)
         begin        
+            ROM[i] = 32'd0;
             RAM[i] = 32'd0;
         end
-        
+
+        $readmemh("../src/darksocv.rom",ROM);        
         $readmemh("../src/darksocv.ram",RAM);
-`ifndef CACHE_CONTROLLER
-        for(i=0;i!=1024;i=i+1)
-        begin        
-            ROM[i] = 32'd0;
-        end
-        
-        $readmemh("../src/darksocv.rom",ROM);
-`endif        
-    end
-    
-    reg [1:0] RESFF;
-
-    // host memory interface
-    
-    always@(posedge CLK)
-    begin
-        RESFF <= RESFF<<1 | RES;
-        
-        if(^RESFF)
-        begin
-`ifdef CACHE_CONTROLLER        
-            $display("cache controller active");
-`endif
-`ifdef STAGE3
-            $display("3-stage pipeline active");
-`endif        
-        end
-
-`ifndef AVNET_MICROBOARD_LX9        
-        if(HWR)
-        begin
-            RAM[HDADDR[10:2]] <= HDATAO;
-        end
-        
-        RAMFF <= RAM[HDADDR[10:2]];
     end
 
-    assign HDATAO = !HRD ? 32'hzzzzzzzz : RAMFF;
-`else
-    end
-`endif
-
-    // darkriscv cache interface
+    // darkriscv bus interface
 
     wire [31:0] IADDR;
     wire [31:0] DADDR;
     wire [31:0] IDATA;    
     wire [31:0] DATAO;        
     wire [31:0] DATAI;
-    wire WR,RD;
-    wire [3:0] BE;
-    wire [31:0] IOMUX;
+    wire        WR,RD;
+    wire [3:0]  BE;
+
+    reg [31:0] IOMUX;
+
+    reg [31:0] ROMBUG = 0;
     
-`ifdef CACHE_CONTROLLER
+`ifdef __ICACHE__
+
     // instruction cache
 
     reg  [55:0] ICACHE [0:63]; // instruction cache
@@ -182,6 +137,60 @@ module darksocv
     
     wire IHIT = ITAG[IPTR] && ICACHEA==IADDR[31:8];
 
+    reg  IFFX = 0;
+    reg IFFX2 = 0;
+    
+    reg [31:0] ROMFF2;
+
+    always@(posedge CLK)
+    begin
+        ROMFF2 <= ROM[IADDR[11:2]];
+
+        if(IFFX2)
+        begin
+            IFFX2 <= 0;
+            IFFX  <= 0;
+        end
+        else    
+        if(!IHIT)
+        begin
+            ICACHE[IPTR] <= { IADDR[31:8], ROMFF2 };
+            ITAG[IPTR]    <= IFFX; // cached!
+            IFFX          <= 1;
+            IFFX2         <= IFFX;
+        end
+    end
+
+    assign IDATA = ICACHED;
+
+`else
+
+    wire IHIT=1;
+
+    reg [31:0] ROMFF2;
+    
+    always@(negedge CLK) // stage #0.5
+    begin
+        ROMFF2 <= ROM[IADDR[11:2]];
+    end
+
+    //assign IDATA = ROM[IADDR[11:2]];
+
+    always@(posedge CLK)
+    begin   
+        // weird bug appears to be related to the "sw ra,12(sp)" instruction.
+        if(WR&&DADDR[31]==0&&DADDR[12]==0)
+        begin
+            ROMBUG <= IADDR;
+        end
+    end
+    
+    assign IDATA = ROMFF2;
+
+`endif
+
+`ifdef __DCACHE__
+
     // data cache
 
     reg  [55:0] DCACHE [0:63]; // data cache
@@ -192,102 +201,94 @@ module darksocv
     wire [31:0] DCACHED = DCACHEO[31: 0]; // data
     wire [31:8] DCACHEA = DCACHEO[55:32]; // address
 
-    wire DHIT = RD ? DTAG[DPTR] && DCACHEA==DADDR[31:8] : 1;
+    wire DHIT = RD&&!DADDR[31] ? DTAG[DPTR] && DCACHEA==DADDR[31:8] : 1;
 
-    // cache fill
+    reg   FFX = 0;
+    reg  FFX2 = 0;
+    
+    reg [31:0] RAMFF2;    
 
-    reg [31:0] RAMFF2;
     reg        WTAG    = 0;
     reg [31:0] WCACHEA = 0;
     
-    reg  FFX = 0;
-    reg FFX2 = 0;
-
-    wire [31:0] AFILL = (!DHIT||!WHIT) ? DADDR : IADDR;
-
-    wire WHIT = WR&&!DADDR[31] ? WTAG&&WCACHEA==DADDR : 1;
+    wire WHIT = WR&&!DADDR[31]&&DADDR[12] ? WTAG&&WCACHEA==DADDR : 1;
 
     always@(posedge CLK)
     begin
-        RAMFF2 <= RAM[AFILL[10:2]];
+        RAMFF2 <= RAM[DADDR[11:2]];
 
         if(FFX2)
         begin
             FFX2 <= 0;
             FFX  <= 0;
+            WCACHEA <= 0;
+            WTAG <= 0;
         end
         else
         if(!DHIT)
         begin
             DCACHE[DPTR] <= { DADDR[31:8], RAMFF2 };
-            FFX          <= 1;
             DTAG[DPTR]   <= FFX; // cached!
+            FFX          <= 1;
             FFX2         <= FFX;
         end        
         else
         if(!WHIT)
         begin
-            RAM [AFILL[10:2]] <= DATAO; // write-through
-            
-            FFX          <= 1;
-            WCACHEA      <= DADDR;
-            DCACHE[DPTR] <= { DADDR[31:8], DATAO };
+            //individual byte/word/long selection, thanks to HYF!
+            if(BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+            if(BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+            if(BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+            if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];        
+
+            DCACHE[DPTR] <= { DADDR[31:8],
+                                    BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF2[3 * 8 + 7: 3 * 8],
+                                    BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF2[2 * 8 + 7: 2 * 8],
+                                    BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF2[1 * 8 + 7: 1 * 8],
+                                    BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF2[0 * 8 + 7: 0 * 8]
+                            };
+
             DTAG[DPTR]   <= FFX; // cached!
             WTAG         <= FFX;
-            FFX2         <= FFX;
-        end
-        else
-        if(!IHIT)
-        begin
-            ICACHE[IPTR] <= { IADDR[31:8], RAMFF2 };
+
+            WCACHEA      <= DADDR;
+
             FFX          <= 1;
-            ITAG[IPTR]   <= FFX; // cached!
             FFX2         <= FFX;
         end
     end
     
     assign DATAI = DADDR[31] ? IOMUX : DCACHED;
-    assign IDATA = ICACHED;
+
 `else
-    
-    wire IHIT=1;
+
     wire DHIT=1;
     wire WHIT=1;
 
-    reg [31:0] ROMFF2;
     reg [31:0] RAMFF2;
     
-    always@(negedge CLK)
+    always@(negedge CLK) // stage #1.5
     begin
-        ROMFF2 <= ROM[IADDR[11:2]];
         RAMFF2 <= RAM[DADDR[11:2]];
     end
 
-    //wire [31:0] ROMFF2 = ROM[IADDR[11:2]];
-    //wire [31:0] RAMFF2 = RAM[DADDR[11:2]];
-
-    reg [31:0] ROMBUG = 0;
+    //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[11:2]];
     
     always@(posedge CLK)
     begin   
         if(WR&&DADDR[31]==0&&DADDR[12]==1)
         begin
-            //individual byte/word/long selection, thanks to HYF!                                                                                                                                                                                                                                
+            //individual byte/word/long selection, thanks to HYF!
             if(BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
             if(BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
             if(BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-            if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];            
+            if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
         end
-        
-        // weird bug appears to be related to the "sw ra,12(sp)" instruction.
-        if(WR&&DADDR[31]==0&&DADDR[12]==0)
-            ROMBUG <= IADDR;
     end    
     
     assign DATAI = DADDR[31] ? IOMUX  : RAMFF2;
-    assign IDATA = ROMFF2;
-`endif
 
+`endif
 
     // io for debug
 
@@ -398,11 +399,14 @@ module darksocv
     assign UART_TXD = UART_XSTATE[3] ? UART_XFIFO[UART_XSTATE[2:0]] : 
                       UART_XSTATE==7 ? 0 : 
                                        1;
-                                       
-    assign IOMUX = DADDR[3:2]==0 ? { 30'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK } :
-                   DADDR[3:2]==1 ? { 24'd0, UART_RFIFO } : 
-                   DADDR[3:2]==2 ? { 28'd0, LEDFF } : 
-                                   { ROMBUG };
+
+    always@(negedge CLK)
+    begin                                       
+        IOMUX <= DADDR[3:2]==0 ? { 30'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK } :
+                 DADDR[3:2]==1 ? { 24'd0, UART_RFIFO } : 
+                 DADDR[3:2]==2 ? { 28'd0, LEDFF } : 
+                                 { ROMBUG };
+    end
 
     // darkriscv
 
@@ -420,8 +424,9 @@ module darksocv
     core0 
     (
         .CLK(CLK),
-        .RES(RESFF[1]),
-        .HLT(!IHIT||!DHIT||!WHIT),
+        .RES(RES),
+        .IHLT(!IHIT),
+        .DHLT(!DHIT||!WHIT),
         .IDATA(IDATA),
         .IADDR(IADDR),
         .DATAI(DATAI),

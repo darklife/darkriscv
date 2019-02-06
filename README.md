@@ -118,7 +118,7 @@ other Xilinx devices available in the ISE:
 
 - Spartan-3e:	47MHz
 - Spartan-6: 	75MHz
-- Artix-7: 	133MHz
+- Artix-7: 	    133MHz
 - Virtex-6: 	137MHz
 - Kintex-7: 	167MHz
 
@@ -133,34 +133,17 @@ and data are already cached.  Of course, the cache controller impact the
 performance, reducing the clock from 75MHz to 50MHz and inserting lots of
 wait-states in the cache filling cycles.
 
-===8<-------------------------------------------------- need some debug here!
-
-Well, in order to bypass this performance limitation, the most logic step is
-increase the number of states.  In this case, the *darkriscv* have the
-option to work with a real 3-stage pipeline:
-
-- 1st stage: instruction pre-fetch (no operation other than cache)
-- 2nd stage: instruction decode (no register or memory read here!)
-- 3rd stage: instruction execution (register/memory read/write)
-
-Of course, this is not solution for the load/store problem... the probably solution
-is increase the pipeline to 4-stages, splitting the 3rd. stage in a read/write
-stage. Although possible, this step adds some confusion, as long requires 
-additional logic in order to interlock the pipeline when one instruction in the
-3.rd stage uses a result from another instruction in the 4.th stage. However, with 
-the cache controller, the 3-stage pipeline works pretty well and I guess is
-possible add some fixes in the future in order to make it more flexible.
-
-===8<-------------------------------------------------- need some debug here!
-
 In fact, when running the "hello world" code we have the following results:
 
 - darkriscv@75MHz -cache -wait-states 2-stage pipeline 2-phase clock:  6.40us
-- darkriscv@75MHz +cache +wait-states 3-stage pipeline 1-phase clock:  9.37us
 - darkriscv@50MHz +cache +wait-states 2-stage pipeline 2-phase clock: 13.84us
 
 Although the first configuration reaches the best performance, the second 
 configuration is probably the most realistic at this time!
+
+note: the 3-stage pipeline version is not available anymore, since the
+2-stage pipeline version appears to be working well.  Maybe it will return
+in the future.
 
 ## Development Tools (gcc)
 

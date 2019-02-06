@@ -49,11 +49,6 @@
 // 2-stages: core and memory in different clock edges result in less clock performance, but
 // less losses when the program counter changes (pipeline flush = 1 clock). Works like a 4-stage
 // pipeline and remember the 68040 clock scheme.
-// 
-// 3-stages: core and memory in the same clock edge result in more clock performance, but
-// more losses when the program counter changes (pipeline flush = 2 clocks).
-    
-//`define STAGE3
 
 module darkriscv
 #(
@@ -62,7 +57,8 @@ module darkriscv
 ) (
     input             CLK,   // clock
     input             RES,   // reset
-    input             HLT,   // halt
+    input             IHLT,  // inst halt
+    input             DHLT,  // data halt
     
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
@@ -84,7 +80,9 @@ module darkriscv
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
 
-    reg [1:0] FLUSH;  // flush instruction pipeline 
+    wire HLT = IHLT||DHLT; // combo halt
+    
+    reg FLUSH;  // flush instruction pipeline 
     
     // IDATA is break apart as described in the RV32I specification
 
@@ -164,9 +162,6 @@ module darkriscv
     wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
-`ifdef STAGE3
-    reg [31:0] NXPC2;       // 32-bit program counter t+2
-`endif
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
     
@@ -234,43 +229,6 @@ module darkriscv
                          FCT3==7 ? U1REG&S2REGX :                        
                                    0;
 
-/*
-    // M-group of instructions (OPCODE==7'b0010011), merged w/ RDATA!
-
-`ifdef MODEL_TECH
-    wire [31:0] MDATA_FCT3EQ5 = FCT7[5]==0||U1REG[31]==0 ? U1REG>>UIMM[4:0] : // workaround for modelsim
-                                -((-U1REG)>>UIMM[4:0]);
-`else
-    wire [31:0] MDATA_FCT3EQ5 = (FCT7[5] ? U1REG>>>UIMM[4:0] : U1REG>>UIMM[4:0]);
-`endif
-    wire [31:0] MDATA = FCT3==0 ? U1REG+SIMM :
-                        FCT3==1 ? U1REG<<UIMM[4:0] :
-                        FCT3==2 ? S1REG<SIMM?1:0 : // signed
-                        FCT3==3 ? U1REG<UIMM?1:0 : // unsigned
-                        FCT3==5 ? MDATA_FCT3EQ5 : // (FCT7[5] ? U1REG>>>UIMM[4:0] : U1REG>>UIMM[4:0]) :
-                        FCT3==4 ? U1REG^SIMM :
-                        FCT3==6 ? U1REG|SIMM :
-                        FCT3==7 ? U1REG&SIMM :                           
-                                  0;
-
-    // R-group of instructions (OPCODE==7'b0110011)
-    
-`ifdef MODEL_TECH
-    wire [31:0] RDATA_FCT3EQ5 = FCT7[5]==0||U1REG[31]==0 ? U1REG>>U2REG[4:0] : // workaround for modelsim
-                                -((-U1REG)>>U2REG[4:0]);
-`else
-    wire [31:0] RDATA_FCT3EQ5 = (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]);
-`endif                        
-    wire [31:0] RDATA = FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REG : U1REG+U2REG) :
-                        FCT3==1 ? U1REG<<U2REG[4:0] :
-                        FCT3==2 ? S1REG<S2REG?1:0 : // signed
-                        FCT3==3 ? U1REG<U2REG?1:0 : // unsigned
-                        FCT3==5 ? RDATA_FCT3EQ5 : // (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
-                        FCT3==4 ? U1REG^U2REG :                        
-                        FCT3==6 ? U1REG|U2REG :
-                        FCT3==7 ? U1REG&U2REG :                        
-                                  0;
-*/
     // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
@@ -287,15 +245,9 @@ module darkriscv
             
     always@(posedge CLK)
     begin
-`ifdef STAGE3
-
-        FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt
-                       FLUSH ? FLUSH-1 : 
-                       (JAL||JALR||BMUX||RES) ? 2 : 0;  // flush the pipeline!
-`else
         FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
                        (JAL||JALR||BMUX||RES);  // flush the pipeline!
-`endif
+
         REG1[DPTR] <=   RES ? RESET_SP  :        // reset sp
                        HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
@@ -324,18 +276,9 @@ module darkriscv
                        CCC ? CDATA : 
                              REG2[DPTR];
 
-`ifdef STAGE3
-
-        NXPC <= RES ? RESET_PC : HLT ? NXPC : NXPC2;
-        
-        NXPC2 <=  RES ? RESET_PC : HLT ? NXPC2 :   // reset and halt
-                 JREQ ? JVAL :                    // jmp/bra
-                        NXPC2+4;                   // normal flow
-`else
         NXPC <= RES ? RESET_PC : HLT ? NXPC :   // reset and halt
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
-`endif
 
         PC   <= RES ? RESET_PC : HLT ? PC : NXPC; // current program counter
 
@@ -358,8 +301,8 @@ module darkriscv
 
     assign DATAO = SDATA; // SCC ? SDATA : 0;
     assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
-    assign RD = LCC;
-    assign WR = SCC;
+    assign RD = IHLT ? 0 : LCC;
+    assign WR = IHLT ? 0 : SCC;
     
     // based in the Scc and Lcc   
     assign BE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
@@ -369,11 +312,7 @@ module darkriscv
                 FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
                                                      4'b0011 ) :
                                                      4'b1111; // sw/lw
-`ifdef STAGE3
-    assign IADDR = NXPC2;
-`else
     assign IADDR = NXPC;
-`endif        
 
     assign DEBUG = { RES, FLUSH, WR, RD };
 
