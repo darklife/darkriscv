@@ -170,18 +170,24 @@ module darkriscv
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
     
-    reg [31:0] REG [0:31];	// general-purpose 32x32-bit registers
+    reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
+    reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
 
     integer i; 
-    initial for(i=0;i!=32;i=i+1) REG[i] = 0; // makes the simulation looks better!
+    initial 
+    for(i=0;i!=32;i=i+1) 
+    begin
+        REG1[i] = 0; // makes the simulation looks better!
+        REG2[i] = 0; // makes the simulation looks better!
+    end
 
     // source-1 and source-1 register selection
 
-    wire signed   [31:0] S1REG = REG[S1PTR];
-    wire signed   [31:0] S2REG = REG[S2PTR];
+    wire signed   [31:0] S1REG = REG1[S1PTR];
+    wire signed   [31:0] S2REG = REG2[S2PTR];
     
-    wire          [31:0] U1REG = REG[S1PTR];
-    wire          [31:0] U2REG = REG[S2PTR];
+    wire          [31:0] U1REG = REG1[S1PTR];
+    wire          [31:0] U2REG = REG2[S2PTR];
     
     // L-group of instructions (OPCODE==7'b0000011)
 
@@ -290,8 +296,8 @@ module darkriscv
         FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
                        (JAL||JALR||BMUX||RES);  // flush the pipeline!
 `endif
-        REG[DPTR] <=   RES ? RESET_SP  :        // reset sp
-                       HLT ? REG[DPTR] :        // halt
+        REG1[DPTR] <=   RES ? RESET_SP  :        // reset sp
+                       HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
                       JAL||
@@ -302,7 +308,21 @@ module darkriscv
                        //MCC ? MDATA :
                        //RCC ? RDATA : 
                        CCC ? CDATA : 
-                             REG[DPTR];
+                             REG1[DPTR];
+
+        REG2[DPTR] <=   RES ? RESET_SP  :        // reset sp
+                       HLT ? REG2[DPTR] :        // halt
+                     !DPTR ? 0 :                // x0 = 0, always!
+                     AUIPC ? PC+SIMM :
+                      JAL||
+                      JALR ? NXPC :
+                       LUI ? SIMM :
+                       LCC ? LDATA :
+                  MCC||RCC ? RMDATA:
+                       //MCC ? MDATA :
+                       //RCC ? RDATA : 
+                       CCC ? CDATA : 
+                             REG2[DPTR];
 
 `ifdef STAGE3
 

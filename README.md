@@ -103,8 +103,8 @@ two different stages, working as a 4\*0.5-stage pipeline:
 
 - 1/2 stage for instruction pre-fetch
 - 1/2 stage for static instruction decode
-- 1/2 stage for execution and address generation
-- 1/2 stage for data read/write
+- 1/2 stage for address generation and data read 
+- 1/2 stage for data write
 
 Anyway, from the processor point of view, there are only 2 stages.
 
@@ -133,6 +133,8 @@ and data are already cached.  Of course, the cache controller impact the
 performance, reducing the clock from 75MHz to 50MHz and inserting lots of
 wait-states in the cache filling cycles.
 
+===8<-------------------------------------------------- need some debug here!
+
 Well, in order to bypass this performance limitation, the most logic step is
 increase the number of states.  In this case, the *darkriscv* have the
 option to work with a real 3-stage pipeline:
@@ -148,6 +150,8 @@ additional logic in order to interlock the pipeline when one instruction in the
 3.rd stage uses a result from another instruction in the 4.th stage. However, with 
 the cache controller, the 3-stage pipeline works pretty well and I guess is
 possible add some fixes in the future in order to make it more flexible.
+
+===8<-------------------------------------------------- need some debug here!
 
 In fact, when running the "hello world" code we have the following results:
 
