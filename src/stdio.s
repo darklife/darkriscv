@@ -6,34 +6,35 @@
 	.type	getchar, @function
 getchar:
 	lui	a5,%hi(io)
+	addi	a5,a5,%lo(io)
 .L2:
-	lw	a4,%lo(io)(a5)
+	lbu	a4,4(a5)
 	andi	a4,a4,2
 	beqz	a4,.L2
-	addi	a5,a5,%lo(io)
-	lw	a0,4(a5)
+	lbu	a0,5(a5)
 	ret
 	.size	getchar, .-getchar
 	.align	2
 	.globl	putchar
 	.type	putchar, @function
 putchar:
-	li	a4,10
 	lui	a5,%hi(io)
+	li	a4,10
+	addi	a5,a5,%lo(io)
 	bne	a0,a4,.L8
 .L7:
-	lw	a4,%lo(io)(a5)
+	lbu	a4,4(a5)
 	andi	a4,a4,1
 	bnez	a4,.L7
-	addi	a4,a5,%lo(io)
-	li	a3,13
-	sw	a3,4(a4)
+	li	a4,13
+	sb	a4,5(a5)
 .L8:
-	lw	a4,%lo(io)(a5)
+	lbu	a4,4(a5)
 	andi	a4,a4,1
 	bnez	a4,.L8
-	addi	a5,a5,%lo(io)
-	sw	a0,4(a5)
+	andi	a4,a0,0xff
+	sb	a4,5(a5)
+	mv	a0,a4
 	ret
 	.size	putchar, .-putchar
 	.align	2

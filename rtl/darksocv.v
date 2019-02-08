@@ -119,9 +119,10 @@ module darksocv
     wire        WR,RD;
     wire [3:0]  BE;
 
-    reg [31:0] IOMUX;
+    wire [31:0] IOMUX [0:3];
 
-    reg [31:0] ROMBUG = 0;
+    reg  [31:0] ROMBUG = 0;
+    reg  [ 3:0] LEDFF  = 0;
     
 `ifdef __ICACHE__
 
@@ -286,133 +287,51 @@ module darksocv
         end
     end    
     
-    assign DATAI = DADDR[31] ? IOMUX  : RAMFF2;
+    assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF2;
 
 `endif
 
     // io for debug
 
-    reg [ 7:0]  UART_XFIFO  = 0; // UART TX FIFO
-    reg         UART_XREQ   = 0; // request (core side)
-    reg         UART_XACK   = 0; // ack (uart side)
-    reg [15:0]  UART_XBAUD  = 0; // baud rate counter
-    reg [ 3:0]  UART_XSTATE = 6; // idle state
+    wire [3:0] IRQ;
 
-    reg [ 7:0]  UART_RFIFO  = 0; // UART RX FIFO
-    reg         UART_RREQ   = 0; // request (uart side)
-    reg         UART_RACK   = 0; // ack (core side)
-    reg [15:0]  UART_RBAUD  = 0; // baud rate counter
-    reg [ 3:0]  UART_RSTATE = 6; // idle state
-
-    reg [2:0]   UART_RXDFF = -1;
-
-    reg [3:0]   LEDFF = 0;
+    assign IOMUX[0] = { 28'd0, IRQ };
+    assign IOMUX[2] = LEDFF;
+    assign IOMUX[3] = ROMBUG;
 
     always@(posedge CLK)
     begin
-        if(WR&&DADDR[31])
+        if(WR&&DADDR[31]&&DADDR[3:2]==2)
         begin
-            case(DADDR[3:0])
-                4:  begin
-                        UART_XFIFO <= DATAO[7:0];
-`ifdef SIMULATION
-                        // print the UART output to console! :)
-                        if(DATAO[7:0]!=13)
-                        begin
-                            $write("%c",DATAO[7:0]);
-                        end            
-`else
-                        UART_XREQ <= !UART_XACK;    // activate UART!
-`endif
-                    end
-                8:  begin
-                        LEDFF <= DATAO[3:0];
-                    end        
-            endcase
-        end
-
-        UART_XBAUD <= UART_XBAUD ? UART_XBAUD-1 : `UART_BAUD;
-
-        // sequence: 6(IDLE), 7(START), 8, 9, 10, 11, 12, 13, 14, 15, 0(STOP), 1(ACK)
-
-        if(RES)
-            UART_XSTATE <= 6;
-        else 
-        if(UART_XBAUD==0)
-        begin
-            case(UART_XSTATE)
-                6: UART_XSTATE <= UART_XREQ^UART_XACK ? 7 : 6;
-                default: UART_XSTATE <= UART_XSTATE+1;
-                1: begin
-                        UART_XSTATE <= 6;
-                        UART_XACK <= UART_XREQ;
-                        // print the UART output to console! :)
-                        if(UART_XFIFO[7:0]!=13)
-                        begin
-                            $write("%c",UART_XFIFO[7:0]);
-                        end
-                   end
-            endcase
-        end
-        
-        if(RD&&DADDR[31]&&DADDR[3:0]==4)
-        begin        
-           UART_RACK <= UART_RREQ; // fifo ready
-        end                
-
-        UART_RXDFF <= (UART_RXDFF<<1)|UART_RXD;
-
-        UART_RBAUD <= UART_RSTATE==6 ? (`UART_BAUD/2) : 
-                          UART_RBAUD ? (UART_RBAUD-1) : 
-                                       (`UART_BAUD);
-
-        // sequence: 6(IDLE), 7(START), 8, 9, 10, 11, 12, 13, 14, 15, 0(STOP), 1(ACK)
-
-        if(RES)
-            UART_RSTATE <= 6;
-        else
-        if(UART_RSTATE==6)
-        begin
-            if(UART_RXDFF[2:1]==2'b10) // "negedge" detection
-            begin
-                UART_RSTATE <= UART_RSTATE+1; 
-            end
-        end
-        else
-        if(UART_RBAUD==0)
-        begin
-            case(UART_RSTATE)
-                default: UART_RSTATE <= UART_RSTATE+1;
-                1: begin
-                        UART_RSTATE <= 6;
-                        UART_RREQ <= !UART_RACK; // fifo not empty!
-                   end
-            endcase
-            
-            if(UART_RSTATE[3])
-            begin
-                UART_RFIFO[UART_RSTATE[2:0]] <= UART_RXDFF[2];
-            end
+            LEDFF <= DATAO[3:0];
         end
     end
 
-    assign UART_TXD = UART_XSTATE[3] ? UART_XFIFO[UART_XSTATE[2:0]] : 
-                      UART_XSTATE==7 ? 0 : 
-                                       1;
+    assign IRQ[0] = 0;
+    assign IRQ[2] = 0;
+    assign IRQ[3] = 0;
 
-    always@(negedge CLK)
-    begin                                       
-        IOMUX <= DADDR[3:2]==0 ? { 30'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK } :
-                 DADDR[3:2]==1 ? { 24'd0, UART_RFIFO } : 
-                 DADDR[3:2]==2 ? { 28'd0, LEDFF } : 
-                                 { ROMBUG };
-    end
+    // darkuart
+  
+    wire [3:0] UDEBUG;
+    wire       UART_IRQ;
+
+    darkuart uart0
+    (
+      .CLK(CLK),
+      .RES(RES),
+      .RD(RD&&DADDR[31]&&DADDR[3:2]==1),
+      .WR(WR&&DADDR[31]&&DADDR[3:2]==1),
+      .BE(BE),
+      .DATAI(DATAO),
+      .DATAO(IOMUX[1]),
+      .IRQ(IRQ[1]),
+      .RXD(UART_RXD),
+      .TXD(UART_TXD),
+      .DEBUG(UDEBUG)
+    );
 
     // darkriscv
-
-    // TODO: replace the HLT by DTACK-like signals separated for 
-    // instruction and data, and make the bus interface more 68k-like.
-    // add support for multiple cores! \o/
 
     wire [3:0] KDEBUG;
 
@@ -448,9 +367,7 @@ module darksocv
 
 `ifdef AVNET_MICROBOARD_LX9
     assign LED   = LEDFF;
-    assign DEBUG = { WR, RD, UART_RREQ^UART_RACK, UART_RXD };
-`else
-    assign DEBUG = KDEBUG;
+    assign DEBUG = UDEBUG;
 `endif
 
 endmodule

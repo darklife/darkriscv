@@ -15,28 +15,28 @@ IO               0x0000000080000000 0x0000000000000010 rw !x
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x3a4
+.text           0x0000000000000000      0x3b8
  boot.o(.text)
- .text          0x0000000000000000       0x14 boot.o
+ .text          0x0000000000000000       0x24 boot.o
                 0x0000000000000000                _start
  *(.text)
- .text          0x0000000000000014        0x0 io.o
- .text          0x0000000000000014      0x310 stdio.o
-                0x0000000000000014                getchar
-                0x0000000000000030                putchar
-                0x000000000000006c                gets
-                0x00000000000000e4                puts
-                0x000000000000011c                putx
-                0x0000000000000204                printf
-                0x00000000000002d8                strcmp
-                0x0000000000000300                memcpy
- .text          0x0000000000000324        0x0 main.o
- .text          0x0000000000000324       0x80 hello.o
-                0x0000000000000324                hello
+ .text          0x0000000000000024        0x0 io.o
+ .text          0x0000000000000024      0x314 stdio.o
+                0x0000000000000024                getchar
+                0x0000000000000040                putchar
+                0x0000000000000080                gets
+                0x00000000000000f8                puts
+                0x0000000000000130                putx
+                0x0000000000000218                printf
+                0x00000000000002ec                strcmp
+                0x0000000000000314                memcpy
+ .text          0x0000000000000338        0x0 main.o
+ .text          0x0000000000000338       0x80 hello.o
+                0x0000000000000338                hello
 
-.text.startup   0x00000000000003a4      0x220
- .text.startup  0x00000000000003a4      0x220 main.o
-                0x00000000000003a4                main
+.text.startup   0x00000000000003b8      0x220
+ .text.startup  0x00000000000003b8      0x220 main.o
+                0x00000000000003b8                main
 
 .data           0x0000000000001000      0x1a0
  *(.data)

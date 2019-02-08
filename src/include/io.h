@@ -30,8 +30,12 @@
 
 struct DARKIO {
 
-    int uart_stat;
-    int uart_fifo;
+    int irq;
+
+    unsigned char   uart_stat;
+    unsigned char   uart_fifo;
+    unsigned short  uart_baud;
+
     int led;
     int bug;
 };

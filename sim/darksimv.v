@@ -38,13 +38,14 @@ module darksimv;
     
     reg [3:0] RES = -1;
 
-    initial while(1) #(500e3/40e3) CLK = !CLK; // clock speed of 80MHz
+    initial while(1) #(500e3/66666) CLK = !CLK; // clock speed of 80MHz
 
     initial #(250e6) $finish;
 
     always@(posedge CLK) RES <= RES ? RES-1 : 0;
 
-    wire TX,RX;
+    wire TX;
+    wire RX = 1;
 
     wire [3:0] LED;
     wire [3:0] DEBUG;

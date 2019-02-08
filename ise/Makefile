@@ -56,7 +56,7 @@ TWR = $(TMP)/darksocv.twr
 BIT = $(TMP)/darksocv.bit
 MAP = $(TMP)/darksocv_map.ncd
 
-RTLS = ../rtl/darksocv.v ../rtl/darkriscv.v
+RTLS = ../rtl/darksocv.v ../rtl/darkriscv.v ../rtl/darkuart.v
 UCFS = ../ise/darksocv.ucf
 PRJS = ../ise/darksocv.prj
 BOOT = ../src/darksocv.rom ../src/darksocv.ram

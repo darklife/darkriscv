@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include <stdio.h>
+#include <io.h>
 
 extern int  main (void);
 extern void hello(void);
@@ -46,5 +46,7 @@ void _start(void)
    *
    */
 
-   for(hello();1;main());
+  io.uart_baud = (66666666/115200);
+  
+  for(hello();1;main());
 }
