@@ -67,11 +67,13 @@
 // 
 // 0: status register ro, 1 = xmit busy, 2 = recv busy
 // 1: buffer register rw, w = xmit fifo, r = recv fifo
-// 2: baud rate msb   rw
-// 3: baud rate lsb   rw
+// 2: baud rate msb   rw (not used)
+// 3: baud rate lsb   rw (not used)
 
 module darkuart
-(
+#(
+  parameter [15:0] BAUD = 0
+) (
     input           CLK,            // clock
     input           RES,            // reset
         
@@ -88,7 +90,7 @@ module darkuart
     output [3:0]    DEBUG           // osc debug
 );
 
-    reg [15:0]  UART_TIMER = 0;     // baud rate config
+    reg [15:0]  UART_TIMER = BAUD;  // baud rate config
     reg         UART_IREQ  = 0;     // UART interrupt req
     reg         UART_IACK  = 0;     // UART interrupt ack
 
@@ -123,16 +125,22 @@ module darkuart
                 UART_XFIFO <= DATAI[15:8];
 `ifdef SIMULATION
                 // print the UART output to console! :)
-                if(DATAI[15:8]!=13)
+                if(DATAI[15:8]!=13) // remove the '\r'
                 begin
                     $write("%c",DATAI[15:8]);
-                end            
+                end
+                
+                if(DATAI[15:8]==62) // prompt '>'
+                begin
+                    $display(" no UART input, finishing simulation...");
+                    $finish();
+                end
 `else
                 UART_XREQ <= !UART_XACK;    // activate UART!
 `endif
             end
-            if(BE[2]) UART_TIMER[ 7:0] <= DATAI[23:16];
-            if(BE[3]) UART_TIMER[15:8] <= DATAI[31:24];           
+            //if(BE[2]) UART_TIMER[ 7:0] <= DATAI[23:16];
+            //if(BE[3]) UART_TIMER[15:8] <= DATAI[31:24];           
         end
     
         if(RES)

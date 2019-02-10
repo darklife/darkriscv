@@ -15,56 +15,65 @@ IO               0x0000000080000000 0x0000000000000010 rw !x
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x3b8
+.text           0x0000000000000000      0x520
  boot.o(.text)
- .text          0x0000000000000000       0x24 boot.o
+ .text          0x0000000000000000       0x78 boot.o
                 0x0000000000000000                _start
  *(.text)
- .text          0x0000000000000024        0x0 io.o
- .text          0x0000000000000024      0x314 stdio.o
-                0x0000000000000024                getchar
-                0x0000000000000040                putchar
-                0x0000000000000080                gets
-                0x00000000000000f8                puts
-                0x0000000000000130                putx
-                0x0000000000000218                printf
-                0x00000000000002ec                strcmp
-                0x0000000000000314                memcpy
- .text          0x0000000000000338        0x0 main.o
- .text          0x0000000000000338       0x80 hello.o
-                0x0000000000000338                hello
+ .text          0x0000000000000078        0x0 io.o
+ .text          0x0000000000000078      0x434 stdio.o
+                0x0000000000000078                getchar
+                0x0000000000000094                putchar
+                0x00000000000000d4                gets
+                0x000000000000014c                puts
+                0x0000000000000184                putx
+                0x0000000000000264                putd
+                0x0000000000000348                printf
+                0x0000000000000444                strcmp
+                0x000000000000046c                memcpy
+                0x0000000000000490                memset
+ .text          0x00000000000004ac        0x0 main.o
+ .text          0x00000000000004ac       0x74 hello.o
+                0x00000000000004ac                hello
 
-.text.startup   0x00000000000003b8      0x220
- .text.startup  0x00000000000003b8      0x220 main.o
-                0x00000000000003b8                main
+.text.startup   0x0000000000000520      0x244
+ .text.startup  0x0000000000000520      0x244 main.o
+                0x0000000000000520                main
 
-.data           0x0000000000001000      0x1a0
+.data           0x0000000000001000      0x2a4
  *(.data)
  .data          0x0000000000001000        0x0 boot.o
- .data          0x0000000000001000        0x0 io.o
- .data          0x0000000000001000        0x0 stdio.o
- .data          0x0000000000001000        0x0 main.o
- .data          0x0000000000001000        0x0 hello.o
+ .data          0x0000000000001000       0x14 io.o
+                0x0000000000001000                board_name
+ .data          0x0000000000001014        0x0 stdio.o
+ .data          0x0000000000001014        0x0 main.o
+ .data          0x0000000000001014        0x0 hello.o
  *(.bss)
- .bss           0x0000000000001000        0x0 boot.o
- .bss           0x0000000000001000        0x0 io.o
- .bss           0x0000000000001000        0x0 stdio.o
- .bss           0x0000000000001000        0x0 main.o
- .bss           0x0000000000001000        0x0 hello.o
+ .bss           0x0000000000001014        0x0 boot.o
+ .bss           0x0000000000001014        0x0 io.o
+ .bss           0x0000000000001014        0x0 stdio.o
+ .bss           0x0000000000001014        0x0 main.o
+ .bss           0x0000000000001014        0x0 hello.o
  *(.rela*)
- .rela.text     0x0000000000001000        0x0 boot.o
+ .rela.text     0x0000000000001014        0x0 boot.o
  .rela.text.startup
-                0x0000000000001000        0x0 boot.o
+                0x0000000000001014        0x0 boot.o
  *(.rodata*)
  .rodata.str1.4
-                0x0000000000001000       0x11 stdio.o
- *fill*         0x0000000000001011        0x3 
+                0x0000000000001014       0x54 boot.o
  .rodata.str1.4
-                0x0000000000001014       0x7a main.o
- *fill*         0x000000000000108e        0x2 
+                0x0000000000001068       0x5a io.o
+ *fill*         0x00000000000010c2        0x2 
+ .rodata        0x00000000000010c4       0x28 stdio.o
  .rodata.str1.4
-                0x0000000000001090      0x110 hello.o
-                                        0x115 (size before relaxing)
+                0x00000000000010ec       0x11 stdio.o
+ *fill*         0x00000000000010fd        0x3 
+ .rodata.str1.4
+                0x0000000000001100       0x92 main.o
+ *fill*         0x0000000000001192        0x2 
+ .rodata.str1.4
+                0x0000000000001194      0x110 hello.o
+                                        0x10d (size before relaxing)
 
 .io             0x0000000080000000       0x10
  io.o(COMMON)

@@ -30,14 +30,23 @@
 
 struct DARKIO {
 
-    int irq;
+    unsigned char board_id;
+    unsigned char board_cm;
+    unsigned char board_ck;
+    unsigned char irq;
 
-    unsigned char   uart_stat;
-    unsigned char   uart_fifo;
-    unsigned short  uart_baud;
+    struct DARKUART {
+        
+        unsigned char  stat;
+        unsigned char  fifo;
+        unsigned short baud;
+
+    } uart;
 
     int led;
     int bug;
 };
 
 extern volatile struct DARKIO io;
+
+extern const char *board_name[];

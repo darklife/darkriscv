@@ -35,4 +35,7 @@ void putstr(char *p);
 int puts(char *p);
 int printf(char *fmt,...);
 int strcmp(char *s1, char *s2);
-unsigned putx(unsigned);
+void putx(unsigned);
+void putd(int);
+char *memcpy(char *dptr,char *sptr,int len);
+char *memset(char *dptr, int c, int len);

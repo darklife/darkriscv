@@ -5,10 +5,10 @@ Opensource RISC-V implemented from scratch in one night!
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
 *darkriscv* is a very experimental implementation of the opensource RISC-V
-instruction set. Nowadays, after weeks of exciting sleepless nights of 
-work and the help of lots of colleagues, the *darkriscv* 
-reached a very good quality result, in a way that the "hello world" compiled 
-by the standard riscv-elf-gcc is working fine! :)
+instruction set.  Nowadays, after weeks of exciting sleepless nights of work
+and the help of lots of colleagues, the *darkriscv* reached a very good
+quality result, in a way that the "hello world" compiled by the standard
+riscv-elf-gcc is working fine!  :)
 
 The general concept is based in my other early RISC processors and composed
 by a simplified two stage pipeline where a instruction is fetch from a
@@ -24,7 +24,7 @@ Although the code is small and crude when compared with other RISC-V
 implementations, the *darkriscv* has lots of impressive features:
 
 - implements most of the RISC-V RV32I instruction set
-- works up to 75MHz and sustain 1 clock per instruction most of time
+- works up to 75MHz (spartan-6) and sustain 1 clock per instruction most of time
 - flexible harvard architecture (easy to integrate a cache controller)
 - works fine in a real spartan-6 lx9
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
@@ -86,7 +86,9 @@ case of *darkriscv* the proposal was a more flexible design, in a way is
 possible use blockRAM-based caches and slow external memories.  The problem
 with the blockRAM is that two clocks are required to readback the memory:
 one clock to register the address and another to register the data. 
-External memories requires lots of clocks.
+External memories requires lots of clocks, but LUT based memories requires
+no extra delays and can be used as ROM or RAM without need of extra clock
+edges.
 
 My first solution was use two different clock edges: one edge for the
 *darkriscv* and another edge for the memory/bus interface.
@@ -143,7 +145,9 @@ configuration is probably the most realistic at this time!
 
 note: the 3-stage pipeline version is not available anymore, since the
 2-stage pipeline version appears to be working well.  Maybe it will return
-in the future.
+in the future.  Anyway, the 2-state pipeline version works at 70MHz with or
+without i-cache only.  For some reason, the d-cache does not work anymore
+and will be fixed in the future.
 
 ## Development Tools (gcc)
 
@@ -260,16 +264,25 @@ complete test and left lots of instructions uncovered (such as the aiupc
 instruction, also pointed by our friend HYF). I hope a more complete test
 will be possible in the future (see issue #9 for more details!).
 
+In order to improve the simulation performance, the UART code is not
+simulated, since the 115200 bps requires lots dead simulation time.
+
 ## Development Boards
 
-Currently, the only supported board is the Avnet Microboard LX9, which is
-equiped with a Xilinx Spartan-6 LX9 board running at 66MHz, a 115200 bps
-UART, LED support and on-chip 4KB ROM and 4KB RAM.  Support for Ethernet and multiple cores 
-is under development and, in a general way, the port for other Spartan-6 
-boards with similar featuers is very easy.
+Currently, therea are two supported boards:
 
-A small shell is available with some basic examples, such as the clear command 
-to clear the screen and the led command to switch the led configuration.
+- Avnet Microboard LX9: equiped with a Xilinx Spartan-6 LX9 running at 66MHz
+- Xilin AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz
+
+Both boards supports a 115200 bps UART for console, 4xLEDs for debug and
+on-chip 4KB ROM and 4KB RAM.  Support for Ethernet and multiple cores is
+under development.  A small shell is available with some basic examples,
+such as the clear command to clear the screen and the led command to switch
+the led configuration.
+
+I received two Spartan-6 LX16 boards from QMTECH, but it requires a JTAG
+external programer, which did not arrived yet.  As long the JTAG external
+programer arrives, I will add support for that board.
 
 ## The Friends of DarkRISCV!
 

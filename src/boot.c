@@ -29,6 +29,7 @@
  */
 
 #include <io.h>
+#include <stdio.h>
 
 extern int  main (void);
 extern void hello(void);
@@ -36,17 +37,20 @@ extern void hello(void);
 void _start(void)
 {
   
-  /* 
-   * put the data and bss initialization here:
-   * 
-   * memcpy(&data_rom, &data_ram,data_len);
-   * memset(&bss_ram,0,bss_len);
-   *
-   * you need ensure the boot.o(.text) is the first block in the rom!
-   *
-   */
+    /* 
+     * put the data and bss initialization here:
+     * 
+     * memcpy(&data_rom, &data_ram,data_len);
+     * memset(&bss_ram,0,bss_len);
+     *
+     * you need ensure the boot.o(.text) is the first block in the rom!
+     *
+     */
 
-  io.uart_baud = (66666666/115200);
-  
-  for(hello();1;main());
+    printf("\33[33;44m.\33[H\33[2J");
+    printf("%s (id=%d)\n",board_name[io.board_id],io.board_id);
+    printf("darkriscv@%d.%dMHz\n",io.board_cm,io.board_ck);
+    printf("darkruart baudrate counter %d\n\n",io.uart.baud);
+
+    for(hello();1;main());
 }

@@ -32,9 +32,12 @@
 
 // the following defines are user defined:
 
-`define AVNET_MICROBOARD_LX9        // board definition
 //`define __ICACHE__ 1              // instruction cache
 //`define __DCACHE__ 1              // data cache
+
+// automatically defined in the xst/xise file:
+//`define AVNET_MICROBOARD_LX9 1
+//`define XILINX_AC701_A200 2
 
 // the following defines are automatically defined:
 
@@ -54,31 +57,32 @@
     `define SIMULATION 4
 `endif
 
-// weird clock calculations for avnet microboard running at 66MHz:
-
 `ifdef AVNET_MICROBOARD_LX9
+    `define BOARD_ID 1
+    `define BOARD_CK 66666666
+`endif
 
-    `define UART_BAUD   ((66666666/115200)-1)
+`ifdef XILINX_AC701_A200
+    `define BOARD_ID 2
+    `define BOARD_CK 90000000
+`endif
 
+`ifndef BOARD_ID
+    `define BOARD_ID 0
+    `define BOARD_CK 75000000
 `endif
 
 module darksocv
 (
-`ifdef AVNET_MICROBOARD_LX9
-
-    input        XCLK,       // 40MHz external clock
-    input        XRES,       // external reset
+    input        XCLK,      // external clock
+    input        XRES,      // external reset
     
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
-            
+
     output [3:0] LED,       // on-board leds
     output [3:0] DEBUG      // osciloscope
-
-`endif
 );
-
-`ifdef AVNET_MICROBOARD_LX9
 
     // internal reset
 
@@ -89,8 +93,6 @@ module darksocv
     wire CLK = XCLK;
     wire RES = IRES[7];
 
-`endif
-    
     reg [31:0] ROM [0:1023]; // ro memory
     reg [31:0] RAM [0:1023]; // rw memory
 
@@ -141,11 +143,11 @@ module darksocv
     reg  IFFX = 0;
     reg IFFX2 = 0;
     
-    reg [31:0] ROMFF2;
+    reg [31:0] ROMFF;
 
     always@(posedge CLK)
     begin
-        ROMFF2 <= ROM[IADDR[11:2]];
+        ROMFF <= ROM[IADDR[11:2]];
 
         if(IFFX2)
         begin
@@ -155,7 +157,7 @@ module darksocv
         else    
         if(!IHIT)
         begin
-            ICACHE[IPTR] <= { IADDR[31:8], ROMFF2 };
+            ICACHE[IPTR] <= { IADDR[31:8], ROMFF };
             ITAG[IPTR]    <= IFFX; // cached!
             IFFX          <= 1;
             IFFX2         <= IFFX;
@@ -168,11 +170,11 @@ module darksocv
 
     wire IHIT=1;
 
-    reg [31:0] ROMFF2;
+    reg [31:0] ROMFF;
     
     always@(negedge CLK) // stage #0.5
     begin
-        ROMFF2 <= ROM[IADDR[11:2]];
+        ROMFF <= ROM[IADDR[11:2]];
     end
 
     //assign IDATA = ROM[IADDR[11:2]];
@@ -186,7 +188,7 @@ module darksocv
         end
     end
     
-    assign IDATA = ROMFF2;
+    assign IDATA = ROMFF;
 
 `endif
 
@@ -207,7 +209,7 @@ module darksocv
     reg   FFX = 0;
     reg  FFX2 = 0;
     
-    reg [31:0] RAMFF2;    
+    reg [31:0] RAMFF;    
 
     reg        WTAG    = 0;
     reg [31:0] WCACHEA = 0;
@@ -216,7 +218,7 @@ module darksocv
 
     always@(posedge CLK)
     begin
-        RAMFF2 <= RAM[DADDR[11:2]];
+        RAMFF <= RAM[DADDR[11:2]];
 
         if(FFX2)
         begin
@@ -228,7 +230,7 @@ module darksocv
         else
         if(!DHIT)
         begin
-            DCACHE[DPTR] <= { DADDR[31:8], RAMFF2 };
+            DCACHE[DPTR] <= { DADDR[31:8], RAMFF };
             DTAG[DPTR]   <= FFX; // cached!
             FFX          <= 1;
             FFX2         <= FFX;
@@ -243,10 +245,10 @@ module darksocv
             if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];        
 
             DCACHE[DPTR] <= { DADDR[31:8],
-                                    BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF2[3 * 8 + 7: 3 * 8],
-                                    BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF2[2 * 8 + 7: 2 * 8],
-                                    BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF2[1 * 8 + 7: 1 * 8],
-                                    BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF2[0 * 8 + 7: 0 * 8]
+                                    BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
+                                    BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
+                                    BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
+                                    BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
                             };
 
             DTAG[DPTR]   <= FFX; // cached!
@@ -263,14 +265,16 @@ module darksocv
 
 `else
 
+    // no cache!
+
     wire DHIT=1;
     wire WHIT=1;
 
-    reg [31:0] RAMFF2;
+    reg [31:0] RAMFF;
     
     always@(negedge CLK) // stage #1.5
     begin
-        RAMFF2 <= RAM[DADDR[11:2]];
+        RAMFF <= RAM[DADDR[11:2]];
     end
 
     //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[11:2]];
@@ -287,15 +291,19 @@ module darksocv
         end
     end    
     
-    assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF2;
+    assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
 
 `endif
 
     // io for debug
 
-    wire [3:0] IRQ;
+    wire [7:0] BOARD_IRQ;
 
-    assign IOMUX[0] = { 28'd0, IRQ };
+    wire   [7:0] BOARD_ID = `BOARD_ID;              // board id
+    wire   [7:0] BOARD_CM = `BOARD_CK/1000000;      // board clock (MHz)
+    wire   [7:0] BOARD_CK = (`BOARD_CK/10000)%100;  // board clock (kHz)
+
+    assign IOMUX[0] = { BOARD_IRQ, BOARD_CK, BOARD_CM, BOARD_ID };
     assign IOMUX[2] = LEDFF;
     assign IOMUX[3] = ROMBUG;
 
@@ -307,16 +315,21 @@ module darksocv
         end
     end
 
-    assign IRQ[0] = 0;
-    assign IRQ[2] = 0;
-    assign IRQ[3] = 0;
+    // unused irqs
+
+    assign BOARD_IRQ[7:2] = 0;
+    assign BOARD_IRQ[0]   = 0;
 
     // darkuart
   
     wire [3:0] UDEBUG;
     wire       UART_IRQ;
 
-    darkuart uart0
+    darkuart
+    #( 
+      .BAUD((`BOARD_CK/115200))
+    )
+    uart0
     (
       .CLK(CLK),
       .RES(RES),
@@ -325,7 +338,7 @@ module darksocv
       .BE(BE),
       .DATAI(DATAO),
       .DATAO(IOMUX[1]),
-      .IRQ(IRQ[1]),
+      .IRQ(BOARD_IRQ[1]),
       .RXD(UART_RXD),
       .TXD(UART_TXD),
       .DEBUG(UDEBUG)
@@ -365,9 +378,7 @@ module darksocv
   end
 `endif
 
-`ifdef AVNET_MICROBOARD_LX9
     assign LED   = LEDFF;
     assign DEBUG = UDEBUG;
-`endif
 
 endmodule

@@ -55,7 +55,7 @@ main:
 	addi	a0,a0,%lo(.LC5)
 	addi	a1,a1,1
 	sw	a1,8(s1)
-.L30:
+.L31:
 	call	printf
 	j	.L2
 .L5:
@@ -66,12 +66,12 @@ main:
 	lui	a0,%hi(.LC7)
 	lw	a1,12(s1)
 	addi	a0,a0,%lo(.LC7)
-	j	.L30
+	j	.L31
 .L6:
 	addi	a1,s7,%lo(.LC8)
 	addi	a0,sp,16
 	call	strcmp
-	bnez	a0,.L27
+	bnez	a0,.L28
 	li	s0,4096
 	lui	s9,%hi(.LC9)
 	li	s2,32
@@ -108,11 +108,11 @@ main:
 .L7:
 	li	a5,0
 	j	.L9
-.L27:
+.L28:
 	addi	a1,s8,%lo(.LC10)
 	addi	a0,sp,16
 	call	strcmp
-	bnez	a0,.L28
+	bnez	a0,.L29
 	li	s0,8192
 	addi	s0,s0,-512
 	lui	s9,%hi(.LC9)
@@ -150,13 +150,23 @@ main:
 .L13:
 	li	a5,0
 	j	.L15
-.L28:
+.L29:
+	lui	a1,%hi(.LC11)
+	addi	a1,a1,%lo(.LC11)
+	addi	a0,sp,16
+	call	strcmp
+	bnez	a0,.L18
+	lui	a0,%hi(.LC12)
+	addi	a0,a0,%lo(.LC12)
+	call	puts
+	j	.L2
+.L18:
 	lbu	a5,16(sp)
 	beqz	a5,.L2
-	lui	a0,%hi(.LC11)
+	lui	a0,%hi(.LC13)
 	addi	a1,sp,16
-	addi	a0,a0,%lo(.LC11)
-	j	.L30
+	addi	a0,a0,%lo(.LC13)
+	j	.L31
 	.size	main, .-main
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
@@ -190,5 +200,10 @@ main:
 	.string	"stack"
 	.zero	2
 .LC11:
+	.string	"hello"
+	.zero	2
+.LC12:
+	.string	"hello atros! o/"
+.LC13:
 	.string	"command: [%s] not found.\n"
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

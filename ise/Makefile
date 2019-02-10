@@ -39,14 +39,21 @@
 # enable/disable the different options.
 # 
 
-DEVICE = xc6slx9-csg324-2
+# board Avnet Microboard LX9
+#BOARD  = avnet_microboard_lx9
+#DEVICE = xc6slx9-csg324-2
 
-XST = ../ise/darksocv.xst
-UT  = ../ise/darksocv.ut
-IMP = ../ise/darksocv.imp
+# board Xilinx AC701 A200
+BOARD  = xilinx_ac701_a200
+DEVICE = xc7a200t-fbg676-2
 
+ISE = ../ise/board/$(BOARD)
 TMP = ../tmp
+
+XST = $(ISE)/darksocv.xst
 SYR = $(TMP)/darksocv.syr
+UCF = $(ISE)/darksocv.ucf
+IMP = $(ISE)/darksocv.imp
 NGC = $(TMP)/darksocv.ngc
 NGD = $(TMP)/darksocv.ngd
 PCF = $(TMP)/darksocv.pcf
@@ -55,31 +62,32 @@ TWX = $(TMP)/darksocv.twx
 TWR = $(TMP)/darksocv.twr
 BIT = $(TMP)/darksocv.bit
 MAP = $(TMP)/darksocv_map.ncd
+UT  = $(ISE)/darksocv.ut
 
-RTLS = ../rtl/darksocv.v ../rtl/darkriscv.v ../rtl/darkuart.v
-UCFS = ../ise/darksocv.ucf
 PRJS = ../ise/darksocv.prj
+RTLS = ../rtl/darksocv.v ../rtl/darkriscv.v ../rtl/darkuart.v
 BOOT = ../src/darksocv.rom ../src/darksocv.ram
+IMP  = ../ise/darksocv.imp
 
 default: all
 
 $(NGC): $(RTLS) $(PRJS) $(BOOT) $(RTLS)
 	cd $(TMP) && xst -intstyle ise -ifn $(XST) -ofn $(SYR)
 
-$(NGD): $(NGC) $(UCFS) $(BOOT) $(RTLS)
-	cd $(TMP) && ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc $(UCFS) -p $(DEVICE) $(NGC) $(NGD)
+$(NGD): $(NGC) $(UCF) $(BOOT) $(RTLS)
+	cd $(TMP) && ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc $(UCF) -p $(DEVICE) $(NGC) $(NGD)
 
-$(PCF): $(NGD) $(BOOT) $(UCFS) $(RTLS)
+$(PCF): $(NGD) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && map -intstyle ise -p $(DEVICE) -w -logic_opt on -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt 2 -detail -ir off -ignore_keep_hierarchy -pr off -lc auto -power off -o $(MAP) $(NGD) $(PCF)
 
-$(NCD): $(PCF) $(BOOT) $(UCFS) $(RTLS)
+$(NCD): $(PCF) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && par -w -intstyle ise -ol high -mt 2 $(MAP) $(NCD) $(PCF)
 	cd $(TMP) && trce -intstyle ise -v 3 -s 2 -n 3 -fastpaths -xml $(TWX) $(NCD) -o $(TWR) $(PCF)
 
-$(BIT): $(UT) $(NCD) $(BOOT) $(UCFS) $(RTLS)
+$(BIT): $(UT) $(NCD) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && bitgen -intstyle ise -f $(UT) $(NCD)
 
-all: $(BIT) $(BOOT) $(UCFS) $(RTLS)
+all: $(BIT) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && impact -batch $(IMP)
 
 clean:

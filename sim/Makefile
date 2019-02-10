@@ -26,7 +26,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-SRCS = ../rtl/darkriscv.v ../rtl/darksocv.v darksimv.v
+SRCS = ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v
 XSIM = darkriscv.o
 VCDS = darkriscv.vcd
 

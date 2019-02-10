@@ -31,3 +31,14 @@
 #include <io.h>
 
 volatile struct DARKIO io;
+
+// board database
+
+const char *board_name[]=
+{
+    "simulation only",                  // 0
+    "avnet microboard spartan-6 lx9",   // 1
+    "xilinx ac701 artix-7 a200",        // 2 
+    "qm sdram lx16",                    // 3  
+    0
+};

@@ -2,8 +2,8 @@
 -g DebugBitstream:No
 -g Binary:no
 -g CRC:Enable
--g Reset_on_err:No
--g ConfigRate:2
+#-g Reset_on_err:No
+#-g ConfigRate:2
 -g ProgPin:PullUp
 -g TckPin:PullUp
 -g TdiPin:PullUp

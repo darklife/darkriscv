@@ -36,21 +36,21 @@
 
 int getchar(void)
 {
-  while((io.uart_stat&2)==0); // uart empty, wait...
+  while((io.uart.stat&2)==0); // uart empty, wait...
   
-  return io.uart_fifo;
+  return io.uart.fifo;
 }
 
 int putchar(int c)
 {
   if(c=='\n')
   {
-    while(io.uart_stat&1); // uart busy, wait...
-    io.uart_fifo = '\r';  
+    while(io.uart.stat&1); // uart busy, wait...
+    io.uart.fifo = '\r';  
   }
   
-  while(io.uart_stat&1); // uart busy, wait...
-  return io.uart_fifo = c;
+  while(io.uart.stat&1); // uart busy, wait...
+  return io.uart.fifo = c;
 }
 
 // high-level functions uses the getchar/putchar
@@ -77,7 +77,7 @@ int puts(char *p)
   return putchar('\n');
 }
 
-unsigned putx(unsigned i)
+void putx(unsigned i)
 {
     register char *hex="0123456789abcdef";
 
@@ -99,8 +99,42 @@ unsigned putx(unsigned i)
 
     putchar(hex[(i>>4)&15]);
     putchar(hex[(i>>0)&15]);
+}
 
-    return i;
+void putd(int i)
+{
+    int db[10] = { 1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 };
+
+    int j,k,t,v=0;
+
+    if(i<0)
+    {
+        putchar('-');
+        i=-i;
+    }
+
+    for(j=0;j!=10;j++)
+    {
+        t = db[j];
+
+        for(k=1;k!=10;k++)
+        {
+            if((i-t)<db[j]) break;
+
+            t = t+db[j];
+        }
+
+        if((i-t)>=0)
+        {
+            if(v==0 && k!=0) v=1; // remove leading zeros
+
+            if(v||j==9) putchar(k+'0');
+
+            i=i-t;
+        }
+        else
+            if(v||j==9) putchar('0');
+    }
 }
 
 int printf(char *fmt,...)
@@ -114,6 +148,7 @@ int printf(char *fmt,...)
             fmt++;
                  if(*fmt=='s') printf(va_arg(ap,char *));
             else if(*fmt=='x') putx(va_arg(ap,int));
+            else if(*fmt=='d') putd(va_arg(ap,int));
             else putchar(*fmt);
         }
         else putchar(*fmt);
@@ -137,5 +172,14 @@ char *memcpy(char *dptr,char *sptr,int len)
 
     while(len--) *dptr++ = *sptr++;
 
+    return ret;
+}
+
+char *memset(char *dptr, int c, int len)
+{
+    char *ret = dptr;
+    
+    while(len--) *dptr++ = c;
+    
     return ret;
 }

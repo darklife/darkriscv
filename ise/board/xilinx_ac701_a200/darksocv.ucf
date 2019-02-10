@@ -26,55 +26,23 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-#CROSS = riscv-elf
-#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
+NET XCLK            LOC = P16 | IOSTANDARD = LVCMOS33 | PERIOD = 90MHz HIGH 50%;
+NET XCLK            CLOCK_DEDICATED_ROUTE = FALSE;
 
-CROSS = riscv32-unknown-elf
-CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+#NET XCLKP           LOC = M21 | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE | PERIOD = 156.25MHz HIGH 50%;
+#NET XCLKN           LOC = M22 | IOSTANDARD = LVDS_25 | DIFF_TERM = TRUE | PERIOD = 156.25MHz HIGH 50%;
 
-    CC = $(CCPATH)/$(CROSS)-gcc
-    AS = $(CCPATH)/$(CROSS)-as
-    LD = $(CCPATH)/$(CROSS)-ld
-    OC = $(CCPATH)/$(CROSS)-objcopy
-    OD = $(CCPATH)/$(CROSS)-objdump
+NET XRES            LOC = U4  | IOSTANDARD = SSTL15 | PULLDOWN;
 
-CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=rv32i
-ASFLAGS = 
-LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
+NET UART_RXD        LOC = T19 | IOSTANDARD = LVCMOS18;
+NET UART_TXD        LOC = U19 | IOSTANDARD = LVCMOS18;
 
-MEMSIZE = 4096
+NET LED[3]          LOC = R26 | IOSTANDARD = LVCMOS33;
+NET LED[2]          LOC = T25 | IOSTANDARD = LVCMOS33;
+NET LED[1]          LOC = T24 | IOSTANDARD = LVCMOS33;
+NET LED[0]          LOC = M26 | IOSTANDARD = LVCMOS33;
 
-OCFLAGS = -O binary
-ODFLAGS = -d
-
-PROJ = darksocv
-OBJS = boot.o stdio.o main.o io.o hello.o
-ASMS = boot.s stdio.s main.s io.s hello.s
-
-all:
-	make $(PROJ).rom
-	make $(PROJ).ram
-
-clean:
-	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom}
-
-%.o: %.s
-	$(AS) $(ASFLAGS) -c $< -o $@
-
-%.s: %.c $(PROJ).ld
-	$(CC) $(CCFLAGS) -S $< -o $@
-
-$(PROJ).o: $(ASMS) $(OBJS)
-	$(LD) $(LDFLAGS) $(OBJS) -o $@
-
-$(PROJ).bin: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $@
-	$(OD) $(ODFLAGS) $< > $(PROJ).lst
-
-$(PROJ).rom: $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' -n $(MEMSIZE) $< | grep -v 00000000 > $@
-	wc -l $@
-
-$(PROJ).ram: $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' -s $(MEMSIZE) $< > $@
-	wc -l $@
+NET DEBUG[3]        LOC = T23 | IOSTANDARD = LVCMOS33; # J48-1
+NET DEBUG[2]        LOC = R22 | IOSTANDARD = LVCMOS33; # J48-2
+NET DEBUG[1]        LOC = T22 | IOSTANDARD = LVCMOS33; # J48-3
+NET DEBUG[0]        LOC = P26 | IOSTANDARD = LVCMOS33; # J48-4
