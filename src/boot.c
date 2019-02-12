@@ -47,7 +47,9 @@ void _start(void)
      *
      */
 
-    printf("\33[33;44m.\33[H\33[2J");
+    putchar('@');
+
+    //printf("\33[33;44m.\33[H\33[2J");
     printf("%s (id=%d)\n",board_name[io.board_id],io.board_id);
     printf("darkriscv@%d.%dMHz\n",io.board_cm,io.board_ck);
     printf("darkruart baudrate counter %d\n\n",io.uart.baud);

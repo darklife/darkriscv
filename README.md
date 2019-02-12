@@ -271,18 +271,35 @@ simulated, since the 115200 bps requires lots dead simulation time.
 
 Currently, therea are two supported boards:
 
-- Avnet Microboard LX9: equiped with a Xilinx Spartan-6 LX9 running at 66MHz
-- Xilin AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz
+- Avnet Microboard LX9: equipped with a Xilinx Spartan-6 LX9 running at 66MHz
+- XilinX AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz
+- QMTech SDRAM LX16: equipped with a Xilinx Spartan-6 LX16 running at 50MHz
 
-Both boards supports a 115200 bps UART for console, 4xLEDs for debug and
-on-chip 4KB ROM and 4KB RAM.  Support for Ethernet and multiple cores is
-under development.  A small shell is available with some basic examples,
-such as the clear command to clear the screen and the led command to switch
-the led configuration.
+Both Avnet and Xilinx boards supports a 115200 bps UART for console, 4xLEDs
+for debug and on-chip 4KB ROM and 4KB RAM (as well the RESET button to
+restart the core and the DEBUG signals for an oscilloscope).  I received two
+Spartan-6 LX16 boards from QMTECH and this board does not includes the JTAG
+neither the UART/USB port.  Thanks to an external JTAG adapter and an
+external USB/UART converter, the board is now working fine and support all
+features from the other boards (UART, LEDs, RESET and DEBUG).  
 
-I received two Spartan-6 LX16 boards from QMTECH, but it requires a JTAG
-external programer, which did not arrived yet.  As long the JTAG external
-programer arrives, I will add support for that board.
+Support for 100Mbps ethernet in the Microboard LX9 board is under
+development, but I am not sure about the 1GbE ethernet in the AC701 A200,
+since the card is shared with other developers and must be returned 
+shortly.
+
+In the software side, a small shell is available with some basic commands:
+
+- led: increment the led register
+- bug: show the last instruction which tried write in the rom area (useful
+  for debug)
+- clear: clear the display
+- heap: dump the heap area
+- stack: dump the stack area
+- hello: print hello to mr.atros
+
+The proposal of the shell is provide some basic test features which can
+provide a go/non-go status about the current hardware status.
 
 ## The Friends of DarkRISCV!
 

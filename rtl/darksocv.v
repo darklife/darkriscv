@@ -67,6 +67,12 @@
     `define BOARD_CK 90000000
 `endif
 
+`ifdef QMTECH_SDRAM_LX16
+    `define BOARD_ID 3
+    `define BOARD_CK 50000000
+`endif
+
+
 `ifndef BOARD_ID
     `define BOARD_ID 0
     `define BOARD_CK 75000000
@@ -88,7 +94,11 @@ module darksocv
 
     reg [7:0] IRES = -1;
 
-    always@(posedge XCLK) IRES <= XRES ? -1 : IRES[7] ? IRES-1 : 0;
+`ifdef QMTECH_SDRAM_LX16
+    always@(posedge XCLK) IRES <= XRES==0 ? -1 : IRES[7] ? IRES-1 : 0; // reset low
+`else
+    always@(posedge XCLK) IRES <= XRES==1 ? -1 : IRES[7] ? IRES-1 : 0; // reset high
+`endif
 
     wire CLK = XCLK;
     wire RES = IRES[7];
@@ -172,7 +182,7 @@ module darksocv
 
     reg [31:0] ROMFF;
     
-    always@(negedge CLK) // stage #0.5
+    always@(negedge CLK) // stage #0.5    
     begin
         ROMFF <= ROM[IADDR[11:2]];
     end
@@ -228,14 +238,6 @@ module darksocv
             WTAG <= 0;
         end
         else
-        if(!DHIT)
-        begin
-            DCACHE[DPTR] <= { DADDR[31:8], RAMFF };
-            DTAG[DPTR]   <= FFX; // cached!
-            FFX          <= 1;
-            FFX2         <= FFX;
-        end        
-        else
         if(!WHIT)
         begin
             //individual byte/word/long selection, thanks to HYF!
@@ -244,12 +246,19 @@ module darksocv
             if(BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
             if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];        
 
-            DCACHE[DPTR] <= { DADDR[31:8],
-                                    BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
-                                    BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
-                                    BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
-                                    BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
-                            };
+            DCACHE[DPTR][0 * 8 + 7: 0 * 8] <= BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8];
+            DCACHE[DPTR][1 * 8 + 7: 1 * 8] <= BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8];
+            DCACHE[DPTR][2 * 8 + 7: 2 * 8] <= BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8];
+            DCACHE[DPTR][3 * 8 + 7: 3 * 8] <= BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8];
+
+            DCACHE[DPTR][55:32] <= DADDR[31:8];
+            
+            //DCACHE[DPTR] <= { DADDR[31:8],
+            //                        BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
+            //                        BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
+            //                        BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
+            //                        BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
+            //                };
 
             DTAG[DPTR]   <= FFX; // cached!
             WTAG         <= FFX;
@@ -259,9 +268,17 @@ module darksocv
             FFX          <= 1;
             FFX2         <= FFX;
         end
+        else
+        if(!DHIT)
+        begin
+            DCACHE[DPTR] <= { DADDR[31:8], RAMFF };
+            DTAG[DPTR]   <= FFX; // cached!
+            FFX          <= 1;
+            FFX2         <= FFX;
+        end        
     end
     
-    assign DATAI = DADDR[31] ? IOMUX : DCACHED;
+    assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]] : DCACHED;
 
 `else
 

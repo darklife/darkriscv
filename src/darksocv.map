@@ -15,32 +15,32 @@ IO               0x0000000080000000 0x0000000000000010 rw !x
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x520
+.text           0x0000000000000000      0x51c
  boot.o(.text)
- .text          0x0000000000000000       0x78 boot.o
+ .text          0x0000000000000000       0x74 boot.o
                 0x0000000000000000                _start
  *(.text)
- .text          0x0000000000000078        0x0 io.o
- .text          0x0000000000000078      0x434 stdio.o
-                0x0000000000000078                getchar
-                0x0000000000000094                putchar
-                0x00000000000000d4                gets
-                0x000000000000014c                puts
-                0x0000000000000184                putx
-                0x0000000000000264                putd
-                0x0000000000000348                printf
-                0x0000000000000444                strcmp
-                0x000000000000046c                memcpy
-                0x0000000000000490                memset
- .text          0x00000000000004ac        0x0 main.o
- .text          0x00000000000004ac       0x74 hello.o
-                0x00000000000004ac                hello
+ .text          0x0000000000000074        0x0 io.o
+ .text          0x0000000000000074      0x434 stdio.o
+                0x0000000000000074                getchar
+                0x0000000000000090                putchar
+                0x00000000000000d0                gets
+                0x0000000000000148                puts
+                0x0000000000000180                putx
+                0x0000000000000260                putd
+                0x0000000000000344                printf
+                0x0000000000000440                strcmp
+                0x0000000000000468                memcpy
+                0x000000000000048c                memset
+ .text          0x00000000000004a8        0x0 main.o
+ .text          0x00000000000004a8       0x74 hello.o
+                0x00000000000004a8                hello
 
-.text.startup   0x0000000000000520      0x244
- .text.startup  0x0000000000000520      0x244 main.o
-                0x0000000000000520                main
+.text.startup   0x000000000000051c      0x244
+ .text.startup  0x000000000000051c      0x244 main.o
+                0x000000000000051c                main
 
-.data           0x0000000000001000      0x2a4
+.data           0x0000000000001000      0x294
  *(.data)
  .data          0x0000000000001000        0x0 boot.o
  .data          0x0000000000001000       0x14 io.o
@@ -60,19 +60,19 @@ Linker script and memory map
                 0x0000000000001014        0x0 boot.o
  *(.rodata*)
  .rodata.str1.4
-                0x0000000000001014       0x54 boot.o
+                0x0000000000001014       0x40 boot.o
  .rodata.str1.4
-                0x0000000000001068       0x5a io.o
- *fill*         0x00000000000010c2        0x2 
- .rodata        0x00000000000010c4       0x28 stdio.o
+                0x0000000000001054       0x5e io.o
+ *fill*         0x00000000000010b2        0x2 
+ .rodata        0x00000000000010b4       0x28 stdio.o
  .rodata.str1.4
-                0x00000000000010ec       0x11 stdio.o
- *fill*         0x00000000000010fd        0x3 
+                0x00000000000010dc       0x11 stdio.o
+ *fill*         0x00000000000010ed        0x3 
  .rodata.str1.4
-                0x0000000000001100       0x92 main.o
- *fill*         0x0000000000001192        0x2 
+                0x00000000000010f0       0x92 main.o
+ *fill*         0x0000000000001182        0x2 
  .rodata.str1.4
-                0x0000000000001194      0x110 hello.o
+                0x0000000000001184      0x110 hello.o
                                         0x10d (size before relaxing)
 
 .io             0x0000000080000000       0x10

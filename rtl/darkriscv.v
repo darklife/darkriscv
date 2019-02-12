@@ -95,7 +95,7 @@ module darkriscv
     wire [4:0] S2PTR  = XIDATA[24:20];
     wire [6:0] FCT7   = XIDATA[31:25];
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC; //, XFCC, XCCC;
 
     always@(posedge CLK)
     begin        
@@ -112,8 +112,8 @@ module darkriscv
         XMCC   <= RES ? 0 : HLT ? XMCC   : IDATA[6:0]==`MCC;
 
         XRCC   <= RES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
-        XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
-        XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
+        //XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
+        //XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
     end   
 
     // signal extended immediate, according to the instruction type:
@@ -159,8 +159,8 @@ module darkriscv
     wire    MCC = FLUSH ? 0 : XMCC; // OPCODE==7'b0010011; //FCT3
     
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
-    wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
-    wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
+    //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
+    //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
@@ -259,7 +259,7 @@ module darkriscv
                   MCC||RCC ? RMDATA:
                        //MCC ? MDATA :
                        //RCC ? RDATA : 
-                       CCC ? CDATA : 
+                       //CCC ? CDATA : 
                              REG1[DPTR];
 
         REG2[DPTR] <=   RES ? RESET_SP  :        // reset sp
@@ -273,7 +273,7 @@ module darkriscv
                   MCC||RCC ? RMDATA:
                        //MCC ? MDATA :
                        //RCC ? RDATA : 
-                       CCC ? CDATA : 
+                       //CCC ? CDATA : 
                              REG2[DPTR];
 
         NXPC <= RES ? RESET_PC : HLT ? NXPC :   // reset and halt
@@ -281,20 +281,6 @@ module darkriscv
                      NXPC+4;                   // normal flow
 
         PC   <= RES ? RESET_PC : HLT ? PC : NXPC; // current program counter
-
-`ifdef DEBUG
-        if(PC=4)                $display("pipeline stages=%d",     STAGES);
-        if(OPCODE[6:0]==`LUI)   $display("%08x: %08x %08x lui",    PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`AUIPC) $display("%08x: %08x %08x auipc",  PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`JAL)   $display("%08x: %08x %08x jal",    PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`JALR)  $display("%08x: %08x %08x jalr",   PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`BCC)   $display("%08x: %08x %08x bcc",    PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`LCC)   $display("%08x: %08x %08x lcc",    PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`SCC)   $display("%08x: %08x %08x scc",    PC,XIDATA,OPCODE);
-        if(OPCODE[6:0]==`MCC)   $display("%08x: %08x %08x mcc",    PC,XIDATA,OPCODE);        
-        if(OPCODE[6:0]==`RCC)   $display("%08x: %08x %08x rcc",    PC,XIDATA,OPCODE);                
-        if(OPCODE[6:0]==0)      $display("%08x: %08x %08x flush",  PC,XIDATA,OPCODE);                
-`endif        
     end
 
     // IO and memory interface

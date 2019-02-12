@@ -24,5 +24,5 @@ board_name:
 	.string	"xilinx ac701 artix-7 a200"
 	.zero	2
 .LC3:
-	.string	"qm sdram lx16"
+	.string	"qmtech sdram lx16"
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

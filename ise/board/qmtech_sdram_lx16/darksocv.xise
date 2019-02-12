@@ -87,7 +87,7 @@
     <property xil_pn:name="Cross Clock Analysis" xil_pn:value="false" xil_pn:valueState="default"/>
     <property xil_pn:name="DSP Utilization Ratio" xil_pn:value="100" xil_pn:valueState="default"/>
     <property xil_pn:name="Delay Values To Be Read from SDF" xil_pn:value="Setup Time" xil_pn:valueState="default"/>
-    <property xil_pn:name="Device" xil_pn:value="xc6slx9" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Device" xil_pn:value="xc6slx16" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Device Family" xil_pn:value="Spartan6" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Device Speed Grade/Select ABS Minimum" xil_pn:value="-2" xil_pn:valueState="default"/>
     <property xil_pn:name="Disable Detailed Package Model Insertion" xil_pn:value="false" xil_pn:valueState="default"/>
@@ -221,7 +221,7 @@
     <property xil_pn:name="Overwrite Compiled Libraries" xil_pn:value="false" xil_pn:valueState="default"/>
     <property xil_pn:name="Pack I/O Registers into IOBs" xil_pn:value="Auto" xil_pn:valueState="default"/>
     <property xil_pn:name="Pack I/O Registers/Latches into IOBs" xil_pn:value="Off" xil_pn:valueState="default"/>
-    <property xil_pn:name="Package" xil_pn:value="csg324" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Package" xil_pn:value="ftg256" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Perform Advanced Analysis" xil_pn:value="false" xil_pn:valueState="default"/>
     <property xil_pn:name="Perform Advanced Analysis Post Trace" xil_pn:value="false" xil_pn:valueState="default"/>
     <property xil_pn:name="Perform Timing-Driven Packing and Placement" xil_pn:value="false" xil_pn:valueState="default"/>
@@ -339,7 +339,7 @@
     <property xil_pn:name="VCCAUX Voltage Level spartan6" xil_pn:value="2.5V" xil_pn:valueState="default"/>
     <property xil_pn:name="VHDL Source Analysis Standard" xil_pn:value="VHDL-93" xil_pn:valueState="default"/>
     <property xil_pn:name="Value Range Check" xil_pn:value="false" xil_pn:valueState="default"/>
-    <property xil_pn:name="Verilog Macros" xil_pn:value="AVNET_MICROBOARD_LX9=1" xil_pn:valueState="non-default"/>
+    <property xil_pn:name="Verilog Macros" xil_pn:value="QMTECH_SDRAM_LX16=1" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Wait for DCM and PLL Lock (Output Events) spartan6" xil_pn:value="Default (NoWait)" xil_pn:valueState="default"/>
     <property xil_pn:name="Wakeup Clock spartan6" xil_pn:value="Startup Clock" xil_pn:valueState="default"/>
     <property xil_pn:name="Watchdog Timer Value spartan6" xil_pn:value="0xFFFF" xil_pn:valueState="default"/>

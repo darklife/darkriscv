@@ -130,6 +130,12 @@ module darkuart
                     $write("%c",DATAI[15:8]);
                 end
                 
+                if(DATAI[15:8]==64) // break point: '@'
+                begin
+                    $display(" simulation break point!");
+                    $stop();
+                end
+                
                 if(DATAI[15:8]==62) // prompt '>'
                 begin
                     $display(" no UART input, finishing simulation...");
