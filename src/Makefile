@@ -39,7 +39,7 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     OD = $(CCPATH)/$(CROSS)-objdump
 
 CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=rv32i
-ASFLAGS = 
+ASFLAGS = -march=rv32i
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
 MEMSIZE = 4096
