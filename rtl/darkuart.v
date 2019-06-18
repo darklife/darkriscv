@@ -76,6 +76,7 @@ module darkuart
 ) (
     input           CLK,            // clock
     input           RES,            // reset
+    input           HLT,            // halt
         
     input           RD,             // bus read
     input           WR,             // bus write
@@ -118,7 +119,7 @@ module darkuart
 
     always@(posedge CLK)
     begin
-        if(WR)
+        if(WR&&!HLT)
         begin
             if(BE[1])
             begin
@@ -133,7 +134,7 @@ module darkuart
                 if(DATAI[15:8]==64) // break point: '@'
                 begin
                     $display(" simulation break point!");
-                    $stop();
+                    //$stop();
                 end
                 
                 if(DATAI[15:8]==62) // prompt '>'
@@ -155,7 +156,7 @@ module darkuart
             UART_STATEFF <= UART_STATE;
         end
         else
-        if(RD)
+        if(RD&&!HLT)
         begin
             if(BE[1]) UART_RACK     <= UART_RREQ; // fifo ready
             if(BE[0]) UART_STATEFF <= UART_STATE; // state update, clear irq

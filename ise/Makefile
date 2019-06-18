@@ -40,16 +40,16 @@
 # 
 
 # board Avnet Microboard LX9
-#BOARD  = avnet_microboard_lx9
-#DEVICE = xc6slx9-csg324-2
+BOARD  = avnet_microboard_lx9
+DEVICE = xc6slx9-csg324-2
 
 # board Xilinx AC701 A200
 #BOARD  = xilinx_ac701_a200
 #DEVICE = xc7a200t-fbg676-2
 
 # board QMTech SDRAM LX16
-BOARD  = qmtech_sdram_lx16
-DEVICE = xc6slx16-ftg256-2
+#BOARD  = qmtech_sdram_lx16
+#DEVICE = xc6slx16-ftg256-2
 
 ISE = ../ise/board/$(BOARD)
 TMP = ../tmp

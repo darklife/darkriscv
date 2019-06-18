@@ -5,20 +5,26 @@ Opensource RISC-V implemented from scratch in one night!
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
 *darkriscv* is a very experimental implementation of the opensource RISC-V
-instruction set.  Nowadays, after weeks of exciting sleepless nights of work
+instruction set.  After weeks of exciting sleepless nights of work
 and the help of lots of colleagues, the *darkriscv* reached a very good
 quality result, in a way that the "hello world" compiled by the standard
 riscv-elf-gcc is working fine!  :)
 
 The general concept is based in my other early RISC processors and composed
-by a simplified two stage pipeline where a instruction is fetch from a
-instruction memory in the first clock and then the instruction is
-decoded/executed in the second clock.  The pipeline is overlapped without
-interlocks, in a way the *darkriscv* can reach the performance of one clock
-per instruction most of time (the exception is after a branch, where one
-clock is lost in the pipeline flush).  As addition, the code is very
-compact, with around two hundred lines of obfuscated but beautiful Verilog
-code.
+by a simplified two stage pipeline working with a two phase clock, where a
+instruction is fetch from a instruction memory in the first clock and then
+the instruction is decoded/executed in the second clock.  The pipeline is
+overlapped without interlocks, in a way the *darkriscv* can reach the
+performance of one clock per instruction most of time (the exception is
+after a branch, where one clock is lost in the pipeline flush).  As
+addition, the code is very compact, with around three hundred lines of
+obfuscated but beautiful Verilog code.
+
+A three stage pipeline working with a single clock phase is available as
+option, where the instruction is fetch in the first clock, decoded in the
+second clock and executed in the thrid clock, except in the case of load
+instrucion, which requires one extra clock, and the taken branch, which
+requires two extra clocks in order to flush the pipeline.
 
 Although the code is small and crude when compared with other RISC-V
 implementations, the *darkriscv* has lots of impressive features:
@@ -30,6 +36,9 @@ implementations, the *darkriscv* has lots of impressive features:
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
 - uses only around 1000 LUTs (spartan-6, core only)
 - BSD license: can be used anywhere with no restrictions!
+
+Some extra features are under development, such a cache controller
+(partially working), a sdram controller and a ethernet controller.
 
 Feel free to make suggestions and good hacking! o/
 
@@ -44,12 +53,22 @@ other environments (I will try add support for other FPGAs and tools in the
 future).
 
 The main motivation for the *darkriscv* is create a migration path for some
-projects around the 680x0/coldfire family. Although there are lots of 680x0
-cores available, I found no core with a good relationship between performance 
-(more than 50MHz) and logic use (~1000LUTs). After lots of tests, I found the 
-*picorv32* core and the all the ecosystem around the RISC-V. Although the
-*picorv32* is a very good option to directly replace the 680x0 family, it is 
-not powerful enough to replace some coldfire processors (more than 75MIPS). 
+projects around the 680x0/coldfire family.  Although there are lots of 680x0
+cores available, I found no core with a good relationship between
+performance (more than 50MHz) and logic use (~1000LUTs).  
+
+The best option, the TG68, requires at least ~2400LUTs (by removing the
+MUL/DIV instructions, which are not really needed), and works up to 40MHz in
+a lx9.  As addition, the TG68 core requires at least 2 clock per
+instruction, which means a peak performance of 20MIPS.  As long the 680x0
+instruction is too complex, the TG68 result is really very good and it is,
+at this moment, probably the best option to replace the 68000.
+
+After lots of tests, I found the picorv32* core and the all the ecosystem
+*around the RISC-V.  Although the picorv32* is a very good option to
+*directly replace the 680x0 family, it is not powerful enough to replace
+*some coldfire processors (more than 75MIPS).
+
 The main problem around the *picorv32* is that most instructions requires 3
 or 4 clocks per instruction, which resembles the 68020 in some ways, but
 running at 150MHz.  Anyway, with 3 clocks per instruction, the peak
@@ -77,9 +96,11 @@ clock per instruction and around 75MIPS.
 
 This means that when comparing with the *picorv32* running at 150MHz and
 with 3 clocks per instruction, the *darkriscv* at 75MHz and 1 clock per
-instruction is 50% faster.
+instruction is 50% faster.  Also, it is faster than the TG68 and probably
+can run side by side with a 80MHz coldfire when running from a blockram or a
+cache.
 
-Unfortunately, I had a small problem with the load instruction: the 1 stage
+Unfortunately, I had a small problem with the load instruction: the 2 stage
 execution needs faster external memory!  This is not a problem for my early
 RISC processors, which used small and faster LUT-based memories, but in the
 case of *darkriscv* the proposal was a more flexible design, in a way is
@@ -124,30 +145,36 @@ other Xilinx devices available in the ISE:
 - Virtex-6: 	137MHz
 - Kintex-7: 	167MHz
 
-Although is possible use the *darkriscv* directly connected to at least two
-blockRAM memories (one for instruction and another for data) working in the
-opposite clock edge and and deterministically keep a very good performance
-of 1 clock per instruction most of time at 75MHz, the most useful
-configuration is use a cache controller.  In this case, is possible use
-large multi-megabyte memories with lots of wait-states and, at same time,
-reach a peak performance of 1 clock per instruction when the instructions
-and data are already cached.  Of course, the cache controller impact the
-performance, reducing the clock from 75MHz to 50MHz and inserting lots of
-wait-states in the cache filling cycles.
+That values are only for reference. The real values depends of some options
+in the core, such as the number of pipeline stages, who the memories are
+connected, etc.  Basically, the best clock is reached by the 3-stage
+pipeline version (85MHz), but it requires at lease 1 wait state in the load
+instruction and 2 extra clocks in the taken branches in order to flush the
+pipeline. The 2-state pipeline requires no extra wait states and only 1 extra
+clock in the taken branches, but runs with less performance (65MHz).
 
-In fact, when running the "hello world" code we have the following results:
+Regardless the synthesis performance, the *darkriscv* directly connected to
+at least two blockRAM memories (one for instruction and another for data)
+working in the opposite clock edges deterministically keep a very good
+performance of 1 clock per instruction most of time at 75MHz. However, it
+is not so flexibly, in a way that the 3-stage pipeline version enables use a
+single clock phase and, at same time, can work with wait states more easily
+(in fact, the load instruction always requires 1 wait state, regardless it
+is connected to a blockram or external memory).
 
-- darkriscv@75MHz -cache -wait-states 2-stage pipeline 2-phase clock:  6.40us
-- darkriscv@50MHz +cache +wait-states 2-stage pipeline 2-phase clock: 13.84us
+When running the "hello world" code we have the following results:
 
-Although the first configuration reaches the best performance, the second 
-configuration is probably the most realistic at this time!
+- darkriscv@75MHz no-cache 0-wait-states 2-stage pipeline (2-phase clock): 392us
+- darkriscv@75MHz no-cache 0-wait-states 3-stage pipeline (1-phase clock): 500us
+- darkriscv@75MHz  i-cache 3-wait-states 3-stage pipeline (1-phase clock): 545us
+- darkriscv@75MHz id-cache 3-wait-states 3-stage pipeline (1-phase clock): 533us  
 
-note: the 3-stage pipeline version is not available anymore, since the
-2-stage pipeline version appears to be working well.  Maybe it will return
-in the future.  Anyway, the 2-state pipeline version works at 70MHz with or
-without i-cache only.  For some reason, the d-cache does not work anymore
-and will be fixed in the future.
+The instruction cache is working only in the 3-stage pipeline version and
+the data cache is working only in the simulation at this moment.  The
+problem appears to be related to the blockram inference.  Anyway, as long
+the caches work in the simulation, is possible measure the hit ratio in
+order to measure the efficiency: 91% for instruction cache and 68% for data
+cache, remembering that the data cache always miss in write operations.
 
 ## Development Tools (gcc)
 
@@ -227,6 +254,15 @@ Also, the linker maps the IO in the following positions:
 The RAM memory contains the .data area, the .bss area (after the .data 
 and initialized with zero), the .rodada and the stack area at the end of RAM.
 
+Although the RISCV is defined as little-endian, appears to be easy change
+the configuration in the GCC.  In this case, it is supposed that the all
+variables are stored in the big-endian format.  Of course, the change
+requires a similar change in the core itself, which is not so complex, as
+long it affects only the load and store instructions.  In the future, I will
+try test a big-endian version of GCC and darkriscv, in order to evaluate
+possible performance enhancements in the case of network oriented
+applications! :)
+
 ## Directory Description
 
 - ise: the ISE project and configuration files (xise, ucf, etc)
@@ -275,6 +311,9 @@ Currently, therea are two supported boards:
 - XilinX AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz
 - QMTech SDRAM LX16: equipped with a Xilinx Spartan-6 LX16 running at 50MHz
 
+The speeds are related to available clocks in the boards and different
+clocks may be generated by programming a DCM.
+
 Both Avnet and Xilinx boards supports a 115200 bps UART for console, 4xLEDs
 for debug and on-chip 4KB ROM and 4KB RAM (as well the RESET button to
 restart the core and the DEBUG signals for an oscilloscope).  I received two
@@ -291,8 +330,7 @@ shortly.
 In the software side, a small shell is available with some basic commands:
 
 - led: increment the led register
-- bug: show the last instruction which tried write in the rom area (useful
-  for debug)
+- bug: show the last instruction which tried write in the rom area
 - clear: clear the display
 - heap: dump the heap area
 - stack: dump the stack area

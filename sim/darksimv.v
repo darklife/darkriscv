@@ -34,11 +34,11 @@
 
 module darksimv;
 
-    reg CLK = 1;
+    reg CLK = 0;
     
     reg [3:0] RES = -1;
 
-    initial while(1) #(500e3/66666) CLK = !CLK; // clock speed of 80MHz
+    initial while(1) #(500e3/75000) CLK = !CLK; // clock speed of 75MHz
 
     initial #(250e6) $finish;
 

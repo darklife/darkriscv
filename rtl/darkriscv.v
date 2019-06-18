@@ -48,7 +48,15 @@
 // 
 // 2-stages: core and memory in different clock edges result in less clock performance, but
 // less losses when the program counter changes (pipeline flush = 1 clock). Works like a 4-stage
-// pipeline and remember the 68040 clock scheme.
+// pipeline and remember the 68040 clock scheme, with instruction per clock = 1. 
+// alternatively, it is possible work w/ 1 wait-state and 1 clock edge, but with a penalty in 
+// performance (instruction per clock = 0.5).
+// 
+// 3-stage: core and memory in the same clock edge require one extra stage in the pipeline, but
+// keep a good performance most of time (instruction per clock = 1). of course, read operations 
+// require 1 wait-state, which means sometimes the read performance is reduced.
+
+`define __3STAGE__
 
 module darkriscv
 #(
@@ -57,8 +65,7 @@ module darkriscv
 ) (
     input             CLK,   // clock
     input             RES,   // reset
-    input             IHLT,  // inst halt
-    input             DHLT,  // data halt
+    input             HLT,   // halt
     
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
@@ -79,10 +86,8 @@ module darkriscv
 
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
-
-    wire HLT = IHLT||DHLT; // combo halt
-    
-    reg FLUSH;  // flush instruction pipeline 
+   
+    reg [1:0] FLUSH;  // flush instruction pipeline 
     
     // IDATA is break apart as described in the RV32I specification
 
@@ -161,7 +166,9 @@ module darkriscv
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
-
+`ifdef __3STAGE__
+    reg [31:0] NXPC2;       // 32-bit program counter t+2
+`endif
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
     
@@ -245,8 +252,14 @@ module darkriscv
             
     always@(posedge CLK)
     begin
+`ifdef __3STAGE__
+	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt
+	                       FLUSH ? FLUSH-1 : 
+	                       (JAL||JALR||BMUX||RES) ? 2 : 0;  // flush the pipeline!
+`else
         FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
                        (JAL||JALR||BMUX||RES);  // flush the pipeline!
+`endif
 
         REG1[DPTR] <=   RES ? RESET_SP  :        // reset sp
                        HLT ? REG1[DPTR] :        // halt
@@ -276,10 +289,19 @@ module darkriscv
                        //CCC ? CDATA : 
                              REG2[DPTR];
 
+`ifdef __3STAGE__
+
+        NXPC <= RES ? RESET_PC : HLT ? NXPC : NXPC2;
+	
+	    NXPC2 <=  RES ? RESET_PC : HLT ? NXPC2 :   // reset and halt
+	                 JREQ ? JVAL :                    // jmp/bra
+	                        NXPC2+4;                   // normal flow
+
+`else
         NXPC <= RES ? RESET_PC : HLT ? NXPC :   // reset and halt
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
-
+`endif
         PC   <= RES ? RESET_PC : HLT ? PC : NXPC; // current program counter
     end
 
@@ -287,8 +309,8 @@ module darkriscv
 
     assign DATAO = SDATA; // SCC ? SDATA : 0;
     assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
-    assign RD = IHLT ? 0 : LCC;
-    assign WR = IHLT ? 0 : SCC;
+    assign RD = LCC;
+    assign WR = SCC;
     
     // based in the Scc and Lcc   
     assign BE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
@@ -298,7 +320,12 @@ module darkriscv
                 FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
                                                      4'b0011 ) :
                                                      4'b1111; // sw/lw
+
+`ifdef __3STAGE__
+	assign IADDR = NXPC2;
+`else
     assign IADDR = NXPC;
+`endif
 
     assign DEBUG = { RES, FLUSH, WR, RD };
 

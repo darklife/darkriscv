@@ -32,8 +32,10 @@
 
 // the following defines are user defined:
 
-//`define __ICACHE__ 1              // instruction cache
-//`define __DCACHE__ 1              // data cache
+`define __ICACHE__ 1              // instruction cache
+//`define __DCACHE__ 1              // data cache (bug: simulation only)
+//`define __WAITSTATES__ 1          // wait-state tests, no cache
+`define __3STAGE__ 1            // single phase 3-state pipeline 
 
 // automatically defined in the xst/xise file:
 //`define AVNET_MICROBOARD_LX9 1
@@ -71,7 +73,6 @@
     `define BOARD_ID 3
     `define BOARD_CK 50000000
 `endif
-
 
 `ifndef BOARD_ID
     `define BOARD_ID 0
@@ -136,6 +137,8 @@ module darksocv
     reg  [31:0] ROMBUG = 0;
     reg  [ 3:0] LEDFF  = 0;
     
+    wire HLT;
+    
 `ifdef __ICACHE__
 
     // instruction cache
@@ -178,13 +181,30 @@ module darksocv
 
 `else
 
-    wire IHIT=1;
-
     reg [31:0] ROMFF;
+
+`ifdef __WAITSTATES__
     
-    always@(negedge CLK) // stage #0.5    
+    reg [1:0] IACK = 0;
+    
+    wire IHIT = !(IACK!=1);
+    
+    always@(posedge CLK) // stage #1.0
     begin
-        ROMFF <= ROM[IADDR[11:2]];
+        IACK <= RES ? 1 : IACK ? IACK-1 : 1; // wait-states
+    end    
+`else
+
+    wire IHIT = 1;
+    
+`endif
+
+    always@(posedge CLK) // stage #0.5    
+    begin
+        if(!HLT)
+        begin
+            ROMFF <= ROM[IADDR[11:2]];
+        end
     end
 
     //assign IDATA = ROM[IADDR[11:2]];
@@ -214,7 +234,7 @@ module darksocv
     wire [31:0] DCACHED = DCACHEO[31: 0]; // data
     wire [31:8] DCACHEA = DCACHEO[55:32]; // address
 
-    wire DHIT = RD&&!DADDR[31] ? DTAG[DPTR] && DCACHEA==DADDR[31:8] : 1;
+    wire DHIT = RD&&!DADDR[31]&&DADDR[12] ? DTAG[DPTR] && DCACHEA==DADDR[31:8] : 1;
 
     reg   FFX = 0;
     reg  FFX2 = 0;
@@ -284,12 +304,43 @@ module darksocv
 
     // no cache!
 
-    wire DHIT=1;
-    wire WHIT=1;
-
     reg [31:0] RAMFF;
+`ifdef __WAITSTATES__
     
-    always@(negedge CLK) // stage #1.5
+    reg [1:0] DACK = 0;
+    
+    wire WHIT = 1;
+    wire DHIT = !((WR||RD) && DACK!=1);
+    
+    always@(posedge CLK) // stage #1.0
+    begin
+        DACK <= RES ? 0 : DACK ? DACK-1 : (RD||WR) ? 1 : 0; // wait-states
+    end
+
+`elsif __3STAGE__
+
+    // for single phase clock: 1 wait state in read op always required!
+
+    reg [1:0] DACK = 0;
+    
+    wire WHIT = 1;
+    wire DHIT = !((RD) && DACK!=1);
+    
+    always@(posedge CLK) // stage #1.0
+    begin
+        DACK <= RES ? 0 : DACK ? DACK-1 : (RD) ? 1 : 0; // wait-states
+    end
+
+`else
+
+    // for dual phase clock: 0 wait state
+
+    wire WHIT = 1;
+    wire DHIT = 1;
+
+`endif
+    
+    always@(posedge CLK) // stage #1.5
     begin
         RAMFF <= RAM[DADDR[11:2]];
     end
@@ -297,15 +348,15 @@ module darksocv
     //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[11:2]];
     
     always@(posedge CLK)
-    begin   
-        if(WR&&DADDR[31]==0&&DADDR[12]==1)
-        begin
+    begin    
+        //if(WR&&DADDR[31]==0&&DADDR[12]==1)
+        //begin
             //individual byte/word/long selection, thanks to HYF!
-            if(BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
-            if(BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-            if(BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-            if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        end
+            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        //end
     end    
     
     assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
@@ -337,6 +388,8 @@ module darksocv
     assign BOARD_IRQ[7:2] = 0;
     assign BOARD_IRQ[0]   = 0;
 
+    assign HLT = !IHIT||!DHIT||!WHIT;
+
     // darkuart
   
     wire [3:0] UDEBUG;
@@ -350,6 +403,7 @@ module darksocv
     (
       .CLK(CLK),
       .RES(RES),
+      .HLT(HLT),
       .RD(RD&&DADDR[31]&&DADDR[3:2]==1),
       .WR(WR&&DADDR[31]&&DADDR[3:2]==1),
       .BE(BE),
@@ -367,15 +421,18 @@ module darksocv
 
     darkriscv
     #(
-        .RESET_PC(0),
+        .RESET_PC(32'h00000000),
         .RESET_SP(32'h00002000)
     ) 
     core0 
     (
+`ifdef __3STAGE__
         .CLK(CLK),
+`else
+        .CLK(!CLK),
+`endif
         .RES(RES),
-        .IHLT(!IHIT),
-        .DHLT(!DHIT||!WHIT),
+        .HLT(HLT),
         .IDATA(IDATA),
         .IADDR(IADDR),
         .DATAI(DATAI),
