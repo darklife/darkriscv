@@ -115,43 +115,62 @@ My first solution was use two different clock edges: one edge for the
 *darkriscv* and another edge for the memory/bus interface.
 
 In this case the processor with a 2-stage pipeline works like a
-2\*0.5+1-stage pipeline:
+pseudo 4-state pipeline:
 
-- 1/2 stage for instruction pre-fetch
+- 1/2 stage for instruction pre-fetch (rom)
 - 1/2 stage for static instruction decode
-- 1 stage for instruction execution
-
-In the special case of load/store instructions, the last stage is divided in
-two different stages, working as a 4\*0.5-stage pipeline:
-
-- 1/2 stage for instruction pre-fetch
-- 1/2 stage for static instruction decode
-- 1/2 stage for address generation and data read 
-- 1/2 stage for data write
+- 1/2 stage for address generation, register read and data read/write (ram) 
+- 1/2 stage for data write (register write)
 
 Anyway, from the processor point of view, there are only 2 stages.
 
 In normal conditions, this is not recommended because decreases the
 performance by a 2x factor, but in the case of *darkriscv* the performance
 is always limited by the combinational logic regarding the instruction
-execution.
+execution. A 3-state version is provided in order to use a single clock phase.
 
-As reference, here some additional performance results (synthesis only) for
-other Xilinx devices available in the ISE:
+As reference, here some additional performance results (synthesis only, 3-stage 
+version) for other Xilinx devices available in the ISE for speed grade 2:
 
-- Spartan-3e:	47MHz
-- Spartan-6: 	75MHz
-- Artix-7: 	    133MHz
-- Virtex-6: 	137MHz
-- Kintex-7: 	167MHz
+- Spartan-6:	 85MHz
+- Artix-7: 	151MHz
+- Virtex-6: 	181MHz
+- Kintex-7: 	210MHz
+
+For speed grade 3:
+
+- Spartan-6:	100MHz
+- Artix-7: 	173MHz
+- Virtex-6:	218MHZ
+- Kintex-7:	229MHz
+
+Also, it is possible convert the Artix-7 (Xilinx AC701 available in the ise/boards 
+directory) project to Vivado and make some  interesting tests. The only problem
+in the conversion is that the UCF file is not converted, which means that a new
+XDC file with the pin description must be created.
+
+The Vivado is very slow compared to ISE and needs *lots of time* to synthetize and 
+inform a minimal feedback about the performance... but after some weeks waiting, and 
+lots of empirical calculations, I get some numbers for speed grade 2 devices:
+
+- Artix7: 	147MHz
+- Spartan-7:	146MHz
+
+And one number for speed grade 3 devices:
+
+- Kintex-7:	221MHz
+
+Although Vivado is far slow and shows pessimistic numbers for the same FPGAs when 
+compared with ISE, I guess Vivado is more realistic and, at least, it supports the
+new Spartan-7, which shows very good numbers (almost the same as the Artix-7!).
 
 That values are only for reference. The real values depends of some options
 in the core, such as the number of pipeline stages, who the memories are
 connected, etc.  Basically, the best clock is reached by the 3-stage
-pipeline version (85MHz), but it requires at lease 1 wait state in the load
-instruction and 2 extra clocks in the taken branches in order to flush the
-pipeline. The 2-state pipeline requires no extra wait states and only 1 extra
-clock in the taken branches, but runs with less performance (65MHz).
+pipeline version (85MHz in a Spartan-6), but it requires at lease 1 wait state 
+in the load instruction and 2 extra clocks in the taken branches in order to 
+flush the pipeline. The 2-state pipeline requires no extra wait states and only 
+1 extra clock in the taken branches, but runs with less performance (65MHz).
 
 Regardless the synthesis performance, the *darkriscv* directly connected to
 at least two blockRAM memories (one for instruction and another for data)
