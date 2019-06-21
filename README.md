@@ -133,15 +133,29 @@ logic explanation about this.  Of course, this best performance setup uses a
 3-state pipeline and a single-clock phase (posedge) in the entire logic, in
 a way that the 2-stage pipeline and dual-clock phase will be kept only for
 reference.  The only disadvantage of the 3-state pipeline is one extra
-wait-state in the load operation.
+wait-state in the load operation and the longer pipeline flush of two 
+clocks in the taken branches.
 
-TODO: add some simulation counters in order to measure the effective
-MIPS/MHz performance, considering the pipeline flushes and the wait-states.
+Just for reference, the current firmware example runs in the 3-stage
+pipeline version clocked at 100MHz runs at a verified performance of 62
+MIPS.  The theorical 100MIPS performance is not reached 5% due to the extra
+wait-state in the load instruction and 32% due to pipeline flushes after
+taken branches.  The 2-stage pipeline version, in the other side, runs at a
+verified performance of 79MIPS with the same clock.  The only loss regards
+to 20% due to pipeline flushes after a taken branch.
 
-As reference, here some additional performance results (synthesis only, 3-stage 
+Of course, the impact of the pipeline flush depends also from the software
+and, as long the software is currently optimized for size. When compiled
+with the -O2 instead of -Os, the performance increase to 68MIPS in the
+3-state pipeline and the loss changed to 6% for load and 25% for the
+pipeline flush. The -O3 option resulted in 67MIPS and the best result was
+the -O1 option, which produced 70MIPS in the 3-stage version and 85MIPS in
+the 2-stage version.
+
+Here some additional performance results (synthesis only, 3-stage 
 version) for other Xilinx devices available in the ISE for speed grade 2:
 
-- Spartan-6:	100MHz
+- Spartan-6:	100MHz (measured 70MIPS w/ -O1)
 - Artix-7: 	178MHz
 - Kintex-7: 	225MHz
 
@@ -151,10 +165,26 @@ For speed grade 3:
 - Artix-7: 	202MHz
 - Kintex-7:	266MHz
 
-Also, it is possible convert the Artix-7 (Xilinx AC701 available in the ise/boards 
-directory) project to Vivado and make some  interesting tests. The only problem
-in the conversion is that the UCF file is not converted, which means that a new
-XDC file with the pin description must be created.
+For the 2-stage version and speed grade 2, we have less impact from the
+pipeline flush (20%), no impact in the load and some impact in the clock due
+to the use of a 2-phase clock:
+
+- Spartan-6:    56MHz (measured 47MIPS w/ -O1)
+
+By this way, case the performance is a requirement, the src/Makefile must be
+changed in order to use the -O1 optimization. Although the 2-stage version
+is 15% faster than the 3-stage version, the 3-stage version can reach better
+clocks and, by this way, will provide better performance.
+
+As long 2/3 of the branches appears to not be conditional, maybe it is
+possible detect and optimize that branches in order to reduce the time lost
+in the pipeline flush...
+
+In another hand, regarding the support for Vivado, it is possible convert
+the Artix-7 (Xilinx AC701 available in the ise/boards directory) project to
+Vivado and make some interesting tests.  The only problem in the conversion
+is that the UCF file is not converted, which means that a new XDC file with
+the pin description must be created.
 
 TODO: udpate the performance measurement in the Vivado.
 
