@@ -10,23 +10,28 @@ RISC-V instruction set.  The general concept is based in my other early
 working with a two phase clock, where a instruction is fetch from a
 instruction memory in the first clock and then the instruction is
 decoded/executed in the second clock.  The pipeline is overlapped without
-interlocks, in a way the *darkriscv* can reach the performance of one clock
-per instruction most of time, except by after a taken branch, where one
+interlocks, in a way that the *darkriscv* can reach the performance of one clock
+per instruction most of time, except by a taken branch, where one
 clock is lost in the pipeline flush.  As addition, the code is very compact,
-with around three hundred lines of obfuscated but beautiful Verilog code.
-
-After lots of exciting sleepless nights of work and the help of lots of
+with around three hundred lines of obfuscated but beautiful Verilog code. After 
+lots of exciting sleepless nights of work and the help of lots of
 colleagues, the *darkriscv* reached a very good quality result, in a way
 that the code compiled by the standard riscv-elf-gcc is working
-fine! :)
+fine.
 
 Nowadays, a three stage pipeline working with a single clock phase is
-available as option, where the instruction is fetch in the first clock,
-decoded in the second clock and executed in the third clock, except in the
-case of load instrucion, which requires one extra clock, and the taken
-branch, which requires two extra clocks in order to flush the pipeline. 
-With the 3-stage pipeline and some other expensive optimizations, the
-*darkriscv* can reach 100MHz in a low-cost Spartan-6.
+also available as result of a better distribution between the decode and 
+execute stages. In this case the instruction is fetch in the first clock,
+decoded in the second clock and executed in the third clock. As long the 
+load instruction cannot load the data in a single clock, the external logic
+inserts one extra clock in this case. Also, there are two extra clocks 
+in order to flushe de pipeline in the case of taken branches. According to 
+the lastest measurements, the 3-stage pipeline version can reach a instruction 
+per clock (IPC) of 0.7, smaller than the measured IPC of 0.85  in the 
+case of the 2-stage pipeline version. With the 3-stage pipeline and some other 
+expensive optimizations, the *darkriscv* can reach 100MHz in a low-cost 
+Spartan-6. The 2-stage pipeline is also supported with smaller 
+clocks (typically 50MHz).
 
 Although the code is small and crude when compared with other RISC-V
 implementations, the *darkriscv* has lots of impressive features:
@@ -40,7 +45,10 @@ implementations, the *darkriscv* has lots of impressive features:
 - BSD license: can be used anywhere with no restrictions!
 
 Some extra features are under development, such a cache controller
-(partially working), a sdram controller and a ethernet controller.
+(partially working), a sdram controller, supervisor/user modes, multi-core
+support and an ethernet controller. Support for DSP-like MAC instruction
+is planned, as well support for RV64I and other features, but they depends
+of time...
 
 Feel free to make suggestions and good hacking! o/
 
