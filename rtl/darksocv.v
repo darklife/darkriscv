@@ -32,12 +32,13 @@
 
 // the following defines are user defined:
 
-`define __ICACHE__ 1              // instruction cache
+//`define __ICACHE__ 1              // instruction cache
 //`define __DCACHE__ 1              // data cache (bug: simulation only)
 //`define __WAITSTATES__ 1          // wait-state tests, no cache
 `define __3STAGE__ 1            // single phase 3-state pipeline 
 
-// automatically defined in the xst/xise file:
+// automatically defined in the xst/xise file, otherwise define here!:
+
 //`define AVNET_MICROBOARD_LX9 1
 //`define XILINX_AC701_A200 2
 
@@ -61,7 +62,10 @@
 
 `ifdef AVNET_MICROBOARD_LX9
     `define BOARD_ID 1
-    `define BOARD_CK 66666666
+    //`define BOARD_CK 66666666
+    `define BOARD_CK_REF 66666666
+    `define BOARD_CK_MUL 3
+    `define BOARD_CK_DIV 2
 `endif
 
 `ifdef XILINX_AC701_A200
@@ -75,8 +79,8 @@
 `endif
 
 `ifndef BOARD_ID
-    `define BOARD_ID 0
-    `define BOARD_CK 75000000
+    `define BOARD_ID 0    
+    `define BOARD_CK 75000000   
 `endif
 
 module darksocv
@@ -91,7 +95,7 @@ module darksocv
     output [3:0] DEBUG      // osciloscope
 );
 
-    // internal reset
+    // internal/external reset logic
 
     reg [7:0] IRES = -1;
 
@@ -101,8 +105,74 @@ module darksocv
     always@(posedge XCLK) IRES <= XRES==1 ? -1 : IRES[7] ? IRES-1 : 0; // reset high
 `endif
 
+    // clock generator logic
+    
+`ifdef BOARD_CK_REF
+
+    `define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
+
+    wire DCM_LOCKED;
+    
+    // useful script to calculate MUL/DIV values:
+    // 
+    // awk 'BEGIN { for(m=2;m<=32;m++) for(d=1;d<=32;d++) print 66.666*m/d,m,d }' | sort -n
+    // 
+    // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz
+
+   DCM_SP #(
+      .CLKDV_DIVIDE(2.0),                   // CLKDV divide value
+                                            // (1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,14,15,16).
+      .CLKFX_DIVIDE(`BOARD_CK_DIV),                     // Divide value on CLKFX outputs - D - (1-32)
+      .CLKFX_MULTIPLY(`BOARD_CK_MUL),                   // Multiply value on CLKFX outputs - M - (2-32)
+      .CLKIN_DIVIDE_BY_2("FALSE"),          // CLKIN divide by two (TRUE/FALSE)
+      .CLKIN_PERIOD((1e9/`BOARD_CK_REF)),                  // Input clock period specified in nS
+      .CLKOUT_PHASE_SHIFT("NONE"),          // Output phase shift (NONE, FIXED, VARIABLE)
+      .CLK_FEEDBACK("1X"),                  // Feedback source (NONE, 1X, 2X)
+      .DESKEW_ADJUST("SYSTEM_SYNCHRONOUS"), // SYSTEM_SYNCHRNOUS or SOURCE_SYNCHRONOUS
+      .DFS_FREQUENCY_MODE("LOW"),           // Unsupported - Do not change value
+      .DLL_FREQUENCY_MODE("LOW"),           // Unsupported - Do not change value
+      .DSS_MODE("NONE"),                    // Unsupported - Do not change value
+      .DUTY_CYCLE_CORRECTION("TRUE"),       // Unsupported - Do not change value
+      .FACTORY_JF(16'hc080),                // Unsupported - Do not change value
+      .PHASE_SHIFT(0),                      // Amount of fixed phase shift (-255 to 255)
+      .STARTUP_WAIT("FALSE")                // Delay config DONE until DCM_SP LOCKED (TRUE/FALSE)
+   )
+   DCM_SP_inst (
+      //.CLK0(CLK0),         // 1-bit output: 0 degree clock output
+      //.CLK180(CLK180),     // 1-bit output: 180 degree clock output
+      //.CLK270(CLK270),     // 1-bit output: 270 degree clock output
+      //.CLK2X(CLK2X),       // 1-bit output: 2X clock frequency clock output
+      //.CLK2X180(CLK2X180), // 1-bit output: 2X clock frequency, 180 degree clock output
+      //.CLK90(CLK90),       // 1-bit output: 90 degree clock output
+      //.CLKDV(CLKDV),       // 1-bit output: Divided clock output
+      .CLKFX(CLK),       // 1-bit output: Digital Frequency Synthesizer output (DFS)
+      //.CLKFX180(CLKFX180), // 1-bit output: 180 degree CLKFX output
+      .LOCKED(DCM_LOCKED),     // 1-bit output: DCM_SP Lock Output
+      //.PSDONE(PSDONE),     // 1-bit output: Phase shift done output
+      //.STATUS(STATUS),     // 8-bit output: DCM_SP status output
+      //.CLKFB(CLKFB),       // 1-bit input: Clock feedback input
+      .CLKIN(XCLK),       // 1-bit input: Clock input
+      //.DSSEN(DSSEN),       // 1-bit input: Unsupported, specify to GND.
+      //.PSCLK(PSCLK),       // 1-bit input: Phase shift clock input
+      .PSEN(1'b0),         // 1-bit input: Phase shift enable
+      //.PSINCDEC(PSINCDEC), // 1-bit input: Phase shift increment/decrement input
+      .RST(IRES[7])            // 1-bit input: Active high reset input
+   );
+
+    reg [7:0] DRES = -1;
+    
+    always@(posedge CLK)
+    begin    
+        DRES <= DCM_LOCKED==0 ? -1 : DRES ? DRES-1 : 0;
+    end
+
+    wire RES = DRES[7];
+
+`else    
     wire CLK = XCLK;
-    wire RES = IRES[7];
+    wire RES = IRES[7];    
+`endif
+    // ro/rw memories
 
     reg [31:0] ROM [0:1023]; // ro memory
     reg [31:0] RAM [0:1023]; // rw memory
@@ -368,7 +438,7 @@ module darksocv
     wire [7:0] BOARD_IRQ;
 
     wire   [7:0] BOARD_ID = `BOARD_ID;              // board id
-    wire   [7:0] BOARD_CM = `BOARD_CK/1000000;      // board clock (MHz)
+    wire   [7:0] BOARD_CM = (`BOARD_CK/1000000);    // board clock (MHz)
     wire   [7:0] BOARD_CK = (`BOARD_CK/10000)%100;  // board clock (kHz)
 
     assign IOMUX[0] = { BOARD_IRQ, BOARD_CK, BOARD_CM, BOARD_ID };

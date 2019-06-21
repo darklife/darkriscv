@@ -58,6 +58,13 @@
 
 `define __3STAGE__
 
+// weird unexplained hand optimizations:
+// 
+// area:  ~1000 LUTs and ~90MHz core
+// speed: ~1500 LUTS and ~100MHz core
+
+`define __FASTER__
+
 module darkriscv
 #(
     parameter [31:0] RESET_PC = 0,
@@ -193,6 +200,17 @@ module darkriscv
     
     // L-group of instructions (OPCODE==7'b0000011)
 
+`ifdef __FASTER__
+
+    wire [31:0] LDATA =          FCT3==2 ?   DATAI : 
+                        FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
+                                                             { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
+                                           ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
+                                             DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
+                                             DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
+                                                             { FCT3==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } );
+`else
+
     wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
                                              DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
                                              DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
@@ -200,6 +218,7 @@ module darkriscv
                         FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
                                                              { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
                                              DATAI;
+`endif
 
     // S-group of instructions (OPCODE==7'b0100011)
 
@@ -220,21 +239,19 @@ module darkriscv
     wire signed [31:0] S2REGX = XMCC ? SIMM : S2REG;
     wire        [31:0] U2REGX = XMCC ? UIMM : U2REG;
 
-`ifdef MODEL_TECH
-    wire [31:0] RMDATA_FCT3EQ5 = FCT7[5]==0||U1REG[31]==0 ? U1REG>>U2REGX[4:0] : // workaround for modelsim
-                                -((-U1REG)>>U2REGX[4:0]);
-`else
-    wire [31:0] RMDATA_FCT3EQ5 = (FCT7[5] ? U1REG>>>U2REGX[4:0] : U1REG>>U2REGX[4:0]);
-`endif                        
-    wire [31:0] RMDATA = FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REGX : U1REG+S2REGX) :
-                         FCT3==1 ? U1REG<<U2REGX[4:0] :
-                         FCT3==2 ? S1REG<S2REGX?1:0 : // signed
-                         FCT3==3 ? U1REG<U2REGX?1:0 : // unsigned
-                         FCT3==5 ? RMDATA_FCT3EQ5 : // (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0]) :
-                         FCT3==4 ? U1REG^S2REGX :                        
+    wire [31:0] RMDATA = FCT3==7 ? U1REG&S2REGX :
                          FCT3==6 ? U1REG|S2REGX :
-                         FCT3==7 ? U1REG&S2REGX :                        
-                                   0;
+                         FCT3==4 ? U1REG^S2REGX :
+                         FCT3==3 ? U1REG<U2REGX?1:0 : // unsigned
+                         FCT3==2 ? S1REG<S2REGX?1:0 : // signed
+                         FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REGX : U1REG+S2REGX) :
+                         FCT3==1 ? U1REG<<U2REGX[4:0] :                         
+                         //FCT3==5 ? 
+`ifdef MODEL_TECH        
+                         FCT7[5]==0||U1REG[31]==0 ? U1REG>>U2REGX[4:0] : -((-U1REG)>>U2REGX[4:0]; // workaround for modelsim
+`else
+                         FCT7[5] ? U1REG>>>U2REGX[4:0] : U1REG>>U2REGX[4:0]; // (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0])
+`endif                        
 
     // J/B-group of instructions (OPCODE==7'b1100011)
     

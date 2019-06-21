@@ -82,7 +82,7 @@ $(NGD): $(NGC) $(UCF) $(BOOT) $(RTLS)
 	cd $(TMP) && ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc $(UCF) -p $(DEVICE) $(NGC) $(NGD)
 
 $(PCF): $(NGD) $(BOOT) $(UCF) $(RTLS)
-	cd $(TMP) && map -intstyle ise -p $(DEVICE) -w -logic_opt on -ol high -t 1 -xt 0 -register_duplication off -r 4 -global_opt off -mt 2 -detail -ir off -ignore_keep_hierarchy -pr off -lc auto -power off -o $(MAP) $(NGD) $(PCF)
+	cd $(TMP) && map -intstyle ise -p $(DEVICE) -w -logic_opt on -ol high -t 1 -xt 0 -register_duplication on -r 4 -global_opt off -mt 2 -detail -ir off -ignore_keep_hierarchy -pr off -lc auto -power off -o $(MAP) $(NGD) $(PCF)
 
 $(NCD): $(PCF) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && par -w -intstyle ise -ol high -mt 2 $(MAP) $(NCD) $(PCF)
