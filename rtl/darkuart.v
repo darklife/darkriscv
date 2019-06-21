@@ -131,16 +131,16 @@ module darkuart
                     $write("%c",DATAI[15:8]);
                 end
                 
-                if(DATAI[15:8]==64) // break point: '@'
+                if(DATAI[15:8]=="#") // break point
                 begin
-                    $display(" simulation break point!");
+                    $display("[checkpoint #]");
                     //$stop();
                 end
                 
-                if(DATAI[15:8]==62) // prompt '>'
+                if(DATAI[15:8]==">") // prompt '>'
                 begin
                     $display(" no UART input, finishing simulation...");
-                    $finish();
+                    $stop();
                 end
 `else
                 UART_XREQ <= !UART_XACK;    // activate UART!

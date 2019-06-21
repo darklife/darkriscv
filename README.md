@@ -186,7 +186,22 @@ clocks and, by this way, will provide better performance.
 
 As long 2/3 of the branches appears to not be conditional, maybe it is
 possible detect and optimize that branches in order to reduce the time lost
-in the pipeline flush...
+in the pipeline flush.
+
+Another possibility is use the flush time to other tasks, for example handle
+interrupts. As long the interrupt handling and, in a general way, threading
+requires flush the current pipelines in order to change context, match the
+interrupt/threading with the pipeline flush makes some sense!
+
+With the option __INTERRUPT__ is possible test this feature. The
+implementation is in very early stages of development and does not handle
+correctly the initial SP and PC. Anyway, it works and enables the main()
+code stop in a gets() while the interrupt handling blink the LEDs without
+affecting the execution and with little impact in the performance! :)
+
+The interrupt support can be expanded to a more complete threading support,
+but requires some tricks in the hardware and in the software, in order to 
+populate the different threads with the correct SP and PC.
 
 In another hand, regarding the support for Vivado, it is possible convert
 the Artix-7 (Xilinx AC701 available in the ise/boards directory) project to

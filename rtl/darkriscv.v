@@ -65,6 +65,21 @@
 
 `define __FASTER__
 
+// interrupt handling:
+//
+// decreases clock performance by 10% (90MHz), but enables two contexts (threads) in the core. 
+// They start in the same code, but the interrupt handling is locked in a separate loop and the
+// conext switch is always delayed until the next pipeline flush, in order to decrease the 
+// performance impact.
+// Note: interrupts are currently supported only in the 3-stage pipeline version.
+
+`define __INTERRUPT__ 
+
+// performance measurements can be done in the simulation level by eabling the __PERFMETER__
+// define, in order to check how the MHz are used :)
+
+// `define __PERFMETER__
+
 module darkriscv
 #(
     parameter [31:0] RESET_PC = 0,
@@ -74,6 +89,10 @@ module darkriscv
     input             RES,   // reset
     input             HLT,   // halt
     
+`ifdef __INTERRUPT__    
+    input             IREQ,  // irq req
+`endif    
+
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
     
@@ -93,6 +112,10 @@ module darkriscv
 
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
+
+`ifdef __INTERRUPT__
+    reg XMODE = 0;     // 0 = user, 1 = exception
+`endif
    
     reg [1:0] FLUSH;  // flush instruction pipeline 
     
@@ -100,12 +123,25 @@ module darkriscv
 
     reg [31:0] XIDATA;
 
+`ifdef __INTERRUPT__    
+
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [4:0] DPTR   = XIDATA[11: 7];
+    wire [5:0] DPTR   = { XMODE, XIDATA[11: 7] };
     wire [2:0] FCT3   = XIDATA[14:12];
-    wire [4:0] S1PTR  = XIDATA[19:15];
-    wire [4:0] S2PTR  = XIDATA[24:20];
+    wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
+    wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
     wire [6:0] FCT7   = XIDATA[31:25];
+
+`else
+
+    wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
+    wire [5:0] DPTR   = XIDATA[11: 7];
+    wire [2:0] FCT3   = XIDATA[14:12];
+    wire [5:0] S1PTR  = XIDATA[19:15];
+    wire [5:0] S2PTR  = XIDATA[24:20];
+    wire [6:0] FCT7   = XIDATA[31:25];
+
+`endif
 
     reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC; //, XFCC, XCCC;
 
@@ -173,6 +209,25 @@ module darkriscv
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
+
+`ifdef __INTERRUPT__
+`ifdef __3STAGE__
+    reg [31:0] NXPC2 [0:1];       // 32-bit program counter t+2
+`endif
+    reg [31:0] NXPC;        // 32-bit program counter t+1
+    reg [31:0] PC;		    // 32-bit program counter t+0
+    
+    reg [31:0] REG1 [0:63];	// general-purpose 32x32-bit registers (s1)
+    reg [31:0] REG2 [0:63];	// general-purpose 32x32-bit registers (s2)
+
+    integer i; 
+    initial 
+    for(i=0;i!=64;i=i+1) 
+    begin
+        REG1[i] = 0; // makes the simulation looks better!
+        REG2[i] = 0; // makes the simulation looks better!
+    end
+`else
 `ifdef __3STAGE__
     reg [31:0] NXPC2;       // 32-bit program counter t+2
 `endif
@@ -189,6 +244,7 @@ module darkriscv
         REG1[i] = 0; // makes the simulation looks better!
         REG2[i] = 0; // makes the simulation looks better!
     end
+`endif
 
     // source-1 and source-1 register selection
 
@@ -266,12 +322,35 @@ module darkriscv
 
     wire        JREQ = (JAL||JALR||BMUX);
     wire [31:0] JVAL = SIMM + (JALR ? U1REG : PC);
+
+`ifdef __PERFMETER__
+    integer mhz=0, mips=0, halt=0, flush=0, jal=0, jar=0, bmux=0, irq=0;
+`endif
             
     always@(posedge CLK)
     begin
+
+`ifdef __PERFMETER__
+
+        if(!RES)
+        begin
+            mhz = mhz+1;
+            
+            if(HLT)             halt=halt+1;
+            if(FLUSH)           flush=flush+1;
+            if(JAL)             jal = jal+1;
+            if(JALR)            jar = jar+1;
+            if(BMUX)            bmux = bmux+1;
+            if(!HLT && !FLUSH)  mips   = mips+1;
+            if(XMODE)           irq = irq+1;
+                
+            if(mhz%1000==0)     $display("\nmips=%d hlt=%d flush=%d jal=%d jar=%d bcc=%d irq=%d" ,mips*100/mhz,halt*100/mhz,flush*100/mhz,jal*100/mhz,jar*100/mhz,bmux*100/mhz,irq*100/mhz);
+        end
+`endif
+    
 `ifdef __3STAGE__
-	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt
-	                       FLUSH ? FLUSH-1 : 
+	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt                              
+	                       FLUSH ? FLUSH-1 :                           
 	                       (JAL||JALR||BMUX||RES) ? 2 : 0;  // flush the pipeline!
 `else
         FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
@@ -308,18 +387,32 @@ module darkriscv
 
 `ifdef __3STAGE__
 
-        NXPC <= RES ? RESET_PC : HLT ? NXPC : NXPC2;
+`ifdef __INTERRUPT__
+        NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2[XMODE];
+	
+	    NXPC2[XMODE] <=  RES ? RESET_PC : HLT ? NXPC2[XMODE] :   // reset and halt
+	                 JREQ ? JVAL :                    // jmp/bra
+	                        NXPC2[XMODE]+4;                   // normal flow
+
+        XMODE <= RES ? 0 : HLT ? XMODE :        // reset and halt
+	             XMODE==0&& IREQ&&(JAL||JALR||BMUX||RES) ? 1 :         // wait pipeflush to switch to irq
+                 XMODE==1&&!IREQ&&(JAL||JALR||BMUX||RES) ? 0 : XMODE;  // wait pipeflush to return from irq
+
+`else
+        NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2;
 	
 	    NXPC2 <=  RES ? RESET_PC : HLT ? NXPC2 :   // reset and halt
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
+
+`endif
 
 `else
         NXPC <= RES ? RESET_PC : HLT ? NXPC :   // reset and halt
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
 `endif
-        PC   <= RES ? RESET_PC : HLT ? PC : NXPC; // current program counter
+        PC   <= /*RES ? RESET_PC :*/ HLT ? PC : NXPC; // current program counter
     end
 
     // IO and memory interface
@@ -339,11 +432,15 @@ module darkriscv
                                                      4'b1111; // sw/lw
 
 `ifdef __3STAGE__
-	assign IADDR = NXPC2;
+`ifdef __INTERRUPT__
+	assign IADDR = NXPC2[XMODE];
+`else
+    assign IADDR = NXPC2;
+`endif    
 `else
     assign IADDR = NXPC;
 `endif
 
-    assign DEBUG = { RES, FLUSH, WR, RD };
+    assign DEBUG = { RES, |FLUSH, WR, RD };
 
 endmodule

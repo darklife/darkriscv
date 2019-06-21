@@ -32,10 +32,11 @@
 
 // the following defines are user defined:
 
-//`define __ICACHE__ 1              // instruction cache
-//`define __DCACHE__ 1              // data cache (bug: simulation only)
-//`define __WAITSTATES__ 1          // wait-state tests, no cache
-`define __3STAGE__ 1            // single phase 3-state pipeline 
+//`define __ICACHE__              // instruction cache
+//`define __DCACHE__              // data cache (bug: simulation only)
+//`define __WAITSTATES__          // wait-state tests, no cache
+`define __3STAGE__              // single phase 3-state pipeline 
+`define __INTERRUPT__           // interrupt controller
 
 // automatically defined in the xst/xise file, otherwise define here!:
 
@@ -255,13 +256,13 @@ module darksocv
 
 `ifdef __WAITSTATES__
     
-    reg [1:0] IACK = 0;
+    reg [1:0] IHITACK = 0;
     
-    wire IHIT = !(IACK!=1);
+    wire IHIT = !(IHITACK!=1);
     
     always@(posedge CLK) // stage #1.0
     begin
-        IACK <= RES ? 1 : IACK ? IACK-1 : 1; // wait-states
+        IHITACK <= RES ? 1 : IHITACK ? IHITACK-1 : 1; // wait-states
     end    
 `else
 
@@ -435,6 +436,9 @@ module darksocv
 
     // io for debug
 
+    reg IREQ = 0;
+    reg IACK = 0;
+
     wire [7:0] BOARD_IRQ;
 
     wire   [7:0] BOARD_ID = `BOARD_ID;              // board id
@@ -445,17 +449,35 @@ module darksocv
     assign IOMUX[2] = LEDFF;
     assign IOMUX[3] = ROMBUG;
 
+    reg [31:0] TIMER = 0;
+
     always@(posedge CLK)
     begin
         if(WR&&DADDR[31]&&DADDR[3:2]==2)
         begin
             LEDFF <= DATAO[3:0];
         end
+        
+`ifdef __INTERRUPT__        
+        if(WR&&DADDR[31]&&DADDR[3:0]==3)
+        begin
+            IACK <= IREQ;
+        end
+        
+        TIMER <= TIMER ? TIMER-1 : `BOARD_CK/10; // 1/10 second timer
+        
+        if(TIMER==0)
+        begin
+            IREQ <= !IACK;
+        end
+`endif        
     end
+
+    assign BOARD_IRQ[7]   = IREQ^IACK;
 
     // unused irqs
 
-    assign BOARD_IRQ[7:2] = 0;
+    assign BOARD_IRQ[6:2] = 0;
     assign BOARD_IRQ[0]   = 0;
 
     assign HLT = !IHIT||!DHIT||!WHIT;
@@ -503,6 +525,9 @@ module darksocv
 `endif
         .RES(RES),
         .HLT(HLT),
+`ifdef __INTERRUPT__        
+        .IREQ(IREQ^IACK),
+`endif        
         .IDATA(IDATA),
         .IADDR(IADDR),
         .DATAI(DATAI),

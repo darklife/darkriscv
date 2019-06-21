@@ -36,6 +36,19 @@ extern void hello(void);
 
 void _start(void)
 {
+    /* 
+     * the proposal is handle all "exceptions" here!  the interrupts are
+     * checked, otherwise it is a normal reset. when the interrupt register
+     * is set, the core will work in a different context, preserving the
+     * user context. when the interrupt register is cleared, the context 
+     * is switched back to the user
+     */
+
+    while(io.irq)
+    {
+        io.led++; 
+        io.irq  = 0; // clear interrupts and return
+    }
   
     /* 
      * put the data and bss initialization here:
@@ -46,13 +59,13 @@ void _start(void)
      * you need ensure the boot.o(.text) is the first block in the rom!
      *
      */
+    while(1)
+    {
+        printf("board: %s (id=%d)\n",board_name[io.board_id],io.board_id);
+        printf("core0: darkriscv at %d.%dMHz\n",io.board_cm,io.board_ck);
+        printf("uart0: baudrate counter=%d\n\n",io.uart.baud);
 
-    putchar('@');
-
-    //printf("\33[33;44m.\33[H\33[2J");
-    printf("%s (id=%d)\n",board_name[io.board_id],io.board_id);
-    printf("darkriscv@%d.%dMHz\n",io.board_cm,io.board_ck);
-    printf("darkruart baudrate counter %d\n\n",io.uart.baud);
-
-    for(hello();1;main());
+        hello();
+        main();
+    }
 }
