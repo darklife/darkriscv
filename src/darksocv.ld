@@ -49,6 +49,7 @@ SECTIONS
         *(.bss)
         *(.rela*)
         *(.rodata*)
+        *(.sbss)
 
     } > RAM
 

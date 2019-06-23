@@ -38,10 +38,12 @@
 `define __3STAGE__              // single phase 3-state pipeline 
 `define __INTERRUPT__           // interrupt controller
 
-// automatically defined in the xst/xise file, otherwise define here!:
+// the board is automatically defined in the xst/xise files via 
+// Makefile or ISE otherwise, please define you board name here:
 
-//`define AVNET_MICROBOARD_LX9 1
-//`define XILINX_AC701_A200 2
+//`define AVNET_MICROBOARD_LX9
+//`define XILINX_AC701_A200
+//`define QMTECH_SDRAM_LX16
 
 // the following defines are automatically defined:
 
@@ -63,10 +65,13 @@
 
 `ifdef AVNET_MICROBOARD_LX9
     `define BOARD_ID 1
-    //`define BOARD_CK 66666666
-    `define BOARD_CK_REF 66666666
-    `define BOARD_CK_MUL 3
-    `define BOARD_CK_DIV 2
+    `define BOARD_CK 100000000
+    
+    // example of DCM logic:
+    //
+    //`define BOARD_CK_REF 66666666 
+    //`define BOARD_CK_MUL 3
+    //`define BOARD_CK_DIV 2
 `endif
 
 `ifdef XILINX_AC701_A200
@@ -81,7 +86,7 @@
 
 `ifndef BOARD_ID
     `define BOARD_ID 0    
-    `define BOARD_CK 75000000   
+    `define BOARD_CK 100000000   
 `endif
 
 module darksocv
@@ -118,8 +123,9 @@ module darksocv
     // 
     // awk 'BEGIN { for(m=2;m<=32;m++) for(d=1;d<=32;d++) print 66.666*m/d,m,d }' | sort -n
     // 
-    // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz
-
+    // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz. not so useful after I discovered 
+    // that my evaluation board already has external clock generator :D
+    
    DCM_SP #(
       .CLKDV_DIVIDE(2.0),                   // CLKDV divide value
                                             // (1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,14,15,16).
@@ -170,6 +176,9 @@ module darksocv
     wire RES = DRES[7];
 
 `else    
+
+    // when there is no need for a clock generator:
+
     wire CLK = XCLK;
     wire RES = IRES[7];    
 `endif
@@ -205,8 +214,8 @@ module darksocv
 
     wire [31:0] IOMUX [0:3];
 
-    reg  [31:0] ROMBUG = 0;
-    reg  [ 3:0] LEDFF  = 0;
+    reg  [15:0] GPIOFF = 0;
+    reg  [15:0] LEDFF  = 0;
     
     wire HLT;
     
@@ -280,14 +289,14 @@ module darksocv
 
     //assign IDATA = ROM[IADDR[11:2]];
 
-    always@(posedge CLK)
-    begin   
-        // weird bug appears to be related to the "sw ra,12(sp)" instruction.
-        if(WR&&DADDR[31]==0&&DADDR[12]==0)
-        begin
-            ROMBUG <= IADDR;
-        end
-    end
+//    always@(posedge CLK)
+//    begin   
+//        // weird bug appears to be related to the "sw ra,12(sp)" instruction.
+//        if(WR&&DADDR[31]==0&&DADDR[12]==0)
+//        begin
+//            ROMBUG <= IADDR;
+//        end
+//    end
     
     assign IDATA = ROMFF;
 
@@ -446,29 +455,44 @@ module darksocv
     wire   [7:0] BOARD_CK = (`BOARD_CK/10000)%100;  // board clock (kHz)
 
     assign IOMUX[0] = { BOARD_IRQ, BOARD_CK, BOARD_CM, BOARD_ID };
-    assign IOMUX[2] = LEDFF;
-    assign IOMUX[3] = ROMBUG;
+    //assign IOMUX[1] = from UART!
+    assign IOMUX[2] = { GPIOFF, LEDFF };
+    assign IOMUX[3] = TIMERFF;
 
     reg [31:0] TIMER = 0;
+    reg [31:0] TIMERFF = `BOARD_CK/1000000; // 5M interrupts/second!
+
+    reg XTIMER = 0;
 
     always@(posedge CLK)
     begin
-        if(WR&&DADDR[31]&&DADDR[3:2]==2)
+        if(WR&&DADDR[31]&&DADDR[3:0]==4'b1000)
         begin
-            LEDFF <= DATAO[3:0];
+            LEDFF <= DATAO[15:0];
+        end
+
+        if(WR&&DADDR[31]&&DADDR[3:0]==4'b1010)
+        begin
+            GPIOFF <= DATAO[31:16];
         end
         
 `ifdef __INTERRUPT__        
-        if(WR&&DADDR[31]&&DADDR[3:0]==3)
+        if(WR&&DADDR[31]&&DADDR[3:0]==4'b0011)
         begin
             IACK <= IREQ;
         end
+
+        if(WR&&DADDR[31]&&DADDR[3:0]==4'b1100)
+        begin
+            TIMERFF <= DATAO[31:0];
+        end
         
-        TIMER <= TIMER ? TIMER-1 : `BOARD_CK/10; // 1/10 second timer
+        TIMER <= TIMER ? TIMER-1 : TIMERFF;
         
         if(TIMER==0)
         begin
             IREQ <= !IACK;
+            XTIMER <= !XTIMER;
         end
 `endif        
     end
@@ -547,7 +571,8 @@ module darksocv
   end
 `endif
 
-    assign LED   = LEDFF;
-    assign DEBUG = UDEBUG;
+    assign LED   = LEDFF[3:0];
+    
+    assign DEBUG = { GPIOFF[0], XTIMER, WR, RD }; // UDEBUG;
 
 endmodule

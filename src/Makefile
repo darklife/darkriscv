@@ -26,6 +26,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
+HOST_CC = gcc
+HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -DX86 -DX86 -I./include -Os
+
 #CROSS = riscv-elf
 #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
 
@@ -48,15 +51,17 @@ OCFLAGS = -O binary
 ODFLAGS = -d
 
 PROJ = darksocv
-OBJS = boot.o stdio.o main.o io.o hello.o
-ASMS = boot.s stdio.s main.s io.s hello.s
+OBJS = boot.o stdio.o main.o io.o banner.o
+ASMS = boot.s stdio.s main.s io.s banner.s
+SRCS = boot.c stdio.c main.c io.c banner.c
 
 all:
 	make $(PROJ).rom
 	make $(PROJ).ram
+	make $(PROJ).x86
 
 clean:
-	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom}
+	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86}
 
 %.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@
@@ -78,3 +83,6 @@ $(PROJ).rom: $(PROJ).bin
 $(PROJ).ram: $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' -s $(MEMSIZE) $< > $@
 	wc -l $@
+	
+$(PROJ).x86: $(SRCS)
+	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86

@@ -31,11 +31,21 @@
 #include <io.h>
 #include <stdio.h>
 
+extern void banner(void);
+
 int main(void)
 {
     char  buffer[32];
+    char *tmp;
+
+    banner();
 
     // startup
+
+    printf("board: %s (id=%d)\n",board_name[io.board_id],io.board_id);
+    printf("core0: darkriscv at %d.%dMHz\n",io.board_cm,io.board_ck);
+    printf("uart0: baudrate counter=%d\n",io.uart.baud);
+    printf("timr0: periodic timer=%d\n\n",io.timer);
 
     printf("Welcome to DarkRISCV!\n");
 
@@ -43,62 +53,74 @@ int main(void)
 
     while(1)
     {
-      printf("> ");
-      
+      printf("> ");      
       gets(buffer,sizeof(buffer));
 
-      if(!strcmp(buffer,"clear"))
+      if((tmp = strtok(buffer," ")))
       {
-          printf("\33[H\33[2J");
-      }
-      else
-      if(!strcmp(buffer,"led"))
-      {
-          printf("led = %x\n",++io.led);
-      }
-      else
-      if(!strcmp(buffer,"bug"))
-      {
-          printf("bug = %x\n",io.bug);
-      }
-      else
-      if(!strcmp(buffer,"heap"))
-      {
-          char *p=(char *)0x1000;
-          int i,j;
-          
-          for(i=0;i!=16;i++)
+          if(!strcmp(tmp,"clear"))
           {
-              for(j=0;j!=32;j++) printf("%x ",p[j]);
-              for(j=0;j!=32;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
-              putchar('\n');
-              p+=32;
+              printf("\33[H\33[2J");
           }
-      }
-      else
-      if(!strcmp(buffer,"stack"))
-      {
-          char *p=(char *)(0x2000-(32*16));
-          int i,j;
-          
-          for(i=0;i!=16;i++)
+          else
+          if(!strcmp(tmp,"atros"))
           {
-              for(j=0;j!=32;j++) printf("%x ",p[j]);
-              for(j=0;j!=32;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
-              putchar('\n');
-              p+=32;
+              banner();
+              printf("wow! hello atros! o/\n");
           }
-      }
-      else
-      if(!strcmp(buffer,"hello"))
-      {
-          printf("hello atros! o/\n");
-      }
-      else
-      if(buffer[0])
-      {
-          printf("command: [%s] not found.\n",buffer);
-      }
+          else
+          if(!strcmp(tmp,"dump"))
+          {
+              tmp=strtok(NULL," ");
+              
+              char *p=(char *)(kmem+(tmp?atoi(tmp):0));
+
+              int i,j;
+              
+              for(i=0;i!=16;i++)
+              {
+                  printf("%d: ",(unsigned) p);
+              
+                  for(j=0;j!=32;j++) printf("%x ",p[j]);
+                  for(j=0;j!=32;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
+                  putchar('\n');
+                  p+=32;
+              }
+          }
+          else
+          if(!strcmp(tmp,"led"))
+          {
+              if((tmp=strtok(NULL," ")))
+              {
+                  io.led = atoi(tmp);
+              }
+              printf("led = %d\n",io.led);
+          }
+          else
+          if(!strcmp(tmp,"timer"))
+          {
+              if((tmp=strtok(NULL," ")))
+              {
+                  io.timer = atoi(tmp);
+              }
+              printf("timer = %d\n",io.timer);
+          }
+          else
+          if(!strcmp(tmp,"gpio"))
+          {
+              if((tmp=strtok(NULL," ")))
+              {
+                  io.gpio = atoi(tmp);
+              }
+              printf("gpio = %d\n",io.gpio);
+          }
+          else
+          if(tmp[0])
+          {
+              printf("command: [%s] not found.\n",tmp);
+              printf("valid commands: clear, dump <val>, led <val>, timer <val>, gpio <val>\n");
+          }
+       }
     }
 
     return 0;

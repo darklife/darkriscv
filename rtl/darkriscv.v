@@ -78,7 +78,7 @@
 // performance measurements can be done in the simulation level by eabling the __PERFMETER__
 // define, in order to check how the MHz are used :)
 
-// `define __PERFMETER__
+//`define __PERFMETER__
 
 module darkriscv
 #(
@@ -226,6 +226,15 @@ module darkriscv
     begin
         REG1[i] = 0; // makes the simulation looks better!
         REG2[i] = 0; // makes the simulation looks better!
+        
+        NXPC2[0] = RESET_PC;
+        NXPC2[1] = RESET_PC;
+        
+        REG1[2] = RESET_SP;
+        REG2[2] = RESET_SP;
+        
+        REG1[34] = RESET_SP;
+        REG2[34] = RESET_SP;
     end
 `else
 `ifdef __3STAGE__
@@ -324,29 +333,40 @@ module darkriscv
     wire [31:0] JVAL = SIMM + (JALR ? U1REG : PC);
 
 `ifdef __PERFMETER__
-    integer mhz=0, mips=0, halt=0, flush=0, jal=0, jar=0, bmux=0, irq=0;
-`endif
-            
+    integer clocks=0, user=0, super=0, halt=0, flush=0;
+
     always@(posedge CLK)
     begin
-
-`ifdef __PERFMETER__
-
         if(!RES)
         begin
-            mhz = mhz+1;
-            
+            clocks = clocks+1;
+
+    `ifdef __INTERRUPT__
+    
+            if(XMODE==0 && !HLT && !FLUSH)      user  = user +1;
+            if(XMODE==1 && !HLT && !FLUSH)      super = super+1;
+    `else    
+            if(!HLT && !FLUSH)                  user  = user +1;
+    `endif
+
             if(HLT)             halt=halt+1;
             if(FLUSH)           flush=flush+1;
-            if(JAL)             jal = jal+1;
-            if(JALR)            jar = jar+1;
-            if(BMUX)            bmux = bmux+1;
-            if(!HLT && !FLUSH)  mips   = mips+1;
-            if(XMODE)           irq = irq+1;
                 
-            if(mhz%1000==0)     $display("\nmips=%d hlt=%d flush=%d jal=%d jar=%d bcc=%d irq=%d" ,mips*100/mhz,halt*100/mhz,flush*100/mhz,jal*100/mhz,jar*100/mhz,bmux*100/mhz,irq*100/mhz);
+            if(clocks && clocks%10000==0)     
+            begin
+                $display("%d clocks: %0d%% user, %0d%% super, %0d%% ws, %0d%% flush",
+                    clocks,
+                    100*user/clocks,
+                    100*super/clocks,
+                    100*halt/clocks,
+                    100*flush/clocks);
+            end
         end
+    end
 `endif
+
+    always@(posedge CLK)
+    begin
     
 `ifdef __3STAGE__
 	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt                              
@@ -423,6 +443,19 @@ module darkriscv
     assign WR = SCC;
     
     // based in the Scc and Lcc   
+
+`ifdef __FASTER__
+
+    assign BE =          FCT3==2 ?                   4'b1111 : // sw/lw
+                FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
+                                                     4'b0011 ) :
+                                   ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
+                                     DADDR[1:0]==2 ? 4'b0100 : 
+                                     DADDR[1:0]==1 ? 4'b0010 :
+                                                     4'b0001 );
+                
+                                                     
+`else
     assign BE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
                                      DADDR[1:0]==2 ? 4'b0100 : 
                                      DADDR[1:0]==1 ? 4'b0010 :
@@ -430,6 +463,7 @@ module darkriscv
                 FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
                                                      4'b0011 ) :
                                                      4'b1111; // sw/lw
+`endif
 
 `ifdef __3STAGE__
 `ifdef __INTERRUPT__

@@ -32,7 +32,6 @@
 #include <stdio.h>
 
 extern int  main (void);
-extern void hello(void);
 
 void _start(void)
 {
@@ -44,10 +43,12 @@ void _start(void)
      * is switched back to the user
      */
 
+    register int i=0;
+
     while(io.irq)
     {
-        io.led++; 
-        io.irq  = 0; // clear interrupts and return
+        io.gpio = i++; // change gpio!
+        io.irq  = 0;   // clear interrupts and switch context
     }
   
     /* 
@@ -57,15 +58,9 @@ void _start(void)
      * memset(&bss_ram,0,bss_len);
      *
      * you need ensure the boot.o(.text) is the first block in the rom!
-     *
      */
-    while(1)
-    {
-        printf("board: %s (id=%d)\n",board_name[io.board_id],io.board_id);
-        printf("core0: darkriscv at %d.%dMHz\n",io.board_cm,io.board_ck);
-        printf("uart0: baudrate counter=%d\n\n",io.uart.baud);
 
-        hello();
-        main();
-    }
+    puts(":)"); // no crash here! :)
+     
+    main();
 }

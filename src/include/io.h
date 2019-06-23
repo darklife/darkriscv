@@ -30,23 +30,30 @@
 
 struct DARKIO {
 
-    unsigned char board_id;
-    unsigned char board_cm;
-    unsigned char board_ck;
-    unsigned char irq;
+    unsigned char board_id; // 00
+    unsigned char board_cm; // 01
+    unsigned char board_ck; // 02
+    unsigned char irq;      // 03
 
     struct DARKUART {
         
-        unsigned char  stat;
-        unsigned char  fifo;
-        unsigned short baud;
+        unsigned char  stat; // 04
+        unsigned char  fifo; // 05
+        unsigned short baud; // 06/07
 
     } uart;
 
-    int led;
-    int bug;
+    unsigned short led;     // 08/09
+    unsigned short gpio;    // 0a/0b
+
+    unsigned timer;         // 0c
 };
 
 extern volatile struct DARKIO io;
-
 extern const char *board_name[];
+
+#ifndef X86
+#define kmem 0
+#else
+extern unsigned char kmem[8192];
+#endif

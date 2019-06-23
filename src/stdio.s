@@ -306,12 +306,14 @@ printf:
 	j	.L44
 	.size	printf, .-printf
 	.align	2
-	.globl	strcmp
-	.type	strcmp, @function
-strcmp:
+	.globl	strncmp
+	.type	strncmp, @function
+strncmp:
+	li	a3,1
 .L50:
 	lbu	a4,0(a0)
 	lbu	a5,0(a1)
+	beq	a2,a3,.L51
 	beqz	a4,.L51
 	beqz	a5,.L51
 	beq	a4,a5,.L52
@@ -321,23 +323,46 @@ strcmp:
 .L52:
 	addi	a0,a0,1
 	addi	a1,a1,1
+	addi	a2,a2,-2
 	j	.L50
+	.size	strncmp, .-strncmp
+	.align	2
+	.globl	strcmp
+	.type	strcmp, @function
+strcmp:
+	li	a2,-1
+	tail	strncmp
 	.size	strcmp, .-strcmp
+	.align	2
+	.globl	strlen
+	.type	strlen, @function
+strlen:
+	li	a5,0
+.L61:
+	add	a4,a0,a5
+	lbu	a4,0(a4)
+	bnez	a4,.L62
+	mv	a0,a5
+	ret
+.L62:
+	addi	a5,a5,1
+	j	.L61
+	.size	strlen, .-strlen
 	.align	2
 	.globl	memcpy
 	.type	memcpy, @function
 memcpy:
 	li	a5,0
-.L60:
-	bne	a5,a2,.L61
+.L64:
+	bne	a5,a2,.L65
 	ret
-.L61:
+.L65:
 	add	a4,a1,a5
 	lbu	a3,0(a4)
 	add	a4,a0,a5
 	addi	a5,a5,1
 	sb	a3,0(a4)
-	j	.L60
+	j	.L64
 	.size	memcpy, .-memcpy
 	.align	2
 	.globl	memset
@@ -345,14 +370,79 @@ memcpy:
 memset:
 	add	a2,a0,a2
 	mv	a5,a0
-.L63:
-	bne	a5,a2,.L64
+.L67:
+	bne	a5,a2,.L68
 	ret
-.L64:
+.L68:
 	addi	a5,a5,1
 	sb	a1,-1(a5)
-	j	.L63
+	j	.L67
 	.size	memset, .-memset
+	.align	2
+	.globl	strtok
+	.type	strtok, @function
+strtok:
+	addi	sp,sp,-32
+	sw	s0,24(sp)
+	mv	s0,a0
+	mv	a0,a1
+	sw	s2,16(sp)
+	sw	s3,12(sp)
+	sw	ra,28(sp)
+	sw	s1,20(sp)
+	mv	s2,a1
+	call	strlen
+	mv	s3,a0
+	bnez	s0,.L70
+	lui	a5,%hi(nxt.1612)
+	lw	s0,%lo(nxt.1612)(a5)
+	beqz	s0,.L71
+.L70:
+	mv	s1,s0
+.L72:
+	lbu	a5,0(s1)
+	beqz	a5,.L71
+	mv	a2,s3
+	mv	a1,s2
+	mv	a0,s1
+	call	strncmp
+	addi	a5,s1,1
+	bnez	a0,.L74
+	lui	a4,%hi(nxt.1612)
+	sb	zero,0(s1)
+	sw	a5,%lo(nxt.1612)(a4)
+.L71:
+	mv	a0,s0
+	lw	ra,28(sp)
+	lw	s0,24(sp)
+	lw	s1,20(sp)
+	lw	s2,16(sp)
+	lw	s3,12(sp)
+	addi	sp,sp,32
+	jr	ra
+.L74:
+	mv	s1,a5
+	j	.L72
+	.size	strtok, .-strtok
+	.align	2
+	.globl	atoi
+	.type	atoi, @function
+atoi:
+	li	a5,0
+.L80:
+	lbu	a4,0(a0)
+	bnez	a4,.L81
+	mv	a0,a5
+	ret
+.L81:
+	slli	a3,a5,3
+	addi	a4,a4,-48
+	add	a4,a4,a3
+	slli	a5,a5,1
+	add	a5,a4,a5
+	addi	a0,a0,1
+	j	.L80
+	.size	atoi, .-atoi
 	.section	.rodata
 	.align	2
 	.set	.LANCHOR0,. + 0
@@ -371,4 +461,10 @@ memset:
 	.align	2
 .LC1:
 	.string	"0123456789abcdef"
+	.section	.sbss,"aw",@nobits
+	.align	2
+	.type	nxt.1612, @object
+	.size	nxt.1612, 4
+nxt.1612:
+	.zero	4
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

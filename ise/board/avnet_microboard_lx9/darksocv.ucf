@@ -36,7 +36,8 @@
 
 # AVNET board LX9 microboard
 
-NET XCLK            LOC = K15 | PERIOD = 66MHz HIGH 50%;
+NET XCLK            LOC = C10 | PERIOD = 100MHz HIGH 50%;
+#NET XCLK            LOC = K15 | PERIOD = 66MHz HIGH 50%;
 #NET XCLK            LOC = V10 | PERIOD = 40MHz HIGH 50%;
 
 NET XRES            LOC = V4  | PULLDOWN;

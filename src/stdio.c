@@ -34,6 +34,8 @@
 
 // putchar and getchar uses the "low-level" io
 
+#ifndef X86
+
 int getchar(void)
 {
   while((io.uart.stat&2)==0); // uart empty, wait...
@@ -53,6 +55,8 @@ int putchar(int c)
   return io.uart.fifo = c;
 }
 
+#endif
+
 // high-level functions uses the getchar/putchar
 
 void gets(char *p,int s)
@@ -64,10 +68,15 @@ void gets(char *p,int s)
     c=getchar();
     
     if(c=='\n'||c=='\r') break;
-     
+#ifndef X86     
     putchar((*p++ = c));
+#else
+    *p++ = c;
+#endif
   }
+#ifndef X86
   putchar('\n');
+#endif
   *p=0;
 }
 
@@ -159,11 +168,25 @@ int printf(char *fmt,...)
     return 0;
 }
 
-int strcmp(char *s1, char *s2)
+int strncmp(char *s1,char *s2,int len)
 {
-    while(*s1 && *s2 && (*s1==*s2)) { s1++; s2++; }
+    while(--len && *s1 && *s2 && (*s1==*s2)) { s1++; s2++; len--; }
     
     return (*s1-*s2);
+}
+
+int strcmp(char *s1, char *s2)
+{
+    return strncmp(s1,s2,-1);
+}
+
+int strlen(char *s1)
+{
+    int len;
+    
+    for(len=0;s1[len];len++);
+
+    return len;
 }
 
 char *memcpy(char *dptr,char *sptr,int len)
@@ -180,6 +203,45 @@ char *memset(char *dptr, int c, int len)
     char *ret = dptr;
     
     while(len--) *dptr++ = c;
+    
+    return ret;
+}
+
+char *strtok(char *str,char *dptr)
+{
+    static char *nxt = NULL;
+
+    int dlen = strlen(dptr);
+    char *tmp;
+
+         if(str) tmp=str;
+    else if(nxt) tmp=nxt;
+    else return NULL;
+    
+    char *ret=tmp;
+
+    while(*tmp)
+    {
+        if(strncmp(tmp,dptr,dlen)==0)
+        {
+            *tmp=NULL;
+            nxt = tmp+1;
+            return ret;
+        }
+        tmp++;
+    }
+
+    return ret;
+}
+
+int atoi(char *s1)
+{
+    int ret;
+    
+    for(ret=0;*s1;s1++) 
+    {
+        ret = *s1-'0'+(ret<<3)+(ret<<1); // val = val*10+int(*s1)
+    }
     
     return ret;
 }

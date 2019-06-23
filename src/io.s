@@ -6,12 +6,13 @@
 	.data
 	.align	2
 	.type	board_name, @object
-	.size	board_name, 20
+	.size	board_name, 24
 board_name:
 	.word	.LC0
 	.word	.LC1
 	.word	.LC2
 	.word	.LC3
+	.word	.LC4
 	.word	0
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
@@ -25,4 +26,7 @@ board_name:
 	.zero	2
 .LC3:
 	.string	"qmtech sdram lx16"
+	.zero	2
+.LC4:
+	.string	"unknown host x86"
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

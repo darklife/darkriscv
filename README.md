@@ -36,7 +36,7 @@ clocks (typically 50MHz).
 Although the code is small and crude when compared with other RISC-V
 implementations, the *darkriscv* has lots of impressive features:
 
-- implements most of the RISC-V RV32I instruction set
+- implements most of the RISC-V rv32i instruction set
 - works up to 100MHz (spartan-6) and sustain 1 clock per instruction most of time
 - flexible harvard architecture (easy to integrate a cache controller)
 - works fine in a real spartan-6 (lx9/lx16/lx45)
@@ -44,13 +44,25 @@ implementations, the *darkriscv* has lots of impressive features:
 - uses only around 1000 LUTs (spartan-6, core only and no optimizations)
 - BSD license: can be used anywhere with no restrictions!
 
-Some extra features are under development, such a cache controller
-(partially working), a sdram controller, supervisor/user modes, multi-core
-support and an ethernet controller. Support for DSP-like MAC instruction
-is planned, as well support for RV64I and other features, but they depends
-of time...
+Some extra features are planned for the furure or under development:
 
-Feel free to make suggestions and good hacking! o/
+- interrupt controller (under tests)
+- cache controller (under tests)
+- gpio and timer (under tests)
+- sdram controller
+- branch predictor 
+- ethernet controller (GbE)
+- multi-threading (SMT)
+- multi-processing (SMP)
+- network on chip (NoC)
+- rv32e support (less registers, more threads)
+- rv64i support
+- 16x16-bit MAC instruction
+- big-endian support
+- user/supervisor modes
+- debug support
+
+And much other features! Feel free to make suggestions and good hacking! o/
 
 ## Implementation Notes
 
@@ -65,36 +77,51 @@ future).
 The main motivation for the *darkriscv* is create a migration path for some
 projects around the 680x0/coldfire family.  Although there are lots of 680x0
 cores available, I found no core with a good relationship between
-performance (more than 50MHz) and logic use (~1000LUTs).  
+performance (more than 50MHz) and logic use (around 1000LUTs).  
 
-The best option at this moment, the TG68, requires at least ~2400LUTs (by
-removing the MUL/DIV instructions, which are not really needed), and works
-up to 40MHz in a Spartan-6.  As addition, the TG68 core requires at least 2 clock
-per instruction, which means a peak performance of 20MIPS.  As long the
-680x0 instruction is too complex, the TG68 result is really very good and it
-is, at this moment, probably the best option to replace the 68000.
+The best option at this moment, the TG68, requires at least 2400LUTs (by
+removing the MUL/DIV instructions), and works up to 40MHz in a Spartan-6. 
+As addition, the TG68 core requires at least 2 clock per instruction, which
+means a peak performance of 20MIPS.  As long the 680x0 instruction is too
+complex, the TG68 result is really very good and it is, at this moment,
+probably the best option to replace the 68000. 
 
-After lots of tests, I found the *picorv32* core and the all the ecosystem
-around the RISC-V.  The picorv32 is a very nice project, but the main
-problem around the *picorv32* is that most instructions requires 3 or 4
-clocks per instruction, which resembles the 68020 in some ways, but running
-at 150MHz.  Anyway, with 3 clocks per instruction, the peak performance is
-around 50MIPS only.  Although the *picorv32* is a very good option to
-directly replace the 680x0 family, it is not powerful enough to replace some
-coldfire processors (more than 75MIPS!).
+Anyway, the space and performance are not as good as expected. As part of
+the investigation, I tested other cores and started design a risclized-68000 
+core, but I found no much ways to reduce the space and increase the
+performance.
 
-As long I had some good experience with experimental 16-bit RISC cores, I
-started code the *darkriscv* only to check the level of complexity.  For my
-surprise, in the first night I mapped almost all instructions of the RV32I
-specification and the *darkriscv* started to execute the first instructions
-correctly at 75MHz and with one clock per instruction, which resembles a
-fast and nice 68040 and can beat some coldfires! wow! :)
+After lots of tests with different cores, I found the *picorv32* core and
+the all the ecosystem around the RISC-V.  The picorv32 is a very nice
+project, but the main problem around the *picorv32* is that most
+instructions requires 3 or 4 clocks per instruction, which resembles the
+68020 in some ways, but running at 150MHz, which is impressive itself!  
+
+Anyway, with 3 clocks per instruction, the peak performance is around 50MIPS
+only.  Although the *picorv32* is a very good option to directly replace the
+680x0 family, it is not powerful enough to replace some coldfire processors
+(more than 75MIPS).
+
+As long I had some good experience with experimental 16-bit RISC cores for
+DSP-like applications, I started code the *darkriscv* only to check the
+level of complexity and compare with my risclized-68000.  
+
+For my surprise, in the first night I mapped almost all instructions of the
+rv32i specification and the *darkriscv* started to execute the first
+instructions correctly at 75MHz and with one clock per instruction, which
+resembles a fast and nice 68040 and can beat some coldfires!  wow!  :)
 
 After the success of the first nigth, I started to work in order to fix
-small details in the hardware and software implementation.  
+small details in the hardware and software implementation. As long the GCC
+is already available, for sure the RISCV shots the path to provide a way
+to replace some smaller 68000 processors.
 
-As main recomendation when working with softcores try never work in the
-hardware and in the software at the same time!  Start with the minimum
+In the last update I included a way to test the firmware in the x86 host,
+which helps as lot, since is possible interact with the firmware and fix
+quickly some obvious bugs.
+
+Anyway, as main recomendation when working with softcores try never work in
+the hardware and in the software at the same time!  Start with the minimum
 software configuration possible and freeze the software.  When implementing
 new software updates, use the minium hardware configuration possible and
 freeze the hardware.
@@ -104,31 +131,87 @@ The RV32I specification itself is really impressive and easy to implement
 little-endian bus (opposed to the network oriented big-endian bus found in
 the 680x0 family), but after some empirical tests it is easy to make work.
 
-Unfortunately, I had a small problem with the load instruction: the 2 stage
-execution needs faster external memory!  This is not a problem for my early
-16-bit RISC processors, which used small and faster LUT-based memories, but
-in the case of *darkriscv* the proposal was a more flexible design, in a way
-is possible use blockRAM-based caches and slow external memories.  
+In the future I will probably release a way to make the *darkriscv* work in
+big-endian and probably support both endians in a statically way.
 
-My first solution was use two different clock edges: one edge for the
-*darkriscv* and another edge for the memory/bus interface.
+Another drawback in the specification is the lacking of delayed branches.
+Although i understand that they are bad from the conceptual point of view,
+they are good trick in order to extract more performance. As reference, the
+lack of delayed branches or branch predictor in the *darkriscv* may reduce
+between 20 and 30% the performance, in a way that the real measured
+performance may be between 1.25 and 1.66 clocks per instruction.
 
-In this case the processor with a 2-stage pipeline works like a
-pseudo 4-state pipeline:
+The original 2-stage pipeline design has a small problem concerning the ROM
+and RAM timing, in a way that, in order to pre-fetch and execute the
+instruction in two clocks and keep the pre-fetch continously working at the
+rate of 1 instruction per clock (and the same in the execution), the ROM and
+RAM must respond before the next clock. This means that the memories must be
+combinational or, at least, use a 2-phase clock.
+
+The first solution for the 2-stage pipeline version with a 2-phase clock is
+the default solution and makes the *darkriscv* work as a pseudo 4-stage
+pipeline:
 
 - 1/2 stage for instruction pre-fetch (rom)
-- 1/2 stage for static instruction decode
+- 1/2 stage for static instruction decode (core)
 - 1/2 stage for address generation, register read and data read/write (ram) 
 - 1/2 stage for data write (register write)
 
-Anyway, from the processor point of view, there are only 2 stages.
-
-In normal conditions, this is not recommended because decreases the
+From the processor point of view, there are only 2 stages and from the
+memory point of view, there are also 2 stages. But they are in different
+clock phases. In normal conditions, this is not recommended because decreases the
 performance by a 2x factor, but in the case of *darkriscv* the performance
 is always limited by the combinational logic regarding the instruction
-execution. 
+execution.
 
-A 3-state version is provided in order to use a single clock phase.
+The second solution with a 2-stage pipeline is use combinational logic in
+order to provide the needed results before the next clock edge, in a way
+that is possible use a single phase clock.  This solution is composed by a
+instruction and data caches, in a way that when the operand is stored in a
+small LUT-based combinational cache, the processor can perform the memory
+operation with no extra wait states.  However, when the operand is not
+stored in the cache, extra wait-states are inserted in order to fetch the
+operand from a blockram or extenal memory.  According to some preliminary
+tests, the instruction cache w/ 64 direct mapped instructions can reach a
+hit ratio of 91%.  The data cache performance, although is not so good (with
+a hit ratio of only 68%), will be a requirement in order to access external
+memory and reduce the impact of slow SDRAMs and FLASHes.
+
+Unfortunately, the instruction and data caches are not working anymore for
+the 2-stage pipeline version and only the instruction cache is working in
+the 3-stage pipeline.  The problem is probably regarding the HLT signal
+and/or a problem regarding the write byte enable in the cache memory.
+
+Both the use of the cache and a 2-phase clock does not perform well.  By
+this way, a 3-stage pipeline version is provided, in order to use a single
+clock phase with blockrams.
+
+The concept in this case is separate the pre-fetch and decode, in a way that
+the pre-fetch can be done entirely in the blockram side for the instruction
+bus. The decode, in a different stage, provides extra performance and the 
+execute stage works with one clock almost all the time, except when the load
+instruction is executed. In this case, the external memory logic inserts one
+wait-state. The write operation, however, is executed in a single clock.
+
+The solution with wait-states can be used in the 2-stage pipeline version,
+but decreases the performance too much. Case is possible run all versions
+with the same, clock, the theorical performance in clocks per instruction
+CPI), number of clocks to flush the pipeline in the taken branch (FLUSH) and
+memory wait-states (WSMEM) will be:
+
+- 2-stage pipe w/ 2-phase clock: CPI=1, FLUSH=1, WSMEM=0: real CPI=~1.25
+- 3-stage pipe w/ 1-phase clock: CPI=1, FLUSH=2, WSMEM=1: real CPI=˜1.66
+- 2-stage pipe w/ 1-phase clock: CPI=2, FLUSH=1, WSMEM=1, real CPI=~2.00
+
+Empiracally, the impact of the FLUSH in the 2-stage pipeline is around 20%
+and in the 3-stage pipeline is 30%. The real impact depends of the code
+itself, of course... In the case of the impact of the wait-states in the
+memory access regarding the load instruction, the impact ranges between 5
+and 10%, again, depending of the code.
+
+However, the clock in the case of the 3-stage pipeline is far better than the
+2-stage pipeline, in special because the better distribuition of the logic
+between the decode and execute stages.
 
 With some expensive and weird optimizations, is possible increase the
 performance by around 10% at cost of an increase of 50% in the logic.  After
@@ -137,14 +220,20 @@ path and the LDATA path.  The RMDATA reorder incresed the performance with
 minimal impact in the logic size, but is not the case in the LDATA, by this
 way I included an option __FASTER__ in the core.  When enabled, the logic
 uses around 1500LUTs and the performnce increases by 10%, but I found no
-logic explanation about this.  Of course, this best performance setup uses a
-3-state pipeline and a single-clock phase (posedge) in the entire logic, in
-a way that the 2-stage pipeline and dual-clock phase will be kept only for
-reference.  The only disadvantage of the 3-state pipeline is one extra
-wait-state in the load operation and the longer pipeline flush of two 
-clocks in the taken branches.
+logic explanation about this.  
 
-Just for reference, the current firmware example runs in the 3-stage
+Of course, this best performance setup uses a 3-state pipeline and a
+single-clock phase (posedge) in the entire logic, in a way that the 2-stage
+pipeline and dual-clock phase will be kept only for reference.  
+
+The only disadvantage of the 3-state pipeline is one extra wait-state in the
+load operation and the longer pipeline flush of two clocks in the taken
+branches.
+
+Just for reference, I registered some details regarding the performance
+measurements:
+
+The current firmware example runs in the 3-stage
 pipeline version clocked at 100MHz runs at a verified performance of 62
 MIPS.  The theorical 100MIPS performance is not reached 5% due to the extra
 wait-state in the load instruction and 32% due to pipeline flushes after
@@ -160,10 +249,52 @@ pipeline flush. The -O3 option resulted in 67MIPS and the best result was
 the -O1 option, which produced 70MIPS in the 3-stage version and 85MIPS in
 the 2-stage version.
 
+By this way, case the performance is a requirement, the src/Makefile must be
+changed in order to use the -O1 optimization instead of the -Os default. 
+
+And although the 2-stage version is 15% faster than the 3-stage version, the
+3-stage version can reach better clocks and, by this way, will provide
+better performance.
+
+Regarding the flush, it is required after a taken branch, as long the RISCV
+does not supports delayed branches. The solution for this problem is
+implement a branch cache (branch predictor), in a way that the core
+populates a cache with the last branches and can predict the future
+branches. In some inicial tests, the branch prediction with a 4 elements
+entry appers to reach a hit ratio of 60%.
+
+Another possibility is use the flush time to other tasks, for example handle
+interrupts.  As long the interrupt handling and, in a general way, threading
+requires flush the current pipelines in order to change context, by this
+way, match the interrupt/threading with the pipeline flush makes some sense!
+
+With the option __INTERRUPT__ is possible test this feature. 
+
+The implementation is in very early stages of development and does not
+handle correctly the initial SP and PC.  Anyway, it works and enables the
+main() code stop in a gets() while the interrupt handling changes the GPIO
+at a rate of more than 1 million interrupts per second without affecting the
+execution and with little impact in the performance!  :)
+
+The interrupt support can be expanded to a more complete threading support,
+but requires some tricks in the hardware and in the software, in order to 
+populate the different threads with the correct SP and PC.
+
+The interrupt handling use a concept around threading and, with some extra
+effort, it is probably possible support 4, 8 or event 16 threads.  The
+drawback in this case is that the register bank increses in size, which
+explain why the rv32e is an interesting option for threading: with half the
+number of registers is possible store two more threads in the core.
+
+Currently, the time to switch the context in the *darkricv* is two clocks in
+the 3-stage pipeline, which match with the pipeline flush itself. At 100MHz,
+the maximum empirical number of context switches per second is around 2.94
+million.
+
 Here some additional performance results (synthesis only, 3-stage 
 version) for other Xilinx devices available in the ISE for speed grade 2:
 
-- Spartan-6:	100MHz (measured 70MIPS w/ -O1)
+- Spartan-6:	100MHz (measured 70MIPS w/ gcc -O1)
 - Artix-7: 	178MHz
 - Kintex-7: 	225MHz
 
@@ -173,35 +304,13 @@ For speed grade 3:
 - Artix-7: 	202MHz
 - Kintex-7:	266MHz
 
+The Kintex-7 can reach, theorcally 186MIPS w/ gcc -O1.
+
 For the 2-stage version and speed grade 2, we have less impact from the
 pipeline flush (20%), no impact in the load and some impact in the clock due
 to the use of a 2-phase clock:
 
 - Spartan-6:    56MHz (measured 47MIPS w/ -O1)
-
-By this way, case the performance is a requirement, the src/Makefile must be
-changed in order to use the -O1 optimization. Although the 2-stage version
-is 15% faster than the 3-stage version, the 3-stage version can reach better
-clocks and, by this way, will provide better performance.
-
-As long 2/3 of the branches appears to not be conditional, maybe it is
-possible detect and optimize that branches in order to reduce the time lost
-in the pipeline flush.
-
-Another possibility is use the flush time to other tasks, for example handle
-interrupts. As long the interrupt handling and, in a general way, threading
-requires flush the current pipelines in order to change context, match the
-interrupt/threading with the pipeline flush makes some sense!
-
-With the option __INTERRUPT__ is possible test this feature. The
-implementation is in very early stages of development and does not handle
-correctly the initial SP and PC. Anyway, it works and enables the main()
-code stop in a gets() while the interrupt handling blink the LEDs without
-affecting the execution and with little impact in the performance! :)
-
-The interrupt support can be expanded to a more complete threading support,
-but requires some tricks in the hardware and in the software, in order to 
-populate the different threads with the correct SP and PC.
 
 In another hand, regarding the support for Vivado, it is possible convert
 the Artix-7 (Xilinx AC701 available in the ise/boards directory) project to
@@ -211,9 +320,10 @@ the pin description must be created.
 
 TODO: udpate the performance measurement in the Vivado.
 
-The Vivado is very slow compared to ISE and needs *lots of time* to synthetize and 
-inform a minimal feedback about the performance... but after some weeks waiting, and 
-lots of empirical calculations, I get some numbers for speed grade 2 devices:
+The Vivado is very slow compared to ISE and needs *lots of time* to
+synthetize and inform a minimal feedback about the performance...  but after
+some weeks waiting, and lots of empirical calculations, I get some numbers
+for speed grade 2 devices:
 
 - Artix7: 	147MHz
 - Spartan-7:	146MHz
@@ -226,36 +336,14 @@ Although Vivado is far slow and shows pessimistic numbers for the same FPGAs whe
 compared with ISE, I guess Vivado is more realistic and, at least, it supports the
 new Spartan-7, which shows very good numbers (almost the same as the Artix-7!).
 
-That values are only for reference. The real values depends of some options
+That values are only for reference.  The real values depends of some options
 in the core, such as the number of pipeline stages, who the memories are
 connected, etc.  Basically, the best clock is reached by the 3-stage
-pipeline version (85MHz in a Spartan-6), but it requires at lease 1 wait state 
-in the load instruction and 2 extra clocks in the taken branches in order to 
-flush the pipeline. The 2-state pipeline requires no extra wait states and only 
-1 extra clock in the taken branches, but runs with less performance (65MHz).
-
-Regardless the synthesis performance, the *darkriscv* directly connected to
-at least two blockRAM memories (one for instruction and another for data)
-working in the opposite clock edges deterministically keep a very good
-performance of 1 clock per instruction most of time at 75MHz. However, it
-is not so flexibly, in a way that the 3-stage pipeline version enables use a
-single clock phase and, at same time, can work with wait states more easily
-(in fact, the load instruction always requires 1 wait state, regardless it
-is connected to a blockram or external memory).
-
-When running the "hello world" code we have the following results:
-
-- darkriscv@75MHz no-cache 0-wait-states 2-stage pipeline (2-phase clock): 392us
-- darkriscv@75MHz no-cache 0-wait-states 3-stage pipeline (1-phase clock): 500us
-- darkriscv@75MHz  i-cache 3-wait-states 3-stage pipeline (1-phase clock): 545us
-- darkriscv@75MHz id-cache 3-wait-states 3-stage pipeline (1-phase clock): 533us  
-
-The instruction cache is working only in the 3-stage pipeline version and
-the data cache is working only in the simulation at this moment.  The
-problem appears to be related to the blockram inference.  Anyway, as long
-the caches work in the simulation, is possible measure the hit ratio in
-order to measure the efficiency: 91% for instruction cache and 68% for data
-cache, remembering that the data cache always miss in write operations.
+pipeline version (up to 100MHz in a Spartan-6), but it requires at lease 1
+wait state in the load instruction and 2 extra clocks in the taken branches
+in order to flush the pipeline.  The 2-state pipeline requires no extra wait
+states and only 1 extra clock in the taken branches, but runs with less
+performance (56MHz).
 
 ## Development Tools (gcc)
 
@@ -344,6 +432,10 @@ try test a big-endian version of GCC and darkriscv, in order to evaluate
 possible performance enhancements in the case of network oriented
 applications! :)
 
+Finally, the last update regarding the software included  new option to
+build a x86 version in order to help the development by testing exactly the
+same firmware in the x86.
+
 ## Directory Description
 
 - ise: the ISE project and configuration files (xise, ucf, etc)
@@ -361,13 +453,19 @@ FPGA is NOT wired in any particular configuration and you must add the pins
 regarding your FPGA board!  Anyway, although not wired, the build always
 gives you a good estimation about the FPGA utilization and about the timing.
 
-The simulation, in the other hand will show some waveforms and is possible
-check the *darkriscv* operation when running the example code.  The hello.c
-code prints the string "hello world!" in console and also in the UART
-register located in the SoC.  In the future I will provide a real UART logic
-in order to test the *darkriscv* in a real FPGA.
+The current supported boards are:
 
-## Simulation
+- ise/board/avnet_microboard_lx9
+- ise/board/qmtech_sdram_lx16
+- ise/board/xilinx_ac701_a200
+
+The organization is self-explained, w/ the vender, board and FPGA model
+in the name of the directory. In the future I will probably change the
+organization in order to be more agnostic regarding to the tool and change
+the "ise" directory to something like "prod" or something like.
+
+The simulation, in the other hand will show some waveforms and is possible
+check the *darkriscv* operation when running the example code.  
 
 The main simulation tool for *darkriscv* is the iSIM from Xilinx ISE 14.7,
 but the Icarus simulator is also supported via the Makefile in the *sim*
@@ -376,21 +474,21 @@ __ICARUS__ is detected). I also included a workaround for ModelSim, as
 pointed by our friend HYF (the changes regarding ModelSim are active when the 
 symbol MODEL_TECH is detected).
 
-The currently simulation only runs the "hello world" code, which is not a
-complete test and left lots of instructions uncovered (such as the aiupc
-instruction, also pointed by our friend HYF). I hope a more complete test
-will be possible in the future (see issue #9 for more details!).
+The simulation runs the same firmware as in the real FPGA, but in order to
+improve the simulation performance, the UART code is not simulated, since
+the 115200 bps requires lots dead simulation time.
 
-In order to improve the simulation performance, the UART code is not
-simulated, since the 115200 bps requires lots dead simulation time.
+TODO: more details about the rtl and src directories. Maybe split this
+section in "build" and "simulation". The rtl and src can be better explained
+in the code itself (as long is possible add lots of comments).
 
 ## Development Boards
 
 Currently, therea are two supported boards:
 
-- Avnet Microboard LX9: equipped with a Xilinx Spartan-6 LX9 running at 66MHz
-- XilinX AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz
-- QMTech SDRAM LX16: equipped with a Xilinx Spartan-6 LX16 running at 50MHz
+- Avnet Microboard LX9: equipped with a Xilinx Spartan-6 LX9 running at 100MHz
+- XilinX AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz (?)
+- QMTech SDRAM LX16: equipped with a Xilinx Spartan-6 LX16 running at 50MHz (?)
 
 The speeds are related to available clocks in the boards and different
 clocks may be generated by programming a DCM.
@@ -410,15 +508,30 @@ shortly.
 
 In the software side, a small shell is available with some basic commands:
 
-- led: increment the led register
-- bug: show the last instruction which tried write in the rom area
-- clear: clear the display
-- heap: dump the heap area
-- stack: dump the stack area
-- hello: print hello to mr.atros
+- clear: clear display
+- dump <val>: dumps an area of the RAM
+- led <val>: change the LED register (which turns on/off the LEDs)
+- timer <val>: change the timer prescaler, which affects the interrupt rate
+- gpio <val>: change the GPIO register (which changes the DEBUG lines)
 
 The proposal of the shell is provide some basic test features which can
 provide a go/non-go status about the current hardware status.
+
+Useful memory areas: 
+
+- 4096: the start of RAM (data)
+- 4608: the start of RAM (data)
+- 5120: empty area
+- 5632: empty area
+- 6144: empty area
+- 6656: empty area
+- 7168: empty area
+- 7680: the end of RAM (stack)
+
+As long the *darkriscv* uses separate instruction and data buses, it is not
+possible dump the ROM area. It is obviously that a unified ROM/RAM memory
+works better, but it requires a intermediary separated cache in order to
+avoid concurrency between the instruction and data buses.
 
 ## The Friends of DarkRISCV!
 

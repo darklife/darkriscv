@@ -30,7 +30,24 @@
 
 #include <io.h>
 
+#ifndef X86
+
 volatile struct DARKIO io;
+
+#else
+
+volatile struct DARKIO io = 
+{
+    4, 100, 0, 0,   // ctrl = { board id, fMHz, fkHz }
+    { 0, 0, 0 },    // uart = { stat, fifo, baud }
+    0,              // led
+    0,              // gpio
+    0               // timer
+};
+
+unsigned char kmem[8192];
+
+#endif
 
 // board database
 
@@ -40,5 +57,6 @@ const char *board_name[]=
     "avnet microboard spartan-6 lx9",   // 1
     "xilinx ac701 artix-7 a200",        // 2 
     "qmtech sdram lx16",                // 3  
+    "unknown host x86",                 // 4
     0
 };
