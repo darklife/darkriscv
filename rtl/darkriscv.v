@@ -30,19 +30,22 @@
 
 `timescale 1ns / 1ps
 
-// opcodes
+// implemented opcodes:
 
-`define LUI     7'b0110111
-`define AUIPC   7'b0010111
-`define JAL     7'b1101111
-`define JALR    7'b1100111
-`define BCC     7'b1100011
-`define LCC     7'b0000011
-`define SCC     7'b0100011
-`define MCC     7'b0010011
-`define RCC     7'b0110011
-`define FCC     7'b0001111
-`define CCC     7'b1110011
+`define LUI     7'b0110111      // lui   rd,imm[31:12]
+`define AUIPC   7'b0010111      // auipc rd,imm[31:12]
+`define JAL     7'b1101111      // jal   rd,imm[xxxxx]
+`define JALR    7'b1100111      // jalr  rd,rs1,imm[11:0] 
+`define BCC     7'b1100011      // bcc   rs1,rs2,imm[12:1]
+`define LCC     7'b0000011      // lxx   rd,rs1,imm[11:0]
+`define SCC     7'b0100011      // sxx   rs1,rs2,imm[11:0]
+`define MCC     7'b0010011      // xxxi  rd,rs1,imm[11:0]
+`define RCC     7'b0110011      // xxx   rd,rs1,rs2 
+
+// not implemented opcodes:
+
+`define FCC     7'b0001111      // fencex
+`define CCC     7'b1110011      // exx, csrxx
 
 // pipeline stages:
 // 
@@ -51,19 +54,12 @@
 // pipeline and remember the 68040 clock scheme, with instruction per clock = 1. 
 // alternatively, it is possible work w/ 1 wait-state and 1 clock edge, but with a penalty in 
 // performance (instruction per clock = 0.5).
-// 
+//
 // 3-stage: core and memory in the same clock edge require one extra stage in the pipeline, but
 // keep a good performance most of time (instruction per clock = 1). of course, read operations 
 // require 1 wait-state, which means sometimes the read performance is reduced.
 
 `define __3STAGE__
-
-// weird unexplained hand optimizations:
-// 
-// area:  ~1000 LUTs and ~90MHz core
-// speed: ~1500 LUTS and ~100MHz core
-
-`define __FASTER__
 
 // interrupt handling:
 //
@@ -73,7 +69,7 @@
 // performance impact.
 // Note: interrupts are currently supported only in the 3-stage pipeline version.
 
-`define __INTERRUPT__ 
+//`define __INTERRUPT__ 
 
 // performance measurements can be done in the simulation level by eabling the __PERFMETER__
 // define, in order to check how the MHz are used :)
@@ -116,17 +112,66 @@ module darkriscv
 `ifdef __INTERRUPT__
     reg XMODE = 0;     // 0 = user, 1 = exception
 `endif
-   
-    reg [1:0] FLUSH;  // flush instruction pipeline 
     
-    // IDATA is break apart as described in the RV32I specification
+    // pre-decode: IDATA is break apart as described in the RV32I specification
 
     reg [31:0] XIDATA;
+
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC; //, XFCC, XCCC;
+
+    reg [31:0] XSIMM;
+    reg [31:0] XUIMM;
+
+    always@(posedge CLK)
+    begin        
+        if(!HLT)
+        begin
+            XIDATA <= /*RES ? { ALL0[31:12], 5'd2, ALL0[6:0] } : HLT ? XIDATA : */IDATA;
+            
+            XLUI   <= /*RES ? 0 : HLT ? XLUI   : */IDATA[6:0]==`LUI;
+            XAUIPC <= /*RES ? 0 : HLT ? XAUIPC : */IDATA[6:0]==`AUIPC;
+            XJAL   <= /*RES ? 0 : HLT ? XJAL   : */IDATA[6:0]==`JAL;
+            XJALR  <= /*RES ? 0 : HLT ? XJALR  : */IDATA[6:0]==`JALR;        
+
+            XBCC   <= /*RES ? 0 : HLT ? XBCC   : */IDATA[6:0]==`BCC;
+            XLCC   <= /*RES ? 0 : HLT ? XLCC   : */IDATA[6:0]==`LCC;
+            XSCC   <= /*RES ? 0 : HLT ? XSCC   : */IDATA[6:0]==`SCC;
+            XMCC   <= /*RES ? 0 : HLT ? XMCC   : */IDATA[6:0]==`MCC;
+
+            XRCC   <= /*RES ? 0 : HLT ? XRCC   : */IDATA[6:0]==`RCC;
+            //XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
+            //XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
+
+            // signal extended immediate, according to the instruction type:
+
+            
+            XSIMM  <= /*RES ? 0 : HLT ? SIMM :*/
+                     IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                     IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                     IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                     IDATA[6:0]==`LUI||
+                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                          { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
+            // non-signal extended immediate, according to the instruction type:
+
+            XUIMM  <= /*RES ? 0: HLT ? UIMM :*/
+                     IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                     IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                     IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                     IDATA[6:0]==`LUI||
+                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                          { ALL0[31:12], IDATA[31:20] }; // i-type
+        end
+    end
+
+    // decode: after XIDATA
+
+    reg [1:0] FLUSH = -1;  // flush instruction pipeline
 
 `ifdef __INTERRUPT__    
 
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [5:0] DPTR   = { XMODE, XIDATA[11: 7] };
+    wire [5:0] DPTR   = RES ? 2 : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
     wire [2:0] FCT3   = XIDATA[14:12];
     wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
     wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
@@ -135,7 +180,7 @@ module darkriscv
 `else
 
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [5:0] DPTR   = XIDATA[11: 7];
+    wire [5:0] DPTR   = RES ? 2 : XIDATA[11: 7]; // set SP_RESET when RES==1
     wire [2:0] FCT3   = XIDATA[14:12];
     wire [5:0] S1PTR  = XIDATA[19:15];
     wire [5:0] S2PTR  = XIDATA[24:20];
@@ -143,56 +188,8 @@ module darkriscv
 
 `endif
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC; //, XFCC, XCCC;
-
-    always@(posedge CLK)
-    begin        
-        XIDATA <= RES ? { ALL0[31:12], 5'd2, ALL0[6:0] } : HLT ? XIDATA : IDATA;
-        
-        XLUI   <= RES ? 0 : HLT ? XLUI   : IDATA[6:0]==`LUI;
-        XAUIPC <= RES ? 0 : HLT ? XAUIPC : IDATA[6:0]==`AUIPC;
-        XJAL   <= RES ? 0 : HLT ? XJAL   : IDATA[6:0]==`JAL;
-        XJALR  <= RES ? 0 : HLT ? XJALR  : IDATA[6:0]==`JALR;        
-
-        XBCC   <= RES ? 0 : HLT ? XBCC   : IDATA[6:0]==`BCC;
-        XLCC   <= RES ? 0 : HLT ? XLCC   : IDATA[6:0]==`LCC;
-        XSCC   <= RES ? 0 : HLT ? XSCC   : IDATA[6:0]==`SCC;
-        XMCC   <= RES ? 0 : HLT ? XMCC   : IDATA[6:0]==`MCC;
-
-        XRCC   <= RES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
-        //XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
-        //XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
-    end   
-
-    // signal extended immediate, according to the instruction type:
-
-    reg [31:0] SIMM;
-    
-    always@(posedge CLK)
-    begin    
-        SIMM  <= RES ? 0 : HLT ? SIMM :
-                 IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                 IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                 IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                 IDATA[6:0]==`LUI||
-                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                      { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
-    end
-    
-    // non-signal extended immediate, according to the instruction type:
-
-    reg [31:0] UIMM;
-    
-    always@(posedge CLK)
-    begin
-        UIMM  <= RES ? 0: HLT ? UIMM :
-                 IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                 IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                 IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                 IDATA[6:0]==`LUI||
-                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                      { ALL0[31:12], IDATA[31:20] }; // i-type
-    end
+    wire [31:0] SIMM  = XSIMM;
+    wire [31:0] UIMM  = XUIMM;
     
     // main opcode decoder:
                                 
@@ -265,17 +262,6 @@ module darkriscv
     
     // L-group of instructions (OPCODE==7'b0000011)
 
-`ifdef __FASTER__
-
-    wire [31:0] LDATA =          FCT3==2 ?   DATAI : 
-                        FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
-                                                             { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
-                                           ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
-                                             DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
-                                             DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
-                                                             { FCT3==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } );
-`else
-
     wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
                                              DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
                                              DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
@@ -283,7 +269,6 @@ module darkriscv
                         FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
                                                              { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
                                              DATAI;
-`endif
 
     // S-group of instructions (OPCODE==7'b0100011)
 
@@ -371,10 +356,10 @@ module darkriscv
 `ifdef __3STAGE__
 	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt                              
 	                       FLUSH ? FLUSH-1 :                           
-	                       (JAL||JALR||BMUX||RES) ? 2 : 0;  // flush the pipeline!
+	                       (JAL||JALR||BMUX) ? 2 : 0;  // flush the pipeline!
 `else
         FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
-                       (JAL||JALR||BMUX||RES);  // flush the pipeline!
+                       (JAL||JALR||BMUX);  // flush the pipeline!
 `endif
 
         REG1[DPTR] <=   RES ? RESET_SP  :        // reset sp
@@ -415,8 +400,8 @@ module darkriscv
 	                        NXPC2[XMODE]+4;                   // normal flow
 
         XMODE <= RES ? 0 : HLT ? XMODE :        // reset and halt
-	             XMODE==0&& IREQ&&(JAL||JALR||BMUX||RES) ? 1 :         // wait pipeflush to switch to irq
-                 XMODE==1&&!IREQ&&(JAL||JALR||BMUX||RES) ? 0 : XMODE;  // wait pipeflush to return from irq
+	             XMODE==0&& IREQ&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
+                 XMODE==1&&!IREQ&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
 
 `else
         NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2;
@@ -439,23 +424,12 @@ module darkriscv
 
     assign DATAO = SDATA; // SCC ? SDATA : 0;
     assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
+
     assign RD = LCC;
     assign WR = SCC;
     
     // based in the Scc and Lcc   
 
-`ifdef __FASTER__
-
-    assign BE =          FCT3==2 ?                   4'b1111 : // sw/lw
-                FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
-                                                     4'b0011 ) :
-                                   ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
-                                     DADDR[1:0]==2 ? 4'b0100 : 
-                                     DADDR[1:0]==1 ? 4'b0010 :
-                                                     4'b0001 );
-                
-                                                     
-`else
     assign BE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
                                      DADDR[1:0]==2 ? 4'b0100 : 
                                      DADDR[1:0]==1 ? 4'b0010 :
@@ -463,7 +437,6 @@ module darkriscv
                 FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
                                                      4'b0011 ) :
                                                      4'b1111; // sw/lw
-`endif
 
 `ifdef __3STAGE__
 `ifdef __INTERRUPT__

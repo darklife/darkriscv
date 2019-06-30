@@ -36,7 +36,7 @@
 //`define __DCACHE__              // data cache (bug: simulation only)
 //`define __WAITSTATES__          // wait-state tests, no cache
 `define __3STAGE__              // single phase 3-state pipeline 
-`define __INTERRUPT__           // interrupt controller
+//`define __INTERRUPT__           // interrupt controller
 
 // the board is automatically defined in the xst/xise files via 
 // Makefile or ISE otherwise, please define you board name here:
@@ -519,9 +519,8 @@ module darksocv
     (
       .CLK(CLK),
       .RES(RES),
-      .HLT(HLT),
-      .RD(RD&&DADDR[31]&&DADDR[3:2]==1),
-      .WR(WR&&DADDR[31]&&DADDR[3:2]==1),
+      .RD(!HLT&&RD&&DADDR[31]&&DADDR[3:2]==1),
+      .WR(!HLT&&WR&&DADDR[31]&&DADDR[3:2]==1),
       .BE(BE),
       .DATAI(DATAO),
       .DATAO(IOMUX[1]),

@@ -291,6 +291,9 @@ the 3-stage pipeline, which match with the pipeline flush itself. At 100MHz,
 the maximum empirical number of context switches per second is around 2.94
 million.
 
+NOTE: the interrupt controller is currently working only with the -Os
+flag in the gcc!
+
 Here some additional performance results (synthesis only, 3-stage 
 version) for other Xilinx devices available in the ISE for speed grade 2:
 
@@ -311,6 +314,18 @@ pipeline flush (20%), no impact in the load and some impact in the clock due
 to the use of a 2-phase clock:
 
 - Spartan-6:    56MHz (measured 47MIPS w/ -O1)
+
+About the compiler performance, from boot until the prompt, tested w/ the
+3-stage pipeline core at 100MHz and no interrupts, rom and ram measured in
+32-bit words:
+
+- gcc w/ -O3: t=289us rom=876 ram=211
+- gcc w/ -O2: t=291us rom=799 ram=211
+- gcc w/ -O1: t=324us rom=660 ram=211
+- gcc w/ -O0: t=569us rom=886 ram=211
+- gcc w/ -Os: t=398us rom=555 ram=211
+
+Due to reduced ROM space in the FPGA, the -Os is the default option.
 
 In another hand, regarding the support for Vivado, it is possible convert
 the Artix-7 (Xilinx AC701 available in the ise/boards directory) project to
