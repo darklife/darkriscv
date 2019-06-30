@@ -15,13 +15,13 @@ IO               0x0000000080000000 0x0000000000000010 rw !x
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x5f0
+.text           0x0000000000000000      0x7a8
  boot.o(.text)
  .text          0x0000000000000000       0x50 boot.o
                 0x0000000000000000                _start
  *(.text)
  .text          0x0000000000000050        0x0 io.o
- .text          0x0000000000000050      0x52c stdio.o
+ .text          0x0000000000000050      0x6e4 stdio.o
                 0x0000000000000050                getchar
                 0x000000000000006c                putchar
                 0x00000000000000ac                gets
@@ -36,15 +36,24 @@ Linker script and memory map
                 0x000000000000049c                memset
                 0x00000000000004b8                strtok
                 0x000000000000054c                atoi
- .text          0x000000000000057c        0x0 main.o
- .text          0x000000000000057c       0x74 banner.o
-                0x000000000000057c                banner
+                0x0000000000000598                mac
+                0x00000000000005a0                __mului3
+                0x00000000000005e8                __mulsi3
+                0x0000000000000640                __divu_modui3
+                0x0000000000000690                __divui3
+                0x0000000000000698                __modui3
+                0x00000000000006a0                __divs_modsi3
+                0x0000000000000724                __divsi3
+                0x000000000000072c                __modsi3
+ .text          0x0000000000000734        0x0 main.o
+ .text          0x0000000000000734       0x74 banner.o
+                0x0000000000000734                banner
 
-.text.startup   0x00000000000005f0      0x2bc
- .text.startup  0x00000000000005f0      0x2bc main.o
-                0x00000000000005f0                main
+.text.startup   0x00000000000007a8      0x448
+ .text.startup  0x00000000000007a8      0x448 main.o
+                0x00000000000007a8                main
 
-.data           0x0000000000001000      0x34c
+.data           0x0000000000001000      0x3e4
  *(.data)
  .data          0x0000000000001000        0x0 boot.o
  .data          0x0000000000001000       0x18 io.o
@@ -74,13 +83,12 @@ Linker script and memory map
                 0x00000000000010b8       0x11 stdio.o
  *fill*         0x00000000000010c9        0x3 
  .rodata.str1.4
-                0x00000000000010cc      0x16a main.o
- *fill*         0x0000000000001236        0x2 
+                0x00000000000010cc      0x204 main.o
  .rodata.str1.4
-                0x0000000000001238      0x110 banner.o
+                0x00000000000012d0      0x110 banner.o
                                         0x10d (size before relaxing)
  *(.sbss)
- .sbss          0x0000000000001348        0x4 stdio.o
+ .sbss          0x00000000000013e0        0x4 stdio.o
 
 .io             0x0000000080000000       0x10
  io.o(COMMON)

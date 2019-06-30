@@ -28,6 +28,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#ifndef __STDIO__
+#define __STDIO__
+
+#define NULL  0
+
 int getchar(void);
 int putchar(int c);
 void gets(char *p,int s);
@@ -43,5 +48,6 @@ char *memcpy(char *dptr,char *sptr,int len);
 char *memset(char *dptr, int c, int len);
 char *strtok(char *str,char *dptr);
 int atoi(char *);
+int mac(int,short,short);
 
-#define NULL 0
+#endif

@@ -32,20 +32,21 @@
 
 // implemented opcodes:
 
-`define LUI     7'b0110111      // lui   rd,imm[31:12]
-`define AUIPC   7'b0010111      // auipc rd,imm[31:12]
-`define JAL     7'b1101111      // jal   rd,imm[xxxxx]
-`define JALR    7'b1100111      // jalr  rd,rs1,imm[11:0] 
-`define BCC     7'b1100011      // bcc   rs1,rs2,imm[12:1]
-`define LCC     7'b0000011      // lxx   rd,rs1,imm[11:0]
-`define SCC     7'b0100011      // sxx   rs1,rs2,imm[11:0]
-`define MCC     7'b0010011      // xxxi  rd,rs1,imm[11:0]
-`define RCC     7'b0110011      // xxx   rd,rs1,rs2 
+`define LUI     7'b01101_11      // lui   rd,imm[31:12]
+`define AUIPC   7'b00101_11      // auipc rd,imm[31:12]
+`define JAL     7'b11011_11      // jal   rd,imm[xxxxx]
+`define JALR    7'b11001_11      // jalr  rd,rs1,imm[11:0] 
+`define BCC     7'b11000_11      // bcc   rs1,rs2,imm[12:1]
+`define LCC     7'b00000_11      // lxx   rd,rs1,imm[11:0]
+`define SCC     7'b01000_11      // sxx   rs1,rs2,imm[11:0]
+`define MCC     7'b00100_11      // xxxi  rd,rs1,imm[11:0]
+`define RCC     7'b01100_11      // xxx   rd,rs1,rs2 
+`define MAC     7'b11111_11      // mac   rd,rs1,rs2
 
 // not implemented opcodes:
 
-`define FCC     7'b0001111      // fencex
-`define CCC     7'b1110011      // exx, csrxx
+`define FCC     7'b00011_11      // fencex
+`define CCC     7'b11100_11      // exx, csrxx
 
 // pipeline stages:
 // 
@@ -75,6 +76,16 @@
 // define, in order to check how the MHz are used :)
 
 //`define __PERFMETER__
+
+// mac instruction: 
+// 
+// the mac instruction is similar to other register to register instructions, but with a different
+// opcode 7'h1111111. the format is mac rd,r1,r2, but is not currently possible encode in asm, by 
+// this way it is available in licb as int mac(int rd, short r1, short r2). Although it can be
+// used to accelerate the mul/div operations, the mac operation is designed for DSP applications.
+// with some effort (low level machine code), it is possible peak 100MMAC/s @100MHz.
+
+`define __MAC16X16__
 
 module darkriscv
 #(
@@ -117,7 +128,7 @@ module darkriscv
 
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC; //, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XMAC; //, XFCC, XCCC;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
@@ -139,6 +150,7 @@ module darkriscv
             XMCC   <= /*RES ? 0 : HLT ? XMCC   : */IDATA[6:0]==`MCC;
 
             XRCC   <= /*RES ? 0 : HLT ? XRCC   : */IDATA[6:0]==`RCC;
+            XMAC   <= /*RES ? 0 : HLT ? XRCC   : */IDATA[6:0]==`MAC;
             //XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
             //XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
 
@@ -204,6 +216,7 @@ module darkriscv
     wire    MCC = FLUSH ? 0 : XMCC; // OPCODE==7'b0010011; //FCT3
     
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
+    wire    MAC = FLUSH ? 0 : XMAC; // OPCODE==7'b0110011; //FCT3
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
@@ -303,6 +316,22 @@ module darkriscv
                          FCT7[5] ? U1REG>>>U2REGX[4:0] : U1REG>>U2REGX[4:0]; // (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0])
 `endif                        
 
+`ifdef __MAC16X16__
+
+    // MAC instruction rd += s1*s2 (OPCODE==7'b1111111)
+    // 
+    // 0000000 01100 01011 100 01100 0110011 xor a2,a1,a2
+    // 0000000 01010 01100 000 01010 0110011 add a0,a2,a0
+    // 0000000 01100 01011 000 01010 1111111 mac a0,a1,a2
+    // 
+    // 0000 0000 1100 0101 1000 0101 0111 1111 = 00c5857F
+
+    wire signed [15:0] K1TMP = S1REG[15:0];
+    wire signed [15:0] K2TMP = S2REG[15:0];
+    wire signed [31:0] KDATA = K1TMP*K2TMP;
+
+`endif
+
     // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
@@ -371,6 +400,9 @@ module darkriscv
                        LUI ? SIMM :
                        LCC ? LDATA :
                   MCC||RCC ? RMDATA:
+`ifdef __MAC16X16__                  
+                       MAC ? REG2[DPTR]+KDATA :
+`endif
                        //MCC ? MDATA :
                        //RCC ? RDATA : 
                        //CCC ? CDATA : 
@@ -385,6 +417,9 @@ module darkriscv
                        LUI ? SIMM :
                        LCC ? LDATA :
                   MCC||RCC ? RMDATA:
+`ifdef __MAC16X16__
+                       MAC ? REG2[DPTR]+KDATA :
+`endif                       
                        //MCC ? MDATA :
                        //RCC ? RDATA : 
                        //CCC ? CDATA : 

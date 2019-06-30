@@ -30,7 +30,7 @@
 
 #include <io.h>
 
-#ifndef X86
+#ifdef __RISCV__
 
 volatile struct DARKIO io;
 

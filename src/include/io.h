@@ -28,6 +28,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
+#ifndef __IO__
+#define __IO__
+
 struct DARKIO {
 
     unsigned char board_id; // 00
@@ -52,8 +55,10 @@ struct DARKIO {
 extern volatile struct DARKIO io;
 extern const char *board_name[];
 
-#ifndef X86
+#ifdef __RISCV__
 #define kmem 0
 #else
 extern unsigned char kmem[8192];
+#endif
+
 #endif

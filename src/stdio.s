@@ -394,8 +394,8 @@ strtok:
 	call	strlen
 	mv	s3,a0
 	bnez	s0,.L70
-	lui	a5,%hi(nxt.1612)
-	lw	s0,%lo(nxt.1612)(a5)
+	lui	a5,%hi(nxt.1616)
+	lw	s0,%lo(nxt.1616)(a5)
 	beqz	s0,.L71
 .L70:
 	mv	s1,s0
@@ -408,9 +408,9 @@ strtok:
 	call	strncmp
 	addi	a5,s1,1
 	bnez	a0,.L74
-	lui	a4,%hi(nxt.1612)
+	lui	a4,%hi(nxt.1616)
 	sb	zero,0(s1)
-	sw	a5,%lo(nxt.1612)(a4)
+	sw	a5,%lo(nxt.1616)(a4)
 .L71:
 	mv	a0,s0
 	lw	ra,28(sp)
@@ -428,21 +428,204 @@ strtok:
 	.globl	atoi
 	.type	atoi, @function
 atoi:
+	li	a3,0
 	li	a5,0
+	li	a2,45
 .L80:
 	lbu	a4,0(a0)
-	bnez	a4,.L81
+	bnez	a4,.L82
+	beqz	a3,.L79
+	sub	a5,zero,a5
+.L79:
 	mv	a0,a5
 	ret
-.L81:
-	slli	a3,a5,3
+.L82:
+	beq	a4,a2,.L84
+	slli	a1,a5,3
 	addi	a4,a4,-48
-	add	a4,a4,a3
+	add	a4,a4,a1
 	slli	a5,a5,1
 	add	a5,a4,a5
+.L81:
 	addi	a0,a0,1
 	j	.L80
+.L84:
+	li	a3,1
+	j	.L81
 	.size	atoi, .-atoi
+	.align	2
+	.globl	mac
+	.type	mac, @function
+mac:
+ #APP
+# 255 "stdio.c" 1
+	.word 0x00c5857F
+# 0 "" 2
+ #NO_APP
+	ret
+	.size	mac, .-mac
+	.align	2
+	.globl	__mului3
+	.type	__mului3, @function
+__mului3:
+	mv	a5,a0
+	li	a0,0
+	bltu	a5,a1,.L90
+.L91:
+	bnez	a1,.L96
+	ret
+.L93:
+	andi	a4,a5,1
+	beqz	a4,.L92
+	add	a0,a0,a1
+.L92:
+	srli	a5,a5,1
+	slli	a1,a1,1
+.L90:
+	bnez	a5,.L93
+	ret
+.L96:
+	andi	a4,a1,1
+	beqz	a4,.L95
+	add	a0,a0,a5
+.L95:
+	slli	a5,a5,1
+	srli	a1,a1,1
+	j	.L91
+	.size	__mului3, .-__mului3
+	.align	2
+	.globl	__mulsi3
+	.type	__mulsi3, @function
+__mulsi3:
+	addi	sp,sp,-16
+	sw	s1,4(sp)
+	sw	ra,12(sp)
+	sw	s0,8(sp)
+	li	s1,0
+	bgez	a0,.L105
+	sub	a0,zero,a0
+	li	s1,1
+.L105:
+	li	s0,0
+	bgez	a1,.L106
+	sub	a1,zero,a1
+	li	s0,1
+.L106:
+	call	__mului3
+	mv	a5,a0
+	beq	s1,s0,.L104
+	sub	a5,zero,a0
+.L104:
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	lw	s1,4(sp)
+	mv	a0,a5
+	addi	sp,sp,16
+	jr	ra
+	.size	__mulsi3, .-__mulsi3
+	.align	2
+	.globl	__divu_modui3
+	.type	__divu_modui3, @function
+__divu_modui3:
+	li	a5,1
+	bnez	a1,.L115
+.L114:
+	mv	a0,a1
+	ret
+.L116:
+	slli	a5,a5,1
+	slli	a1,a1,1
+.L115:
+	bgtu	a0,a1,.L116
+	mv	a4,a1
+	li	a1,0
+.L117:
+	beqz	a0,.L119
+	bnez	a5,.L120
+.L119:
+	bnez	a2,.L114
+	mv	a1,a0
+	j	.L114
+.L120:
+	bltu	a0,a4,.L118
+	sub	a0,a0,a4
+	add	a1,a1,a5
+.L118:
+	srli	a5,a5,1
+	srli	a4,a4,1
+	j	.L117
+	.size	__divu_modui3, .-__divu_modui3
+	.align	2
+	.globl	__divui3
+	.type	__divui3, @function
+__divui3:
+	li	a2,1
+	tail	__divu_modui3
+	.size	__divui3, .-__divui3
+	.align	2
+	.globl	__modui3
+	.type	__modui3, @function
+__modui3:
+	li	a2,0
+	tail	__divu_modui3
+	.size	__modui3, .-__modui3
+	.align	2
+	.globl	__divs_modsi3
+	.type	__divs_modsi3, @function
+__divs_modsi3:
+	beqz	a1,.L143
+	addi	sp,sp,-16
+	sw	s0,8(sp)
+	sw	s2,0(sp)
+	sw	ra,12(sp)
+	sw	s1,4(sp)
+	mv	s2,a2
+	li	s0,0
+	bgez	a0,.L131
+	sub	a0,zero,a0
+	li	s0,1
+.L131:
+	li	s1,0
+	bgez	a1,.L132
+	sub	a1,zero,a1
+	li	s1,1
+.L132:
+	mv	a2,s2
+	call	__divu_modui3
+	mv	a1,a0
+	beqz	s2,.L133
+	beq	s0,s1,.L130
+	sub	a1,zero,a0
+.L130:
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	lw	s1,4(sp)
+	lw	s2,0(sp)
+	mv	a0,a1
+	addi	sp,sp,16
+	jr	ra
+.L133:
+	beqz	s0,.L130
+	sub	a1,zero,a0
+	j	.L130
+.L143:
+	mv	a0,a1
+	ret
+	.size	__divs_modsi3, .-__divs_modsi3
+	.align	2
+	.globl	__divsi3
+	.type	__divsi3, @function
+__divsi3:
+	li	a2,1
+	tail	__divs_modsi3
+	.size	__divsi3, .-__divsi3
+	.align	2
+	.globl	__modsi3
+	.type	__modsi3, @function
+__modsi3:
+	li	a2,0
+	tail	__divs_modsi3
+	.size	__modsi3, .-__modsi3
 	.section	.rodata
 	.align	2
 	.set	.LANCHOR0,. + 0
@@ -463,8 +646,8 @@ atoi:
 	.string	"0123456789abcdef"
 	.section	.sbss,"aw",@nobits
 	.align	2
-	.type	nxt.1612, @object
-	.size	nxt.1612, 4
-nxt.1612:
+	.type	nxt.1616, @object
+	.size	nxt.1616, 4
+nxt.1616:
 	.zero	4
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

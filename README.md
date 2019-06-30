@@ -41,7 +41,7 @@ implementations, the *darkriscv* has lots of impressive features:
 - flexible harvard architecture (easy to integrate a cache controller)
 - works fine in a real spartan-6 (lx9/lx16/lx45)
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
-- uses only around 1000 LUTs (spartan-6, core only and no optimizations)
+- uses only around 1000-1500 LUTs (depending of enabled features)
 - BSD license: can be used anywhere with no restrictions!
 
 Some extra features are planned for the furure or under development:
@@ -57,7 +57,7 @@ Some extra features are planned for the furure or under development:
 - network on chip (NoC)
 - rv32e support (less registers, more threads)
 - rv64i support
-- 16x16-bit MAC instruction
+- 16x16-bit MAC instruction (under tests!)
 - big-endian support
 - user/supervisor modes
 - debug support
@@ -213,16 +213,20 @@ However, the clock in the case of the 3-stage pipeline is far better than the
 2-stage pipeline, in special because the better distribuition of the logic
 between the decode and execute stages.
 
-With some expensive and weird optimizations, is possible increase the
-performance by around 10% at cost of an increase of 50% in the logic.  After
-lots of tests, I found that the two most problematic paths are the RMDATA
-path and the LDATA path.  The RMDATA reorder incresed the performance with
-minimal impact in the logic size, but is not the case in the LDATA, by this
-way I included an option __FASTER__ in the core.  When enabled, the logic
-uses around 1500LUTs and the performnce increases by 10%, but I found no
-logic explanation about this.  
+Currently, the most expensive path in the Spartan-6 is the address bus
+for the data side of the core (connected to RAM and peripherals). The
+problem regards to the fact that the following acions must be done in a
+single clock:
 
-Of course, this best performance setup uses a 3-state pipeline and a
+- generate the DADDR[31:0] = REG[SPTR][31:0]+EXTSIG(IMM[11:0])
+- generate the BE[3:0] according to the operand size and DADDR[1:0]
+
+In the case of read operation, the DATAI path includes also a small mux
+in order to separate RAM and peripheral buses, as well separate the
+diferent peripherals, which means that the path increases as long the
+number of peripherals and the complexity increases.
+
+Of course, the best performance setup uses a 3-state pipeline and a
 single-clock phase (posedge) in the entire logic, in a way that the 2-stage
 pipeline and dual-clock phase will be kept only for reference.  
 
@@ -294,6 +298,78 @@ million.
 NOTE: the interrupt controller is currently working only with the -Os
 flag in the gcc!
 
+About the new MAC instruction, it is implemented in a very preliminary way
+with the OPCDE 7'b1111111.  I am checking about the possibility to use the
+p.mac instruction, but at this time the instruction is hand encoded in the
+mac() function available in the stdio.c (i.e.  the darkriscv libc). The
+details about include new instructions and make it work with GCC can be
+found in the reference [5].
+
+The preliminary tests pointed, as expected, that the performance decreases
+to 90MHz and although it was possible run at 100MHz with a non-zero timing
+score and reach a peak performance of 100MMAC/s, the small 32-bit
+accumulator saturates too fast and requries extra tricks in order to avoid
+overflows.
+
+The mul operation uses two 16-bit integers and the result is added with a
+separate 32-bit register, which works as accumulator.  As long the operation
+is always signed and the signal always use the MSB bit, this means that the
+15x15 mul produces a 30 bit result which is added to a 31-bit value, which
+means that the overflow is reached after only two MAC operations.
+
+In order to avoid overflows, it is possible shift the input operands.  For
+example, in the case of G711 w/ u-law encoding, the effective resolution is
+14 bits (13 bits for integer and 1 bit for signal), which means that a 13x13
+bit mul will be used and a 26-bit result produced to be added in a 31-bit
+integer, enough to run 32xMAC operations before overflow (in this case, when
+the ACC reach a negative value):
+
+    # awk 'BEGIN { ACC=2**31-1; A=2**13-1; B=-A; for(i=0;ACC>=0;i++) print i,A,B,A*B,ACC+=A*B }'
+    0 8191 -8191 -67092481 2080391166
+    1 8191 -8191 -67092481 2013298685
+    2 8191 -8191 -67092481 1946206204
+    3 8191 -8191 -67092481 1879113723
+    4 8191 -8191 -67092481 1812021242
+    5 8191 -8191 -67092481 1744928761
+    6 8191 -8191 -67092481 1677836280
+    7 8191 -8191 -67092481 1610743799
+    8 8191 -8191 -67092481 1543651318
+    9 8191 -8191 -67092481 1476558837
+    10 8191 -8191 -67092481 1409466356
+    11 8191 -8191 -67092481 1342373875
+    12 8191 -8191 -67092481 1275281394
+    13 8191 -8191 -67092481 1208188913
+    14 8191 -8191 -67092481 1141096432
+    15 8191 -8191 -67092481 1074003951
+    16 8191 -8191 -67092481 1006911470
+    17 8191 -8191 -67092481 939818989
+    18 8191 -8191 -67092481 872726508
+    19 8191 -8191 -67092481 805634027
+    20 8191 -8191 -67092481 738541546
+    21 8191 -8191 -67092481 671449065
+    22 8191 -8191 -67092481 604356584
+    23 8191 -8191 -67092481 537264103
+    24 8191 -8191 -67092481 470171622
+    25 8191 -8191 -67092481 403079141
+    26 8191 -8191 -67092481 335986660
+    27 8191 -8191 -67092481 268894179
+    28 8191 -8191 -67092481 201801698
+    29 8191 -8191 -67092481 134709217
+    30 8191 -8191 -67092481 67616736
+    31 8191 -8191 -67092481 524255
+    32 8191 -8191 -67092481 -66568226
+
+Is this theory correct? I am not sure, but looks good! :)
+
+As complement, I included in the stdio.c the support for the GCC functions
+regarding the native *, / and % (mul, div and mod) operations with 32-bit
+signed and unsigned integers, which means true 32x32 bit operations
+producing 32-bit results.  The code was derived from an old 68000-related
+project (as most of code in the stdio.c) and, although is not so faster, I
+guess it is working. As long the MAC instruction is better defined in the
+syntax and features, I think is possible optimize the mul/div/mod in order
+to try use it and increase the performance.
+
 Here some additional performance results (synthesis only, 3-stage 
 version) for other Xilinx devices available in the ISE for speed grade 2:
 
@@ -364,7 +440,7 @@ performance (56MHz).
 
 About the gcc compiler, I am working with the experimental gcc 9.0.0 for
 RISC-V.  No patches or updates are required for the *darkriscv* other than
-the -march=rv32i.  Although the fence* and crg* instructions are not
+the -march=rv32i.  Although the fence*, e* and crg* instructions are not
 implemented, the gcc appears to not use of that instructions and they are
 not available in the core.
 
@@ -394,6 +470,12 @@ Basically:
 	riscv32-unknown-elf-gcc -v
 
 and everything will magically work! (:
+
+Case you have no succcess to build the compiler, have no interest to change
+the firmware or is just curious about the darkriscv running in a FPGA, the
+project includes the compiled ROM and RAM, in a way that is possible examine
+all derived objects, sources and correlated files generated by the compiler
+without need compile anything.
 
 Finally, as long the *darkriscv* is not yet fully tested, sometimes is a
 very good idea compare the code execution with another stable reference!
@@ -569,3 +651,5 @@ to this project, including the company I work for.
 [3] https://blog.hackster.io/the-rise-of-the-dark-risc-v-ddb49764f392
 
 [4] https://abopen.com/news/darkriscv-an-overnight-bsd-licensed-risc-v-implementation/
+
+[5] http://quasilyte.dev/blog/post/riscv32-custom-instruction-and-its-simulation/

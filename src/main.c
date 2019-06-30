@@ -115,10 +115,61 @@ int main(void)
               printf("gpio = %d\n",io.gpio);
           }
           else
+          if(!strcmp(tmp,"mul"))
+          {
+              int x=0,y=0;
+          
+              if((tmp=strtok(NULL," ")))
+              {
+                  x = atoi(tmp);
+              }
+              if((tmp=strtok(NULL," ")))
+              {
+                  y = atoi(tmp);
+              }
+              printf("mul = %d\n",x*y);
+          }
+          else
+          if(!strcmp(tmp,"div"))
+          {
+              int x=0,y=0;
+          
+              if((tmp=strtok(NULL," ")))
+              {
+                  x = atoi(tmp);
+              }
+              if((tmp=strtok(NULL," ")))
+              {
+                  y = atoi(tmp);
+              }
+              printf("div = %d, mod = %d\n",x/y,x%y);
+          }
+          else
+          if(!strcmp(tmp,"mac"))
+          {
+              int acc=0,x=0,y=0;
+              
+              if((tmp=strtok(NULL," ")))
+              {
+                  acc = atoi(tmp);
+              }
+              if((tmp=strtok(NULL," ")))
+              {
+                  x = atoi(tmp);
+              }
+              if((tmp=strtok(NULL," ")))
+              {
+                  y = atoi(tmp);
+              }
+              printf("mac = %d\n",mac(acc,x,y));
+          }
+          else
           if(tmp[0])
           {
               printf("command: [%s] not found.\n",tmp);
               printf("valid commands: clear, dump <val>, led <val>, timer <val>, gpio <val>\n");
+              printf("                mul <val1> <val2>, div <val1> <val2>\n");
+              printf("                mac <acc> <val1> <val2>\n");
           }
        }
     }

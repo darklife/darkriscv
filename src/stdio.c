@@ -34,7 +34,7 @@
 
 // putchar and getchar uses the "low-level" io
 
-#ifndef X86
+#ifdef __RISCV__
 
 int getchar(void)
 {
@@ -68,13 +68,13 @@ void gets(char *p,int s)
     c=getchar();
     
     if(c=='\n'||c=='\r') break;
-#ifndef X86     
+#ifdef __RISCV__     
     putchar((*p++ = c));
 #else
     *p++ = c;
 #endif
   }
-#ifndef X86
+#ifdef __RISCV__
   putchar('\n');
 #endif
   *p=0;
@@ -236,12 +236,98 @@ char *strtok(char *str,char *dptr)
 
 int atoi(char *s1)
 {
-    int ret;
+    int ret,sig;
     
-    for(ret=0;*s1;s1++) 
+    for(sig=ret=0;*s1;s1++) 
     {
-        ret = *s1-'0'+(ret<<3)+(ret<<1); // val = val*10+int(*s1)
+        if(*s1=='-') 
+            sig=1;
+        else 
+            ret = *s1-'0'+(ret<<3)+(ret<<1); // val = val*10+int(*s1)
     }
     
-    return ret;
+    return sig ? -ret : ret;
 }
+
+int mac(int acc,short x,short y)
+{
+#ifdef __RISCV__
+    __asm__(".word 0x00c5857F"); // mac a0,a1,a2
+    // "template"
+    //acc += (x^y);
+#else
+    acc+=x*y;
+#endif
+    return acc;
+}
+
+unsigned __mului3(unsigned x,unsigned y)
+{
+    unsigned acc;
+
+    if(x<y) { for(acc=0;x;x>>=1,y<<=1) if (x & 1) acc += y; }
+    else    { for(acc=0;y;x<<=1,y>>=1) if (y & 1) acc += x; }
+
+    return acc;
+}
+
+int __mulsi3(int x, int y)
+{
+    unsigned acc,xs,ys;
+    
+    if(x<0) { xs=1; x=-x; } else xs=0;
+    if(y<0) { ys=1; y=-y; } else ys=0;
+
+    acc = __mului3(x,y);
+    
+    return xs^ys ? -acc : acc;
+}
+
+unsigned __divu_modui3(unsigned x,unsigned y,int opt)
+{
+    unsigned acc,aux;
+
+    if(!y) return 0;
+
+    for(aux=1,acc=y;acc<x;aux<<=1,acc<<=1,y=acc);
+    for(acc=0;x&&aux;aux>>=1,y>>=1) if(y<=x) x-=y,acc+=aux;
+
+    return opt ? acc : x;
+}
+
+int __divui3(int x, int y)
+{
+    return __divu_modui3(x,y,1);
+}
+
+int __modui3(int x,int y)
+{
+    return __divu_modui3(x,y,0);
+}
+
+int __divs_modsi3(int x,int y,int opt)
+{
+    unsigned acc,xs,ys;
+
+    if(!y) return 0;
+
+    if(x<0) { xs=1; x=-x; } else xs=0;
+    if(y<0) { ys=1; y=-y; } else ys=0;
+
+    acc = __divu_modui3(x,y,opt);
+
+    if(opt) return xs^ys ? -acc : acc;
+    else    return xs    ? -acc : acc;
+}
+
+int __divsi3(int x, int y)
+{
+    return __divs_modsi3(x,y,1);
+}
+
+int __modsi3(int x,int y)
+{
+    return __divs_modsi3(x,y,0);
+}
+
+

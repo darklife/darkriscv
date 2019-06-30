@@ -27,7 +27,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
 HOST_CC = gcc
-HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -DX86 -DX86 -I./include -Os
+HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os 
 
 #CROSS = riscv-elf
 #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
@@ -41,7 +41,7 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=rv32i
+CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__
 ASFLAGS = -march=rv32i
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
