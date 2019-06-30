@@ -1,8 +1,6 @@
 # DarkRISCV
 Opensource RISC-V implemented from scratch in one night!
 
-[TOC]
-
 ## Introduction
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
@@ -331,10 +329,6 @@ the ACC reach a negative value):
     1 8191 -8191 -67092481 2013298685
     2 8191 -8191 -67092481 1946206204
     ...
-    26 8191 -8191 -67092481 335986660
-    27 8191 -8191 -67092481 268894179
-    28 8191 -8191 -67092481 201801698
-    29 8191 -8191 -67092481 134709217
     30 8191 -8191 -67092481 67616736
     31 8191 -8191 -67092481 524255
     32 8191 -8191 -67092481 -66568226
