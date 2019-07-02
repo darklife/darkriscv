@@ -62,6 +62,10 @@ main:
 	lui	a5,%hi(.LC5)
 	addi	a0,a5,%lo(.LC5)
 	call	printf
+	li	a2,32
+	li	a1,0
+	addi	a0,sp,16
+	call	memset
 	li	a1,32
 	addi	a0,sp,16
 	call	gets

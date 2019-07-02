@@ -85,7 +85,7 @@
 // used to accelerate the mul/div operations, the mac operation is designed for DSP applications.
 // with some effort (low level machine code), it is possible peak 100MMAC/s @100MHz.
 
-`define __MAC16X16__
+//`define __MAC16X16__
 
 module darkriscv
 #(

@@ -4,42 +4,45 @@ Opensource RISC-V implemented from scratch in one night!
 ## Introduction
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
-*darkriscv* softcore started as an proof of concept for the opensource
-RISC-V instruction set.  The general concept is based in my other early
+*DarkRISCV* softcore started as an proof of concept for the opensource
+RISC-V instruction set.  The general concept was based in my other early
 16-bit RISC processors and composed by a simplified two stage pipeline
 working with a two phase clock, where a instruction is fetch from a
 instruction memory in the first clock and then the instruction is
 decoded/executed in the second clock.  The pipeline is overlapped without
-interlocks, in a way that the *darkriscv* can reach the performance of one clock
-per instruction most of time, except by a taken branch, where one
-clock is lost in the pipeline flush.  As addition, the code is very compact,
-with around three hundred lines of obfuscated but beautiful Verilog code. After 
-lots of exciting sleepless nights of work and the help of lots of
-colleagues, the *darkriscv* reached a very good quality result, in a way
-that the code compiled by the standard riscv-elf-gcc is working
-fine.
+interlocks, in a way that the *DarkRISCV* can reach the performance of one
+clock per instruction most of time, except by a taken branch, where one
+clock is lost in the pipeline flush.  Of course, in order to perform read
+operations in blockrams in a single clock, a two-phase clock is required, in
+a way that no wait states are required.  As result, the code is very
+compact, with around three hundred lines of obfuscated but beautiful Verilog
+code.  After lots of exciting sleepless nights of work and the help of lots
+of colleagues, the *DarkRRISCV* reached a very good quality result, in a way
+that the code compiled by the standard GCC for RV32I worked fine.
 
-Nowadays, a three stage pipeline working with a single clock phase is
-also available as result of a better distribution between the decode and 
-execute stages. In this case the instruction is fetch in the first clock,
-decoded in the second clock and executed in the third clock. As long the 
-load instruction cannot load the data in a single clock, the external logic
-inserts one extra clock in this case. Also, there are two extra clocks 
-in order to flushe de pipeline in the case of taken branches. According to 
-the lastest measurements, the 3-stage pipeline version can reach a instruction 
-per clock (IPC) of 0.7, smaller than the measured IPC of 0.85  in the 
-case of the 2-stage pipeline version. With the 3-stage pipeline and some other 
-expensive optimizations, the *darkriscv* can reach 100MHz in a low-cost 
-Spartan-6. The 2-stage pipeline is also supported with smaller 
-clocks (typically 50MHz).
+Nowadays, a three stage pipeline working with a single clock phase is also
+available, resulting in a better distribution between the decode and execute
+stages.  In this case the instruction is fetch in the first clock from a
+blockram, decoded in the second clock and executed in the third clock.  As
+long the load instruction cannot load the data from a blockram in a single
+clock, the external logic inserts one extra clock in this case.  Also, there
+are two extra clocks in order to flush the pipeline in the case of taken
+branches.  The impcat of the pipeline flush depends of the compiler
+optimizations, but according to the lastest measurements, the 3-stage
+pipeline version can reach a instruction per clock (IPC) of 0.7, smaller
+than the measured IPC of 0.85 in the case of the 2-stage pipeline version. 
+Anyway, with the 3-stage pipeline and some other expensive optimizations,
+the *DarkRISCV* can reach 100MHz in a low-cost Spartan-6, which results in
+more performance when compared with the 2-stage pipeline version, which is
+supported as reference and with smaller clocks (typically 50MHz).
 
 Although the code is small and crude when compared with other RISC-V
-implementations, the *darkriscv* has lots of impressive features:
+implementations, the *DarkRISCV* has lots of impressive features:
 
-- implements most of the RISC-V rv32i instruction set
+- implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
 - works up to 100MHz (spartan-6) and sustain 1 clock per instruction most of time
 - flexible harvard architecture (easy to integrate a cache controller)
-- works fine in a real spartan-6 (lx9/lx16/lx45)
+- works fine in a real spartan-6 (lx9/lx16/lx45 up to 100MHz)
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
 - uses only around 1000-1500 LUTs (depending of enabled features)
 - BSD license: can be used anywhere with no restrictions!
@@ -64,57 +67,56 @@ Some extra features are planned for the furure or under development:
 
 And much other features! Feel free to make suggestions and good hacking! o/
 
+## Project Background
+
+The main motivation for the *DarkRISCV* was create a migration path for some
+projects around the 680x0/Coldfire family.  
+
+Although there are lots of 680x0 cores available, they are designed around
+different concepts and requirements, in a way that I found no much options
+regarding my requirements (more than 50MIPS with around 1000LUTs).  The best
+option at this moment, the TG68, requires at least 2400LUTs (by removing the
+MUL/DIV instructions), and works up to 40MHz in a Spartan-6.  As addition,
+the TG68 core requires at least 2 clock per instruction, which means a peak
+performance of 20MIPS.  As long the 680x0 instruction is too complex, this
+result is really not bad at all and, at this moment, probably the best
+opensource option to replace the 68000.
+
+Anyway, it does not match with the my requirements regarding space and
+performance.  As part of the investigation, I tested other cores, but I
+found no much options as good as the TG68 and I even started design a
+risclized-68000 core, in order to try find a solution.  Unfortunately, I
+found no much ways to reduce the space and increase the performance, in a
+way that I started investigate about non-680x0 cores.  After lots of tests
+with different cores, I found the *picorv32* core and the all the ecosystem
+around the RISC-V.  The *picorv32* is a very nice project and can peak up to
+150MHz in a low-cost Spartan-6.  Although most instructions requires 3 or 4
+clocks per instruction, the *picorv32* resembles the 68020 in some ways, but
+running at 150MHz and providing a peak performance of 50MIPS, which is very
+impressive.
+
+Although the *picorv32* is a very good option to directly replace the 680x0
+family, it is not powerful enough to replace some Coldfire processors (more
+than 75MIPS).  As long I had some good experience with experimental 16-bit
+RISC cores for DSP-like applications, I started code the *DarkRISCV* only to
+check the level of complexity and compare with my risclized-68000.  For my
+surprise, in the first night I mapped almost all instructions of the rv32i
+specification and the *DarkRISCV* started to execute the first instructions
+correctly at 75MHz and with one clock per instruction, which not only
+resembles a fast and nice 68040 and can beat some Coldfires!  wow!  :)
+
+After the success of the first nigth, I started to work in order to fix
+small details in the hardware and software implementation. 
+
 ## Implementation Notes
 
 Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the
-project is currently based in the Xilinx ISE 14.7 for Linux, which is the 
-latest available ISE.  However, there is no explicit reference for Xilinx 
-elements and all logic is inferred directly from Verilog, which means that 
-the project is easily portable to other FPGA families and easily portable to 
-other environments (I will try add support for other FPGAs and tools in the 
+project is currently based in the Xilinx ISE 14.7 for Linux, which is the
+latest available ISE.  However, there is no explicit reference for Xilinx
+elements and all logic is inferred directly from Verilog, which means that
+the project is easily portable to other FPGA families and easily portable to
+other environments (I will try add support for other FPGAs and tools in the
 future).
-
-The main motivation for the *darkriscv* is create a migration path for some
-projects around the 680x0/coldfire family.  Although there are lots of 680x0
-cores available, I found no core with a good relationship between
-performance (more than 50MHz) and logic use (around 1000LUTs).  
-
-The best option at this moment, the TG68, requires at least 2400LUTs (by
-removing the MUL/DIV instructions), and works up to 40MHz in a Spartan-6. 
-As addition, the TG68 core requires at least 2 clock per instruction, which
-means a peak performance of 20MIPS.  As long the 680x0 instruction is too
-complex, the TG68 result is really very good and it is, at this moment,
-probably the best option to replace the 68000. 
-
-Anyway, the space and performance are not as good as expected. As part of
-the investigation, I tested other cores and started design a risclized-68000 
-core, but I found no much ways to reduce the space and increase the
-performance.
-
-After lots of tests with different cores, I found the *picorv32* core and
-the all the ecosystem around the RISC-V.  The picorv32 is a very nice
-project, but the main problem around the *picorv32* is that most
-instructions requires 3 or 4 clocks per instruction, which resembles the
-68020 in some ways, but running at 150MHz, which is impressive itself!  
-
-Anyway, with 3 clocks per instruction, the peak performance is around 50MIPS
-only.  Although the *picorv32* is a very good option to directly replace the
-680x0 family, it is not powerful enough to replace some coldfire processors
-(more than 75MIPS).
-
-As long I had some good experience with experimental 16-bit RISC cores for
-DSP-like applications, I started code the *darkriscv* only to check the
-level of complexity and compare with my risclized-68000.  
-
-For my surprise, in the first night I mapped almost all instructions of the
-rv32i specification and the *darkriscv* started to execute the first
-instructions correctly at 75MHz and with one clock per instruction, which
-resembles a fast and nice 68040 and can beat some coldfires!  wow!  :)
-
-After the success of the first nigth, I started to work in order to fix
-small details in the hardware and software implementation. As long the GCC
-is already available, for sure the RISCV shots the path to provide a way
-to replace some smaller 68000 processors.
 
 In the last update I included a way to test the firmware in the x86 host,
 which helps as lot, since is possible interact with the firmware and fix
@@ -131,13 +133,13 @@ The RV32I specification itself is really impressive and easy to implement
 little-endian bus (opposed to the network oriented big-endian bus found in
 the 680x0 family), but after some empirical tests it is easy to make work.
 
-In the future I will probably release a way to make the *darkriscv* work in
+In the future I will probably release a way to make the *DarkRISCV* work in
 big-endian and probably support both endians in a statically way.
 
 Another drawback in the specification is the lacking of delayed branches.
 Although i understand that they are bad from the conceptual point of view,
 they are good trick in order to extract more performance. As reference, the
-lack of delayed branches or branch predictor in the *darkriscv* may reduce
+lack of delayed branches or branch predictor in the *DarkRISCV* may reduce
 between 20 and 30% the performance, in a way that the real measured
 performance may be between 1.25 and 1.66 clocks per instruction.
 
@@ -149,7 +151,7 @@ RAM must respond before the next clock. This means that the memories must be
 combinational or, at least, use a 2-phase clock.
 
 The first solution for the 2-stage pipeline version with a 2-phase clock is
-the default solution and makes the *darkriscv* work as a pseudo 4-stage
+the default solution and makes the *DarkRISCV* work as a pseudo 4-stage
 pipeline:
 
 - 1/2 stage for instruction pre-fetch (rom)
@@ -160,7 +162,7 @@ pipeline:
 From the processor point of view, there are only 2 stages and from the
 memory point of view, there are also 2 stages. But they are in different
 clock phases. In normal conditions, this is not recommended because decreases the
-performance by a 2x factor, but in the case of *darkriscv* the performance
+performance by a 2x factor, but in the case of *DarkRISCV* the performance
 is always limited by the combinational logic regarding the instruction
 execution.
 
@@ -413,7 +415,7 @@ performance (56MHz).
 ## Development Tools (gcc)
 
 About the gcc compiler, I am working with the experimental gcc 9.0.0 for
-RISC-V.  No patches or updates are required for the *darkriscv* other than
+RISC-V.  No patches or updates are required for the *DarkRISCV* other than
 the -march=rv32i.  Although the fence*, e* and crg* instructions are not
 implemented, the gcc appears to not use of that instructions and they are
 not available in the core.
@@ -451,7 +453,7 @@ project includes the compiled ROM and RAM, in a way that is possible examine
 all derived objects, sources and correlated files generated by the compiler
 without need compile anything.
 
-Finally, as long the *darkriscv* is not yet fully tested, sometimes is a
+Finally, as long the *DarkRISCV* is not yet fully tested, sometimes is a
 very good idea compare the code execution with another stable reference!
 
 In this case, I am working with the project *picorv32*:
@@ -459,9 +461,9 @@ In this case, I am working with the project *picorv32*:
 https://github.com/cliffordwolf/picorv32
 
 When I have some time, I will try create a more well organized support in
-order to easily test both the *darkriscv* and *picorv32* in the same cache,
+order to easily test both the *DarkRISCV* and *picorv32* in the same cache,
 memory and IO sub-systems, in order to make possible select the core
-according to the desired features, for example, use the *darkriscv* for more
+according to the desired features, for example, use the *DarkRISCV* for more
 performance or *picorv32* for more features.
 
 About the software, the most complex issue is make the memory design match
@@ -470,7 +472,7 @@ problem, in fact, is the way that the software guys works when linking the
 code and data!
 
 In the most simplified version, directly connected to blockRAMs, the
-*darkriscv* is a pure harvard architecture processor and will requires the
+*DarkRISCV* is a pure harvard architecture processor and will requires the
 separation between the instruction and data blocks!
 
 When the cache controller is activated, the cache controller provides
@@ -536,9 +538,9 @@ organization in order to be more agnostic regarding to the tool and change
 the "ise" directory to something like "prod" or something like.
 
 The simulation, in the other hand will show some waveforms and is possible
-check the *darkriscv* operation when running the example code.  
+check the *DarkRISCV* operation when running the example code.  
 
-The main simulation tool for *darkriscv* is the iSIM from Xilinx ISE 14.7,
+The main simulation tool for *DarkRISCV* is the iSIM from Xilinx ISE 14.7,
 but the Icarus simulator is also supported via the Makefile in the *sim*
 directory (the changes regarding Icarus are active when the symbol
 __ICARUS__ is detected). I also included a workaround for ModelSim, as 
@@ -599,7 +601,7 @@ Useful memory areas:
 - 7168: empty area
 - 7680: the end of RAM (stack)
 
-As long the *darkriscv* uses separate instruction and data buses, it is not
+As long the *DarkRISCV* uses separate instruction and data buses, it is not
 possible dump the ROM area. It is obviously that a unified ROM/RAM memory
 works better, but it requires a intermediary separated cache in order to
 avoid concurrency between the instruction and data buses.

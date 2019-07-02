@@ -51,7 +51,9 @@ DEVICE = xc6slx9-csg324-2
 #BOARD  = qmtech_sdram_lx16
 #DEVICE = xc6slx16-ftg256-2
 
-ISE = ../ise/board/$(BOARD)
+ISE = ../ise
+RTL = ../../../rtl
+SRC = ../../../src
 TMP = ../tmp
 
 XST = $(ISE)/darksocv.xst
@@ -68,14 +70,14 @@ BIT = $(TMP)/darksocv.bit
 MAP = $(TMP)/darksocv_map.ncd
 UT  = $(ISE)/darksocv.ut
 
-PRJS = ../ise/darksocv.prj
-RTLS = ../rtl/darksocv.v ../rtl/darkriscv.v ../rtl/darkuart.v
-BOOT = ../src/darksocv.rom ../src/darksocv.ram
-IMP  = ../ise/darksocv.imp
+PRJS = $(ISE)/darksocv.prj
+RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v
+BOOT = $(SRC)/darksocv.rom $(SRC)/darksocv.ram
+IMP  = $(ISE)/darksocv.imp
 
 default: all
 
-$(NGC): $(RTLS) $(PRJS) $(BOOT) $(RTLS)
+$(NGC): $(PRJS) $(BOOT) $(RTLS)
 	cd $(TMP) && xst -intstyle ise -ifn $(XST) -ofn $(SYR)
 
 $(NGD): $(NGC) $(UCF) $(BOOT) $(RTLS)
@@ -92,6 +94,8 @@ $(BIT): $(UT) $(NCD) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && bitgen -intstyle ise -f $(UT) $(NCD)
 
 all: $(BIT) $(BOOT) $(UCF) $(RTLS)
+
+run: $(BIT) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && impact -batch $(IMP)
 
 clean:

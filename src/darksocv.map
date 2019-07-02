@@ -49,8 +49,8 @@ Linker script and memory map
  .text          0x0000000000000734       0x74 banner.o
                 0x0000000000000734                banner
 
-.text.startup   0x00000000000007a8      0x448
- .text.startup  0x00000000000007a8      0x448 main.o
+.text.startup   0x00000000000007a8      0x458
+ .text.startup  0x00000000000007a8      0x458 main.o
                 0x00000000000007a8                main
 
 .data           0x0000000000001000      0x3e4

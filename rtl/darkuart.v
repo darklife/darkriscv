@@ -139,7 +139,7 @@ module darkuart
                 if(DATAI[15:8]==">") // prompt '>'
                 begin
                     $display(" no UART input, finishing simulation...");
-                    $stop();
+                    $finish();
                 end
 `else
                 UART_XREQ <= !UART_XACK;    // activate UART!

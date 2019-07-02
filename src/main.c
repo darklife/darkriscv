@@ -53,7 +53,8 @@ int main(void)
 
     while(1)
     {
-      printf("> ");      
+      printf("> ");
+      memset(buffer,0,sizeof(buffer));
       gets(buffer,sizeof(buffer));
 
       if((tmp = strtok(buffer," ")))

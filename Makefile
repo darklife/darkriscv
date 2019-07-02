@@ -1,17 +1,18 @@
+#
 # Copyright (c) 2018, Marcelo Samsoniuk
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 # 
-## Redistributions of source code must retain the above copyright notice, this
+# * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
 # 
-## Redistributions in binary form must reproduce the above copyright notice,
+# * Redistributions in binary form must reproduce the above copyright notice,
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
 # 
-## Neither the name of the copyright holder nor the names of its
+# * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
 # 
@@ -25,18 +26,35 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+#
+# ===8<--------------------------------------------------------- cut here!
+#
+# This the root makefile and the function of this file is call other
+# makefiles. Of course, you need first set the board model:
 
-SRCS = ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v
-XSIM = darksocv.o
-VCDS = darksocv.vcd
+BOARD  = avnet_microboard_lx9
+#BOARD  = xilinx_ac701_a200
+#BOARD  = qmtech_sdram_lx16
 
-all: $(VCDS)
+# now you can just type 'make'
+
+ROM = src/darksocv.rom                      # requires gcc for riscv
+RAM = src/darksocv.ram                      # requires gcc for riscv
+SIM = sim/darksocv.vcd                      # requires icarus verilog 
+BIT = boards/$(BOARD)/tmp/darksocv.bit      # requires FPGA build tool
+
+default: all
+
+all:
+	make -C src darksocv.rom
+	make -C src darksocv.ram
+	make -C sim all
+	make -C boards/$(BOARD) all tmp/darksocv.bit
+
+run:
+	make -C boards/$(BOARD) run
 
 clean:
-	-rm $(VCDS) $(XSIM)
-
-$(VCDS): $(XSIM)
-	./$(XSIM)
-
-$(XSIM): $(SRCS)
-	iverilog -o $(XSIM) $(SRCS)
+	make -C boards/$(BOARD) clean
+	make -C sim clean
+	make -C src clean

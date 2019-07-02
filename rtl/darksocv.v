@@ -565,7 +565,7 @@ module darksocv
 `ifdef __ICARUS__
   initial
   begin
-    $dumpfile("darkriscv.vcd");
+    $dumpfile("darksocv.vcd");
     $dumpvars(0, core0);
   end
 `endif
