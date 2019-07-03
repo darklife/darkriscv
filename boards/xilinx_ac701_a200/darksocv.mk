@@ -40,20 +40,20 @@
 # 
 
 # board Avnet Microboard LX9
-BOARD  = avnet_microboard_lx9
-DEVICE = xc6slx9-csg324-2
+#BOARD  = avnet_microboard_lx9
+#DEVICE = xc6slx9-csg324-2
 
 # board Xilinx AC701 A200
-#BOARD  = xilinx_ac701_a200
-#DEVICE = xc7a200t-fbg676-2
+BOARD  = xilinx_ac701_a200
+DEVICE = xc7a200t-fbg676-2
 
 # board QMTech SDRAM LX16
 #BOARD  = qmtech_sdram_lx16
 #DEVICE = xc6slx16-ftg256-2
 
-ISE = ../ise
-RTL = ../../../rtl
-SRC = ../../../src
+ISE = ../boards/$(BOARD)
+RTL = ../rtl
+SRC = ../src
 TMP = ../tmp
 
 XST = $(ISE)/darksocv.xst
@@ -95,7 +95,7 @@ $(BIT): $(UT) $(NCD) $(BOOT) $(UCF) $(RTLS)
 
 all: $(BIT) $(BOOT) $(UCF) $(RTLS)
 
-run: $(BIT) $(BOOT) $(UCF) $(RTLS)
+install: $(BIT) $(BOOT) $(UCF) $(RTLS)
 	cd $(TMP) && impact -batch $(IMP)
 
 clean:

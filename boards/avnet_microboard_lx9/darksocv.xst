@@ -1,7 +1,7 @@
 set -tmpdir "../tmp"
 set -xsthdpdir "../tmp/"
 run
--ifn ../ise/darksocv.prj
+-ifn ../boards/avnet_microboard_lx9/darksocv.prj
 -ofn darksocv
 -ofmt NGC
 -p xc6slx9-2-csg324

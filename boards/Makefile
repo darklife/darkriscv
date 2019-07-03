@@ -28,13 +28,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
+include $(BOARD)/darksocv.mk
+
 default: all
 
-all: 
-	make -C ise all
-
-run:
-	make -C ise run
-
-clean:
-	make -C ise clean
+all: ../tmp/darksocv.bit
+	echo done.

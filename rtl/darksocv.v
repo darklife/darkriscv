@@ -76,7 +76,10 @@
 
 `ifdef XILINX_AC701_A200
     `define BOARD_ID 2
-    `define BOARD_CK 90000000
+    //`define BOARD_CK 90000000
+    `define BOARD_CK_REF 90000000 
+    `define BOARD_CK_MUL 4
+    `define BOARD_CK_DIV 2
 `endif
 
 `ifdef QMTECH_SDRAM_LX16

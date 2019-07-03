@@ -41,7 +41,7 @@ BOARD  = avnet_microboard_lx9
 ROM = src/darksocv.rom                      # requires gcc for riscv
 RAM = src/darksocv.ram                      # requires gcc for riscv
 SIM = sim/darksocv.vcd                      # requires icarus verilog 
-BIT = boards/$(BOARD)/tmp/darksocv.bit      # requires FPGA build tool
+BIT = tmp/darksocv.bit                      # requires FPGA build tool
 
 default: all
 
@@ -49,12 +49,12 @@ all:
 	make -C src darksocv.rom
 	make -C src darksocv.ram
 	make -C sim all
-	make -C boards/$(BOARD) all tmp/darksocv.bit
+	make -C boards BOARD=$(BOARD) all
 
-run:
-	make -C boards/$(BOARD) run
+install:
+	make -C boards BOARD=$(BOARD) install
 
 clean:
-	make -C boards/$(BOARD) clean
-	make -C sim clean
 	make -C src clean
+	make -C sim clean
+	make -C boards BOARD=$(BOARD) clean
