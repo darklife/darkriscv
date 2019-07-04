@@ -1,7 +1,6 @@
 # DarkRISCV
 Opensource RISC-V implemented from scratch in one night!
 
-
 ## Introduction
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
@@ -51,15 +50,20 @@ implementations, the *DarkRISCV* has lots of impressive features:
 And much other features! Feel free to make suggestions and good hacking! o/
 
 The project documentation is available in the [doc](doc) directory, but 
-there are also extra README.md files available in other directory in order to better explain how that different parts of the project works.
+there are also extra README.md files available in other directories in order 
+to better explain how that different parts of the project works.
 
 ## Index
 
-- [Introduction](doc/README.md#Introduction)
-- [Project Background](doc/README.md#project_background)
-- [Directory Description](doc/README.md#directory_description)
-- [Development Tools](doc/README.md#development_tools)
-- [Implementation Notes](doc/README.md#implementation_notes)
-- [Simulation](doc/README.md#simulation)
+- [Introduction](doc/README.md#introduction)
+- [Project Background](doc/README.md#project-background)
+- [Directory Description](doc/README.md#directory-description)
+- ["src" Directory](doc/README.md#src-directory)
+- ["sim" Directory](doc/README.md#sim-directory)
+- ["rtl" Directory](doc/README.md#rtl-directory)
+- ["board" Directory](doc/README.md#board-directory)
+- [Implementation Notes](doc/README.md#implementation-notes)
+- [Development Tools](doc/README.md#development-tools)
+- [Development Boards](doc/README.md#development-boards)
 - [Acknowledgments](doc/README.md#acknowledgments)
 - [References](doc/README.md#references)
