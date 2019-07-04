@@ -1,20 +1,20 @@
 # DarkRISCV
 Opensource RISC-V implemented from scratch in one night!
 
-## Index
+## Table of Contents
 
-- [Introduction](doc/README.md#Introduction)
-- [Project Background](doc/README.md#project_background)
-- [Directory Description](doc/README.md#directory_description)
+- [Introduction](#Introduction)
+- [Project Background](#project_background)
+- [Directory Description](#directory_description)
 - ["src" Directory](#"src"_directory)
 - ["sim" Directory](#"sim"_directory)
 - ["rtl" Directory](#"rtl"_directory)
 - ["board" Directory]("board"_directory)
-- [Implementation Notes](doc/README.md#implementation_notes)
-- [Development Tools](doc/README.md#development_tools)
-- [Development Boards](doc/README.md#development_boards)
-- [Acknowledgments](doc/README.md#acknowledgments)
-- [References](doc/README.md#references)
+- [Implementation Notes](#implementation_notes)
+- [Development Tools](#development_tools)
+- [Development Boards](#development_boards)
+- [Acknowledgments](#acknowledgments)
+- [References](#references)
 
 ## Introduction
 
