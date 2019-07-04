@@ -4,7 +4,7 @@ Opensource RISC-V implemented from scratch in one night!
 ## Table of Contents
 
 - [Introduction](#Introduction)
-- [Project Background](#project_background)
+- [Project Background](#project background)
 - [Directory Description](#directory_description)
 - ["src" Directory](#"src"_directory)
 - ["sim" Directory](#"sim"_directory)
