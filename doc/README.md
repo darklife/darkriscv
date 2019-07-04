@@ -3,16 +3,16 @@ Opensource RISC-V implemented from scratch in one night!
 
 ## Table of Contents
 
-- [Introduction](#Introduction)
-- [Project Background](#project background)
-- [Directory Description](#directory_description)
-- ["src" Directory](#"src"_directory)
-- ["sim" Directory](#"sim"_directory)
-- ["rtl" Directory](#"rtl"_directory)
-- ["board" Directory]("board"_directory)
-- [Implementation Notes](#implementation_notes)
-- [Development Tools](#development_tools)
-- [Development Boards](#development_boards)
+- [Introduction](#introduction)
+- [Project Background](#project-background)
+- [Directory Description](#directory-description)
+- ["src" Directory](#src-directory)
+- ["sim" Directory](#sim-directory)
+- ["rtl" Directory](#rtl-directory)
+- ["board" Directory](#board-directory)
+- [Implementation Notes](#implementation-notes)
+- [Development Tools](#development-tools)
+- [Development Boards](#development-boards)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 
