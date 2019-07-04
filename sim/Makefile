@@ -26,6 +26,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
+#ICARUS = iverilog
+
 SRCS = ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v
 XSIM = darksocv.o
 VCDS = darksocv.vcd
@@ -39,4 +41,4 @@ $(VCDS): $(XSIM)
 	./$(XSIM)
 
 $(XSIM): $(SRCS)
-	iverilog -o $(XSIM) $(SRCS)
+	$(ICARUS) -o $(XSIM) $(SRCS)

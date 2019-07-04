@@ -15,43 +15,43 @@ IO               0x0000000080000000 0x0000000000000010 rw !x
 Linker script and memory map
 
 
-.text           0x0000000000000000      0x7a8
+.text           0x0000000000000000      0x760
  boot.o(.text)
  .text          0x0000000000000000       0x50 boot.o
                 0x0000000000000000                _start
  *(.text)
  .text          0x0000000000000050        0x0 io.o
- .text          0x0000000000000050      0x6e4 stdio.o
+ .text          0x0000000000000050      0x6a4 stdio.o
                 0x0000000000000050                getchar
                 0x000000000000006c                putchar
                 0x00000000000000ac                gets
-                0x0000000000000124                puts
-                0x000000000000015c                putx
-                0x000000000000023c                putd
-                0x0000000000000320                printf
-                0x000000000000041c                strncmp
-                0x0000000000000450                strcmp
-                0x0000000000000458                strlen
-                0x0000000000000478                memcpy
-                0x000000000000049c                memset
-                0x00000000000004b8                strtok
-                0x000000000000054c                atoi
-                0x0000000000000598                mac
-                0x00000000000005a0                __mului3
-                0x00000000000005e8                __mulsi3
-                0x0000000000000640                __divu_modui3
-                0x0000000000000690                __divui3
-                0x0000000000000698                __modui3
-                0x00000000000006a0                __divs_modsi3
-                0x0000000000000724                __divsi3
-                0x000000000000072c                __modsi3
- .text          0x0000000000000734        0x0 main.o
- .text          0x0000000000000734       0x74 banner.o
-                0x0000000000000734                banner
+                0x0000000000000114                puts
+                0x000000000000014c                putx
+                0x000000000000022c                putd
+                0x0000000000000300                printf
+                0x00000000000003dc                strncmp
+                0x0000000000000410                strcmp
+                0x0000000000000418                strlen
+                0x0000000000000438                memcpy
+                0x000000000000045c                memset
+                0x0000000000000478                strtok
+                0x000000000000050c                atoi
+                0x0000000000000558                mac
+                0x0000000000000560                __mului3
+                0x00000000000005a8                __mulsi3
+                0x0000000000000600                __divu_modui3
+                0x0000000000000650                __divui3
+                0x0000000000000658                __modui3
+                0x0000000000000660                __divs_modsi3
+                0x00000000000006e4                __divsi3
+                0x00000000000006ec                __modsi3
+ .text          0x00000000000006f4        0x0 main.o
+ .text          0x00000000000006f4       0x6c banner.o
+                0x00000000000006f4                banner
 
-.text.startup   0x00000000000007a8      0x458
- .text.startup  0x00000000000007a8      0x458 main.o
-                0x00000000000007a8                main
+.text.startup   0x0000000000000760      0x468
+ .text.startup  0x0000000000000760      0x468 main.o
+                0x0000000000000760                main
 
 .data           0x0000000000001000      0x3e4
  *(.data)

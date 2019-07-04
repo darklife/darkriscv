@@ -1,6 +1,7 @@
 # DarkRISCV
 Opensource RISC-V implemented from scratch in one night!
 
+
 ## Introduction
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
@@ -17,7 +18,7 @@ operations in blockrams in a single clock, a two-phase clock is required, in
 a way that no wait states are required.  As result, the code is very
 compact, with around three hundred lines of obfuscated but beautiful Verilog
 code.  After lots of exciting sleepless nights of work and the help of lots
-of colleagues, the *DarkRRISCV* reached a very good quality result, in a way
+of colleagues, the *DarkRISCV* reached a very good quality result, in a way
 that the code compiled by the standard GCC for RV32I worked fine.
 
 Nowadays, a three stage pipeline working with a single clock phase is also
@@ -39,37 +40,26 @@ supported as reference and with smaller clocks (typically 50MHz).
 Although the code is small and crude when compared with other RISC-V
 implementations, the *DarkRISCV* has lots of impressive features:
 
-- implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
-- works up to 100MHz (spartan-6) and sustain 1 clock per instruction most of time
+- implements most of the RISC-V RV32I instruction set
+- works up to 100MHz (Spartan-6) with 1 clock per instruction most of time
 - flexible harvard architecture (easy to integrate a cache controller)
 - works fine in a real spartan-6 (lx9/lx16/lx45 up to 100MHz)
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
 - uses only around 1000-1500 LUTs (depending of enabled features)
-- no interlock between pipeline stages 
 - BSD license: can be used anywhere with no restrictions!
 
-Some extra features are planned for the furure or under development:
+And much other features! Feel free to make suggestions and good hacking! o/
 
-- interrupt controller (under tests)
-- cache controller (under tests)
-- gpio and timer (under tests)
-- sdram controller
-- branch predictor 
-- ethernet controller (GbE)
-- multi-threading (SMT)
-- multi-processing (SMP)
-- network on chip (NoC)
-- rv32e support (less registers, more threads)
-- rv64i support
-- 16x16-bit MAC instruction (under tests!)
-- big-endian support
-- user/supervisor modes
-- debug support
+The project documentation is available in the [doc](doc) directory, but 
+there are also extra README.md files available in other directory in order to better explain how that different parts of the project works.
 
-And much other features!
+## Index
 
-The project documentation is available in the *doc* directory, but there are
-also extra README.mds available in other directory in order to better
-explain how that different parts of the project works.
-
-Feel free to make suggestions and good hacking! o/
+- [Introduction](doc/README.md#Introduction)
+- [Project Background](doc/README.md#project_background)
+- [Directory Description](doc/README.md#directory_description)
+- [Development Tools](doc/README.md#development_tools)
+- [Implementation Notes](doc/README.md#implementation_notes)
+- [Simulation](doc/README.md#simulation)
+- [Acknowledgments](doc/README.md#acknowledgments)
+- [References](doc/README.md#references)

@@ -9,21 +9,11 @@
 	.globl	main
 	.type	main, @function
 main:
-	addi	sp,sp,-112
-	sw	ra,108(sp)
-	sw	s0,104(sp)
-	sw	s1,100(sp)
+	addi	sp,sp,-64
+	sw	ra,60(sp)
+	sw	s0,56(sp)
+	sw	s1,52(sp)
 	lui	s0,%hi(io)
-	sw	s2,96(sp)
-	sw	s5,84(sp)
-	sw	s6,80(sp)
-	sw	s7,76(sp)
-	sw	s3,92(sp)
-	sw	s4,88(sp)
-	sw	s8,72(sp)
-	sw	s9,68(sp)
-	sw	s10,64(sp)
-	sw	s11,60(sp)
 	call	banner
 	lbu	a5,%lo(io)(s0)
 	lui	a4,%hi(board_name)
@@ -34,8 +24,8 @@ main:
 	lbu	a2,%lo(io)(s0)
 	lui	a0,%hi(.LC0)
 	addi	a0,a0,%lo(.LC0)
-	addi	s1,s0,%lo(io)
 	call	printf
+	addi	s1,s0,%lo(io)
 	lbu	a1,1(s1)
 	lbu	a2,2(s1)
 	lui	a0,%hi(.LC1)
@@ -51,13 +41,9 @@ main:
 	call	printf
 	lui	a0,%hi(.LC4)
 	addi	a0,a0,%lo(.LC4)
-	lui	s1,%hi(.LC6)
 	call	puts
-	addi	s0,s0,%lo(io)
-	mv	s2,s1
-	lui	s5,%hi(.LC11)
-	lui	s6,%hi(.LC14)
-	lui	s7,%hi(.LC16)
+	addi	a5,s0,%lo(io)
+	sw	a5,8(sp)
 .L2:
 	lui	a5,%hi(.LC5)
 	addi	a0,a5,%lo(.LC5)
@@ -69,13 +55,14 @@ main:
 	li	a1,32
 	addi	a0,sp,16
 	call	gets
+	lui	s1,%hi(.LC6)
 	addi	a1,s1,%lo(.LC6)
 	addi	a0,sp,16
 	call	strtok
-	mv	s3,a0
+	mv	s0,a0
 	beqz	a0,.L2
-	lui	a5,%hi(.LC7)
-	addi	a1,a5,%lo(.LC7)
+	lui	a1,%hi(.LC7)
+	addi	a1,a1,%lo(.LC7)
 	call	strcmp
 	bnez	a0,.L4
 	lui	a0,%hi(.LC8)
@@ -83,9 +70,9 @@ main:
 	call	printf
 	j	.L2
 .L4:
-	lui	a5,%hi(.LC9)
-	addi	a1,a5,%lo(.LC9)
-	mv	a0,s3
+	lui	a1,%hi(.LC9)
+	addi	a1,a1,%lo(.LC9)
+	mv	a0,s0
 	call	strcmp
 	bnez	a0,.L6
 	call	banner
@@ -95,130 +82,143 @@ main:
 	call	puts
 	j	.L2
 .L6:
-	addi	a1,s5,%lo(.LC11)
-	mv	a0,s3
+	lui	a1,%hi(.LC11)
+	addi	a1,a1,%lo(.LC11)
+	mv	a0,s0
 	call	strcmp
 	bnez	a0,.L7
 	addi	a1,s1,%lo(.LC6)
 	call	strtok
-	mv	s4,a0
+	mv	s0,a0
 	beqz	a0,.L8
 	call	atoi
-	mv	s4,a0
+	mv	s0,a0
 .L8:
-	addi	s8,s4,512
-	lui	s9,%hi(.LC12)
-	lui	s10,%hi(.LC13)
-	li	s3,32
-	li	s11,94
+	addi	s1,s0,512
 .L12:
-	mv	a1,s4
-	addi	a0,s9,%lo(.LC12)
+	lui	a5,%hi(.LC12)
+	mv	a1,s0
+	addi	a0,a5,%lo(.LC12)
 	call	printf
 	li	a4,0
+	lui	a2,%hi(.LC13)
 .L9:
-	add	a3,s4,a4
+	add	a3,s0,a4
 	lbu	a1,0(a3)
-	addi	a0,s10,%lo(.LC13)
+	addi	a0,a2,%lo(.LC13)
 	sw	a4,12(sp)
 	call	printf
 	lw	a4,12(sp)
+	li	a3,32
+	lui	a2,%hi(.LC13)
 	addi	a4,a4,1
-	bne	a4,s3,.L9
+	bne	a4,a3,.L9
 	li	a4,0
 .L11:
-	add	a3,s4,a4
+	add	a3,s0,a4
 	lbu	a0,0(a3)
+	li	a2,94
 	addi	a3,a0,-32
 	andi	a3,a3,0xff
-	bleu	a3,s11,.L10
+	bleu	a3,a2,.L10
 	li	a0,46
 .L10:
 	sw	a4,12(sp)
 	call	putchar
 	lw	a4,12(sp)
+	li	a3,32
 	addi	a4,a4,1
-	bne	a4,s3,.L11
+	bne	a4,a3,.L11
 	li	a0,10
-	addi	s4,s4,32
+	addi	s0,s0,32
 	call	putchar
-	bne	s8,s4,.L12
+	bne	s1,s0,.L12
 	j	.L2
 .L7:
-	addi	a1,s6,%lo(.LC14)
-	mv	a0,s3
+	lui	a1,%hi(.LC14)
+	addi	a1,a1,%lo(.LC14)
+	mv	a0,s0
 	call	strcmp
 	bnez	a0,.L13
 	addi	a1,s1,%lo(.LC6)
 	call	strtok
 	beqz	a0,.L14
 	call	atoi
+	lw	a5,8(sp)
 	slli	a0,a0,16
 	srli	a0,a0,16
-	sh	a0,8(s0)
+	sh	a0,8(a5)
 .L14:
-	lhu	a1,8(s0)
+	lw	a5,8(sp)
 	lui	a0,%hi(.LC15)
 	addi	a0,a0,%lo(.LC15)
+	lhu	a1,8(a5)
 .L67:
 	call	printf
 	j	.L2
 .L13:
-	addi	a1,s7,%lo(.LC16)
-	mv	a0,s3
+	lui	a1,%hi(.LC16)
+	addi	a1,a1,%lo(.LC16)
+	mv	a0,s0
 	call	strcmp
 	bnez	a0,.L15
 	addi	a1,s1,%lo(.LC6)
 	call	strtok
 	beqz	a0,.L16
 	call	atoi
-	sw	a0,12(s0)
+	lw	a5,8(sp)
+	sw	a0,12(a5)
 .L16:
+	lw	a5,8(sp)
 	lui	a0,%hi(.LC17)
-	lw	a1,12(s0)
 	addi	a0,a0,%lo(.LC17)
+	lw	a1,12(a5)
 	j	.L67
 .L15:
 	lui	a1,%hi(.LC18)
 	addi	a1,a1,%lo(.LC18)
-	mv	a0,s3
+	mv	a0,s0
 	call	strcmp
 	bnez	a0,.L17
 	addi	a1,s1,%lo(.LC6)
 	call	strtok
 	beqz	a0,.L18
 	call	atoi
+	lw	a5,8(sp)
 	slli	a0,a0,16
 	srli	a0,a0,16
-	sh	a0,10(s0)
+	sh	a0,10(a5)
 .L18:
+	lw	a5,8(sp)
 	lui	a0,%hi(.LC19)
-	lhu	a1,10(s0)
 	addi	a0,a0,%lo(.LC19)
+	lhu	a1,10(a5)
 	j	.L67
 .L17:
 	lui	a1,%hi(.LC20)
 	addi	a1,a1,%lo(.LC20)
-	mv	a0,s3
+	mv	a0,s0
 	call	strcmp
-	mv	s8,a0
+	mv	s1,a0
 	bnez	a0,.L19
-	addi	a1,s1,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	call	strtok
-	li	s3,0
+	li	s0,0
 	beqz	a0,.L20
 	call	atoi
-	mv	s3,a0
+	mv	s0,a0
 .L20:
-	addi	a1,s2,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	li	a0,0
 	call	strtok
 	beqz	a0,.L21
 	call	atoi
-	mv	s8,a0
+	mv	s1,a0
 .L21:
-	mv	a1,s8
-	mv	a0,s3
+	mv	a1,s1
+	mv	a0,s0
 	call	__mulsi3
 	mv	a1,a0
 	lui	a0,%hi(.LC21)
@@ -227,28 +227,30 @@ main:
 .L19:
 	lui	a1,%hi(.LC22)
 	addi	a1,a1,%lo(.LC22)
-	mv	a0,s3
+	mv	a0,s0
 	call	strcmp
-	mv	s8,a0
+	mv	s1,a0
 	bnez	a0,.L22
-	addi	a1,s1,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	call	strtok
 	beqz	a0,.L23
 	call	atoi
-	mv	s8,a0
+	mv	s1,a0
 .L23:
-	addi	a1,s2,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	li	a0,0
 	call	strtok
 	beqz	a0,.L24
 	call	atoi
-	mv	s3,a0
+	mv	s0,a0
 	mv	a1,a0
-	mv	a0,s8
+	mv	a0,s1
 	call	__modsi3
 	sw	a0,12(sp)
-	mv	a1,s3
-	mv	a0,s8
+	mv	a1,s0
+	mv	a0,s1
 	call	__divsi3
 	lw	a2,12(sp)
 	mv	a1,a0
@@ -259,48 +261,50 @@ main:
 .L22:
 	lui	a1,%hi(.LC24)
 	addi	a1,a1,%lo(.LC24)
-	mv	a0,s3
+	mv	a0,s0
 	call	strcmp
-	mv	s8,a0
+	mv	s1,a0
 	bnez	a0,.L25
-	addi	a1,s2,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	li	a0,0
 	call	strtok
-	li	s3,0
+	li	s0,0
 	beqz	a0,.L26
 	call	atoi
-	mv	s3,a0
+	mv	s0,a0
 .L26:
-	addi	a1,s2,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	li	a0,0
 	call	strtok
-	li	s9,0
+	sw	zero,12(sp)
 	beqz	a0,.L27
 	call	atoi
-	mv	s9,a0
+	sw	a0,12(sp)
 .L27:
-	addi	a1,s2,%lo(.LC6)
+	lui	a5,%hi(.LC6)
+	addi	a1,a5,%lo(.LC6)
 	li	a0,0
 	call	strtok
 	beqz	a0,.L28
 	call	atoi
-	mv	s8,a0
+	mv	s1,a0
 .L28:
-	slli	a2,s8,16
-	slli	a1,s9,16
-	srai	a1,a1,16
+	lh	a1,12(sp)
+	slli	a2,s1,16
 	srai	a2,a2,16
-	mv	a0,s3
+	mv	a0,s0
 	call	mac
 	mv	a1,a0
 	lui	a0,%hi(.LC25)
 	addi	a0,a0,%lo(.LC25)
 	j	.L67
 .L25:
-	lbu	a5,0(s3)
+	lbu	a5,0(s0)
 	beqz	a5,.L2
 	lui	a0,%hi(.LC26)
-	mv	a1,s3
+	mv	a1,s0
 	addi	a0,a0,%lo(.LC26)
 	call	printf
 	lui	a0,%hi(.LC27)

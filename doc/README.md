@@ -3,7 +3,18 @@ Opensource RISC-V implemented from scratch in one night!
 
 ## Index
 
-TODO: investigate how create an index here! o/
+- [Introduction](doc/README.md#Introduction)
+- [Project Background](doc/README.md#project_background)
+- [Directory Description](doc/README.md#directory_description)
+- ["src" Directory](#"src"_directory)
+- ["sim" Directory](#"sim"_directory)
+- ["rtl" Directory](#"rtl"_directory)
+- ["board" Directory]("board"_directory)
+- [Implementation Notes](doc/README.md#implementation_notes)
+- [Development Tools](doc/README.md#development_tools)
+- [Development Boards](doc/README.md#development_boards)
+- [Acknowledgments](doc/README.md#acknowledgments)
+- [References](doc/README.md#references)
 
 ## Introduction
 
@@ -21,7 +32,7 @@ operations in blockrams in a single clock, a two-phase clock is required, in
 a way that no wait states are required.  As result, the code is very
 compact, with around three hundred lines of obfuscated but beautiful Verilog
 code.  After lots of exciting sleepless nights of work and the help of lots
-of colleagues, the *DarkRRISCV* reached a very good quality result, in a way
+of colleagues, the *DarkRISCV* reached a very good quality result, in a way
 that the code compiled by the standard GCC for RV32I worked fine.
 
 Nowadays, a three stage pipeline working with a single clock phase is also
@@ -49,6 +60,7 @@ implementations, the *DarkRISCV* has lots of impressive features:
 - works fine in a real spartan-6 (lx9/lx16/lx45 up to 100MHz)
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
 - uses only around 1000-1500 LUTs (depending of enabled features)
+- no interlock between pipeline stages 
 - BSD license: can be used anywhere with no restrictions!
 
 Some extra features are planned for the furure or under development:
@@ -69,7 +81,9 @@ Some extra features are planned for the furure or under development:
 - user/supervisor modes
 - debug support
 
-And much other features! Feel free to make suggestions and good hacking! o/
+And much other features!
+
+Feel free to make suggestions and good hacking! o/
 
 ## Project Background
 
@@ -112,7 +126,241 @@ resembles a fast and nice 68040 and can beat some Coldfires!  wow!  :)
 After the success of the first nigth, I started to work in order to fix
 small details in the hardware and software implementation. 
 
+## Directory Description
+
+Although the *DarkRISCV* is only a small processor core, a small eco-system 
+is required in order to test the core, including RISCV compatible software,
+support for simulations and support for peripherals, in a way that the 
+processor core produces observable results. Each element is stored with 
+similar elements in directories, in a way that the top level has the
+following organization:
+
+- [README.md](README.md): the top level README file (points to this document)
+- [LICENSE](LICENSE): unlimited freedom! o/
+- [Makefile](Makefile): the show start here!
+- [src](src): the source code for the test firmware (boot.c, main.c etc in C language)
+- [rt](rtl): the source code for the *DarkRISCV* core and the support logic (Verilog)
+- [sim](sim): the source code for the simulation to test the rtl files (currently via icarus)
+- [board](board): support and examples for different boards (currently via Xilinx ISE)
+- [tmp](tmp): empty, but the ISE will create lots of files here)
+- [doc](doc): this document and other future documents
+
+The top level *Makefile* is responsible to build everything, but it must 
+be edited first, in a way that the user at least must select the compiler 
+path and the target board.
+
+By default, the top level *Makefile** uses:
+
+	CROSS = riscv32-embedded-elf
+	CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+	ICARUS = /usr/local/bin/iverilog
+	BOARD  = avnet_microboard_lx9
+	
+Tust update the configuration according to your system configuration, 
+type *make* and hope everything is in the correct location! You probably will
+need fix some paths and set some others in the PATH environment variable, but
+it will eventually work.
+
+And, when everything is correctly configured, the result will be something like this:
+
+```$ make
+make -C src darksocv.rom    CROSS=riscv32-embedded-elf CCPATH=/usr/local/share/gcc-riscv32-embedded-elf/bin/
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S boot.c -o boot.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S stdio.c -o stdio.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S main.c -o main.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S io.c -o io.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S banner.c -o banner.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c boot.s -o boot.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c stdio.s -o stdio.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c main.s -o main.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c io.s -o io.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c banner.s -o banner.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-ld -Tdarksocv.ld -Map=darksocv.map  boot.o stdio.o main.o io.o banner.o -o darksocv.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objcopy -O binary darksocv.o darksocv.bin
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objdump -d darksocv.o > darksocv.lst
+hexdump -ve '1/4 "%08x\n"' -n 4096 darksocv.bin | grep -v 00000000 > darksocv.rom
+wc -l darksocv.rom
+     754 darksocv.rom
+make -C src darksocv.ram    CROSS=riscv32-embedded-elf CCPATH=/usr/local/share/gcc-riscv32-embedded-elf/bin/
+hexdump -ve '1/4 "%08x\n"' -s 4096 darksocv.bin > darksocv.ram
+wc -l darksocv.ram
+     249 darksocv.ram
+make -C sim all             ICARUS=/usr/local/bin/iverilog
+/usr/local/bin/iverilog -o darksocv.o ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v
+./darksocv.o
+WARNING: ../rtl/darksocv.v:204: $readmemh(../src/darksocv.rom): Not enough words in the file for the requested range [0:1023].
+WARNING: ../rtl/darksocv.v:205: $readmemh(../src/darksocv.ram): Not enough words in the file for the requested range [0:1023].
+VCD info: dumpfile darksocv.vcd opened for output.
+:)
+              vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                  vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
+rr                vvvvvvvvvvvvvvvvvvvvvv      
+rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
+rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
+rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
+rrrrrrrr      vvvvvvvvvvvvvvvvvv      rrrrrrrr
+rrrrrrrrrr      vvvvvvvvvvvvvv      rrrrrrrrrr
+rrrrrrrrrrrr      vvvvvvvvvv      rrrrrrrrrrrr
+rrrrrrrrrrrrrr      vvvvvv      rrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrr      vv      rrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrr          rrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrr      rrrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
+
+       INSTRUCTION SETS WANT TO BE FREE
+
+board: simulation only (id=0)
+core0: darkriscv at 100.0MHz
+uart0: baudrate counter=868
+timr0: periodic timer=100
+
+Welcome to DarkRISCV!
+> no UART input, finishing simulation...
+make -C boards all          BOARD=avnet_microboard_lx9
+cd ../tmp && xst -intstyle ise -ifn ../boards/avnet_microboard_lx9/darksocv.xst -ofn ../tmp/darksocv.syr
+
+*** lots of weird FPGA related messages here *** 
+
+cd ../tmp && bitgen -intstyle ise -f ../boards/avnet_microboard_lx9/darksocv.ut ../tmp/darksocv.ncd
+echo done.
+done.
+```
+
+Which means that the software compiled and liked correctly, the simulation 
+worked correctly and the FPGA build produced a image that can be loaded in 
+your FPGA board with a *make install* (case you has a FPGA board, of course).
+
+Case the FPGA is correctly programmed and the UART is attached to a terminal
+emulator, the FPGA will be configured with the DarkRISCV, which will run the
+test software and produce the following result:
+
+```
+:)
+              vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+                  vvvvvvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
+rr                vvvvvvvvvvvvvvvvvvvvvv      
+rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
+rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
+rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
+rrrrrrrr      vvvvvvvvvvvvvvvvvv      rrrrrrrr
+rrrrrrrrrr      vvvvvvvvvvvvvv      rrrrrrrrrr
+rrrrrrrrrrrr      vvvvvvvvvv      rrrrrrrrrrrr
+rrrrrrrrrrrrrr      vvvvvv      rrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrr      vv      rrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrr          rrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrr      rrrrrrrrrrrrrrrrrrrr
+rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
+
+       INSTRUCTION SETS WANT TO BE FREE
+
+board: avnet microboard spartan-6 lx9 (id=1)
+core0: darkriscv at 100.0MHz
+uart0: baudrate counter=868
+timr0: periodic timer=0
+
+Welcome to DarkRISCV!
+> 
+```
+
+The beautiful ASCII RISCV logo was produced by Andrew Waterman! [6]
+
+As long as the build works, it is possible start make changes, but 
+my recommendation when working with soft processors is not work in the hardware 
+and software at the same time! This means that is better freeze the
+hardware and work only with the software or freeze the software and work
+only with the hardware. It is perfectly possible make your research in 
+both, but not at the same time, otherwise you find the *DarkRISCV*
+in a non-working state after software and hardware changes and will not be 
+sure where the problem is.
+
+### "src" Directory
+
+The *src* directory contains the source code for the test firmware, which 
+includes the boot code, the main process and auxiliary libraries. The code is
+compiled via *gcc* in a way that some auxiliary files are produced, 
+for example:
+
+- boot.c: the original C code for the boot process
+- boot.s: the assembler version of the C code, generated automatically by the gcc
+- boot.o: the compiled version of the C code, generated automatically by the gcc
+
+When all .o files are produced, the result is linked in a *darksocv.o* ELF 
+file, which is used to produce the *darksocv.bin* file, which is converted to 
+hexadecimal and separated in ROM and RAM files (which are loaded by the Verilog
+code in the blockRAMs). The linker also produces a *darksocv.lst* with a 
+complete list of the code generated and the *darsocv.map*, which shows the
+map of all functions and variables in the produced code.
+
+Extra code can be easily added in the compilation by editing the *src/Makefile*.
+
+For example, in order to add a lempel-ziv code *lz.c*, it is necessary make the
+Makefile knows that we need the *lz.s* and *lz.o*:
+
+	OBJS = boot.o stdio.o main.o io.o banner.o lz.o
+	ASMS = boot.s stdio.s main.s io.s banner.s lz.s
+	SRCS = boot.c stdio.c main.c io.c banner.c lz.c
+
+And add a "lz" command in the *main.c*, in a way that is possible call 
+the function via the prompt. Alternatively, it is possible entirely replace
+the provided firmware and use your own firmware.
+
+### "sim" Directory
+
+The simulation, in the other hand will show some waveforms and is possible
+check the *DarkRISCV* operation when running the example code.  
+
+The main simulation tool for *DarkRISCV* is the iSIM from Xilinx ISE 14.7,
+but the Icarus simulator is also supported via the Makefile in the *sim*
+directory (the changes regarding Icarus are active when the symbol
+__ICARUS__ is detected). I also included a workaround for ModelSim, as 
+pointed by our friend HYF (the changes regarding ModelSim are active when the 
+symbol MODEL_TECH is detected).
+
+The simulation runs the same firmware as in the real FPGA, but in order to
+improve the simulation performance, the UART code is not simulated, since
+the 115200 bps requires lots dead simulation time.
+
+### "rtl" Directory
+
+TODO: write something here about the RTL directory.
+
+### "board" Directory
+
+The current supported boards are:
+
+- board/avnet_microboard_lx9
+- board/qmtech_sdram_lx16
+- board/xilinx_ac701_a200
+
+The organization is self-explained, w/ the vender, board and FPGA model
+in the name of the directory. Each  *board* directory contains the project 
+files to be open in the Xilinx ISE 14.x, as well Makefiles to build the
+FPGA image regarding that board model. Although a *ucf* file is provided in 
+order to generate a complete build with a UART and some LEDs, the FPGA is 
+NOT fully wired in any particular configuration and you must add the 
+pins that you will use in your FPGA board.
+
+Anyway, although not wired, the build always gives you a good estimation 
+about the FPGA utilization and about the timing (because the UART output 
+ensures that the complete processor must be synthesized).
+
 ## Implementation Notes
+
+TODO: re-write this section.
 
 Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the
 project is currently based in the Xilinx ISE 14.7 for Linux, which is the
@@ -392,7 +640,7 @@ the pin description must be created.
 TODO: udpate the performance measurement in the Vivado.
 
 The Vivado is very slow compared to ISE and needs *lots of time* to
-synthetize and inform a minimal feedback about the performance...  but after
+synthesise and inform a minimal feedback about the performance...  but after
 some weeks waiting, and lots of empirical calculations, I get some numbers
 for speed grade 2 devices:
 
@@ -416,7 +664,7 @@ in order to flush the pipeline.  The 2-state pipeline requires no extra wait
 states and only 1 extra clock in the taken branches, but runs with less
 performance (56MHz).
 
-## Development Tools (gcc)
+## Development Tools
 
 About the gcc compiler, I am working with the experimental gcc 9.0.0 for
 RISC-V.  No patches or updates are required for the *DarkRISCV* other than
@@ -513,51 +761,28 @@ Finally, the last update regarding the software included  new option to
 build a x86 version in order to help the development by testing exactly the
 same firmware in the x86.
 
-## Directory Description
+TODO: Add support for RV32E: in a preliminary way, it is possible build the gcc with the folllowing configuration:
 
-- ise: the ISE project and configuration files (xise, ucf, etc)
-- rtl: the source for the core and the test SoC
-- sim: the simulation to test the core and the SoC
-- src: the source code for the test firmware (hello.c, boot.c, etc)
-- tmp: empty, but the ISE will create lots of files here)
+    git clone --depth=1 git://gcc.gnu.org/git/gcc.git gcc
+    git clone --depth=1 git://sourceware.org/git/binutils-gdb.git
+    git clone --depth=1 git://sourceware.org/git/newlib-cygwin.git
+    mkdir combined
+    cd combined
+    ln -s ../newlib-cygwin/* .
+    ln -sf ../binutils-gdb/* .
+    ln -sf ../gcc/* .
+    mkdir build
+    cd build
+    ../configure --target=riscv32-embedded-elf --enable-languages=c --disable-shared --disable-threads --disable-multilib --disable-gdb --disable-libssp --with-newlib  --with-arch-rv32e --with-abi=ilp32e --prefix=/usr/local/share/gcc-riscv32-embedded-elf
 
-The *ise* directory contains the *xise* project file to be open in the
-Xilinx ISE 14.x and the project is assembled in a way that all files are
-readily loaded.
+    make -j4
+    make
+    make install
+    export PATH=$PATH:/usr/local/share/gcc-riscv32-embedded-elf/bin/
+    riscv32-embedded-elf-gcc -v
 
-Although a *ucf* file is provided in order to generate a complete build, the
-FPGA is NOT wired in any particular configuration and you must add the pins
-regarding your FPGA board!  Anyway, although not wired, the build always
-gives you a good estimation about the FPGA utilization and about the timing.
 
-The current supported boards are:
 
-- ise/board/avnet_microboard_lx9
-- ise/board/qmtech_sdram_lx16
-- ise/board/xilinx_ac701_a200
-
-The organization is self-explained, w/ the vender, board and FPGA model
-in the name of the directory. In the future I will probably change the
-organization in order to be more agnostic regarding to the tool and change
-the "ise" directory to something like "prod" or something like.
-
-The simulation, in the other hand will show some waveforms and is possible
-check the *DarkRISCV* operation when running the example code.  
-
-The main simulation tool for *DarkRISCV* is the iSIM from Xilinx ISE 14.7,
-but the Icarus simulator is also supported via the Makefile in the *sim*
-directory (the changes regarding Icarus are active when the symbol
-__ICARUS__ is detected). I also included a workaround for ModelSim, as 
-pointed by our friend HYF (the changes regarding ModelSim are active when the 
-symbol MODEL_TECH is detected).
-
-The simulation runs the same firmware as in the real FPGA, but in order to
-improve the simulation performance, the UART code is not simulated, since
-the 115200 bps requires lots dead simulation time.
-
-TODO: more details about the rtl and src directories. Maybe split this
-section in "build" and "simulation". The rtl and src can be better explained
-in the code itself (as long is possible add lots of comments).
 
 ## Development Boards
 
@@ -610,26 +835,25 @@ possible dump the ROM area. It is obviously that a unified ROM/RAM memory
 works better, but it requires a intermediary separated cache in order to
 avoid concurrency between the instruction and data buses.
 
-## The Friends of DarkRISCV!
+## Acknowledgments
 
-Special thanks to: Paulo Matias (jedi master and verilog guru), Paulo
-Bernard (co-worker and verilog guru), Evandro Hauenstein (co-worker and git
-guru), Lucas Mendes (technology guru), Marcelo Toledo (technology guru),
-Fabiano Silos (technology guru and darkriscv beta tester), Guilherme Barile
-(technology guru and first guy to post anything about the darkriscv [2]),
-Alasdair Allan (technology guru, posted an article about the darkriscv [3])
-and Gareth Halfacree (technology guru, posted an article about the darkriscv
-[3].  Special thanks to all people who directly and indirectly contributed
-to this project, including the company I work for.
+Special thanks to the Friends of DarkRISCV: Paulo Matias (jedi master and 
+verilog guru), Paulo Bernard (co-worker and verilog guru), Evandro Hauenstein 
+(co-worker and git guru), Lucas Mendes (technology guru), Marcelo Toledo 
+(technology guru), Fabiano Silos (technology guru and darkriscv beta tester), 
+Guilherme Barile (technology guru and first guy to post anything about the 
+darkriscv [2]), Alasdair Allan (technology guru, posted an article about the 
+darkriscv [3]) and Gareth Halfacree (technology guru, posted an article 
+about the darkriscv [3].  Special thanks to all people who directly and 
+indirectly contributed to this project, including the company I work for.
+
+TODO: add more friends in this list! :)
 
 ## References
 
-[1] https://www.amazon.com/RISC-V-Reader-Open-Architecture-Atlas/dp/099924910X
-
-[2] https://news.ycombinator.com/item?id=17852876
-
-[3] https://blog.hackster.io/the-rise-of-the-dark-risc-v-ddb49764f392
-
-[4] https://abopen.com/news/darkriscv-an-overnight-bsd-licensed-risc-v-implementation/
-
-[5] http://quasilyte.dev/blog/post/riscv32-custom-instruction-and-its-simulation/
+	[1] https://www.amazon.com/RISC-V-Reader-Open-Architecture-Atlas/dp/099924910X
+	[2] https://news.ycombinator.com/item?id=17852876
+	[3] https://blog.hackster.io/the-rise-of-the-dark-risc-v-ddb49764f392
+	[4] https://abopen.com/news/darkriscv-an-overnight-bsd-licensed-risc-v-implementation/
+	[5] http://quasilyte.dev/blog/post/riscv32-custom-instruction-and-its-simulation/
+	[6] https://github.com/riscv/riscv-pk/blob/master/bbl/riscv_logo.txt

@@ -28,6 +28,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 
+#BOARD  = avnet_microboard_lx9
+#BOARD  = xilinx_ac701_a200
+#BOARD  = qmtech_sdram_lx16
+
 include $(BOARD)/darksocv.mk
 
 default: all

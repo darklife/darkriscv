@@ -30,10 +30,10 @@ HOST_CC = gcc
 HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os 
 
 #CROSS = riscv-elf
+#CROSS = riscv32-unknown-elf
+#CROSS = riscv32-embedded-elf
 #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-
-CROSS = riscv32-unknown-elf
-CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+#CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
 
     CC = $(CCPATH)/$(CROSS)-gcc
     AS = $(CCPATH)/$(CROSS)-as
@@ -41,8 +41,9 @@ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__
-ASFLAGS = -march=rv32i
+   ARCH = rv32i
+CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=$(ARCH) -D__RISCV__
+ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
 MEMSIZE = 4096

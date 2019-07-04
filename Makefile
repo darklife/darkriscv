@@ -30,9 +30,16 @@
 # ===8<--------------------------------------------------------- cut here!
 #
 # This the root makefile and the function of this file is call other
-# makefiles. Of course, you need first set the board model:
+# makefiles. Of course, you need first set the GCC compiler path/name, the
+# simulator path/name and the board model:
 
-BOARD  = avnet_microboard_lx9
+# CROSS = riscv-elf
+# CROSS = riscv32-unknown-elf
+  CROSS = riscv32-embedded-elf
+#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
+ CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+ ICARUS = /usr/local/bin/iverilog
+ BOARD  = avnet_microboard_lx9
 #BOARD  = xilinx_ac701_a200
 #BOARD  = qmtech_sdram_lx16
 
@@ -46,15 +53,15 @@ BIT = tmp/darksocv.bit                      # requires FPGA build tool
 default: all
 
 all:
-	make -C src darksocv.rom
-	make -C src darksocv.ram
-	make -C sim all
-	make -C boards BOARD=$(BOARD) all
+	make -C src darksocv.rom    CROSS=$(CROSS) CCPATH=$(CCPATH)
+	make -C src darksocv.ram    CROSS=$(CROSS) CCPATH=$(CCPATH)
+	make -C sim all             ICARUS=$(ICARUS)
+	make -C boards all          BOARD=$(BOARD)
 
 install:
-	make -C boards BOARD=$(BOARD) install
+	make -C boards install      BOARD=$(BOARD)
 
 clean:
-	make -C src clean
-	make -C sim clean
-	make -C boards BOARD=$(BOARD) clean
+	make -C src clean           CROSS=$(CROSS) CCPATH=$(CCPATH)
+	make -C sim clean           ICARUS=$(ICARUS)
+	make -C boards clean        BOARD=$(BOARD)

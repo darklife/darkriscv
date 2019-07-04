@@ -9,23 +9,18 @@ banner:
 	lui	a1,%hi(.LC0)
 	li	a2,269
 	addi	a1,a1,%lo(.LC0)
-	mv	a0,sp
+	addi	a0,sp,16
 	sw	s0,296(sp)
-	sw	s3,284(sp)
 	sw	ra,300(sp)
 	sw	s1,292(sp)
-	sw	s2,288(sp)
-	mv	s0,sp
+	addi	s0,sp,16
 	call	memcpy
-	li	s3,-1
 .L2:
-	lbu	s2,0(s0)
-	bnez	s2,.L5
+	lbu	a5,0(s0)
+	bnez	a5,.L5
 	lw	ra,300(sp)
 	lw	s0,296(sp)
 	lw	s1,292(sp)
-	lw	s2,288(sp)
-	lw	s3,284(sp)
 	addi	sp,sp,304
 	jr	ra
 .L5:
@@ -33,9 +28,12 @@ banner:
 	lbu	s1,-1(s0)
 .L3:
 	addi	s1,s1,-1
-	beq	s1,s3,.L2
-	mv	a0,s2
+	li	a4,-1
+	beq	s1,a4,.L2
+	mv	a0,a5
+	sw	a5,12(sp)
 	call	putchar
+	lw	a5,12(sp)
 	j	.L3
 	.size	banner, .-banner
 	.section	.rodata.str1.4,"aMS",@progbits,1
