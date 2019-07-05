@@ -26,14 +26,22 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-HOST_CC = gcc
-HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os 
+ifndef HOST_CC
+    HOST_CC = gcc
+    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os 
+endif
 
-#CROSS = riscv-elf
-#CROSS = riscv32-unknown-elf
-#CROSS = riscv32-embedded-elf
-#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-#CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+ifndef CROSS
+    #CROSS = riscv-elf
+    #CROSS = riscv32-unknown-elf
+    CROSS = riscv32-embedded-elf
+    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
+    CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+endif
+
+ifndef BUILD
+    BUILD = $(shell date -R)
+endif
 
     CC = $(CCPATH)/$(CROSS)-gcc
     AS = $(CCPATH)/$(CROSS)-as
@@ -41,8 +49,8 @@ HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-   ARCH = rv32i
-CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=$(ARCH) -D__RISCV__
+   ARCH = rv32e
+CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=$(ARCH) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
@@ -80,10 +88,13 @@ $(PROJ).bin: $(PROJ).o
 $(PROJ).rom: $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' -n $(MEMSIZE) $< | grep -v 00000000 > $@
 	wc -l $@
+	echo rom ok.
 
 $(PROJ).ram: $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' -s $(MEMSIZE) $< > $@
 	wc -l $@
+	echo ram ok.
 	
 $(PROJ).x86: $(SRCS)
-	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86
+	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""
+	echo x86 ok.

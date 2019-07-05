@@ -31,11 +31,13 @@
 #ifndef __STDIO__
 #define __STDIO__
 
-#define NULL  0
+#define EOF   -1
+#define NUL   0
+#define NULL  (void *)0
 
 int getchar(void);
 int putchar(int c);
-void gets(char *p,int s);
+char *gets(char *p,int s);
 void putstr(char *p);
 int puts(char *p);
 int printf(char *fmt,...);
@@ -48,6 +50,7 @@ char *memcpy(char *dptr,char *sptr,int len);
 char *memset(char *dptr, int c, int len);
 char *strtok(char *str,char *dptr);
 int atoi(char *);
+int xtoi(char *);
 int mac(int,short,short);
 
 #endif

@@ -35,17 +35,16 @@ extern void banner(void);
 
 int main(void)
 {
-    char  buffer[32];
-    char *tmp;
-
     banner();
 
     // startup
 
     printf("board: %s (id=%d)\n",board_name[io.board_id],io.board_id);
-    printf("core0: darkriscv at %d.%dMHz\n",io.board_cm,io.board_ck);
+    printf("core0: darkriscv/%s at %d.%dMHz\n",ARCH,io.board_cm,io.board_ck);
     printf("uart0: baudrate counter=%d\n",io.uart.baud);
-    printf("timr0: periodic timer=%d\n\n",io.timer);
+    printf("timr0: periodic timer=%d\n",io.timer);
+    printf("build: %s\n",BUILD);
+    printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
 
@@ -53,124 +52,150 @@ int main(void)
 
     while(1)
     {
-      printf("> ");
-      memset(buffer,0,sizeof(buffer));
-      gets(buffer,sizeof(buffer));
+        char  buffer[64];
 
-      if((tmp = strtok(buffer," ")))
-      {
-          if(!strcmp(tmp,"clear"))
+        printf("> ");
+        memset(buffer,0,sizeof(buffer));
+        gets(buffer,sizeof(buffer));
+        
+        char *argv[8];
+        int   argc;
+
+        for(argc=0;argc<8 && (argv[argc]=strtok(argc==0?buffer:NULL," "));argc++)
+            //printf("argv[%d] = [%s]\n",argc,argv[argc]);
+            ;
+
+        if(argv[0])
+        {
+          if(!strcmp(argv[0],"clear"))
           {
               printf("\33[H\33[2J");
           }
           else
-          if(!strcmp(tmp,"atros"))
+          if(!strcmp(argv[0],"atros"))
           {
               banner();
               printf("wow! hello atros! o/\n");
           }
           else
-          if(!strcmp(tmp,"dump"))
+          if(!strcmp(argv[0],"dump"))
           {
-              tmp=strtok(NULL," ");
-              
-              char *p=(char *)(kmem+(tmp?atoi(tmp):0));
+              char *p=(char *)(kmem+(argv[1]?xtoi(argv[1]):0));
 
               int i,j;
               
               for(i=0;i!=16;i++)
               {
-                  printf("%d: ",(unsigned) p);
+                  printf("%x: ",(unsigned) p);
               
-                  for(j=0;j!=32;j++) printf("%x ",p[j]);
-                  for(j=0;j!=32;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
+                  for(j=0;j!=16;j++) printf("%x ",p[j]);
+                  for(j=0;j!=16;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
+
                   putchar('\n');
-                  p+=32;
+                  p+=16;
               }
           }
           else
-          if(!strcmp(tmp,"led"))
+          if(!strncmp(argv[0],"rd",2))
           {
-              if((tmp=strtok(NULL," ")))
+              int k = xtoi(argv[1]);
+          
+              if(argv[0][2]=='b') printf("%x: %x\n",k,*((char  *)k)); 
+              if(argv[0][2]=='w') printf("%x: %x\n",k,*((short *)k));
+              if(argv[0][2]=='l') printf("%x: %x\n",k,*((int   *)k));
+              if(argv[0][2]=='m')
               {
-                  io.led = atoi(tmp);
-              }
-              printf("led = %d\n",io.led);
+                  int j,i = xtoi(argv[2]);
+                  
+                  printf("%x: ",k);
+                  for(j=0;i--;j++)
+                  {
+                      if(argv[0][3]=='b') printf("%x ",j[(char  *)k]);
+                      if(argv[0][3]=='w') printf("%x ",j[(short *)k]);
+                      if(argv[0][3]=='l') printf("%x ",j[(int   *)k]);
+                  }
+                  printf("\n");
+              }              
           }
           else
-          if(!strcmp(tmp,"timer"))
+          if(!strncmp(argv[0],"wr",2))
           {
-              if((tmp=strtok(NULL," ")))
+              int k = xtoi(argv[1]);
+              int w = xtoi(argv[2]);
+              
+              if(argv[0][2]=='b') printf("%x: %x\n",k,*((char  *)k)=w);
+              if(argv[0][2]=='w') printf("%x: %x\n",k,*((short *)k)=w);
+              if(argv[0][2]=='l') printf("%x: %x\n",k,*((int   *)k)=w);
+              if(argv[0][2]=='m')
               {
-                  io.timer = atoi(tmp);
-              }
+                  int j,i = xtoi(argv[0]);
+                  
+                  printf("%x: ",xtoi(argv[0]));
+                  for(j=0;i--;j++)
+                  {
+                      int h = xtoi(argv[3]);
+                      
+                      if(argv[0][3]=='b') printf("%x ",j[(char  *)w]=h);
+                      if(argv[0][3]=='w') printf("%x ",j[(short *)w]=h);
+                      if(argv[0][3]=='l') printf("%x ",j[(int   *)w]=h);
+                  }
+                  printf("\n");
+              }              
+          }
+          else
+          if(!strcmp(argv[0],"led"))
+          {
+              if(argv[1]) io.led = xtoi(argv[1]);
+              
+              printf("led = %x\n",io.led);
+          }
+          else
+          if(!strcmp(argv[0],"timer"))
+          {
+              if(argv[1]) io.timer = atoi(argv[1]);
+              
               printf("timer = %d\n",io.timer);
           }
           else
-          if(!strcmp(tmp,"gpio"))
+          if(!strcmp(argv[0],"gpio"))
           {
-              if((tmp=strtok(NULL," ")))
-              {
-                  io.gpio = atoi(tmp);
-              }
-              printf("gpio = %d\n",io.gpio);
+              if(argv[1]) io.gpio = xtoi(argv[1]);
+
+              printf("gpio = %x\n",io.gpio);
           }
           else
-          if(!strcmp(tmp,"mul"))
+          if(!strcmp(argv[0],"mul"))
           {
-              int x=0,y=0;
-          
-              if((tmp=strtok(NULL," ")))
-              {
-                  x = atoi(tmp);
-              }
-              if((tmp=strtok(NULL," ")))
-              {
-                  y = atoi(tmp);
-              }
+              int x = atoi(argv[1]);
+              int y = atoi(argv[2]);
+              
               printf("mul = %d\n",x*y);
           }
           else
-          if(!strcmp(tmp,"div"))
+          if(!strcmp(argv[0],"div"))
           {
-              int x=0,y=0;
-          
-              if((tmp=strtok(NULL," ")))
-              {
-                  x = atoi(tmp);
-              }
-              if((tmp=strtok(NULL," ")))
-              {
-                  y = atoi(tmp);
-              }
+              int x = atoi(argv[1]);
+              int y = atoi(argv[2]);
+
               printf("div = %d, mod = %d\n",x/y,x%y);
           }
           else
-          if(!strcmp(tmp,"mac"))
+          if(!strcmp(argv[0],"mac"))
           {
-              int acc=0,x=0,y=0;
-              
-              if((tmp=strtok(NULL," ")))
-              {
-                  acc = atoi(tmp);
-              }
-              if((tmp=strtok(NULL," ")))
-              {
-                  x = atoi(tmp);
-              }
-              if((tmp=strtok(NULL," ")))
-              {
-                  y = atoi(tmp);
-              }
+              int acc = atoi(argv[1]);
+              int x = atoi(argv[2]);
+              int y = atoi(argv[3]);
+
               printf("mac = %d\n",mac(acc,x,y));
           }
           else
-          if(tmp[0])
+          if(argv[0][0])
           {
-              printf("command: [%s] not found.\n",tmp);
-              printf("valid commands: clear, dump <val>, led <val>, timer <val>, gpio <val>\n");
-              printf("                mul <val1> <val2>, div <val1> <val2>\n");
-              printf("                mac <acc> <val1> <val2>\n");
+              printf("command: [%s] not found.\n"
+                     "valid commands: clear, dump <hex>, led <hex>, timer <dec>, gpio <hex>\n"
+                     "                mul <dec> <dec>, div <dec> <dec>, mac <dec> <dec> <dec>\n"
+                     "                rd[m][bwl] <hex> [<hex> when m], wr[m][bwl] <hex> <hex> [<hex> when m]\n",
+                     argv[0]);
           }
        }
     }

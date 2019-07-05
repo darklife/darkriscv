@@ -5,23 +5,23 @@
 	.globl	banner
 	.type	banner, @function
 banner:
-	addi	sp,sp,-304
+	addi	sp,sp,-288
 	lui	a1,%hi(.LC0)
 	li	a2,269
 	addi	a1,a1,%lo(.LC0)
-	addi	a0,sp,16
-	sw	s0,296(sp)
-	sw	ra,300(sp)
-	sw	s1,292(sp)
-	addi	s0,sp,16
+	addi	a0,sp,4
+	sw	s0,280(sp)
+	sw	ra,284(sp)
+	sw	s1,276(sp)
+	addi	s0,sp,4
 	call	memcpy
 .L2:
 	lbu	a5,0(s0)
 	bnez	a5,.L5
-	lw	ra,300(sp)
-	lw	s0,296(sp)
-	lw	s1,292(sp)
-	addi	sp,sp,304
+	lw	ra,284(sp)
+	lw	s0,280(sp)
+	lw	s1,276(sp)
+	addi	sp,sp,288
 	jr	ra
 .L5:
 	addi	s0,s0,2
@@ -31,9 +31,9 @@ banner:
 	li	a4,-1
 	beq	s1,a4,.L2
 	mv	a0,a5
-	sw	a5,12(sp)
+	sw	a5,0(sp)
 	call	putchar
-	lw	a5,12(sp)
+	lw	a5,0(sp)
 	j	.L3
 	.size	banner, .-banner
 	.section	.rodata.str1.4,"aMS",@progbits,1

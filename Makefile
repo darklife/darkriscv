@@ -55,7 +55,7 @@ default: all
 all:
 	make -C src darksocv.rom    CROSS=$(CROSS) CCPATH=$(CCPATH)
 	make -C src darksocv.ram    CROSS=$(CROSS) CCPATH=$(CCPATH)
-	make -C sim all             ICARUS=$(ICARUS)
+	make -C sim all             ICARUS=$(ICARUS) 
 	make -C boards all          BOARD=$(BOARD)
 
 install:

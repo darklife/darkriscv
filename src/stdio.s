@@ -41,70 +41,92 @@ putchar:
 	.globl	gets
 	.type	gets, @function
 gets:
-	addi	sp,sp,-16
 	addi	a1,a1,-1
-	sw	s0,8(sp)
-	sw	s1,4(sp)
-	sw	ra,12(sp)
+	addi	sp,sp,-20
+	add	a5,a0,a1
+	sw	s0,12(sp)
+	sw	s1,8(sp)
+	sw	ra,16(sp)
+	mv	s1,a0
+	sw	a5,0(sp)
 	mv	s0,a0
-	add	s1,a0,a1
 .L12:
-	beq	s0,s1,.L14
+	lw	a5,0(sp)
+	beq	s0,a5,.L16
 	call	getchar
-	li	a5,10
-	bne	a0,a5,.L13
-.L14:
+	li	a3,10
+	bne	a0,a3,.L13
+.L16:
 	li	a0,10
 	call	putchar
-	lw	ra,12(sp)
 	sb	zero,0(s0)
-	lw	s0,8(sp)
-	lw	s1,4(sp)
-	addi	sp,sp,16
+	bne	s0,s1,.L14
+	li	s1,0
+.L14:
+	lw	ra,16(sp)
+	lw	s0,12(sp)
+	mv	a0,s1
+	lw	s1,8(sp)
+	addi	sp,sp,20
 	jr	ra
 .L13:
-	li	a5,13
-	beq	a0,a5,.L14
-	addi	s0,s0,1
-	sb	a0,-1(s0)
-	andi	a0,a0,0xff
+	li	a3,13
+	sw	a0,4(sp)
+	beq	a0,a3,.L16
 	call	putchar
+	lw	a4,4(sp)
+	addi	s0,s0,1
+	sb	a4,-1(s0)
 	j	.L12
 	.size	gets, .-gets
+	.align	2
+	.globl	putstr
+	.type	putstr, @function
+putstr:
+	addi	sp,sp,-12
+	sw	s0,4(sp)
+	sw	ra,8(sp)
+	mv	s0,a0
+	bnez	a0,.L21
+	lui	s0,%hi(.LC1)
+	addi	s0,s0,%lo(.LC1)
+.L21:
+	lbu	a0,0(s0)
+	bnez	a0,.L23
+	lw	ra,8(sp)
+	lw	s0,4(sp)
+	addi	sp,sp,12
+	jr	ra
+.L23:
+	addi	s0,s0,1
+	call	putchar
+	j	.L21
+	.size	putstr, .-putstr
 	.align	2
 	.globl	puts
 	.type	puts, @function
 puts:
-	addi	sp,sp,-16
-	sw	s0,8(sp)
-	sw	ra,12(sp)
-	mv	s0,a0
-.L19:
-	lbu	a0,0(s0)
-	bnez	a0,.L20
-	lw	s0,8(sp)
-	lw	ra,12(sp)
+	addi	sp,sp,-12
+	sw	ra,8(sp)
+	call	putstr
+	lw	ra,8(sp)
 	li	a0,10
-	addi	sp,sp,16
+	addi	sp,sp,12
 	tail	putchar
-.L20:
-	addi	s0,s0,1
-	call	putchar
-	j	.L19
 	.size	puts, .-puts
 	.align	2
 	.globl	putx
 	.type	putx, @function
 putx:
-	addi	sp,sp,-16
-	sw	s0,8(sp)
-	sw	s1,4(sp)
-	sw	ra,12(sp)
-	lui	s1,%hi(.LC1)
+	addi	sp,sp,-12
+	sw	s0,4(sp)
+	sw	s1,0(sp)
+	sw	ra,8(sp)
+	lui	s1,%hi(.LC2)
 	li	a5,16777216
 	mv	s0,a0
-	addi	s1,s1,%lo(.LC1)
-	bleu	a0,a5,.L23
+	addi	s1,s1,%lo(.LC2)
+	bltu	a0,a5,.L29
 	srli	a5,a0,28
 	add	a5,s1,a5
 	lbu	a0,0(a5)
@@ -114,7 +136,7 @@ putx:
 	add	a5,s1,a5
 	lbu	a0,0(a5)
 	call	putchar
-.L24:
+.L30:
 	srli	a5,s0,20
 	andi	a5,a5,15
 	add	a5,s1,a5
@@ -125,7 +147,7 @@ putx:
 	add	a5,s1,a5
 	lbu	a0,0(a5)
 	call	putchar
-.L26:
+.L32:
 	srli	a5,s0,12
 	andi	a5,a5,15
 	add	a5,s1,a5
@@ -136,13 +158,13 @@ putx:
 	add	a5,s1,a5
 	lbu	a0,0(a5)
 	call	putchar
-	j	.L27
-.L23:
+	j	.L33
+.L29:
 	li	a5,65536
-	bgtu	a0,a5,.L24
-	li	a5,256
-	bgtu	a0,a5,.L26
-.L27:
+	bgeu	a0,a5,.L30
+	li	a5,255
+	bgtu	a0,a5,.L32
+.L33:
 	srli	a5,s0,4
 	andi	a5,a5,15
 	add	a5,s1,a5
@@ -151,164 +173,161 @@ putx:
 	add	s0,s1,s0
 	call	putchar
 	lbu	a0,0(s0)
-	lw	s0,8(sp)
-	lw	ra,12(sp)
-	lw	s1,4(sp)
-	addi	sp,sp,16
+	lw	s0,4(sp)
+	lw	ra,8(sp)
+	lw	s1,0(sp)
+	addi	sp,sp,12
 	tail	putchar
 	.size	putx, .-putx
 	.align	2
 	.globl	putd
 	.type	putd, @function
 putd:
-	addi	sp,sp,-80
+	addi	sp,sp,-56
 	lui	a1,%hi(.LANCHOR0)
-	sw	s0,72(sp)
+	sw	s0,48(sp)
 	li	a2,40
 	mv	s0,a0
 	addi	a1,a1,%lo(.LANCHOR0)
-	addi	a0,sp,24
-	sw	ra,76(sp)
-	sw	s1,68(sp)
+	addi	a0,sp,4
+	sw	ra,52(sp)
+	sw	s1,44(sp)
 	call	memcpy
-	bgez	s0,.L30
+	bgez	s0,.L36
 	li	a0,45
 	call	putchar
 	sub	s0,zero,s0
-.L30:
+.L36:
 	li	a1,0
 	li	s1,0
-.L36:
+.L42:
 	slli	a5,s1,2
-	addi	a4,sp,24
+	addi	a4,sp,4
 	add	a5,a4,a5
 	lw	a3,0(a5)
 	li	a0,1
 	sub	a2,s0,a3
 	mv	a5,a3
-.L32:
-	bgt	a3,a2,.L31
+.L38:
+	bgt	a3,a2,.L37
 	addi	a0,a0,1
 	li	a4,10
 	add	a5,a5,a3
 	sub	a2,a2,a3
-	bne	a0,a4,.L32
-.L31:
+	bne	a0,a4,.L38
+.L37:
 	sub	a5,s0,a5
-	sw	a5,12(sp)
-	bltz	a5,.L33
+	sw	a5,0(sp)
+	bltz	a5,.L39
 	addi	a0,a0,48
 	call	putchar
-	lw	a5,12(sp)
+	lw	a5,0(sp)
 	li	a1,1
 	mv	s0,a5
-.L34:
+.L40:
 	addi	s1,s1,1
 	li	a5,10
-	bne	s1,a5,.L36
-	lw	ra,76(sp)
-	lw	s0,72(sp)
-	lw	s1,68(sp)
-	addi	sp,sp,80
+	bne	s1,a5,.L42
+	lw	ra,52(sp)
+	lw	s0,48(sp)
+	lw	s1,44(sp)
+	addi	sp,sp,56
 	jr	ra
-.L33:
-	bnez	a1,.L35
+.L39:
+	bnez	a1,.L41
 	li	a5,9
-	bne	s1,a5,.L34
-.L35:
+	bne	s1,a5,.L40
+.L41:
 	li	a0,48
-	sw	a1,12(sp)
+	sw	a1,0(sp)
 	call	putchar
-	lw	a1,12(sp)
-	j	.L34
+	lw	a1,0(sp)
+	j	.L40
 	.size	putd, .-putd
 	.align	2
 	.globl	printf
 	.type	printf, @function
 printf:
-	addi	sp,sp,-64
-	sw	a5,52(sp)
-	addi	a5,sp,36
-	sw	s0,24(sp)
-	sw	ra,28(sp)
-	sw	s1,20(sp)
+	addi	sp,sp,-36
+	sw	a5,32(sp)
+	addi	a5,sp,16
+	sw	s0,8(sp)
+	sw	ra,12(sp)
+	sw	s1,4(sp)
 	mv	s0,a0
-	sw	a1,36(sp)
-	sw	a2,40(sp)
-	sw	a3,44(sp)
-	sw	a4,48(sp)
-	sw	a6,56(sp)
-	sw	a7,60(sp)
-	sw	a5,12(sp)
-.L41:
-	lbu	a0,0(s0)
-	bnez	a0,.L47
-	lw	ra,28(sp)
-	lw	s0,24(sp)
-	lw	s1,20(sp)
-	addi	sp,sp,64
-	jr	ra
+	sw	a1,16(sp)
+	sw	a2,20(sp)
+	sw	a3,24(sp)
+	sw	a4,28(sp)
+	sw	a5,0(sp)
 .L47:
+	lbu	a0,0(s0)
+	bnez	a0,.L53
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	lw	s1,4(sp)
+	addi	sp,sp,36
+	jr	ra
+.L53:
 	li	a5,37
 	addi	s1,s0,1
-	bne	a0,a5,.L42
+	bne	a0,a5,.L48
 	lbu	a0,1(s0)
 	li	a5,115
-	bne	a0,a5,.L43
-	lw	a5,12(sp)
+	bne	a0,a5,.L49
+	lw	a5,0(sp)
 	lw	a0,0(a5)
 	addi	a4,a5,4
-	sw	a4,12(sp)
-	call	printf
-.L44:
+	sw	a4,0(sp)
+	call	putstr
+.L50:
 	addi	s0,s1,1
-	j	.L41
-.L43:
+	j	.L47
+.L49:
 	li	a5,120
-	bne	a0,a5,.L45
-	lw	a5,12(sp)
+	bne	a0,a5,.L51
+	lw	a5,0(sp)
 	lw	a0,0(a5)
 	addi	a4,a5,4
-	sw	a4,12(sp)
+	sw	a4,0(sp)
 	call	putx
-	j	.L44
-.L45:
+	j	.L50
+.L51:
 	li	a5,100
-	bne	a0,a5,.L46
-	lw	a5,12(sp)
+	bne	a0,a5,.L52
+	lw	a5,0(sp)
 	lw	a0,0(a5)
 	addi	a4,a5,4
-	sw	a4,12(sp)
+	sw	a4,0(sp)
 	call	putd
-	j	.L44
-.L46:
+	j	.L50
+.L52:
 	call	putchar
-	j	.L44
-.L42:
+	j	.L50
+.L48:
 	call	putchar
 	mv	s1,s0
-	j	.L44
+	j	.L50
 	.size	printf, .-printf
 	.align	2
 	.globl	strncmp
 	.type	strncmp, @function
 strncmp:
-	li	a3,1
-.L50:
-	lbu	a4,0(a0)
-	lbu	a5,0(a1)
-	beq	a2,a3,.L51
-	beqz	a4,.L51
-	beqz	a5,.L51
-	beq	a4,a5,.L52
-.L51:
-	sub	a0,a4,a5
+	addi	a2,a2,-1
+	li	a5,0
+.L57:
+	add	a4,a0,a5
+	lbu	a3,0(a4)
+	add	a4,a1,a5
+	lbu	a4,0(a4)
+	beq	a5,a2,.L56
+	beqz	a3,.L56
+	beqz	a4,.L56
+	addi	a5,a5,1
+	beq	a3,a4,.L57
+.L56:
+	sub	a0,a3,a4
 	ret
-.L52:
-	addi	a0,a0,1
-	addi	a1,a1,1
-	addi	a2,a2,-2
-	j	.L50
 	.size	strncmp, .-strncmp
 	.align	2
 	.globl	strcmp
@@ -322,31 +341,32 @@ strcmp:
 	.type	strlen, @function
 strlen:
 	li	a5,0
-.L61:
+.L67:
 	add	a4,a0,a5
 	lbu	a4,0(a4)
-	bnez	a4,.L62
+	beqz	a4,.L66
+	addi	a5,a5,1
+	add	a4,a0,a5
+	bnez	a4,.L67
+.L66:
 	mv	a0,a5
 	ret
-.L62:
-	addi	a5,a5,1
-	j	.L61
 	.size	strlen, .-strlen
 	.align	2
 	.globl	memcpy
 	.type	memcpy, @function
 memcpy:
 	li	a5,0
-.L64:
-	bne	a5,a2,.L65
+.L74:
+	bne	a5,a2,.L75
 	ret
-.L65:
+.L75:
 	add	a4,a1,a5
 	lbu	a3,0(a4)
 	add	a4,a0,a5
 	addi	a5,a5,1
 	sb	a3,0(a4)
-	j	.L64
+	j	.L74
 	.size	memcpy, .-memcpy
 	.align	2
 	.globl	memset
@@ -354,59 +374,63 @@ memcpy:
 memset:
 	add	a2,a0,a2
 	mv	a5,a0
-.L67:
-	bne	a5,a2,.L68
+.L77:
+	bne	a5,a2,.L78
 	ret
-.L68:
+.L78:
 	addi	a5,a5,1
 	sb	a1,-1(a5)
-	j	.L67
+	j	.L77
 	.size	memset, .-memset
 	.align	2
 	.globl	strtok
 	.type	strtok, @function
 strtok:
-	addi	sp,sp,-32
-	sw	s0,24(sp)
+	addi	sp,sp,-20
+	sw	s0,12(sp)
 	mv	s0,a0
 	mv	a0,a1
-	sw	s1,20(sp)
-	sw	ra,28(sp)
+	sw	s1,8(sp)
+	sw	ra,16(sp)
 	mv	s1,a1
 	call	strlen
 	mv	a3,a0
-	bnez	s0,.L70
-	lui	a5,%hi(nxt.1616)
-	lw	s0,%lo(nxt.1616)(a5)
-	beqz	s0,.L71
-.L70:
+	bnez	s0,.L80
+	lui	a5,%hi(nxt.1622)
+	lw	s0,%lo(nxt.1622)(a5)
+	beqz	s0,.L81
+.L80:
 	mv	a5,s0
-.L72:
+.L82:
 	lbu	a4,0(a5)
-	beqz	a4,.L71
+	bnez	a4,.L83
+	lui	a5,%hi(nxt.1622)
+	sw	zero,%lo(nxt.1622)(a5)
+	j	.L81
+.L83:
 	mv	a2,a3
 	mv	a0,a5
 	mv	a1,s1
-	sw	a3,12(sp)
-	sw	a5,8(sp)
+	sw	a3,4(sp)
+	sw	a5,0(sp)
 	call	strncmp
-	lw	a5,8(sp)
-	lw	a3,12(sp)
+	lw	a5,0(sp)
+	lw	a3,4(sp)
 	addi	a4,a5,1
-	bnez	a0,.L74
+	bnez	a0,.L84
 	sb	zero,0(a5)
-	lui	a5,%hi(nxt.1616)
-	sw	a4,%lo(nxt.1616)(a5)
-.L71:
+	lui	a5,%hi(nxt.1622)
+	sw	a4,%lo(nxt.1622)(a5)
+.L81:
 	mv	a0,s0
-	lw	ra,28(sp)
-	lw	s0,24(sp)
-	lw	s1,20(sp)
-	addi	sp,sp,32
+	lw	ra,16(sp)
+	lw	s0,12(sp)
+	lw	s1,8(sp)
+	addi	sp,sp,20
 	jr	ra
-.L74:
+.L84:
 	mv	a5,a4
-	j	.L72
+	j	.L82
 	.size	strtok, .-strtok
 	.align	2
 	.globl	atoi
@@ -415,34 +439,64 @@ atoi:
 	li	a3,0
 	li	a5,0
 	li	a2,45
-.L80:
-	lbu	a4,0(a0)
-	bnez	a4,.L82
-	beqz	a3,.L79
-	sub	a5,zero,a5
-.L79:
+.L90:
+	bnez	a0,.L92
+.L96:
+	bnez	a3,.L93
+.L89:
 	mv	a0,a5
 	ret
-.L82:
-	beq	a4,a2,.L84
+.L97:
+	li	a3,1
+	j	.L91
+.L92:
+	lbu	a4,0(a0)
+	beqz	a4,.L96
+	beq	a4,a2,.L97
 	slli	a1,a5,3
 	addi	a4,a4,-48
 	add	a4,a4,a1
 	slli	a5,a5,1
 	add	a5,a4,a5
-.L81:
+.L91:
 	addi	a0,a0,1
-	j	.L80
-.L84:
-	li	a3,1
-	j	.L81
+	j	.L90
+.L93:
+	sub	a5,zero,a5
+	j	.L89
 	.size	atoi, .-atoi
+	.align	2
+	.globl	xtoi
+	.type	xtoi, @function
+xtoi:
+	mv	a3,a0
+	li	a2,57
+	li	a0,0
+.L99:
+	beqz	a3,.L98
+	lbu	a5,0(a3)
+	bnez	a5,.L103
+.L98:
+	ret
+.L103:
+	slli	a4,a0,4
+	bgtu	a5,a2,.L100
+	addi	a5,a5,-48
+.L107:
+	add	a0,a5,a4
+	addi	a3,a3,1
+	j	.L99
+.L100:
+	andi	a5,a5,95
+	addi	a5,a5,-55
+	j	.L107
+	.size	xtoi, .-xtoi
 	.align	2
 	.globl	mac
 	.type	mac, @function
 mac:
  #APP
-# 255 "stdio.c" 1
+# 278 "stdio.c" 1
 	.word 0x00c5857F
 # 0 "" 2
  #NO_APP
@@ -454,57 +508,57 @@ mac:
 __mului3:
 	mv	a5,a0
 	li	a0,0
-	bltu	a5,a1,.L90
-.L91:
-	bnez	a1,.L96
+	bltu	a5,a1,.L110
+.L111:
+	bnez	a1,.L116
 	ret
-.L93:
+.L113:
 	andi	a4,a5,1
-	beqz	a4,.L92
+	beqz	a4,.L112
 	add	a0,a0,a1
-.L92:
+.L112:
 	srli	a5,a5,1
 	slli	a1,a1,1
-.L90:
-	bnez	a5,.L93
+.L110:
+	bnez	a5,.L113
 	ret
-.L96:
+.L116:
 	andi	a4,a1,1
-	beqz	a4,.L95
+	beqz	a4,.L115
 	add	a0,a0,a5
-.L95:
+.L115:
 	slli	a5,a5,1
 	srli	a1,a1,1
-	j	.L91
+	j	.L111
 	.size	__mului3, .-__mului3
 	.align	2
 	.globl	__mulsi3
 	.type	__mulsi3, @function
 __mulsi3:
-	addi	sp,sp,-16
-	sw	s1,4(sp)
-	sw	ra,12(sp)
-	sw	s0,8(sp)
+	addi	sp,sp,-12
+	sw	s1,0(sp)
+	sw	ra,8(sp)
+	sw	s0,4(sp)
 	li	s1,0
-	bgez	a0,.L105
+	bgez	a0,.L125
 	sub	a0,zero,a0
 	li	s1,1
-.L105:
+.L125:
 	li	s0,0
-	bgez	a1,.L106
+	bgez	a1,.L126
 	sub	a1,zero,a1
 	li	s0,1
-.L106:
+.L126:
 	call	__mului3
 	mv	a5,a0
-	beq	s1,s0,.L104
+	beq	s1,s0,.L124
 	sub	a5,zero,a0
-.L104:
-	lw	ra,12(sp)
-	lw	s0,8(sp)
-	lw	s1,4(sp)
+.L124:
+	lw	ra,8(sp)
+	lw	s0,4(sp)
+	lw	s1,0(sp)
 	mv	a0,a5
-	addi	sp,sp,16
+	addi	sp,sp,12
 	jr	ra
 	.size	__mulsi3, .-__mulsi3
 	.align	2
@@ -512,32 +566,32 @@ __mulsi3:
 	.type	__divu_modui3, @function
 __divu_modui3:
 	li	a5,1
-	bnez	a1,.L115
-.L114:
+	bnez	a1,.L135
+.L134:
 	mv	a0,a1
 	ret
-.L116:
+.L136:
 	slli	a5,a5,1
 	slli	a1,a1,1
-.L115:
-	bgtu	a0,a1,.L116
+.L135:
+	bgtu	a0,a1,.L136
 	mv	a4,a1
 	li	a1,0
-.L117:
-	beqz	a0,.L119
-	bnez	a5,.L120
-.L119:
-	bnez	a2,.L114
+.L137:
+	beqz	a0,.L139
+	bnez	a5,.L140
+.L139:
+	bnez	a2,.L134
 	mv	a1,a0
-	j	.L114
-.L120:
-	bltu	a0,a4,.L118
+	j	.L134
+.L140:
+	bltu	a0,a4,.L138
 	sub	a0,a0,a4
 	add	a1,a1,a5
-.L118:
+.L138:
 	srli	a5,a5,1
 	srli	a4,a4,1
-	j	.L117
+	j	.L137
 	.size	__divu_modui3, .-__divu_modui3
 	.align	2
 	.globl	__divui3
@@ -557,42 +611,42 @@ __modui3:
 	.globl	__divs_modsi3
 	.type	__divs_modsi3, @function
 __divs_modsi3:
-	beqz	a1,.L143
-	addi	sp,sp,-32
-	sw	s0,24(sp)
-	sw	ra,28(sp)
-	sw	s1,20(sp)
+	beqz	a1,.L163
+	addi	sp,sp,-16
+	sw	s0,8(sp)
+	sw	ra,12(sp)
+	sw	s1,4(sp)
 	mv	a5,a2
 	li	s0,0
-	bgez	a0,.L131
+	bgez	a0,.L151
 	sub	a0,zero,a0
 	li	s0,1
-.L131:
+.L151:
 	li	s1,0
-	bgez	a1,.L132
+	bgez	a1,.L152
 	sub	a1,zero,a1
 	li	s1,1
-.L132:
+.L152:
 	mv	a2,a5
-	sw	a5,12(sp)
+	sw	a5,0(sp)
 	call	__divu_modui3
-	lw	a5,12(sp)
+	lw	a5,0(sp)
 	mv	a1,a0
-	beqz	a5,.L133
-	beq	s0,s1,.L130
+	beqz	a5,.L153
+	beq	s0,s1,.L150
 	sub	a1,zero,a0
-.L130:
-	lw	ra,28(sp)
-	lw	s0,24(sp)
-	lw	s1,20(sp)
+.L150:
+	lw	ra,12(sp)
+	lw	s0,8(sp)
+	lw	s1,4(sp)
 	mv	a0,a1
-	addi	sp,sp,32
+	addi	sp,sp,16
 	jr	ra
-.L133:
-	beqz	s0,.L130
+.L153:
+	beqz	s0,.L150
 	sub	a1,zero,a0
-	j	.L130
-.L143:
+	j	.L150
+.L163:
 	mv	a0,a1
 	ret
 	.size	__divs_modsi3, .-__divs_modsi3
@@ -627,11 +681,14 @@ __modsi3:
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC1:
+	.string	"(NULL)"
+	.zero	1
+.LC2:
 	.string	"0123456789abcdef"
 	.section	.sbss,"aw",@nobits
 	.align	2
-	.type	nxt.1616, @object
-	.size	nxt.1616, 4
-nxt.1616:
+	.type	nxt.1622, @object
+	.size	nxt.1622, 4
+nxt.1622:
 	.zero	4
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

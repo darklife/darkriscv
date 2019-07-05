@@ -33,7 +33,7 @@
 
 extern int  main (void);
 
-void _start(void)
+void boot(void)
 {
     /* 
      * the proposal is handle all "exceptions" here!  the interrupts are
@@ -43,14 +43,14 @@ void _start(void)
      * is switched back to the user
      */
 
-    register int i=0;
+    io.timer = (io.board_cm*1000000+io.board_ck*1000)/2;
 
     while(io.irq)
     {
-        io.gpio = i++; // change gpio!
-        io.irq  = 0;   // clear interrupts and switch context
+        io.led ^= 1; // change gpio!
+        io.irq  = 0; // clear interrupts and switch context
     }
-  
+
     /* 
      * put the data and bss initialization here:
      * 

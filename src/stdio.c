@@ -32,9 +32,9 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-// putchar and getchar uses the "low-level" io
-
 #ifdef __RISCV__
+
+// putchar and getchar uses the "low-level" io
 
 int getchar(void)
 {
@@ -59,9 +59,10 @@ int putchar(int c)
 
 // high-level functions uses the getchar/putchar
 
-void gets(char *p,int s)
+char *gets(char *p,int s)
 {
-  register int c;
+  char *ret = p;
+  int c;
 
   while(--s)
   {
@@ -69,38 +70,45 @@ void gets(char *p,int s)
     
     if(c=='\n'||c=='\r') break;
 #ifdef __RISCV__     
-    putchar((*p++ = c));
-#else
-    *p++ = c;
+    putchar(c);
 #endif
+    *p++ = c;
   }
 #ifdef __RISCV__
   putchar('\n');
 #endif
   *p=0;
+  
+  return p==ret ? NULL : ret;
+}
+
+void putstr(char *p)
+{
+    if(p) while(*p) putchar(*p++);
+    else putstr("(NULL)");
 }
 
 int puts(char *p)
 {
-  while(*p) putchar(*p++);
+  putstr(p);
   return putchar('\n');
 }
 
 void putx(unsigned i)
 {
-    register char *hex="0123456789abcdef";
+    char *hex="0123456789abcdef";
 
-    if(i>16777216)
+    if(i>=16777216)
     {
         putchar(hex[(i>>28)&15]);
         putchar(hex[(i>>24)&15]);
     }
-    if(i>65536)
+    if(i>=65536)
     {
         putchar(hex[(i>>20)&15]);
         putchar(hex[(i>>16)&15]);
     }    
-    if(i>256)
+    if(i>=256)
     {
         putchar(hex[(i>>12)&15]);
         putchar(hex[(i>>8)&15]);
@@ -155,7 +163,7 @@ int printf(char *fmt,...)
         if(*fmt=='%')
         {
             fmt++;
-                 if(*fmt=='s') printf(va_arg(ap,char *));
+                 if(*fmt=='s') putstr(va_arg(ap,char *));
             else if(*fmt=='x') putx(va_arg(ap,int));
             else if(*fmt=='d') putd(va_arg(ap,int));
             else putchar(*fmt);
@@ -170,7 +178,7 @@ int printf(char *fmt,...)
 
 int strncmp(char *s1,char *s2,int len)
 {
-    while(--len && *s1 && *s2 && (*s1==*s2)) { s1++; s2++; len--; }
+    while(--len && *s1 && *s2 && (*s1==*s2)) s1++, s2++;
     
     return (*s1-*s2);
 }
@@ -184,7 +192,7 @@ int strlen(char *s1)
 {
     int len;
     
-    for(len=0;s1[len];len++);
+    for(len=0;s1&&*s1++;len++);
 
     return len;
 }
@@ -224,13 +232,13 @@ char *strtok(char *str,char *dptr)
     {
         if(strncmp(tmp,dptr,dlen)==0)
         {
-            *tmp=NULL;
+            *tmp=NUL;
             nxt = tmp+1;
             return ret;
         }
         tmp++;
     }
-
+    nxt = NULL;
     return ret;
 }
 
@@ -238,7 +246,7 @@ int atoi(char *s1)
 {
     int ret,sig;
     
-    for(sig=ret=0;*s1;s1++) 
+    for(sig=ret=0;s1&&*s1;s1++) 
     {
         if(*s1=='-') 
             sig=1;
@@ -247,6 +255,21 @@ int atoi(char *s1)
     }
     
     return sig ? -ret : ret;
+}
+
+int xtoi(char *s1)
+{
+    int ret;
+    
+    for(ret=0;s1&&*s1;s1++) 
+    {
+        if(*s1<='9')
+            ret = *s1-'0'+(ret<<4); // val = val*16+int(*s1)
+        else
+            ret = 10+(*s1&0x5f)-'A'+(ret<<4); // val = val*16+int(toupper(*s1))
+    }
+    
+    return ret;
 }
 
 int mac(int acc,short x,short y)
@@ -329,5 +352,3 @@ int __modsi3(int x,int y)
 {
     return __divs_modsi3(x,y,0);
 }
-
-
