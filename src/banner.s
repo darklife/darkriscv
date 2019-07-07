@@ -10,11 +10,13 @@ banner:
 	li	a2,269
 	addi	a1,a1,%lo(.LC0)
 	addi	a0,sp,4
-	sw	s0,280(sp)
 	sw	ra,284(sp)
+	sw	s0,280(sp)
 	sw	s1,276(sp)
-	addi	s0,sp,4
 	call	memcpy
+	li	a0,10
+	call	putchar
+	addi	s0,sp,4
 .L2:
 	lbu	a5,0(s0)
 	bnez	a5,.L5

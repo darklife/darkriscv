@@ -98,26 +98,44 @@ void putx(unsigned i)
 {
     char *hex="0123456789abcdef";
 
-    if(i>=16777216)
-    {
-        putchar(hex[(i>>28)&15]);
-        putchar(hex[(i>>24)&15]);
-    }
-    if(i>=65536)
-    {
-        putchar(hex[(i>>20)&15]);
-        putchar(hex[(i>>16)&15]);
-    }    
-    if(i>=256)
-    {
-        putchar(hex[(i>>12)&15]);
-        putchar(hex[(i>>8)&15]);
-    }
+    int db[] = { 16777216, 65536, 256, 1, 0 };
 
-    putchar(hex[(i>>4)&15]);
-    putchar(hex[(i>>0)&15]);
+    int j=0,k=24,l;
+    
+    for(j=0;(l=db[j]);j++)
+    {
+        if(l==1 || i>=l)
+        {
+            putchar(hex[(i>>(k+4))&15]);
+            putchar(hex[(i>>k)&15]);
+        }
+        k-=8;
+    }
 }
 
+void putd(int i)
+{
+    char *dec="0123456789";
+    
+    int db[] = { 1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1, 0 };
+
+    if(i<0)
+    {
+        putchar('-');
+        i=-1;
+    }
+    
+    int j,l;
+    
+    for(j=0;(l=db[j]);j++)
+    {
+        if(l==1 || i>=l)
+        {
+            putchar(dec[(i/l)%10]);
+        }
+    }    
+}
+/*
 void putd(int i)
 {
     int db[10] = { 1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 };
@@ -153,7 +171,7 @@ void putd(int i)
             if(v||j==9) putchar('0');
     }
 }
-
+*/
 int printf(char *fmt,...)
 {
     va_list ap;
@@ -284,7 +302,7 @@ int mac(int acc,short x,short y)
     return acc;
 }
 
-unsigned __mului3(unsigned x,unsigned y)
+unsigned __umulsi3(unsigned x,unsigned y)
 {
     unsigned acc;
 
@@ -301,12 +319,12 @@ int __mulsi3(int x, int y)
     if(x<0) { xs=1; x=-x; } else xs=0;
     if(y<0) { ys=1; y=-y; } else ys=0;
 
-    acc = __mului3(x,y);
+    acc = __umulsi3(x,y);
     
     return xs^ys ? -acc : acc;
 }
 
-unsigned __divu_modui3(unsigned x,unsigned y,int opt)
+unsigned __udiv_umod_si3(unsigned x,unsigned y,int opt)
 {
     unsigned acc,aux;
 
@@ -318,17 +336,17 @@ unsigned __divu_modui3(unsigned x,unsigned y,int opt)
     return opt ? acc : x;
 }
 
-int __divui3(int x, int y)
+int __udivsi3(int x, int y)
 {
-    return __divu_modui3(x,y,1);
+    return __udiv_umod_si3(x,y,1);
 }
 
-int __modui3(int x,int y)
+int __umodsi3(int x,int y)
 {
-    return __divu_modui3(x,y,0);
+    return __udiv_umod_si3(x,y,0);
 }
 
-int __divs_modsi3(int x,int y,int opt)
+int __div_mod_si3(int x,int y,int opt)
 {
     unsigned acc,xs,ys;
 
@@ -337,7 +355,7 @@ int __divs_modsi3(int x,int y,int opt)
     if(x<0) { xs=1; x=-x; } else xs=0;
     if(y<0) { ys=1; y=-y; } else ys=0;
 
-    acc = __divu_modui3(x,y,opt);
+    acc = __udiv_umod_si3(x,y,opt);
 
     if(opt) return xs^ys ? -acc : acc;
     else    return xs    ? -acc : acc;
@@ -345,10 +363,10 @@ int __divs_modsi3(int x,int y,int opt)
 
 int __divsi3(int x, int y)
 {
-    return __divs_modsi3(x,y,1);
+    return __div_mod_si3(x,y,1);
 }
 
 int __modsi3(int x,int y)
 {
-    return __divs_modsi3(x,y,0);
+    return __div_mod_si3(x,y,0);
 }

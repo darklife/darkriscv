@@ -59,6 +59,7 @@ all:
 	make -C boards all          BOARD=$(BOARD)
 
 install:
+	make all
 	make -C boards install      BOARD=$(BOARD)
 
 clean:

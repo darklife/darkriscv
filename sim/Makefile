@@ -30,7 +30,8 @@ ifndef ICARUS
     ICARUS = iverilog
 endif
 
-SRCS = ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v
+RTLS = ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v 
+SRCS = ../src/darksocv.rom ../src/darksocv.ram
 XSIM = darksocv.o
 VCDS = darksocv.vcd
 
@@ -43,5 +44,5 @@ $(VCDS): $(XSIM)
 	./$(XSIM)
 	echo simulation ok.
 
-$(XSIM): $(SRCS)
-	$(ICARUS) -o $(XSIM) $(SRCS)
+$(XSIM): $(SRCS) $(RTLS)
+	$(ICARUS) -o $(XSIM) $(RTLS)

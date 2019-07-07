@@ -36,13 +36,17 @@ module darksimv;
 
     reg CLK = 0;
     
-    reg [3:0] RES = -1;
+    reg RES = 1;
 
     initial while(1) #(500e6/100e6) CLK = !CLK; // clock speed of 100MHz
 
-    initial #(250e6) $finish;
-
-    always@(posedge CLK) RES <= RES ? RES-1 : 0;
+    initial
+    begin
+        #1e3   RES = 0;
+        #1000e3 RES = 1;
+        #1e3   RES = 0;
+        #1000e3 $finish();
+    end
 
     wire TX;
     wire RX = 1;

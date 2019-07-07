@@ -463,7 +463,7 @@ module darksocv
     assign IOMUX[3] = TIMERFF;
 
     reg [31:0] TIMER = 0;
-    reg [31:0] TIMERFF = `BOARD_CK/1000000; // 5M interrupts/second!
+    reg [31:0] TIMERFF = 0; // timer disabled
 
     reg XTIMER = 0;
 
@@ -479,23 +479,32 @@ module darksocv
             GPIOFF <= DATAO[31:16];
         end
 
+        if(RES)
+            TIMERFF <= 0;
+        else
         if(WR&&DADDR[31]&&DADDR[3:0]==4'b1100)
         begin
             TIMERFF <= DATAO[31:0];
         end
         
-`ifdef __INTERRUPT__        
+`ifdef __INTERRUPT__
+        if(RES)
+            IACK <= IREQ;
+        else
         if(WR&&DADDR[31]&&DADDR[3:0]==4'b0011)
         begin
             IACK <= IREQ;
         end
         
-        TIMER <= TIMER ? TIMER-1 : TIMERFF;
+        if(TIMERFF)
+        begin        
+            TIMER <= TIMER ? TIMER-1 : TIMERFF;
         
-        if(TIMER==0)
-        begin
-            IREQ <= !IACK;
-            XTIMER <= !XTIMER;
+            if(TIMER==0)
+            begin
+                IREQ <= !IACK;
+                XTIMER <= !XTIMER;
+            end
         end
 `endif        
     end

@@ -31,36 +31,33 @@
 #include <io.h>
 #include <stdio.h>
 
-extern int  main (void);
+extern int  main ();
 
 void boot(void)
 {
-    /* 
-     * the proposal is handle all "exceptions" here!  the interrupts are
-     * checked, otherwise it is a normal reset. when the interrupt register
-     * is set, the core will work in a different context, preserving the
-     * user context. when the interrupt register is cleared, the context 
-     * is switched back to the user
-     */
+    int tmp = 1&threads++;
 
-    io.timer = (io.board_cm*1000000+io.board_ck*1000)/2;
+    volatile int timer_value;
 
-    while(io.irq)
+    putchar('0'+tmp); // print thread number
+
+    if(tmp==0)
     {
-        io.led ^= 1; // change gpio!
-        io.irq  = 0; // clear interrupts and switch context
+        timer_value = 49; // 1MHz GPIO
+        // timer_value = (io.board_cm*1000000+io.board_ck*1000)/20-1; // 10Hz blink!
+
+        io.timer = 1; // start timer w/ shortest time to force the thread 1 start
+        
+        while(1) main();
     }
+    
+    io.timer = timer_value;
 
-    /* 
-     * put the data and bss initialization here:
-     * 
-     * memcpy(&data_rom, &data_ram,data_len);
-     * memset(&bss_ram,0,bss_len);
-     *
-     * you need ensure the boot.o(.text) is the first block in the rom!
-     */
+    while(1)
+    {
+        io.led  ^= 1; // change led
+        io.gpio ^= 1; // change gpio
 
-    puts(":)"); // no crash here! :)
-     
-    main();
+        io.irq  = 0;  // clear interrupts and switch context
+    }
 }

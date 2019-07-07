@@ -182,8 +182,10 @@ module darkriscv
 
 `ifdef __INTERRUPT__    
 
+    reg [5:0] RESMODE = 0;
+
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [5:0] DPTR   = RES ? 2 : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
+    wire [5:0] DPTR   = RES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
     wire [2:0] FCT3   = XIDATA[14:12];
     wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
     wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
@@ -191,11 +193,13 @@ module darkriscv
 
 `else
 
+    reg [4:0] RESMODE = 0;
+
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [5:0] DPTR   = RES ? 2 : XIDATA[11: 7]; // set SP_RESET when RES==1
+    wire [4:0] DPTR   = RES ? RESMODE : XIDATA[11: 7]; // set SP_RESET when RES==1
     wire [2:0] FCT3   = XIDATA[14:12];
-    wire [5:0] S1PTR  = XIDATA[19:15];
-    wire [5:0] S2PTR  = XIDATA[24:20];
+    wire [4:0] S1PTR  = XIDATA[19:15];
+    wire [4:0] S2PTR  = XIDATA[24:20];
     wire [6:0] FCT7   = XIDATA[31:25];
 
 `endif
@@ -229,23 +233,15 @@ module darkriscv
     
     reg [31:0] REG1 [0:63];	// general-purpose 32x32-bit registers (s1)
     reg [31:0] REG2 [0:63];	// general-purpose 32x32-bit registers (s2)
-
+/*
     integer i; 
     initial 
     for(i=0;i!=64;i=i+1) 
     begin
         REG1[i] = 0; // makes the simulation looks better!
         REG2[i] = 0; // makes the simulation looks better!
-        
-        NXPC2[0] = RESET_PC;
-        NXPC2[1] = RESET_PC;
-        
-        REG1[2] = RESET_SP;
-        REG2[2] = RESET_SP;
-        
-        REG1[34] = RESET_SP;
-        REG2[34] = RESET_SP;
     end
+*/
 `else
 `ifdef __3STAGE__
     reg [31:0] NXPC2;       // 32-bit program counter t+2
@@ -255,7 +251,7 @@ module darkriscv
     
     reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
     reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
-
+/*
     integer i; 
     initial 
     for(i=0;i!=32;i=i+1) 
@@ -263,6 +259,7 @@ module darkriscv
         REG1[i] = 0; // makes the simulation looks better!
         REG2[i] = 0; // makes the simulation looks better!
     end
+*/
 `endif
 
     // source-1 and source-1 register selection
@@ -381,7 +378,6 @@ module darkriscv
 
     always@(posedge CLK)
     begin
-    
 `ifdef __3STAGE__
 	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt                              
 	                       FLUSH ? FLUSH-1 :                           
@@ -391,7 +387,7 @@ module darkriscv
                        (JAL||JALR||BMUX);  // flush the pipeline!
 `endif
 
-        REG1[DPTR] <=   RES ? RESET_SP  :        // reset sp
+        REG1[DPTR] <=   RES ? (RESMODE[4:0]==2 ? RESET_SP : 0)  :        // reset sp
                        HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
@@ -408,7 +404,7 @@ module darkriscv
                        //CCC ? CDATA : 
                              REG1[DPTR];
 
-        REG2[DPTR] <=   RES ? RESET_SP  :        // reset sp
+        REG2[DPTR] <=   RES ? (RESMODE[4:0]==2 ? RESET_SP : 0) :        // reset sp
                        HLT ? REG2[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
@@ -428,17 +424,22 @@ module darkriscv
 `ifdef __3STAGE__
 
 `ifdef __INTERRUPT__
+
+        RESMODE <= RESMODE+1; // used in the reset to initilize all registers!
+
         NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2[XMODE];
-	
-	    NXPC2[XMODE] <=  RES ? RESET_PC : HLT ? NXPC2[XMODE] :   // reset and halt
-	                 JREQ ? JVAL :                    // jmp/bra
-	                        NXPC2[XMODE]+4;                   // normal flow
+
+        NXPC2[RES ? RESMODE[0] : XMODE] <=  RES ? RESET_PC : HLT ? NXPC2[XMODE] :   // reset and halt
+                                      JREQ ? JVAL :                            // jmp/bra
+	                                         NXPC2[XMODE]+4;                   // normal flow
 
         XMODE <= RES ? 0 : HLT ? XMODE :        // reset and halt
 	             XMODE==0&& IREQ&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
                  XMODE==1&&!IREQ&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
 
 `else
+        RESMODE <= RESMODE +1;
+
         NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2;
 	
 	    NXPC2 <=  RES ? RESET_PC : HLT ? NXPC2 :   // reset and halt

@@ -31,6 +31,8 @@
 #ifndef __IO__
 #define __IO__
 
+extern int threads; // number of threads in the core
+
 struct DARKIO {
 
     unsigned char board_id; // 00

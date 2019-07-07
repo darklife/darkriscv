@@ -42,12 +42,14 @@ volatile struct DARKIO io =
     { 0, 0, 0 },    // uart = { stat, fifo, baud }
     0,              // led
     0,              // gpio
-    0               // timer
+    1000000         // timer
 };
 
-unsigned char kmem[8192];
+unsigned char kmem[8192] = "darksocv x86 payload test";
 
 #endif
+
+int threads = 0; // number of threads
 
 // board database
 

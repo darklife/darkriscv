@@ -67,7 +67,7 @@ SRCS = boot.c stdio.c main.c io.c banner.c
 all:
 	make $(PROJ).rom
 	make $(PROJ).ram
-	make $(PROJ).x86
+	#make $(PROJ).x86
 
 clean:
 	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86}

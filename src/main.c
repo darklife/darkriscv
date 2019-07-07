@@ -40,10 +40,19 @@ int main(void)
     // startup
 
     printf("board: %s (id=%d)\n",board_name[io.board_id],io.board_id);
-    printf("core0: darkriscv/%s at %d.%dMHz\n",ARCH,io.board_cm,io.board_ck);
-    printf("uart0: baudrate counter=%d\n",io.uart.baud);
-    printf("timr0: periodic timer=%d\n",io.timer);
-    printf("build: %s\n",BUILD);
+    printf("build: darkriscv fw build %s\n",BUILD);
+
+    printf("core0: darkriscv@%d.%dMHz with %s%s%s\n",
+        io.board_cm,                        // board clock MHz
+        io.board_ck,                        // board clock kHz
+        ARCH,                               // architecture
+        threads>1?"+SMT":"",                // SMT support
+        mac(1000,16,16)==1256?"+MAC":"");   // MAC support
+
+    threads = 0; // prepare for the next restart
+
+    printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
+    printf("timr0: periodic timer=%dHz\n",(io.board_cm*1000000+io.board_ck*1000)/(io.timer+1));
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");

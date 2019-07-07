@@ -118,6 +118,7 @@ void banner(void)
       0x45, 0x02, 0x0a, 0x02, 0x00 };
 
   //printf("\33[H\33[2J");
+  putchar('\n');
   
   register int c,s;
   register char *p = rle_logo;

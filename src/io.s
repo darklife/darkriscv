@@ -2,6 +2,7 @@
 	.option nopic
 	.text
 	.globl	board_name
+	.globl	threads
 	.comm	io,16,4
 	.data
 	.align	2
@@ -29,4 +30,10 @@ board_name:
 	.zero	2
 .LC4:
 	.string	"unknown host x86"
+	.section	.sbss,"aw",@nobits
+	.align	2
+	.type	threads, @object
+	.size	threads, 4
+threads:
+	.zero	4
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"
