@@ -72,7 +72,16 @@ char *gets(char *p,int s)
 #ifdef __RISCV__     
     putchar(c);
 #endif
-    *p++ = c;
+    if(c=='\b') // backspace!
+    {
+        if(p!=ret) 
+        {
+            *--p = 0;
+            s++;
+        }
+    }
+    else
+        *p++ = c;
   }
 #ifdef __RISCV__
   putchar('\n');
@@ -135,43 +144,7 @@ void putd(int i)
         }
     }    
 }
-/*
-void putd(int i)
-{
-    int db[10] = { 1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1 };
 
-    int j,k,t,v=0;
-
-    if(i<0)
-    {
-        putchar('-');
-        i=-i;
-    }
-
-    for(j=0;j!=10;j++)
-    {
-        t = db[j];
-
-        for(k=1;k!=10;k++)
-        {
-            if((i-t)<db[j]) break;
-
-            t = t+db[j];
-        }
-
-        if((i-t)>=0)
-        {
-            if(v==0 && k!=0) v=1; // remove leading zeros
-
-            if(v||j==9) putchar(k+'0');
-
-            i=i-t;
-        }
-        else
-            if(v||j==9) putchar('0');
-    }
-}
-*/
 int printf(char *fmt,...)
 {
     va_list ap;

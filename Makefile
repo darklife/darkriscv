@@ -33,6 +33,8 @@
 # makefiles. Of course, you need first set the GCC compiler path/name, the
 # simulator path/name and the board model:
 
+   ARCH = rv32e
+#  ARCH = rv32i
 # CROSS = riscv-elf
 # CROSS = riscv32-unknown-elf
   CROSS = riscv32-embedded-elf
@@ -53,8 +55,8 @@ BIT = tmp/darksocv.bit                      # requires FPGA build tool
 default: all
 
 all:
-	make -C src darksocv.rom    CROSS=$(CROSS) CCPATH=$(CCPATH)
-	make -C src darksocv.ram    CROSS=$(CROSS) CCPATH=$(CCPATH)
+	make -C src darksocv.rom    CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH)
+	make -C src darksocv.ram    CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH)
 	make -C sim all             ICARUS=$(ICARUS) 
 	make -C boards all          BOARD=$(BOARD)
 
@@ -63,6 +65,6 @@ install:
 	make -C boards install      BOARD=$(BOARD)
 
 clean:
-	make -C src clean           CROSS=$(CROSS) CCPATH=$(CCPATH)
-	make -C sim clean           ICARUS=$(ICARUS)
+	make -C src clean
+	make -C sim clean
 	make -C boards clean        BOARD=$(BOARD)

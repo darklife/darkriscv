@@ -32,10 +32,14 @@ ifndef HOST_CC
 endif
 
 ifndef CROSS
+    ARCH = rv32i
+    #ARCH = rv32e
+
     #CROSS = riscv-elf
-    #CROSS = riscv32-unknown-elf
-    CROSS = riscv32-embedded-elf
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
+    
+    CROSS = riscv32-unknown-elf
+    #CROSS = riscv32-embedded-elf
     CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
 endif
 
@@ -49,7 +53,6 @@ endif
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
 
-   ARCH = rv32e
 CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=$(ARCH) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0

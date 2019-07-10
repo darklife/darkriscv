@@ -105,51 +105,37 @@ int main(void)
               }
           }
           else
-          if(!strncmp(argv[0],"rd",2))
+          if(!strncmp(argv[0],"rd",2)||!strncmp(argv[0],"wr",2))
           {
-              int k = xtoi(argv[1]);
-          
-              if(argv[0][2]=='b') printf("%x: %x\n",k,*((char  *)k)); 
-              if(argv[0][2]=='w') printf("%x: %x\n",k,*((short *)k));
-              if(argv[0][2]=='l') printf("%x: %x\n",k,*((int   *)k));
-              if(argv[0][2]=='m')
-              {
-                  int j,i = xtoi(argv[2]);
-                  
-                  printf("%x: ",k);
-                  for(j=0;i--;j++)
-                  {
-                      if(argv[0][3]=='b') printf("%x ",j[(char  *)k]);
-                      if(argv[0][3]=='w') printf("%x ",j[(short *)k]);
-                      if(argv[0][3]=='l') printf("%x ",j[(int   *)k]);
-                  }
-                  printf("\n");
-              }              
-          }
-          else
-          if(!strncmp(argv[0],"wr",2))
-          {
-              int k = xtoi(argv[1]);
-              int w = xtoi(argv[2]);
+              int kp = 2,
+                  i = 1,j,k,w,
+                  vp = 1;
               
-              if(argv[0][2]=='b') printf("%x: %x\n",k,*((char  *)k)=w);
-              if(argv[0][2]=='w') printf("%x: %x\n",k,*((short *)k)=w);
-              if(argv[0][2]=='l') printf("%x: %x\n",k,*((int   *)k)=w);
-              if(argv[0][2]=='m')
+              if(argv[0][kp]=='m')
               {
-                  int j,i = xtoi(argv[0]);
-                  
-                  printf("%x: ",xtoi(argv[0]));
-                  for(j=0;i--;j++)
+                  i=xtoi(argv[vp++]);
+                  kp++;
+              }
+          
+              printf("%x: ",k=xtoi(argv[vp++]));
+              
+              for(j=0;i--;j++)
+              {
+                  if(argv[0][0]=='r')
                   {
-                      int h = xtoi(argv[3]);
-                      
-                      if(argv[0][3]=='b') printf("%x ",j[(char  *)w]=h);
-                      if(argv[0][3]=='w') printf("%x ",j[(short *)w]=h);
-                      if(argv[0][3]=='l') printf("%x ",j[(int   *)w]=h);
+                      if(argv[0][kp]=='b') printf("%x ",j[(char  *)k]);
+                      if(argv[0][kp]=='w') printf("%x ",j[(short *)k]);
+                      if(argv[0][kp]=='l') printf("%x ",j[(int   *)k]);
                   }
-                  printf("\n");
-              }              
+                  else
+                  {
+                      w = xtoi(argv[vp++]);
+                      if(argv[0][kp]=='b') printf("%x ",j[(char  *)k]=w);
+                      if(argv[0][kp]=='w') printf("%x ",j[(short *)k]=w);
+                      if(argv[0][kp]=='l') printf("%x ",j[(int   *)k]=w);
+                  }
+              }
+              printf("\n");
           }
           else
           if(!strcmp(argv[0],"led"))
@@ -208,6 +194,4 @@ int main(void)
           }
        }
     }
-
-    return 0;
 }
