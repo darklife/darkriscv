@@ -29,14 +29,15 @@
  */
 
 `timescale 1ns / 1ps
+`include "../rtl/config.vh"
 
 // the following defines are user defined:
 
 //`define __ICACHE__              // instruction cache
 //`define __DCACHE__              // data cache (bug: simulation only)
 //`define __WAITSTATES__          // wait-state tests, no cache
-`define __3STAGE__              // single phase 3-state pipeline 
-`define __INTERRUPT__           // interrupt controller
+//`define __3STAGE__              // single phase 3-state pipeline 
+//`define __INTERRUPT__           // interrupt controller
 
 // the board is automatically defined in the xst/xise files via 
 // Makefile or ISE otherwise, please define you board name here:
@@ -46,7 +47,7 @@
 //`define QMTECH_SDRAM_LX16
 
 // the following defines are automatically defined:
-
+/*
 `ifdef __ICARUS__
     `define SIMULATION 1
 `endif
@@ -91,7 +92,7 @@
     `define BOARD_ID 0    
     `define BOARD_CK 100000000   
 `endif
-
+*/
 module darksocv
 (
     input        XCLK,      // external clock
@@ -118,7 +119,7 @@ module darksocv
     
 `ifdef BOARD_CK_REF
 
-    `define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
+    //`define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
 
     wire DCM_LOCKED;
     
@@ -407,11 +408,11 @@ module darksocv
     reg [1:0] DACK = 0;
     
     wire WHIT = 1;
-    wire DHIT = !((RD) && DACK!=1);
+    wire DHIT = !((RD/*||WR*/) && DACK!=1); // the WR operatio does not need ws. in this config.
     
     always@(posedge CLK) // stage #1.0
     begin
-        DACK <= RES ? 0 : DACK ? DACK-1 : (RD) ? 1 : 0; // wait-states
+        DACK <= RES ? 0 : DACK ? DACK-1 : (RD/*||WR*/) ? 1 : 0; // wait-states
     end
 
 `else
@@ -524,9 +525,9 @@ module darksocv
     wire       UART_IRQ;
 
     darkuart
-    #( 
-      .BAUD((`BOARD_CK/115200))
-    )
+//    #( 
+//      .BAUD((`BOARD_CK/115200))
+//    )
     uart0
     (
       .CLK(CLK),
@@ -547,10 +548,10 @@ module darksocv
     wire [3:0] KDEBUG;
 
     darkriscv
-    #(
-        .RESET_PC(32'h00000000),
-        .RESET_SP(32'h00002000)
-    ) 
+//    #(
+//        .RESET_PC(32'h00000000),
+//        .RESET_SP(32'h00002000)
+//    ) 
     core0 
     (
 `ifdef __3STAGE__

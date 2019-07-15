@@ -29,6 +29,7 @@
  */
 
 `timescale 1ns / 1ps
+`include "../rtl/config.vh"
 
 // implemented opcodes:
 
@@ -60,7 +61,7 @@
 // keep a good performance most of time (instruction per clock = 1). of course, read operations 
 // require 1 wait-state, which means sometimes the read performance is reduced.
 
-`define __3STAGE__
+//`define __3STAGE__
 
 // interrupt handling:
 //
@@ -70,7 +71,7 @@
 // performance impact.
 // Note: interrupts are currently supported only in the 3-stage pipeline version.
 
-`define __INTERRUPT__ 
+//`define __INTERRUPT__ 
 
 // performance measurements can be done in the simulation level by eabling the __PERFMETER__
 // define, in order to check how the MHz are used :)
@@ -85,13 +86,14 @@
 // used to accelerate the mul/div operations, the mac operation is designed for DSP applications.
 // with some effort (low level machine code), it is possible peak 100MMAC/s @100MHz.
 
-`define __MAC16X16__
+//`define __MAC16X16__
 
 module darkriscv
-#(
-    parameter [31:0] RESET_PC = 0,
-    parameter [31:0] RESET_SP = 4096
-) (
+//#(
+//    parameter [31:0] RESET_PC = 0,
+//    parameter [31:0] RESET_SP = 4096
+//) 
+(
     input             CLK,   // clock
     input             RES,   // reset
     input             HLT,   // halt
@@ -177,8 +179,11 @@ module darkriscv
     end
 
     // decode: after XIDATA
-
+`ifdef __3STAGE__
     reg [1:0] FLUSH = -1;  // flush instruction pipeline
+`else
+    reg FLUSH = -1;  // flush instruction pipeline
+`endif
 
 `ifdef __INTERRUPT__    
 
@@ -363,7 +368,7 @@ module darkriscv
             if(HLT)             halt=halt+1;
             if(FLUSH)           flush=flush+1;
                 
-            if(clocks && clocks%10000==0)     
+            if(clocks && clocks%`__PERFMETER__==0)     
             begin
                 $display("%d clocks: %0d%% user, %0d%% super, %0d%% ws, %0d%% flush",
                     clocks,
@@ -378,6 +383,8 @@ module darkriscv
 
     always@(posedge CLK)
     begin
+        RESMODE <= RESMODE +1;
+
 `ifdef __3STAGE__
 	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt                              
 	                       FLUSH ? FLUSH-1 :                           
@@ -387,7 +394,7 @@ module darkriscv
                        (JAL||JALR||BMUX);  // flush the pipeline!
 `endif
 
-        REG1[DPTR] <=   RES ? (RESMODE[4:0]==2 ? RESET_SP : 0)  :        // reset sp
+        REG1[DPTR] <=   RES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
                        HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
@@ -404,7 +411,7 @@ module darkriscv
                        //CCC ? CDATA : 
                              REG1[DPTR];
 
-        REG2[DPTR] <=   RES ? (RESMODE[4:0]==2 ? RESET_SP : 0) :        // reset sp
+        REG2[DPTR] <=   RES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0) :        // reset sp
                        HLT ? REG2[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
@@ -427,9 +434,9 @@ module darkriscv
 
         RESMODE <= RESMODE+1; // used in the reset to initilize all registers!
 
-        NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2[XMODE];
+        NXPC <= /*RES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
 
-        NXPC2[RES ? RESMODE[0] : XMODE] <=  RES ? RESET_PC : HLT ? NXPC2[XMODE] :   // reset and halt
+        NXPC2[RES ? RESMODE[0] : XMODE] <=  RES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
@@ -438,22 +445,20 @@ module darkriscv
                  XMODE==1&&!IREQ&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
 
 `else
-        RESMODE <= RESMODE +1;
-
-        NXPC <= /*RES ? RESET_PC :*/ HLT ? NXPC : NXPC2;
+        NXPC <= /*RES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
 	
-	    NXPC2 <=  RES ? RESET_PC : HLT ? NXPC2 :   // reset and halt
+	    NXPC2 <=  RES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
 
 `endif
 
 `else
-        NXPC <= RES ? RESET_PC : HLT ? NXPC :   // reset and halt
+        NXPC <= RES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
 `endif
-        PC   <= /*RES ? RESET_PC :*/ HLT ? PC : NXPC; // current program counter
+        PC   <= /*RES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
     end
 
     // IO and memory interface

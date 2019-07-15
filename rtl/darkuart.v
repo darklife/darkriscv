@@ -29,9 +29,10 @@
  */
 
 `timescale 1ns / 1ps
+`include "../rtl/config.vh"
 
 // the following defines are automatically defined:
-
+/*
 `ifdef __ICARUS__
     `define SIMULATION 1
 `endif
@@ -47,7 +48,7 @@
 `ifdef XILINX_SIMULATOR
     `define SIMULATION 4
 `endif
-
+*/
 // uart states
 
 `define UART_STATE_IDLE  6
@@ -71,9 +72,10 @@
 // 3: baud rate lsb   rw (not used)
 
 module darkuart
-#(
-  parameter [15:0] BAUD = 0
-) (
+//#(
+// parameter [15:0] BAUD = 0
+//) 
+(
     input           CLK,            // clock
     input           RES,            // reset
         
@@ -90,7 +92,7 @@ module darkuart
     output [3:0]    DEBUG           // osc debug
 );
 
-    reg [15:0]  UART_TIMER = BAUD;  // baud rate config
+    reg [15:0]  UART_TIMER = `__BAUD__;  // baud rate from config.vh
     reg         UART_IREQ  = 0;     // UART interrupt req
     reg         UART_IACK  = 0;     // UART interrupt ack
 
