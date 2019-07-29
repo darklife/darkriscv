@@ -66,16 +66,16 @@
 
 `define __3STAGE__
 
-// interrupt handling:
+// muti-threading support:
 //
 // Decreases clock performance by 10% (90MHz), but enables two contexts
-// (threads) in the core.  They start in the same code, but the interrupt
+// (threads) in the core.  They start in the same code, but the "interrupt"
 // handling is locked in a separate loop and the conext switch is always
 // delayed until the next pipeline flush, in order to decrease the
-// performance impact.  Note: interrupts are currently supported only in the
+// performance impact.  Note: threading is currently supported only in the
 // 3-stage pipeline version.
 
-`define __INTERRUPT__ 
+//`define __THREADING__ 
 
 // performance measurement:
 //
@@ -96,7 +96,15 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 
-`define __MAC16X16__
+//`define __MAC16X16__
+
+// RV32I vs RV32E:
+//
+// The difference between the RV32I and RV32E regarding the logic space is 
+// minimal in typical applications with modern 5 or 6 input LUT based FPGAs, 
+// but the RV32E is better with old 4 input LUT based FPGAs.
+
+`define __RV32E__
 
 // initial PC and SP
 //
@@ -140,13 +148,17 @@
 
 `ifdef AVNET_MICROBOARD_LX9
     `define BOARD_ID 1
-    `define BOARD_CK 100000000
+    //`define BOARD_CK 100000000
     //`define BOARD_CK 66666666
     //`define BOARD_CK 40000000
     // example of DCM logic:
-    //`define BOARD_CK_REF 66666666 
-    //`define BOARD_CK_MUL 3
-    //`define BOARD_CK_DIV 2
+    `define BOARD_CK_REF 100000000
+    `define BOARD_CK_MUL 2
+    `ifdef __3STAGE__
+        `define BOARD_CK_DIV 2 // 100MHz 
+    `else
+        `define BOARD_CK_DIV 4 // 50MHz
+    `endif
 `endif
 
 `ifdef XILINX_AC701_A200

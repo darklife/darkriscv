@@ -37,7 +37,7 @@
 //`define __DCACHE__              // data cache (bug: simulation only)
 //`define __WAITSTATES__          // wait-state tests, no cache
 //`define __3STAGE__              // single phase 3-state pipeline 
-//`define __INTERRUPT__           // interrupt controller
+//`define __THREADING__           // interrupt controller
 
 // the board is automatically defined in the xst/xise files via 
 // Makefile or ISE otherwise, please define you board name here:
@@ -408,11 +408,11 @@ module darksocv
     reg [1:0] DACK = 0;
     
     wire WHIT = 1;
-    wire DHIT = !((RD/*||WR*/) && DACK!=1); // the WR operatio does not need ws. in this config.
+    wire DHIT = !((RD||WR) && DACK!=1); // the WR operatio does not need ws. in this config.
     
     always@(posedge CLK) // stage #1.0
     begin
-        DACK <= RES ? 0 : DACK ? DACK-1 : (RD/*||WR*/) ? 1 : 0; // wait-states
+        DACK <= RES ? 0 : DACK ? DACK-1 : (RD||WR) ? 1 : 0; // wait-states
     end
 
 `else
@@ -431,19 +431,42 @@ module darksocv
 
     //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[11:2]];
     
+    reg [31:0] IOMUXFF;
+
+    //individual byte/word/long selection, thanks to HYF!
+    
     always@(posedge CLK)
     begin    
-        //if(WR&&DADDR[31]==0&&DADDR[12]==1)
-        //begin
-            //individual byte/word/long selection, thanks to HYF!
-            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
-            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-            if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        //end
+
+`ifdef __3STAGE__
+
+        // read-modify-write operation w/ 1 wait-state:
+
+        if(!HLT&&WR&&DADDR[31]==0&&DADDR[12]==1)
+        begin
+            RAM[DADDR[11:2]] <= {
+                                    BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
+                                    BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
+                                    BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
+                                    BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
+                                };
+        end
+
+`else
+        // write-only operation w/ 0 wait-states:
+
+        if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(WR&&DADDR[31]==0&&DADDR[12]==1&&BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+
+`endif
+
+        IOMUXFF <= IOMUX[DADDR[3:2]]; // read w/ 2 wait-states
     end    
-    
-    assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
+
+    //assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
+    assign DATAI = DADDR[31] ? /*IOMUX[DADDR[3:2]]*/ IOMUXFF  : RAMFF;
 
 `endif
 
@@ -451,6 +474,7 @@ module darksocv
 
     reg IREQ = 0;
     reg IACK = 0;
+    reg [31:0] TIMERFF = 0; // timer disabled
 
     wire [7:0] BOARD_IRQ;
 
@@ -464,7 +488,6 @@ module darksocv
     assign IOMUX[3] = TIMERFF;
 
     reg [31:0] TIMER = 0;
-    reg [31:0] TIMERFF = 0; // timer disabled
 
     reg XTIMER = 0;
 
@@ -488,7 +511,7 @@ module darksocv
             TIMERFF <= DATAO[31:0];
         end
         
-`ifdef __INTERRUPT__
+`ifdef __THREADING__
         if(RES)
             IACK <= IREQ;
         else
@@ -561,7 +584,7 @@ module darksocv
 `endif
         .RES(RES),
         .HLT(HLT),
-`ifdef __INTERRUPT__        
+`ifdef __THREADING__        
         .IREQ(IREQ^IACK),
 `endif        
         .IDATA(IDATA),

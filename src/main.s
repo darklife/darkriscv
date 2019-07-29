@@ -491,8 +491,7 @@ main:
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC0:
-	.string	"+SMT"
-	.zero	3
+	.string	"+MT"
 .LC1:
 	.string	""
 	.zero	3
@@ -503,7 +502,7 @@ main:
 	.string	"board: %s (id=%d)\n"
 	.zero	1
 .LC4:
-	.string	"Wed, 10 Jul 2019 03:17:16 -0300"
+	.string	"Mon, 29 Jul 2019 02:41:26 -0300"
 .LC5:
 	.string	"build: darkriscv fw build %s\n"
 	.zero	2

@@ -71,7 +71,7 @@ MAP = $(TMP)/darksocv_map.ncd
 UT  = $(ISE)/darksocv.ut
 
 PRJS = $(ISE)/darksocv.prj
-RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v
+RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v $(RTL)/config.vh
 BOOT = $(SRC)/darksocv.rom $(SRC)/darksocv.ram
 IMP  = $(ISE)/darksocv.imp
 

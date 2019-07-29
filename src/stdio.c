@@ -103,46 +103,48 @@ int puts(char *p)
   return putchar('\n');
 }
 
-void putx(unsigned i)
+void putdx(unsigned i, int mode) // mode1 = dec, mode0 = hex
 {
     char *hex="0123456789abcdef";
 
-    int db[] = { 16777216, 65536, 256, 1, 0 };
+    int dbd[] = { 1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1, 0 };
+    int dbx[] = { 16777216, 65536, 256, 1, 0 };
 
-    int j=0,k=24,l;
-    
-    for(j=0;(l=db[j]);j++)
-    {
-        if(l==1 || i>=l)
-        {
-            putchar(hex[(i>>(k+4))&15]);
-            putchar(hex[(i>>k)&15]);
-        }
-        k-=8;
-    }
-}
+    int *db = mode ? dbd : dbx;
 
-void putd(int i)
-{
-    char *dec="0123456789";
-    
-    int db[] = { 1000000000, 100000000, 10000000, 1000000, 100000, 10000, 1000, 100, 10, 1, 0 };
-
-    if(i<0)
+    if(mode && i<0)
     {
         putchar('-');
         i=-1;
     }
-    
-    int j,l;
-    
-    for(j=0;(l=db[j]);j++)
+
+    int j,k,l;
+
+    for(j=0,k=24;(l=db[j]);j++,k-=8)
     {
         if(l==1 || i>=l)
         {
-            putchar(dec[(i/l)%10]);
+            if(mode)
+            {
+                putchar(hex[(i/l)%10]);
+            }
+            else
+            {
+                putchar(hex[(i>>(k+4))&15]);
+                putchar(hex[(i>>k)&15]);
+            }
         }
-    }    
+    }
+}
+
+void putx(unsigned i)
+{
+    putdx(i,0);
+}
+
+void putd(int i)
+{
+    putdx(i,1);
 }
 
 int printf(char *fmt,...)

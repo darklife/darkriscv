@@ -46,7 +46,7 @@ int main(void)
         io.board_cm,                        // board clock MHz
         io.board_ck,                        // board clock kHz
         ARCH,                               // architecture
-        threads>1?"+SMT":"",                // SMT support
+        threads>1?"+MT":"",                 //  MT support
         mac(1000,16,16)==1256?"+MAC":"");   // MAC support
 
     threads = 0; // prepare for the next restart

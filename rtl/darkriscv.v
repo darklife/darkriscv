@@ -29,7 +29,6 @@
  */
 
 `timescale 1ns / 1ps
-`include "../rtl/config.vh"
 
 // implemented opcodes:
 
@@ -49,44 +48,9 @@
 `define FCC     7'b00011_11      // fencex
 `define CCC     7'b11100_11      // exx, csrxx
 
-// pipeline stages:
-// 
-// 2-stages: core and memory in different clock edges result in less clock performance, but
-// less losses when the program counter changes (pipeline flush = 1 clock). Works like a 4-stage
-// pipeline and remember the 68040 clock scheme, with instruction per clock = 1. 
-// alternatively, it is possible work w/ 1 wait-state and 1 clock edge, but with a penalty in 
-// performance (instruction per clock = 0.5).
-//
-// 3-stage: core and memory in the same clock edge require one extra stage in the pipeline, but
-// keep a good performance most of time (instruction per clock = 1). of course, read operations 
-// require 1 wait-state, which means sometimes the read performance is reduced.
+// configuration file
 
-//`define __3STAGE__
-
-// interrupt handling:
-//
-// decreases clock performance by 10% (90MHz), but enables two contexts (threads) in the core. 
-// They start in the same code, but the interrupt handling is locked in a separate loop and the
-// conext switch is always delayed until the next pipeline flush, in order to decrease the 
-// performance impact.
-// Note: interrupts are currently supported only in the 3-stage pipeline version.
-
-//`define __INTERRUPT__ 
-
-// performance measurements can be done in the simulation level by eabling the __PERFMETER__
-// define, in order to check how the MHz are used :)
-
-//`define __PERFMETER__
-
-// mac instruction: 
-// 
-// the mac instruction is similar to other register to register instructions, but with a different
-// opcode 7'h1111111. the format is mac rd,r1,r2, but is not currently possible encode in asm, by 
-// this way it is available in licb as int mac(int rd, short r1, short r2). Although it can be
-// used to accelerate the mul/div operations, the mac operation is designed for DSP applications.
-// with some effort (low level machine code), it is possible peak 100MMAC/s @100MHz.
-
-//`define __MAC16X16__
+`include "../rtl/config.vh"
 
 module darkriscv
 //#(
@@ -98,7 +62,7 @@ module darkriscv
     input             RES,   // reset
     input             HLT,   // halt
     
-`ifdef __INTERRUPT__    
+`ifdef __THREADING__    
     input             IREQ,  // irq req
 `endif    
 
@@ -122,7 +86,7 @@ module darkriscv
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
 
-`ifdef __INTERRUPT__
+`ifdef __THREADING__
     reg XMODE = 0;     // 0 = user, 1 = exception
 `endif
     
@@ -185,26 +149,46 @@ module darkriscv
     reg FLUSH = -1;  // flush instruction pipeline
 `endif
 
-`ifdef __INTERRUPT__    
+`ifdef __THREADING__    
 
-    reg [5:0] RESMODE = 0;
+    `ifdef __RV32E__
+    
+        reg [4:0] RESMODE = 0;
+
+        wire [4:0] DPTR   = RES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
+        wire [4:0] S1PTR  = { XMODE, XIDATA[18:15] };
+        wire [4:0] S2PTR  = { XMODE, XIDATA[23:20] };
+    `else
+        reg [5:0] RESMODE = 0;
+
+        wire [5:0] DPTR   = RES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
+        wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
+        wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
+    `endif
 
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [5:0] DPTR   = RES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
     wire [2:0] FCT3   = XIDATA[14:12];
-    wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
-    wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
     wire [6:0] FCT7   = XIDATA[31:25];
 
 `else
 
-    reg [4:0] RESMODE = 0;
+    `ifdef __RV32E__    
+    
+        reg [3:0] RESMODE = 0;
+    
+        wire [3:0] DPTR   = RES ? RESMODE : XIDATA[10: 7]; // set SP_RESET when RES==1
+        wire [3:0] S1PTR  = XIDATA[18:15];
+        wire [3:0] S2PTR  = XIDATA[23:20];
+    `else
+        reg [4:0] RESMODE = 0;
+    
+        wire [4:0] DPTR   = RES ? RESMODE : XIDATA[11: 7]; // set SP_RESET when RES==1
+        wire [4:0] S1PTR  = XIDATA[19:15];
+        wire [4:0] S2PTR  = XIDATA[24:20];    
+    `endif
 
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [4:0] DPTR   = RES ? RESMODE : XIDATA[11: 7]; // set SP_RESET when RES==1
     wire [2:0] FCT3   = XIDATA[14:12];
-    wire [4:0] S1PTR  = XIDATA[19:15];
-    wire [4:0] S2PTR  = XIDATA[24:20];
     wire [6:0] FCT7   = XIDATA[31:25];
 
 `endif
@@ -229,15 +213,20 @@ module darkriscv
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
-`ifdef __INTERRUPT__
+`ifdef __THREADING__
 `ifdef __3STAGE__
     reg [31:0] NXPC2 [0:1];       // 32-bit program counter t+2
 `endif
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
-    
-    reg [31:0] REG1 [0:63];	// general-purpose 32x32-bit registers (s1)
-    reg [31:0] REG2 [0:63];	// general-purpose 32x32-bit registers (s2)
+
+    `ifdef __RV32E__
+        reg [31:0] REG1 [0:31];	// general-purpose 16x32-bit registers (s1)
+        reg [31:0] REG2 [0:31];	// general-purpose 16x32-bit registers (s2)
+    `else
+        reg [31:0] REG1 [0:63];	// general-purpose 32x32-bit registers (s1)
+        reg [31:0] REG2 [0:63];	// general-purpose 32x32-bit registers (s2)    
+    `endif
 /*
     integer i; 
     initial 
@@ -253,9 +242,14 @@ module darkriscv
 `endif
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
-    
-    reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
-    reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
+
+    `ifdef __RV32E__
+        reg [31:0] REG1 [0:31];	// general-purpose 16x32-bit registers (s1)
+        reg [31:0] REG2 [0:31];	// general-purpose 16x32-bit registers (s2)
+    `else
+        reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
+        reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
+    `endif
 /*
     integer i; 
     initial 
@@ -357,7 +351,7 @@ module darkriscv
         begin
             clocks = clocks+1;
 
-    `ifdef __INTERRUPT__
+    `ifdef __THREADING__
     
             if(XMODE==0 && !HLT && !FLUSH)      user  = user +1;
             if(XMODE==1 && !HLT && !FLUSH)      super = super+1;
@@ -394,7 +388,11 @@ module darkriscv
                        (JAL||JALR||BMUX);  // flush the pipeline!
 `endif
 
+`ifdef __RV32E__
+        REG1[DPTR] <=   RES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+`else
         REG1[DPTR] <=   RES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+`endif
                        HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
@@ -410,8 +408,11 @@ module darkriscv
                        //RCC ? RDATA : 
                        //CCC ? CDATA : 
                              REG1[DPTR];
-
+`ifdef __RV32E__
+        REG2[DPTR] <=   RES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0) :        // reset sp
+`else        
         REG2[DPTR] <=   RES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0) :        // reset sp
+`endif        
                        HLT ? REG2[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PC+SIMM :
@@ -430,9 +431,7 @@ module darkriscv
 
 `ifdef __3STAGE__
 
-`ifdef __INTERRUPT__
-
-        RESMODE <= RESMODE+1; // used in the reset to initilize all registers!
+`ifdef __THREADING__
 
         NXPC <= /*RES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
 
@@ -480,7 +479,7 @@ module darkriscv
                                                      4'b1111; // sw/lw
 
 `ifdef __3STAGE__
-`ifdef __INTERRUPT__
+`ifdef __THREADING__
 	assign IADDR = NXPC2[XMODE];
 `else
     assign IADDR = NXPC2;

@@ -31,9 +31,11 @@ ifndef ICARUS
 endif
 
 RTLS = darksimv.v ../rtl/darksocv.v ../rtl/darkuart.v ../rtl/darkriscv.v
+INCS = ../rtl/config.vh
 SRCS = ../src/darksocv.rom ../src/darksocv.ram
 XSIM = darksocv.o
 VCDS = darksocv.vcd
+DEPS = $(SRCS) $(RTLS) $(INCS)
 
 all: $(VCDS)
 
@@ -44,5 +46,5 @@ $(VCDS): $(XSIM)
 	./$(XSIM)
 	echo simulation ok.
 
-$(XSIM): $(SRCS) $(RTLS)
+$(XSIM): $(DEPS)
 	$(ICARUS) -I ../rtl -o $(XSIM) $(RTLS)

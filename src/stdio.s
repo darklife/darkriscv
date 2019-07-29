@@ -129,106 +129,95 @@ puts:
 	addi	sp,sp,12
 	tail	putchar
 	.size	puts, .-puts
+	.globl	__udivsi3
+	.globl	__umodsi3
+	.align	2
+	.globl	putdx
+	.type	putdx, @function
+putdx:
+	addi	sp,sp,-84
+	sw	a1,0(sp)
+	lui	a1,%hi(.LANCHOR0)
+	sw	s0,76(sp)
+	sw	s1,72(sp)
+	li	a2,44
+	addi	s1,a1,%lo(.LANCHOR0)
+	mv	s0,a0
+	addi	a1,a1,%lo(.LANCHOR0)
+	addi	a0,sp,28
+	sw	ra,80(sp)
+	call	memcpy
+	li	a2,20
+	addi	a1,s1,44
+	addi	a0,sp,8
+	call	memcpy
+	lw	a4,0(sp)
+	addi	a5,sp,8
+	beqz	a4,.L32
+	addi	a5,sp,28
+.L32:
+	li	s1,24
+.L33:
+	lw	a1,0(a5)
+	bnez	a1,.L37
+	lw	ra,80(sp)
+	lw	s0,76(sp)
+	lw	s1,72(sp)
+	addi	sp,sp,84
+	jr	ra
+.L37:
+	li	a4,1
+	beq	a1,a4,.L34
+	bgtu	a1,s0,.L35
+.L34:
+	lw	a3,0(sp)
+	lui	a4,%hi(.LC3)
+	sw	a5,4(sp)
+	addi	a4,a4,%lo(.LC3)
+	beqz	a3,.L36
+	mv	a0,s0
+	call	__udivsi3
+	li	a1,10
+	call	__umodsi3
+	lui	a5,%hi(.LC3)
+	addi	a4,a5,%lo(.LC3)
+	add	a0,a4,a0
+	lbu	a0,0(a0)
+.L41:
+	call	putchar
+	lw	a5,4(sp)
+.L35:
+	addi	s1,s1,-8
+	addi	a5,a5,4
+	j	.L33
+.L36:
+	addi	a3,s1,4
+	srl	a3,s0,a3
+	andi	a3,a3,15
+	add	a3,a4,a3
+	lbu	a0,0(a3)
+	call	putchar
+	srl	a0,s0,s1
+	lui	a5,%hi(.LC3)
+	andi	a0,a0,15
+	addi	a4,a5,%lo(.LC3)
+	add	a4,a4,a0
+	lbu	a0,0(a4)
+	j	.L41
+	.size	putdx, .-putdx
 	.align	2
 	.globl	putx
 	.type	putx, @function
 putx:
-	addi	sp,sp,-36
-	lui	a1,%hi(.LANCHOR0)
-	sw	s0,28(sp)
-	li	a2,20
-	mv	s0,a0
-	addi	a1,a1,%lo(.LANCHOR0)
-	addi	a0,sp,4
-	sw	s1,24(sp)
-	sw	ra,32(sp)
-	call	memcpy
-	addi	s1,sp,4
-	li	a4,24
-	lui	a3,%hi(.LC3)
-.L32:
-	lw	a5,0(s1)
-	bnez	a5,.L35
-	lw	ra,32(sp)
-	lw	s0,28(sp)
-	lw	s1,24(sp)
-	addi	sp,sp,36
-	jr	ra
-.L35:
-	li	a2,1
-	beq	a5,a2,.L33
-	bgtu	a5,s0,.L34
-.L33:
-	addi	a5,a4,4
-	srl	a5,s0,a5
-	addi	a2,a3,%lo(.LC3)
-	andi	a5,a5,15
-	add	a5,a5,a2
-	lbu	a0,0(a5)
-	sw	a4,0(sp)
-	call	putchar
-	lw	a4,0(sp)
-	srl	a5,s0,a4
-	lui	a4,%hi(.LC3)
-	addi	a2,a4,%lo(.LC3)
-	andi	a5,a5,15
-	add	a5,a5,a2
-	lbu	a0,0(a5)
-	call	putchar
-	lw	a4,0(sp)
-	lui	a3,%hi(.LC3)
-.L34:
-	addi	a4,a4,-8
-	addi	s1,s1,4
-	j	.L32
+	li	a1,0
+	tail	putdx
 	.size	putx, .-putx
-	.globl	__divsi3
-	.globl	__modsi3
 	.align	2
 	.globl	putd
 	.type	putd, @function
 putd:
-	addi	sp,sp,-56
-	lui	a1,%hi(.LANCHOR0+20)
-	sw	s1,44(sp)
-	li	a2,44
-	mv	s1,a0
-	addi	a1,a1,%lo(.LANCHOR0+20)
-	mv	a0,sp
-	sw	ra,52(sp)
-	sw	s0,48(sp)
-	call	memcpy
-	bgez	s1,.L38
-	li	a0,45
-	call	putchar
-	li	s1,-1
-.L38:
-	mv	s0,sp
-.L39:
-	lw	a1,0(s0)
-	bnez	a1,.L42
-	lw	ra,52(sp)
-	lw	s0,48(sp)
-	lw	s1,44(sp)
-	addi	sp,sp,56
-	jr	ra
-.L42:
-	li	a4,1
-	beq	a1,a4,.L40
-	blt	s1,a1,.L41
-.L40:
-	mv	a0,s1
-	call	__divsi3
-	li	a1,10
-	call	__modsi3
-	lui	a5,%hi(.LC4)
-	addi	a4,a5,%lo(.LC4)
-	add	a0,a4,a0
-	lbu	a0,0(a0)
-	call	putchar
-.L41:
-	addi	s0,s0,4
-	j	.L39
+	li	a1,1
+	tail	putdx
 	.size	putd, .-putd
 	.align	2
 	.globl	printf
@@ -382,16 +371,16 @@ strtok:
 	call	strlen
 	mv	a3,a0
 	bnez	s0,.L78
-	lui	a5,%hi(nxt.1626)
-	lw	s0,%lo(nxt.1626)(a5)
+	lui	a5,%hi(nxt.1625)
+	lw	s0,%lo(nxt.1625)(a5)
 	beqz	s0,.L79
 .L78:
 	mv	a5,s0
 .L80:
 	lbu	a4,0(a5)
 	bnez	a4,.L81
-	lui	a5,%hi(nxt.1626)
-	sw	zero,%lo(nxt.1626)(a5)
+	lui	a5,%hi(nxt.1625)
+	sw	zero,%lo(nxt.1625)(a5)
 	j	.L79
 .L81:
 	mv	a2,a3
@@ -405,8 +394,8 @@ strtok:
 	addi	a4,a5,1
 	bnez	a0,.L82
 	sb	zero,0(a5)
-	lui	a5,%hi(nxt.1626)
-	sw	a4,%lo(nxt.1626)(a5)
+	lui	a5,%hi(nxt.1625)
+	sw	a4,%lo(nxt.1625)(a5)
 .L79:
 	mv	a0,s0
 	lw	ra,16(sp)
@@ -482,7 +471,7 @@ xtoi:
 	.type	mac, @function
 mac:
  #APP
-# 269 "stdio.c" 1
+# 271 "stdio.c" 1
 	.word 0x00c5857F
 # 0 "" 2
  #NO_APP
@@ -654,12 +643,6 @@ __modsi3:
 	.align	2
 	.set	.LANCHOR0,. + 0
 .LC0:
-	.word	16777216
-	.word	65536
-	.word	256
-	.word	1
-	.word	0
-.LC1:
 	.word	1000000000
 	.word	100000000
 	.word	10000000
@@ -671,6 +654,12 @@ __modsi3:
 	.word	10
 	.word	1
 	.word	0
+.LC1:
+	.word	16777216
+	.word	65536
+	.word	256
+	.word	1
+	.word	0
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC2:
@@ -678,13 +667,10 @@ __modsi3:
 	.zero	1
 .LC3:
 	.string	"0123456789abcdef"
-	.zero	3
-.LC4:
-	.string	"0123456789"
 	.section	.sbss,"aw",@nobits
 	.align	2
-	.type	nxt.1626, @object
-	.size	nxt.1626, 4
-nxt.1626:
+	.type	nxt.1625, @object
+	.size	nxt.1625, 4
+nxt.1625:
 	.zero	4
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

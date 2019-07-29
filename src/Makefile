@@ -32,8 +32,8 @@ ifndef HOST_CC
 endif
 
 ifndef CROSS
-    ARCH = rv32i
-    #ARCH = rv32e
+    #ARCH = rv32i
+    ARCH = rv32e
 
     #CROSS = riscv-elf
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin

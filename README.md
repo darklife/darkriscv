@@ -71,7 +71,7 @@ Some extra features are planned for the furure or under development:
 - sdram controller
 - branch predictor 
 - ethernet controller (GbE)
-- multi-threading (SMT)
+- multi-threading (coarse-grained MT)
 - multi-processing (SMP)
 - network on chip (NoC)
 - rv32e support (less registers, more threads)
@@ -525,7 +525,7 @@ interrupts.  As long the interrupt handling and, in a general way, threading
 requires flush the current pipelines in order to change context, by this
 way, match the interrupt/threading with the pipeline flush makes some sense!
 
-With the option __INTERRUPT__ is possible test this feature. 
+With the option __THREADING__ is possible test this feature. 
 
 The implementation is in very early stages of development and does not
 handle correctly the initial SP and PC.  Anyway, it works and enables the
@@ -610,7 +610,14 @@ For speed grade 3:
 - Artix-7: 	202MHz
 - Kintex-7:	266MHz
 
-The Kintex-7 can reach, theorcally 186MIPS w/ gcc -O1.
+The Kintex-7 can reach, theorically 186MIPS w/ gcc -O1.
+
+This performance is reached w/o the MAC and THREADING activated.  Thanks to
+the RV32E option, the synthesis for the Spartan-3E is now possible with
+resulting in 95% of LUT occupation in the case of the low-cost 100E model
+and 70MHz clock (synthesis only and speed grade 5):
+
+- Spartan-3E:   70MHz
 
 For the 2-stage version and speed grade 2, we have less impact from the
 pipeline flush (20%), no impact in the load and some impact in the clock due
