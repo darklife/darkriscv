@@ -32,19 +32,22 @@
 # This the root makefile and the function of this file is call other
 # makefiles. Of course, you need first set the GCC compiler path/name, the
 # simulator path/name and the board model:
-
+#
    ARCH = rv32e
 #  ARCH = rv32i
+#ENDIAN = _le
+#ENDIAN = _be
 # CROSS = riscv-elf
 # CROSS = riscv32-unknown-elf
-  CROSS = riscv32-embedded-elf
+# CROSS = riscv32-embedded-elf
+  CROSS = riscv32-embedded$(ENDIAN)-elf
 #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
  CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
  ICARUS = /usr/local/bin/iverilog
  BOARD  = avnet_microboard_lx9
 #BOARD  = xilinx_ac701_a200
 #BOARD  = qmtech_sdram_lx16
-
+#
 # now you can just type 'make'
 
 ROM = src/darksocv.rom                      # requires gcc for riscv

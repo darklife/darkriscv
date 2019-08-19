@@ -28,19 +28,25 @@
 
 ifndef HOST_CC
     HOST_CC = gcc
-    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os 
+    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os
 endif
 
 ifndef CROSS
-    #ARCH = rv32i
-    ARCH = rv32e
 
-    #CROSS = riscv-elf
-    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
+    ARCH = rv32e
+    #ARCH = rv32i
     
-    CROSS = riscv32-unknown-elf
+    #TODO: better way to switch little/big-endian:
+    #ENDIAN = _le # gcc for little-endian
+    #ENDIAN = _be # gcc for big-endian
+
+    CROSS = riscv32-embedded$(ENDIAN)-elf
+    #CROSS = riscv-elf
+    #CROSS = riscv32-unknown-elf
     #CROSS = riscv32-embedded-elf
+    
     CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin    
 endif
 
 ifndef BUILD
@@ -59,7 +65,7 @@ LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
 MEMSIZE = 4096
 
-OCFLAGS = -O binary
+OCFLAGS = -O binary --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
 ODFLAGS = -d
 
 PROJ = darksocv
@@ -70,10 +76,11 @@ SRCS = boot.c stdio.c main.c io.c banner.c
 all:
 	make $(PROJ).rom
 	make $(PROJ).ram
+	#make $(PROJ).bin
 	#make $(PROJ).x86
 
 clean:
-	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86}
+	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin}
 
 %.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@
@@ -88,13 +95,21 @@ $(PROJ).bin: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $@
 	$(OD) $(ODFLAGS) $< > $(PROJ).lst
 
-$(PROJ).rom: $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' -n $(MEMSIZE) $< | grep -v 00000000 > $@
+$(PROJ).text: $(PROJ).o
+	$(OC) $(OCFLAGS) $< $@ --only-section .text*
+
+$(PROJ).data: $(PROJ).o
+	$(OC) $(OCFLAGS) $< $@ --only-section .*data*
+
+$(PROJ).rom: $(PROJ).text
+	#hexdump -ve '1/4 "%08x\n"' $< > $@
+	xxd -p -c 4 -g 4 $< > $@
 	wc -l $@
 	echo rom ok.
 
-$(PROJ).ram: $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' -s $(MEMSIZE) $< > $@
+$(PROJ).ram: $(PROJ).data
+	#hexdump -ve '1/4 "%08x\n"' $< > $@
+	xxd -p -c 4 -g 4 $< > $@
 	wc -l $@
 	echo ram ok.
 	

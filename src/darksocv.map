@@ -52,11 +52,11 @@ Linker script and memory map
  .text          0x0000000000000730       0x74 banner.o
                 0x0000000000000730                banner
 
-.text.startup   0x00000000000007a4      0x6d8
- .text.startup  0x00000000000007a4      0x6d8 main.o
+.text.startup   0x00000000000007a4      0x7d4
+ .text.startup  0x00000000000007a4      0x7d4 main.o
                 0x00000000000007a4                main
 
-.data           0x0000000000001000      0x4a4
+.data           0x0000000000001000      0x564
  *(.data)
  .data          0x0000000000001000        0x0 boot.o
  .data          0x0000000000001000       0x18 io.o
@@ -83,16 +83,23 @@ Linker script and memory map
                 0x00000000000010cc       0x19 stdio.o
  *fill*         0x00000000000010e5        0x3 
  .rodata.str1.4
-                0x00000000000010e8      0x2a3 main.o
-                                        0x2a7 (size before relaxing)
- *fill*         0x000000000000138b        0x1 
+                0x00000000000010e8      0x363 main.o
+                                        0x367 (size before relaxing)
+ *fill*         0x000000000000144b        0x1 
  .rodata.str1.4
-                0x000000000000138c      0x110 banner.o
+                0x000000000000144c      0x110 banner.o
                                         0x10d (size before relaxing)
  *(.sbss)
- .sbss          0x000000000000149c        0x4 io.o
-                0x000000000000149c                threads
- .sbss          0x00000000000014a0        0x4 stdio.o
+ .sbss          0x000000000000155c        0x4 io.o
+                0x000000000000155c                threads
+ .sbss          0x0000000000001560        0x4 stdio.o
+
+.sdata          0x0000000000001564        0xc
+ .sdata         0x0000000000001564        0xc main.o
+                0x0000000000001564                opts
+                0x0000000000001566                port
+                0x0000000000001568                ip
+                0x000000000000156c                test
 
 .io             0x0000000080000000       0x10
  io.o(COMMON)

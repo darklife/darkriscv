@@ -148,7 +148,7 @@ The top level *Makefile* is responsible to build everything, but it must
 be edited first, in a way that the user at least must select the compiler 
 path and the target board.
 
-By default, the top level *Makefile** uses:
+By default, the top level *Makefile* uses:
 
 	CROSS = riscv32-embedded-elf
 	CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
@@ -780,15 +780,44 @@ TODO: Add support for RV32E: in a preliminary way, it is possible build the gcc 
     mkdir build
     cd build
     ../configure --target=riscv32-embedded-elf --enable-languages=c --disable-shared --disable-threads --disable-multilib --disable-gdb --disable-libssp --with-newlib  --with-arch-rv32e --with-abi=ilp32e --prefix=/usr/local/share/gcc-riscv32-embedded-elf
-
     make -j4
     make
     make install
     export PATH=$PATH:/usr/local/share/gcc-riscv32-embedded-elf/bin/
     riscv32-embedded-elf-gcc -v
 
+TODO: add support for RV32E big-endian:
 
+Files to be changed:
 
+    ./binutils-gdb/gas/config/tc-riscv.h
+    31d30
+    < #ifndef TARGET_BYTES_BIG_ENDIAN
+    33d31
+    < #endif
+    ./gcc/gcc/config/riscv/riscv.h
+    89,91c89,91
+    < #define BITS_BIG_ENDIAN 1
+    < #define BYTES_BIG_ENDIAN 1
+    < #define WORDS_BIG_ENDIAN 1
+    ---
+    > #define BITS_BIG_ENDIAN 0
+    > #define BYTES_BIG_ENDIAN 0
+    > #define WORDS_BIG_ENDIAN 0
+    ./gcc/libgcc/config/riscv/sfp-machine.h
+    131c131
+    < #define __BYTE_ORDER __BIG_ENDIAN
+    ---
+    > #define __BYTE_ORDER __LITTLE_ENDIAN
+
+Build instructions (same as RV32E, but):
+
+    ../configure --target=riscv32-embedded_be-elf --enable-languages=c --disable-shared --disable-threads --disable-multilib --disable-gdb --disable-libssp --with-newlib  --with-arch-rv32e --with-abi=ilp32e --prefix=/usr/local/share/gcc-riscv32-embedded_be-elf
+    ...
+    export PATH=$PATH:/usr/local/share/gcc-riscv32-embedded_be-elf/bin/
+    riscv32-embedded_be-elf-gcc -v
+
+Fun fact: the darkriscv works with no changes in the core/soc!
 
 ## Development Boards
 
