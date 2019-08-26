@@ -65,7 +65,7 @@ LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 
 MEMSIZE = 4096
 
-OCFLAGS = -O binary --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
+OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
 ODFLAGS = -d
 
 PROJ = darksocv
@@ -102,14 +102,14 @@ $(PROJ).data: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $@ --only-section .*data*
 
 $(PROJ).rom: $(PROJ).text
-	#hexdump -ve '1/4 "%08x\n"' $< > $@
-	xxd -p -c 4 -g 4 $< > $@
+	hexdump -ve '1/4 "%08x\n"' $< > $@
+	#xxd -p -c 4 -g 4 $< > $@
 	wc -l $@
 	echo rom ok.
 
 $(PROJ).ram: $(PROJ).data
-	#hexdump -ve '1/4 "%08x\n"' $< > $@
-	xxd -p -c 4 -g 4 $< > $@
+	hexdump -ve '1/4 "%08x\n"' $< > $@
+	#xxd -p -c 4 -g 4 $< > $@
 	wc -l $@
 	echo ram ok.
 	
