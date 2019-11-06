@@ -46,7 +46,8 @@ ifndef CROSS
     #CROSS = riscv32-embedded-elf
     
     CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
-    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin    
+    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
+    #HARVARD = 1
 endif
 
 ifndef BUILD
@@ -58,10 +59,16 @@ endif
     LD = $(CCPATH)/$(CROSS)-ld
     OC = $(CCPATH)/$(CROSS)-objcopy
     OD = $(CCPATH)/$(CROSS)-objdump
+   CPP = $(CCPATH)/$(CROSS)-cpp
 
 CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=$(ARCH) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
+CPFLAGS = -P 
+
+ifdef HARVARD
+	CPFLAGS +=  -DHARVARD=1
+endif
 
 MEMSIZE = 4096
 
@@ -73,45 +80,56 @@ OBJS = boot.o stdio.o main.o io.o banner.o
 ASMS = boot.s stdio.s main.s io.s banner.s
 SRCS = boot.c stdio.c main.c io.c banner.c
 
-all:
-	make $(PROJ).rom
-	make $(PROJ).ram
-	#make $(PROJ).bin
-	#make $(PROJ).x86
+DEPS = $(SRCS) $(ASMS) $(OBJS)
+
+ifdef HARVARD
+	TARGETS = $(PROJ).rom $(PROJ).ram
+else
+	TARGETS = $(PROJ).mem
+endif
+
+.PHONY: all
+
+all: $(TARGETS) $(DEPS)
+	echo sources ok.
 
 clean:
-	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin}
+	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin,ld}
 
 %.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-%.s: %.c $(PROJ).ld
+%.s: %.c
 	$(CC) $(CCFLAGS) -S $< -o $@
 
-$(PROJ).o: $(ASMS) $(OBJS)
+$(PROJ).o: $(OBJS)
+	$(CPP) $(CPFLAGS) $(PROJ).ld.src $(PROJ).ld
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
+	$(OD) $(ODFLAGS) $@ > $(PROJ).lst
 
-$(PROJ).bin: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $@
-	$(OD) $(ODFLAGS) $< > $(PROJ).lst
-
-$(PROJ).text: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $@ --only-section .text*
-
-$(PROJ).data: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $@ --only-section .*data*
-
-$(PROJ).rom: $(PROJ).text
-	hexdump -ve '1/4 "%08x\n"' $< > $@
+$(PROJ).rom: $(PROJ).o
+	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .text* 
+	hexdump -ve '1/4 "%08x\n"' $(PROJ).text > $@
 	#xxd -p -c 4 -g 4 $< > $@
+	rm $(PROJ).text
 	wc -l $@
 	echo rom ok.
 
-$(PROJ).ram: $(PROJ).data
-	hexdump -ve '1/4 "%08x\n"' $< > $@
+$(PROJ).ram: $(PROJ).o
+	$(OC) $(OCFLAGS) $< $(PROJ).data --only-section .*data*
+	hexdump -ve '1/4 "%08x\n"' $(PROJ).data > $@
 	#xxd -p -c 4 -g 4 $< > $@
+	rm $(PROJ).data
 	wc -l $@
 	echo ram ok.
+
+$(PROJ).mem: $(PROJ).o
+	$(OC) $(OCFLAGS) $< $(PROJ).bin
+	hexdump -ve '1/4 "%08x\n"' $(PROJ).bin > $@
+	#xxd -p -c 4 -g 4 $< > $@
+	rm $(PROJ).bin
+	wc -l $@
+	echo mem ok.
 	
 $(PROJ).x86: $(SRCS)
 	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""

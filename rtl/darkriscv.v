@@ -244,8 +244,8 @@ module darkriscv
     reg [31:0] PC;		    // 32-bit program counter t+0
 
     `ifdef __RV32E__
-        reg [31:0] REG1 [0:31];	// general-purpose 16x32-bit registers (s1)
-        reg [31:0] REG2 [0:31];	// general-purpose 16x32-bit registers (s2)
+        reg [31:0] REG1 [0:15];	// general-purpose 16x32-bit registers (s1)
+        reg [31:0] REG2 [0:15];	// general-purpose 16x32-bit registers (s2)
     `else
         reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
         reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)

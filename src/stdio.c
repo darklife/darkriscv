@@ -281,8 +281,9 @@ unsigned __umulsi3(unsigned x,unsigned y)
 {
     unsigned acc;
 
-    if(x<y) { for(acc=0;x;x>>=1,y<<=1) if (x & 1) acc += y; }
-    else    { for(acc=0;y;x<<=1,y>>=1) if (y & 1) acc += x; }
+    if(x<y) { unsigned z = x; x = y; y = z; }
+    
+    for(acc=0;y;x<<=1,y>>=1) if (y & 1) acc += x;
 
     return acc;
 }

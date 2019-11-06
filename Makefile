@@ -37,6 +37,7 @@
 #  ARCH = rv32i
 #ENDIAN = _le
 #ENDIAN = _be
+#HARVARD = 1
 # CROSS = riscv-elf
 # CROSS = riscv32-unknown-elf
 # CROSS = riscv32-embedded-elf
@@ -50,6 +51,10 @@
 #
 # now you can just type 'make'
 
+ifdef HARVARD
+	MTYPE = HARVARD=1
+endif
+
 ROM = src/darksocv.rom                      # requires gcc for riscv
 RAM = src/darksocv.ram                      # requires gcc for riscv
 SIM = sim/darksocv.vcd                      # requires icarus verilog 
@@ -58,13 +63,11 @@ BIT = tmp/darksocv.bit                      # requires FPGA build tool
 default: all
 
 all:
-	make -C src darksocv.rom    CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH)
-	make -C src darksocv.ram    CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH)
-	make -C sim all             ICARUS=$(ICARUS) 
-	make -C boards all          BOARD=$(BOARD)
+	make -C src all             CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH) $(MTYPE)
+	make -C sim all             ICARUS=$(ICARUS) $(MTYPE)
+	make -C boards all          BOARD=$(BOARD) $(MTYPE)
 
 install:
-	make all
 	make -C boards install      BOARD=$(BOARD)
 
 clean:

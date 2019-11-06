@@ -72,7 +72,13 @@ UT  = $(ISE)/darksocv.ut
 
 PRJS = $(ISE)/darksocv.prj
 RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v
-BOOT = $(SRC)/darksocv.rom $(SRC)/darksocv.ram
+
+ifdef HARVARD
+        BOOT = $(SRC)/darksocv.rom $(SRC)/darksocv.ram
+else
+        BOOT = $(SRC)/darksocv.mem
+endif
+
 IMP  = $(ISE)/darksocv.imp
 
 default: all

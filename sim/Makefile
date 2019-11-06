@@ -32,19 +32,25 @@ endif
 
 RTLS = darksimv.v ../rtl/darksocv.v ../rtl/darkuart.v ../rtl/darkriscv.v
 INCS = ../rtl/config.vh
-SRCS = ../src/darksocv.rom ../src/darksocv.ram
-XSIM = darksocv.o
+XSIM = darksocv
 VCDS = darksocv.vcd
 DEPS = $(SRCS) $(RTLS) $(INCS)
 
+ifdef HARVARD
+	SRCS = ../src/darksocv.rom ../src/darksocv.ram 
+else
+	SRCS = ../src/darksocv.mem
+endif
+
 all: $(VCDS)
+	echo simulation ok.
 
 clean:
 	-rm $(VCDS) $(XSIM)
 
 $(VCDS): $(XSIM)
 	./$(XSIM)
-	echo simulation ok.
+
 
 $(XSIM): $(DEPS)
 	$(ICARUS) -I ../rtl -o $(XSIM) $(RTLS)

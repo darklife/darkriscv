@@ -75,7 +75,7 @@
 // performance impact.  Note: threading is currently supported only in the
 // 3-stage pipeline version.
 
-`define __THREADING__ 
+//`define __THREADING__ 
 
 // performance measurement:
 //
@@ -96,7 +96,7 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 
-`define __MAC16X16__
+//`define __MAC16X16__
 
 // RV32I vs RV32E:
 //
@@ -115,6 +115,22 @@
 // RAM memory matches with the .data and other volatile data, in a way that
 // the stack can be positioned in the top of RAM and does not match with the
 // .data.
+
+//`define __HARVARD__
+
+// full harvard architecture:
+// 
+// When defined, enforses that the instruction and data buses are connected
+// to fully separate memory banks.  Although the darkriscv always use
+// harvard architecture in the core, with separate instruction and data
+// buses, the logic levels outside the core can use different architectures
+// and concepts, including von neumann, wich a single bus shared by
+// instruction and data access, as well a mix between harvard and von
+// neumann, which is possible in the case of dual-port blockrams, where is
+// possible connect two separate buses in a single memory bank.  the main
+// advantage of a single memory bank is that the .text and .data areas can
+// be better allocated, but in this case is not possible protect the .text
+// area as in the case of separate memory banks.
 
 `define __RESETPC__ 32'd0
 `define __RESETSP__ 32'd8192

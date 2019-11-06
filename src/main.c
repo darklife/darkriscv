@@ -33,11 +33,6 @@
 
 extern void banner(void);
 
-unsigned int   test = 0x12345678;
-unsigned int   ip   = 0xAC100001; // 172.16.0.1
-unsigned short port = 0x0c38;     // 3128
-unsigned short opts = 0xABCD;
-
 int main(void)
 {
     banner();
@@ -58,40 +53,6 @@ int main(void)
 
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
     printf("timr0: periodic timer=%dHz (io.timer=%d)\n",(io.board_cm*1000000u+io.board_ck*1000u)/(io.timer+1),io.timer);
-    printf("\n");
-
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-    printf("endian-test (big-endian):\n");
-#else
-    printf("endian-test (little-endian):\n");
-#endif
-
-
-    struct
-    {
-        unsigned int   ref;
-        unsigned int   ip;
-        unsigned short port;
-        unsigned char  opt_a;
-        unsigned char  opt_b;
-    } 
-    data;
-
-    data.ref  = 0x12345678;
-    data.ip   = ip;
-    data.port = port;
-    data.opt_a = 0xA;
-    data.opt_b = 0xB;
-
-    unsigned char *p = (unsigned char *)&data;
-
-    printf("ip:port=%d.%d.%d.%d:%d\n",p[4],p[5],p[6],p[7],data.port);
-
-    printf("data.ref  = %x %x %x %x = %x\n",p[0],p[1],p[2],p[3],data.ref);
-    printf("data.ip   = %x %x %x %x = %x\n",p[4],p[5],p[6],p[7],data.ip);
-    printf("data.port = %x %x = %x/%d\n",p[8],p[9], data.port, data.port);
-    printf("data.opts = %x %x = %x %x\n",p[10],p[11],data.opt_a,data.opt_b);
-
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
