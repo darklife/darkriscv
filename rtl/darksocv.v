@@ -223,7 +223,7 @@ module darksocv
             MEM[i] = 32'd0;
         end
 
-        $readmemh("../src/darksocv.mem",MEM);        
+        $readmemh("../src/darksocv.mem",MEM,256);
     end
 
 `endif

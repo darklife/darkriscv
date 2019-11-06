@@ -6,9 +6,9 @@
 	.type	banner, @function
 banner:
 	addi	sp,sp,-288
-	lui	a1,%hi(.LC0)
+	.LA0: auipc	a1,%pcrel_hi(.LC0)
 	li	a2,269
-	addi	a1,a1,%lo(.LC0)
+	addi	a1,a1,%pcrel_lo(.LA0)
 	addi	a0,sp,4
 	sw	ra,284(sp)
 	sw	s0,280(sp)

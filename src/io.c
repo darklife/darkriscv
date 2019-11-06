@@ -53,12 +53,12 @@ int threads = 0; // number of threads
 
 // board database
 
-const char *board_name[]=
+char *board_name(int id)
 {
-    "simulation only",                  // 0
-    "avnet microboard spartan-6 lx9",   // 1
-    "xilinx ac701 artix-7 a200",        // 2 
-    "qmtech sdram lx16",                // 3  
-    "unknown host x86",                 // 4
-    0
-};
+    return id==0 ? "simulation only" : 
+           id==1 ? "avnet microboard spartan-6 lx9": 
+           id==2 ? "xilinx ac701 artix-7 a200" :
+           id==3 ? "qmtech sdram lx16" :
+           id==4 ? "unknown host x86" :
+                   "unknown";
+}

@@ -39,7 +39,7 @@ int main(void)
 
     // startup
 
-    printf("board: %s (id=%d)\n",board_name[io.board_id],io.board_id);
+    printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
     printf("build: darkriscv fw build %s\n",BUILD);
 
     printf("core0: darkriscv@%d.%dMHz with %s%s%s\n",

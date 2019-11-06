@@ -55,7 +55,8 @@ struct DARKIO {
 };
 
 extern volatile struct DARKIO io;
-extern const char *board_name[];
+
+extern char *board_name(int);
 
 #ifdef __RISCV__
 #define kmem 0

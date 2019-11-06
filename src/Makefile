@@ -61,7 +61,7 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -I./include -Os -fomit-frame-pointer -march=$(ARCH) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS = -Wall -I./include -Os -march=$(ARCH) -mcmodel=medany -mexplicit-relocs -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 CPFLAGS = -P 

@@ -8,8 +8,7 @@ Memory Configuration
 
 Name             Origin             Length             Attributes
 IO               0x0000000080000000 0x0000000000000010 rw !x
-ROM              0x0000000000000000 0x0000000000001000 x !rw
-RAM              0x0000000000001000 0x0000000000001000 rw !x
+MEM              0x0000000000000000 0x0000000000002000 xrw
 *default*        0x0000000000000000 0xffffffffffffffff
 
 Linker script and memory map
@@ -20,84 +19,83 @@ Linker script and memory map
  COMMON         0x0000000080000000       0x10 io.o
                 0x0000000080000000                io
 
-.text           0x0000000000000000      0x790
+.text           0x0000000000000000      0x850
  boot.o(.text)
- .text          0x0000000000000000       0x74 boot.o
+ .text          0x0000000000000000       0xa8 boot.o
                 0x0000000000000000                boot
  *(.text)
- .text          0x0000000000000074        0x0 io.o
- .text          0x0000000000000074      0x6a8 stdio.o
-                0x0000000000000074                getchar
-                0x0000000000000090                putchar
-                0x00000000000000d0                gets
-                0x0000000000000188                putstr
-                0x00000000000001c8                puts
-                0x00000000000001e4                putdx
-                0x00000000000002dc                putx
-                0x00000000000002e4                putd
-                0x00000000000002ec                printf
-                0x00000000000003c0                strncmp
-                0x00000000000003f4                strcmp
-                0x00000000000003fc                strlen
-                0x0000000000000420                memcpy
-                0x0000000000000444                memset
-                0x0000000000000460                strtok
-                0x0000000000000500                atoi
-                0x0000000000000554                xtoi
-                0x0000000000000594                mac
-                0x000000000000059c                __umulsi3
-                0x00000000000005d0                __mulsi3
-                0x0000000000000628                __udiv_umod_si3
-                0x0000000000000678                __udivsi3
-                0x0000000000000680                __umodsi3
-                0x0000000000000688                __div_mod_si3
-                0x000000000000070c                __divsi3
-                0x0000000000000714                __modsi3
- .text          0x000000000000071c        0x0 main.o
- .text          0x000000000000071c       0x74 banner.o
-                0x000000000000071c                banner
+ .text          0x00000000000000a8       0x5c io.o
+                0x00000000000000a8                board_name
+ .text          0x0000000000000104      0x6d8 stdio.o
+                0x0000000000000104                getchar
+                0x0000000000000128                putchar
+                0x0000000000000180                gets
+                0x0000000000000238                putstr
+                0x000000000000027c                puts
+                0x0000000000000298                putdx
+                0x000000000000039c                putx
+                0x00000000000003a4                putd
+                0x00000000000003ac                printf
+                0x0000000000000480                strncmp
+                0x00000000000004b4                strcmp
+                0x00000000000004bc                strlen
+                0x00000000000004e0                memcpy
+                0x0000000000000504                memset
+                0x0000000000000520                strtok
+                0x00000000000005c0                atoi
+                0x0000000000000614                xtoi
+                0x0000000000000654                mac
+                0x000000000000065c                __umulsi3
+                0x0000000000000690                __mulsi3
+                0x00000000000006e8                __udiv_umod_si3
+                0x0000000000000738                __udivsi3
+                0x0000000000000740                __umodsi3
+                0x0000000000000748                __div_mod_si3
+                0x00000000000007cc                __divsi3
+                0x00000000000007d4                __modsi3
+ .text          0x00000000000007dc        0x0 main.o
+ .text          0x00000000000007dc       0x74 banner.o
+                0x00000000000007dc                banner
 
-.text.startup   0x0000000000000790      0x6e4
- .text.startup  0x0000000000000790      0x6e4 main.o
-                0x0000000000000790                main
+.text.startup   0x0000000000000850      0x704
+ .text.startup  0x0000000000000850      0x704 main.o
+                0x0000000000000850                main
 
-.data           0x0000000000001000      0x4b4
+.data           0x0000000000000f54      0x4a4
  *(.data)
- .data          0x0000000000001000       0x18 io.o
-                0x0000000000001000                board_name
- .data          0x0000000000001018        0x0 boot.o
- .data          0x0000000000001018        0x0 stdio.o
- .data          0x0000000000001018        0x0 main.o
- .data          0x0000000000001018        0x0 banner.o
+ .data          0x0000000000000f54        0x0 io.o
+ .data          0x0000000000000f54        0x0 boot.o
+ .data          0x0000000000000f54        0x0 stdio.o
+ .data          0x0000000000000f54        0x0 main.o
+ .data          0x0000000000000f54        0x0 banner.o
  *(.bss)
- .bss           0x0000000000001018        0x0 io.o
- .bss           0x0000000000001018        0x0 boot.o
- .bss           0x0000000000001018        0x0 stdio.o
- .bss           0x0000000000001018        0x0 main.o
- .bss           0x0000000000001018        0x0 banner.o
+ .bss           0x0000000000000f54        0x0 io.o
+ .bss           0x0000000000000f54        0x0 boot.o
+ .bss           0x0000000000000f54        0x0 stdio.o
+ .bss           0x0000000000000f54        0x0 main.o
+ .bss           0x0000000000000f54        0x0 banner.o
  *(.rela*)
- .rela.text     0x0000000000001018        0x0 io.o
+ .rela.text     0x0000000000000f54        0x0 io.o
  .rela.text.startup
-                0x0000000000001018        0x0 io.o
+                0x0000000000000f54        0x0 io.o
  *(.rodata*)
  .rodata.str1.4
-                0x0000000000001018       0x71 io.o
- *fill*         0x0000000000001089        0x3 
- .rodata        0x000000000000108c       0x40 stdio.o
+                0x0000000000000f54       0x7c io.o
+ .rodata        0x0000000000000fd0       0x40 stdio.o
  .rodata.str1.4
-                0x00000000000010cc       0x19 stdio.o
- *fill*         0x00000000000010e5        0x3 
+                0x0000000000001010       0x19 stdio.o
+ *fill*         0x0000000000001029        0x3 
  .rodata.str1.4
-                0x00000000000010e8      0x2b3 main.o
+                0x000000000000102c      0x2b3 main.o
                                         0x2b7 (size before relaxing)
- *fill*         0x000000000000139b        0x1 
+ *fill*         0x00000000000012df        0x1 
  .rodata.str1.4
-                0x000000000000139c      0x110 banner.o
+                0x00000000000012e0      0x110 banner.o
                                         0x10d (size before relaxing)
  *(.sbss)
- .sbss          0x00000000000014ac        0x4 io.o
-                0x00000000000014ac                threads
- .sbss          0x00000000000014b0        0x4 stdio.o
+ .sbss          0x00000000000013f0        0x4 io.o
+                0x00000000000013f0                threads
+ .sbss          0x00000000000013f4        0x4 stdio.o
  *(COMMON)
 LOAD boot.o
 LOAD stdio.o
