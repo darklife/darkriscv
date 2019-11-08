@@ -53,10 +53,12 @@
 
 ifdef HARVARD
 	MTYPE = HARVARD=1
+	ROM = src/darksocv.rom.mem                  # requires gcc for riscv
+	RAM = src/darksocv.ram.mem                  # requires gcc for riscv
+else	
+	MEM = src/darksocv.mem
 endif
-
-ROM = src/darksocv.rom                      # requires gcc for riscv
-RAM = src/darksocv.ram                      # requires gcc for riscv
+	
 SIM = sim/darksocv.vcd                      # requires icarus verilog 
 BIT = tmp/darksocv.bit                      # requires FPGA build tool
 

@@ -116,7 +116,7 @@
 // the stack can be positioned in the top of RAM and does not match with the
 // .data.
 
-//`define __HARVARD__
+`define __HARVARD__
 
 // full harvard architecture:
 // 
@@ -131,6 +131,8 @@
 // advantage of a single memory bank is that the .text and .data areas can
 // be better allocated, but in this case is not possible protect the .text
 // area as in the case of separate memory banks.
+//
+// for spartan-7 devices, always use full harvard architecture!
 
 `define __RESETPC__ 32'd0
 `define __RESETSP__ 32'd8192
@@ -192,7 +194,7 @@
 
 `ifndef BOARD_ID
     `define BOARD_ID 0    
-    `define BOARD_CK 100000000   
+    `define BOARD_CK 61440000   
 `endif
     
 `ifdef BOARD_CK_REF

@@ -74,7 +74,7 @@ PRJS = $(ISE)/darksocv.prj
 RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v
 
 ifdef HARVARD
-        BOOT = $(SRC)/darksocv.rom $(SRC)/darksocv.ram
+        BOOT = $(SRC)/darksocv.rom.mem $(SRC)/darksocv.ram.mem
 else
         BOOT = $(SRC)/darksocv.mem
 endif

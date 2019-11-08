@@ -31,7 +31,8 @@
 #include <io.h>
 #include <stdio.h>
 
-extern int  main ();
+extern int banner(void);
+extern int main  (void);
 
 void boot(void)
 {
@@ -47,8 +48,19 @@ void boot(void)
         // timer_value = (io.board_cm*1000000+io.board_ck*1000)/20-1; // 10Hz blink!
 
         io.timer = 1; // start timer w/ shortest time to force the thread 1 start
+
+        while(1)
+        {
+
+            banner();
+
+            printf("boot0: text@%d data@%d stack@%d\n",
+                (unsigned int)boot,
+                (unsigned int)&threads,
+                (unsigned int)&tmp);
         
-        while(1) main();
+                main();
+        }
     }
     
     io.timer = timer_value;

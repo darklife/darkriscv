@@ -204,26 +204,38 @@ module darksocv
             RAM[i] = 32'd0;
         end
 
-        $readmemh("../src/darksocv.rom",ROM);        
-        $readmemh("../src/darksocv.ram",RAM);
+        // workaround for vivado: no path in simulation and .mem extension
+        
+`ifdef XILINX_SIMULATOR
+        $readmemh("darksocv.rom.mem",ROM);        
+        $readmemh("darksocv.ram.mem",RAM);
+`else
+        $readmemh("../src/darksocv.rom.mem",ROM);        
+        $readmemh("../src/darksocv.ram.mem",RAM);
+`endif        
     end
 
 `else
 
-
-    reg [31:0] MEM [0:2047]; // rw memory
+    reg [31:0] MEM [0:2047]; // ro memory
 
     // memory initialization
 
     integer i;
     initial
     begin
-        for(i=0;i!=2047;i=i+1)
-        begin        
+        for(i=0;i!=2048;i=i+1)
+        begin
             MEM[i] = 32'd0;
         end
-
-        $readmemh("../src/darksocv.mem",MEM,256);
+        
+        // workaround for vivado: no path in simulation and .mem extension
+        
+`ifdef XILINX_SIMULATOR
+        $readmemh("darksocv.mem",MEM);
+`else
+        $readmemh("../src/darksocv.mem",MEM);
+`endif        
     end
 
 `endif
@@ -309,12 +321,11 @@ module darksocv
     begin
         if(!HLT)
         begin
-            
-    `ifdef __HARVARD__            
+`ifdef __HARVARD__
             ROMFF <= ROM[IADDR[11:2]];
-    `else
+`else
             ROMFF <= MEM[IADDR[12:2]];
-    `endif
+`endif
         end
     end
 
@@ -453,11 +464,11 @@ module darksocv
     
     always@(posedge CLK) // stage #1.5
     begin
-    `ifdef __HARVARD__
+`ifdef __HARVARD__
         RAMFF <= RAM[DADDR[11:2]];
-    `else
+`else
         RAMFF <= MEM[DADDR[12:2]];
-    `endif
+`endif
     end
 
     //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[11:2]];
@@ -473,14 +484,13 @@ module darksocv
 
         // read-modify-write operation w/ 1 wait-state:
 
-        if(!HLT&&WR&&DADDR[31]==0/*&&DADDR[12]==1*/)
+        if(!HLT&&WR&&DADDR[31]==0)//&&DADDR[12]==1)
         begin
     `ifdef __HARVARD__
-            RAM[DADDR[11:2]] <= 
+            RAM[DADDR[11:2]] <= {
     `else
-            MEM[DADDR[12:2]] <=
+            MEM[DADDR[12:2]] <= {
     `endif            
-                                {
                                     BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
                                     BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
                                     BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
@@ -490,19 +500,17 @@ module darksocv
 
 `else
         // write-only operation w/ 0 wait-states:
-
     `ifdef __HARVARD__
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
     `else
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
     `endif
-
 `endif
 
         IOMUXFF <= IOMUX[DADDR[3:2]]; // read w/ 2 wait-states
@@ -645,7 +653,7 @@ module darksocv
   initial
   begin
     $dumpfile("darksocv.vcd");
-    $dumpvars(0, core0);
+    $dumpvars();
   end
 `endif
 

@@ -16,11 +16,11 @@ SECTIONS
     } > MEM
     .data :
     {
+        *(.sbss)
+        *(.rodata*)
         *(.data)
         *(.bss)
         *(.rela*)
-        *(.rodata*)
-        *(.sbss)
  *(COMMON)
     } > MEM
 }

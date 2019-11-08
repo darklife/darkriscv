@@ -47,7 +47,7 @@ ifndef CROSS
     
     CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-    #HARVARD = 1
+    HARVARD = 1
 endif
 
 ifndef BUILD
@@ -83,7 +83,7 @@ SRCS = boot.c stdio.c main.c io.c banner.c
 DEPS = $(SRCS) $(ASMS) $(OBJS)
 
 ifdef HARVARD
-	TARGETS = $(PROJ).rom $(PROJ).ram
+	TARGETS = $(PROJ).rom.mem $(PROJ).ram.mem
 else
 	TARGETS = $(PROJ).mem
 endif
@@ -107,7 +107,7 @@ $(PROJ).o: $(OBJS)
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
 	$(OD) $(ODFLAGS) $@ > $(PROJ).lst
 
-$(PROJ).rom: $(PROJ).o
+$(PROJ).rom.mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .text* 
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).text > $@
 	#xxd -p -c 4 -g 4 $< > $@
@@ -115,7 +115,7 @@ $(PROJ).rom: $(PROJ).o
 	wc -l $@
 	echo rom ok.
 
-$(PROJ).ram: $(PROJ).o
+$(PROJ).ram.mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).data --only-section .*data*
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).data > $@
 	#xxd -p -c 4 -g 4 $< > $@

@@ -31,14 +31,8 @@
 #include <io.h>
 #include <stdio.h>
 
-extern void banner(void);
-
 int main(void)
 {
-    banner();
-
-    // startup
-
     printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
     printf("build: darkriscv fw build %s\n",BUILD);
 
@@ -83,8 +77,7 @@ int main(void)
           else
           if(!strcmp(argv[0],"atros"))
           {
-              banner();
-              printf("wow! hello atros! o/\n");
+              return printf("wow! hello atros! o/\n\n");;
           }
           else
           if(!strcmp(argv[0],"dump"))

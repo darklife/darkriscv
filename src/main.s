@@ -10,13 +10,12 @@
 	.globl	main
 	.type	main, @function
 main:
+	.LA4: auipc	a5,%pcrel_hi(io)
+	lbu	a0,%pcrel_lo(.LA4)(a5)
 	addi	sp,sp,-128
 	sw	ra,124(sp)
 	sw	s0,120(sp)
 	sw	s1,116(sp)
-	call	banner
-	.LA4: auipc	a5,%pcrel_hi(io)
-	lbu	a0,%pcrel_lo(.LA4)(a5)
 	call	board_name
 	.LA5: auipc	a5,%pcrel_hi(io)
 	lbu	a2,%pcrel_lo(.LA5)(a5)
@@ -108,7 +107,6 @@ main:
 	call	putchar
 	.LA22: auipc	a0,%pcrel_hi(.LC10)
 	addi	a0,a0,%pcrel_lo(.LA22)
-.L67:
 	call	puts
 .L38:
 	.LA23: auipc	a0,%pcrel_hi(.LC11)
@@ -154,10 +152,14 @@ main:
 	mv	a0,s0
 	call	strcmp
 	bnez	a0,.L10
-	call	banner
 	.LA28: auipc	a0,%pcrel_hi(.LC16)
 	addi	a0,a0,%pcrel_lo(.LA28)
-	j	.L67
+	call	printf
+	lw	ra,124(sp)
+	lw	s0,120(sp)
+	lw	s1,116(sp)
+	addi	sp,sp,128
+	jr	ra
 .L10:
 	.LA29: auipc	a1,%pcrel_hi(.LC17)
 	addi	a1,a1,%pcrel_lo(.LA29)
@@ -379,7 +381,7 @@ main:
 	lhu	a1,8(a5)
 	.LA44: auipc	a0,%pcrel_hi(.LC23)
 	addi	a0,a0,%pcrel_lo(.LA44)
-.L66:
+.L67:
 	call	printf
 	j	.L38
 .L29:
@@ -400,7 +402,7 @@ main:
 	.LA48: auipc	a0,%pcrel_hi(.LC25)
 	lw	a1,12(a5)
 	addi	a0,a0,%pcrel_lo(.LA48)
-	j	.L66
+	j	.L67
 .L31:
 	.LA49: auipc	a1,%pcrel_hi(.LC26)
 	addi	a1,a1,%pcrel_lo(.LA49)
@@ -421,7 +423,7 @@ main:
 	.LA52: auipc	a0,%pcrel_hi(.LC27)
 	lhu	a1,10(a5)
 	addi	a0,a0,%pcrel_lo(.LA52)
-	j	.L66
+	j	.L67
 .L33:
 	.LA53: auipc	a1,%pcrel_hi(.LC28)
 	addi	a1,a1,%pcrel_lo(.LA53)
@@ -439,7 +441,7 @@ main:
 	mv	a1,a0
 	.LA54: auipc	a0,%pcrel_hi(.LC29)
 	addi	a0,a0,%pcrel_lo(.LA54)
-	j	.L66
+	j	.L67
 .L35:
 	.LA55: auipc	a1,%pcrel_hi(.LC30)
 	addi	a1,a1,%pcrel_lo(.LA55)
@@ -488,14 +490,14 @@ main:
 	mv	a1,a0
 	.LA58: auipc	a0,%pcrel_hi(.LC33)
 	addi	a0,a0,%pcrel_lo(.LA58)
-	j	.L66
+	j	.L67
 .L37:
 	lbu	a5,0(s0)
 	beqz	a5,.L38
 	.LA59: auipc	a0,%pcrel_hi(.LC34)
 	mv	a1,s0
 	addi	a0,a0,%pcrel_lo(.LA59)
-	j	.L66
+	j	.L67
 	.size	main, .-main
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
@@ -511,7 +513,7 @@ main:
 	.string	"board: %s (id=%d)\n"
 	.zero	1
 .LC4:
-	.string	"Wed, 06 Nov 2019 05:22:47 -0200"
+	.string	"Fri, 08 Nov 2019 12:54:33 -0300"
 .LC5:
 	.string	"build: darkriscv fw build %s\n"
 	.zero	2
@@ -544,8 +546,8 @@ main:
 	.string	"atros"
 	.zero	2
 .LC16:
-	.string	"wow! hello atros! o/"
-	.zero	3
+	.string	"wow! hello atros! o/\n\n"
+	.zero	1
 .LC17:
 	.string	"dump"
 	.zero	3
