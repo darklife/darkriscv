@@ -346,3 +346,12 @@ int __modsi3(int x,int y)
 {
     return __div_mod_si3(x,y,0);
 }
+
+void usleep(int delay)
+{
+    while(delay--)
+    {
+        io.irq=IRQ_TIMR;
+        while(!io.irq);
+    }
+}

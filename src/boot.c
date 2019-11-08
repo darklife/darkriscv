@@ -38,16 +38,18 @@ void boot(void)
 {
     int tmp = 1&threads++;
 
-    volatile int timer_value;
+    //volatile int timer_value;
 
     putchar('0'+tmp); // print thread number
 
+    // thread 0
+
     if(tmp==0)
     {
-        timer_value = 49; // 1MHz GPIO
-        // timer_value = (io.board_cm*1000000+io.board_ck*1000)/20-1; // 10Hz blink!
-
-        io.timer = 1; // start timer w/ shortest time to force the thread 1 start
+        //the timer is initialized with 1kHz by default (usleep function)
+        //timer_value = 49; // 1MHz GPIO
+        //timer_value = (io.board_cm*1000000+io.board_ck*1000)/20-1; // 10Hz blink!
+        //io.timer = 1; // start timer w/ shortest time to force the thread 1 start
 
         while(1)
         {
@@ -63,7 +65,9 @@ void boot(void)
         }
     }
     
-    io.timer = timer_value;
+    // thread 1, case exist
+        
+    //io.timer = timer_value;
 
     while(1)
     {

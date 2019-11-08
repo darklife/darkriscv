@@ -523,9 +523,10 @@ module darksocv
 
     // io for debug
 
-    reg IREQ = 0;
-    reg IACK = 0;
-    reg [31:0] TIMERFF = 0; // timer disabled
+    reg [7:0] IREQ = 0;
+    reg [7:0] IACK = 0;
+    
+    reg [31:0] TIMERFF;
 
     wire [7:0] BOARD_IRQ;
 
@@ -555,36 +556,49 @@ module darksocv
         end
 
         if(RES)
-            TIMERFF <= 0;
+            TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
         else
         if(WR&&DADDR[31]&&DADDR[3:0]==4'b1100)
         begin
             TIMERFF <= DATAO[31:0];
         end
-        
-`ifdef __THREADING__
+
         if(RES)
-            IACK <= IREQ;
+            IACK <= 0;
         else
         if(WR&&DADDR[31]&&DADDR[3:0]==4'b0011)
         begin
-            IACK <= IREQ;
+            //$display("clear io.irq = %x (ireq=%x, iack=%x)",DATAO[32:24],IREQ,IACK);
+            
+            IACK[7] <= DATAO[7+24] ? IREQ[7] : IACK[7];
+            IACK[6] <= DATAO[6+24] ? IREQ[6] : IACK[6];
+            IACK[5] <= DATAO[5+24] ? IREQ[5] : IACK[5];
+            IACK[4] <= DATAO[4+24] ? IREQ[4] : IACK[4];                                    
+            IACK[3] <= DATAO[3+24] ? IREQ[3] : IACK[3];
+            IACK[2] <= DATAO[2+24] ? IREQ[2] : IACK[2];
+            IACK[1] <= DATAO[1+24] ? IREQ[1] : IACK[1];
+            IACK[0] <= DATAO[0+24] ? IREQ[0] : IACK[0];
         end
-        
+
+        if(RES)
+            IREQ <= 0;
+        else        
         if(TIMERFF)
-        begin        
+        begin
             TIMER <= TIMER ? TIMER-1 : TIMERFF;
-        
-            if(TIMER==0)
+            
+            if(TIMER==0 && IREQ==IACK)
             begin
-                IREQ <= !IACK;
-                XTIMER <= !XTIMER;
+                IREQ[7] <= !IACK[7];
+                
+                //$display("timr0 set");
             end
+            
+            XTIMER  <= XTIMER+(TIMER==0);
         end
-`endif        
     end
 
-    assign BOARD_IRQ[7]   = IREQ^IACK;
+    assign BOARD_IRQ = IREQ^IACK;
 
     // unused irqs
 
@@ -653,7 +667,7 @@ module darksocv
   initial
   begin
     $dumpfile("darksocv.vcd");
-    $dumpvars();
+    $dumpvars(0, core0);
   end
 `endif
 

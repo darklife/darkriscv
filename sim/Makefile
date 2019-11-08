@@ -34,13 +34,14 @@ RTLS = darksimv.v ../rtl/darksocv.v ../rtl/darkuart.v ../rtl/darkriscv.v
 INCS = ../rtl/config.vh
 XSIM = darksocv
 VCDS = darksocv.vcd
-DEPS = $(SRCS) $(RTLS) $(INCS)
 
 ifdef HARVARD
-	SRCS = ../src/darksocv.rom ../src/darksocv.ram 
+	SRCS = ../src/darksocv.rom.mem ../src/darksocv.ram.mem
 else
 	SRCS = ../src/darksocv.mem
 endif
+
+DEPS = $(SRCS) $(RTLS) $(INCS)
 
 all: $(VCDS)
 	echo simulation ok.

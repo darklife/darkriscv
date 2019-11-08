@@ -38,7 +38,7 @@ struct DARKIO {
     unsigned char board_id; // 00
     unsigned char board_cm; // 01
     unsigned char board_ck; // 02
-    unsigned char irq;      // 03
+    volatile unsigned char irq;      // 03
 
     struct DARKUART {
         
@@ -63,5 +63,8 @@ extern char *board_name(int);
 #else
 extern unsigned char kmem[8192];
 #endif
+
+#define IRQ_TIMR 0x80
+#define IRQ_UART 0x02
 
 #endif

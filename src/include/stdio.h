@@ -52,5 +52,6 @@ char *strtok(char *str,char *dptr);
 int atoi(char *);
 int xtoi(char *);
 int mac(int,short,short);
+void usleep(int);
 
 #endif

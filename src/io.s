@@ -5,29 +5,37 @@
 	.globl	board_name
 	.type	board_name, @function
 board_name:
-	.LA2: auipc	a5,%pcrel_hi(.LC2)
-	addi	a5,a5,%pcrel_lo(.LA2)
-	beqz	a0,.L1
-	.LA3: auipc	a5,%pcrel_hi(.LC3)
-	li	a4,1
-	addi	a5,a5,%pcrel_lo(.LA3)
-	beq	a0,a4,.L1
-	.LA1: auipc	a5,%pcrel_hi(.LC1)
-	li	a4,2
-	addi	a5,a5,%pcrel_lo(.LA1)
-	beq	a0,a4,.L1
-	.LA4: auipc	a5,%pcrel_hi(.LC4)
-	li	a4,3
-	addi	a5,a5,%pcrel_lo(.LA4)
-	beq	a0,a4,.L1
-	.LA0: auipc	a5,%pcrel_hi(.LC0)
-	li	a4,4
-	addi	a5,a5,%pcrel_lo(.LA0)
-	beq	a0,a4,.L1
-	.LA5: auipc	a5,%pcrel_hi(.LC5)
-	addi	a5,a5,%pcrel_lo(.LA5)
-.L1:
-	mv	a0,a5
+	beqz	a0,.L3
+	li	a5,1
+	beq	a0,a5,.L4
+	li	a5,2
+	beq	a0,a5,.L5
+	li	a5,3
+	beq	a0,a5,.L6
+	li	a5,4
+	beq	a0,a5,.L7
+	lui	a0,%hi(.LC5)
+	addi	a0,a0,%lo(.LC5)
+	ret
+.L3:
+	lui	a0,%hi(.LC2)
+	addi	a0,a0,%lo(.LC2)
+	ret
+.L4:
+	lui	a0,%hi(.LC3)
+	addi	a0,a0,%lo(.LC3)
+	ret
+.L5:
+	lui	a0,%hi(.LC1)
+	addi	a0,a0,%lo(.LC1)
+	ret
+.L6:
+	lui	a0,%hi(.LC4)
+	addi	a0,a0,%lo(.LC4)
+	ret
+.L7:
+	lui	a0,%hi(.LC0)
+	addi	a0,a0,%lo(.LC0)
 	ret
 	.size	board_name, .-board_name
 	.globl	threads

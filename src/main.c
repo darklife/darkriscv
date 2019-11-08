@@ -46,10 +46,12 @@ int main(void)
     threads = 0; // prepare for the next restart
 
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
-    printf("timr0: periodic timer=%dHz (io.timer=%d)\n",(io.board_cm*1000000u+io.board_ck*1000u)/(io.timer+1),io.timer);
+    printf("timr0: periodic timer=%dHz (io.timer=%d)\n",(io.board_cm*1000000u+io.board_ck*10000u)/(io.timer+1),io.timer);
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
+
+    usleep(1000); // 1 ms delay test
 
     // main loop
 
@@ -77,10 +79,11 @@ int main(void)
           else
           if(!strcmp(argv[0],"atros"))
           {
+                     printf("core0: reboot in 3 seconds...\n"); usleep(3000);
               return printf("wow! hello atros! o/\n\n");;
           }
           else
-          if(!strcmp(argv[0],"dump"))
+/*          if(!strcmp(argv[0],"dump"))
           {
               char *p=(char *)(kmem+(argv[1]?xtoi(argv[1]):0));
 
@@ -130,7 +133,7 @@ int main(void)
               }
               printf("\n");
           }
-          else
+          else*/
           if(!strcmp(argv[0],"led"))
           {
               if(argv[1]) io.led = xtoi(argv[1]);

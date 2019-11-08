@@ -61,16 +61,16 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -I./include -Os -march=$(ARCH) -mcmodel=medany -mexplicit-relocs -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS = -Wall -I./include -Os -march=$(ARCH) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map # -Ttext=0
 CPFLAGS = -P 
 
+#CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
+
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
 endif
-
-MEMSIZE = 4096
 
 OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
 ODFLAGS = -d
@@ -79,6 +79,8 @@ PROJ = darksocv
 OBJS = boot.o stdio.o main.o io.o banner.o
 ASMS = boot.s stdio.s main.s io.s banner.s
 SRCS = boot.c stdio.c main.c io.c banner.c
+
+#include app/Makefile.in
 
 DEPS = $(SRCS) $(ASMS) $(OBJS)
 
