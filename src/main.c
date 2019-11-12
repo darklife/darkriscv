@@ -51,7 +51,7 @@ int main(void)
 
     printf("Welcome to DarkRISCV!\n");
 
-    usleep(1000); // 1 ms delay test
+    usleep(1000); // 10us delay test
 
     // main loop
 

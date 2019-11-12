@@ -38,6 +38,7 @@ board_name:
 	addi	a0,a0,%lo(.LC0)
 	ret
 	.size	board_name, .-board_name
+	.globl	utimers
 	.globl	threads
 	.comm	io,16,4
 	.section	.rodata.str1.4,"aMS",@progbits,1
@@ -60,6 +61,10 @@ board_name:
 	.string	"unknown"
 	.section	.sbss,"aw",@nobits
 	.align	2
+	.type	utimers, @object
+	.size	utimers, 4
+utimers:
+	.zero	4
 	.type	threads, @object
 	.size	threads, 4
 threads:

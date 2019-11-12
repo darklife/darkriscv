@@ -30,8 +30,8 @@ main:
 	addi	a5,s0,%lo(io)
 	lui	s1,%hi(threads)
 	lbu	t1,1(a5)
-	lw	a4,%lo(threads)(s1)
 	lbu	t0,2(a5)
+	lw	a4,%lo(threads)(s1)
 	li	a5,1
 	andi	t1,t1,0xff
 	andi	t0,t0,0xff
@@ -62,10 +62,10 @@ main:
 	addi	a3,a3,%lo(.LC6)
 	addi	a0,a0,%lo(.LC7)
 	call	printf
+	sw	zero,%lo(threads)(s1)
 	lhu	a1,6(s0)
 	lui	a0,%hi(.LC8)
 	addi	a0,a0,%lo(.LC8)
-	sw	zero,%lo(threads)(s1)
 	call	printf
 	lbu	a0,1(s0)
 	lbu	s1,2(s0)
@@ -308,7 +308,7 @@ main:
 	.string	"board: %s (id=%d)\n"
 	.zero	1
 .LC4:
-	.string	"Fri, 08 Nov 2019 20:24:23 -0300"
+	.string	"Tue, 12 Nov 2019 16:34:18 -0300"
 .LC5:
 	.string	"build: darkriscv fw build %s\n"
 	.zero	2

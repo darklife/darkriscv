@@ -31,14 +31,15 @@
 #ifndef __IO__
 #define __IO__
 
-extern int threads; // number of threads in the core
+extern volatile int threads; // number of threads in the core
+extern volatile int utimers; // microsecond timer
 
 struct DARKIO {
 
     unsigned char board_id; // 00
     unsigned char board_cm; // 01
     unsigned char board_ck; // 02
-    volatile unsigned char irq;      // 03
+    unsigned char irq;      // 03
 
     struct DARKUART {
         

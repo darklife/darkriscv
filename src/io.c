@@ -49,7 +49,8 @@ unsigned char kmem[8192] = "darksocv x86 payload test";
 
 #endif
 
-int threads = 0; // number of threads
+volatile int threads = 0; // number of threads
+volatile int utimers = 0; // number of microseconds
 
 // board database
 

@@ -371,16 +371,16 @@ strtok:
 	call	strlen
 	mv	a3,a0
 	bnez	s0,.L78
-	lui	a5,%hi(nxt.1628)
-	lw	s0,%lo(nxt.1628)(a5)
+	lui	a5,%hi(nxt.1629)
+	lw	s0,%lo(nxt.1629)(a5)
 	beqz	s0,.L79
 .L78:
 	mv	a5,s0
 .L80:
 	lbu	a4,0(a5)
 	bnez	a4,.L81
-	lui	a5,%hi(nxt.1628)
-	sw	zero,%lo(nxt.1628)(a5)
+	lui	a5,%hi(nxt.1629)
+	sw	zero,%lo(nxt.1629)(a5)
 	j	.L79
 .L81:
 	mv	a2,a3
@@ -394,8 +394,8 @@ strtok:
 	addi	a4,a5,1
 	bnez	a0,.L82
 	sb	zero,0(a5)
-	lui	a5,%hi(nxt.1628)
-	sw	a4,%lo(nxt.1628)(a5)
+	lui	a5,%hi(nxt.1629)
+	sw	a4,%lo(nxt.1629)(a5)
 .L79:
 	mv	a0,s0
 	lw	ra,16(sp)
@@ -637,20 +637,34 @@ __modsi3:
 	.type	usleep, @function
 usleep:
 	lui	a5,%hi(io)
-	li	a3,-1
+	addi	a4,a5,%lo(io)
+	li	a3,1
+	sh	a3,8(a4)
+	lui	a4,%hi(threads)
+	lw	a3,%lo(threads)(a4)
+	li	a4,1
 	addi	a5,a5,%lo(io)
+	bgt	a3,a4,.L169
+	li	a3,-1
 	li	a2,-128
 .L160:
 	addi	a0,a0,-1
-	bne	a0,a3,.L162
-	ret
-.L162:
+	beq	a0,a3,.L164
 	sb	a2,3(a5)
-.L161:
+.L162:
 	lbu	a4,3(a5)
 	andi	a4,a4,0xff
-	beqz	a4,.L161
+	beqz	a4,.L162
 	j	.L160
+.L169:
+	lui	a4,%hi(utimers)
+	sw	zero,%lo(utimers)(a4)
+.L161:
+	lw	a3,%lo(utimers)(a4)
+	blt	a3,a0,.L161
+.L164:
+	sh	zero,8(a5)
+	ret
 	.size	usleep, .-usleep
 	.section	.rodata
 	.align	2
@@ -682,8 +696,8 @@ usleep:
 	.string	"0123456789abcdef"
 	.section	.sbss,"aw",@nobits
 	.align	2
-	.type	nxt.1628, @object
-	.size	nxt.1628, 4
-nxt.1628:
+	.type	nxt.1629, @object
+	.size	nxt.1629, 4
+nxt.1629:
 	.zero	4
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

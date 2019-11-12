@@ -349,9 +349,19 @@ int __modsi3(int x,int y)
 
 void usleep(int delay)
 {
-    while(delay--)
+    io.led = 1;
+
+    if(threads>1)
     {
-        io.irq=IRQ_TIMR;
-        while(!io.irq);
+        for(utimers=0;utimers<delay;);
     }
+    else
+    {
+        while(delay--) 
+        {
+            for(io.irq=IRQ_TIMR;!io.irq;);
+        }
+    }
+    
+    io.led = 0;
 }

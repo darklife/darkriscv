@@ -37,7 +37,7 @@
 #  ARCH = rv32i
 #ENDIAN = _le
 #ENDIAN = _be
-#HARVARD = 1
+HARVARD = 1
 # CROSS = riscv-elf
 # CROSS = riscv32-unknown-elf
 # CROSS = riscv32-embedded-elf

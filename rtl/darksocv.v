@@ -319,7 +319,9 @@ module darksocv
 
     always@(posedge CLK) // stage #0.5    
     begin
+`ifdef __3STAGE__    
         if(!HLT)
+`endif
         begin
 `ifdef __HARVARD__
             ROMFF <= ROM[IADDR[11:2]];
@@ -484,13 +486,14 @@ module darksocv
 
         // read-modify-write operation w/ 1 wait-state:
 
-        if(!HLT&&WR&&DADDR[31]==0)//&&DADDR[12]==1)
+        if(!HLT&&WR&&DADDR[31]==0/*&&DADDR[12]==1*/)
         begin
     `ifdef __HARVARD__
-            RAM[DADDR[11:2]] <= {
+            RAM[DADDR[11:2]] <=
     `else
-            MEM[DADDR[12:2]] <= {
+            MEM[DADDR[12:2]] <=
     `endif            
+                                {
                                     BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
                                     BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
                                     BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
@@ -501,15 +504,15 @@ module darksocv
 `else
         // write-only operation w/ 0 wait-states:
     `ifdef __HARVARD__
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
     `else
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(WR&&DADDR[31]==0/*&&DADDR[12]==1*/&&BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
     `endif
 `endif
 
@@ -600,17 +603,11 @@ module darksocv
 
     assign BOARD_IRQ = IREQ^IACK;
 
-    // unused irqs
-
-    assign BOARD_IRQ[6:2] = 0;
-    assign BOARD_IRQ[0]   = 0;
-
     assign HLT = !IHIT||!DHIT||!WHIT;
 
     // darkuart
   
     wire [3:0] UDEBUG;
-    wire       UART_IRQ;
 
     darkuart
 //    #( 
@@ -625,7 +622,7 @@ module darksocv
       .BE(BE),
       .DATAI(DATAO),
       .DATAO(IOMUX[1]),
-      .IRQ(BOARD_IRQ[1]),
+      //.IRQ(BOARD_IRQ[1]),
       .RXD(UART_RXD),
       .TXD(UART_TXD),
       .DEBUG(UDEBUG)
@@ -650,7 +647,7 @@ module darksocv
         .RES(RES),
         .HLT(HLT),
 `ifdef __THREADING__        
-        .IREQ(IREQ^IACK),
+        .IREQ(|(IREQ^IACK)),
 `endif        
         .IDATA(IDATA),
         .IADDR(IADDR),

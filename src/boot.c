@@ -38,42 +38,36 @@ void boot(void)
 {
     int tmp = 1&threads++;
 
-    //volatile int timer_value;
+    io.irq = IRQ_TIMR; // clear interrupt
 
-    putchar('0'+tmp); // print thread number
-
-    // thread 0
+    // thread #0
 
     if(tmp==0)
     {
-        //the timer is initialized with 1kHz by default (usleep function)
-        //timer_value = 49; // 1MHz GPIO
-        //timer_value = (io.board_cm*1000000+io.board_ck*1000)/20-1; // 10Hz blink!
-        //io.timer = 1; // start timer w/ shortest time to force the thread 1 start
-
+        putchar('0'+tmp);
+    
         while(1)
         {
-
             banner();
 
             printf("boot0: text@%d data@%d stack@%d\n",
                 (unsigned int)boot,
-                (unsigned int)&threads,
+                (unsigned int)&utimers,
                 (unsigned int)&tmp);
         
-                main();
+            main();
         }
     }
-    
-    // thread 1, case exist
-        
-    //io.timer = timer_value;
+
+    // thread #1
+
+    putchar('0'+tmp);
 
     while(1)
     {
-        io.led  ^= 1; // change led
+        utimers++;
+        //io.led  ^= 1; // change led
         io.gpio ^= 1; // change gpio
-
-        io.irq  = 0;  // clear interrupts and switch context
+        io.irq  = IRQ_TIMR;  // clear interrupts and switch context
     }
 }
