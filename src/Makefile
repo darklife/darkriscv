@@ -82,7 +82,7 @@ SRCS = boot.c stdio.c main.c io.c banner.c
 
 #include app/Makefile.in
 
-DEPS = $(SRCS) $(ASMS) $(OBJS)
+DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).ld.src
 
 ifdef HARVARD
 	TARGETS = $(PROJ).rom.mem $(PROJ).ram.mem
@@ -104,8 +104,10 @@ clean:
 %.s: %.c
 	$(CC) $(CCFLAGS) -S $< -o $@
 
-$(PROJ).o: $(OBJS)
+$(PROJ).ld: $(PROJ).ld.src
 	$(CPP) $(CPFLAGS) $(PROJ).ld.src $(PROJ).ld
+	
+$(PROJ).o: $(OBJS) $(PROJ).ld
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
 	$(OD) $(ODFLAGS) $@ > $(PROJ).lst
 

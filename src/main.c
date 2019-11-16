@@ -51,7 +51,7 @@ int main(void)
 
     printf("Welcome to DarkRISCV!\n");
 
-    usleep(1000); // 10us delay test
+    usleep(10);
 
     // main loop
 
@@ -77,13 +77,24 @@ int main(void)
               printf("\33[H\33[2J");
           }
           else
-          if(!strcmp(argv[0],"atros"))
+          if(!strcmp(argv[0],"reboot"))
           {
-                     printf("core0: reboot in 3 seconds...\n"); usleep(3000);
-              return printf("wow! hello atros! o/\n\n");;
+              int i;
+              
+              printf("core0: reboot in 3 seconds");
+              
+              for(i=0;i!=3;i++) 
+              {
+                  usleep(1000000);
+                  putchar('.');
+              }
+              
+              printf("done.\n");
+                     
+              return 0;
           }
           else
-/*          if(!strcmp(argv[0],"dump"))
+          if(!strcmp(argv[0],"dump"))
           {
               char *p=(char *)(kmem+(argv[1]?xtoi(argv[1]):0));
 
@@ -133,7 +144,7 @@ int main(void)
               }
               printf("\n");
           }
-          else*/
+          else
           if(!strcmp(argv[0],"led"))
           {
               if(argv[1]) io.led = xtoi(argv[1]);

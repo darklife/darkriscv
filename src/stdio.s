@@ -636,35 +636,38 @@ __modsi3:
 	.globl	usleep
 	.type	usleep, @function
 usleep:
-	lui	a5,%hi(io)
-	addi	a4,a5,%lo(io)
-	li	a3,1
-	sh	a3,8(a4)
-	lui	a4,%hi(threads)
-	lw	a3,%lo(threads)(a4)
-	li	a4,1
-	addi	a5,a5,%lo(io)
-	bgt	a3,a4,.L169
-	li	a3,-1
-	li	a2,-128
+	lui	a5,%hi(threads)
+	lw	a4,%lo(threads)(a5)
+	li	a5,1
+	ble	a4,a5,.L171
+	li	a4,-1
+	lui	a5,%hi(utimers)
 .L160:
 	addi	a0,a0,-1
-	beq	a0,a3,.L164
-	sb	a2,3(a5)
+	bne	a0,a4,.L163
+	ret
+.L171:
+	lui	a5,%hi(io)
+	li	a3,-1
+	addi	a5,a5,%lo(io)
+	li	a2,-128
+.L161:
+	addi	a0,a0,-1
+	bne	a0,a3,.L165
+	ret
+.L163:
+	lw	a3,%lo(utimers)(a5)
 .L162:
+	lw	a2,%lo(utimers)(a5)
+	beq	a2,a3,.L162
+	j	.L160
+.L165:
+	sb	a2,3(a5)
+.L164:
 	lbu	a4,3(a5)
 	andi	a4,a4,0xff
-	beqz	a4,.L162
-	j	.L160
-.L169:
-	lui	a4,%hi(utimers)
-	sw	zero,%lo(utimers)(a4)
-.L161:
-	lw	a3,%lo(utimers)(a4)
-	blt	a3,a0,.L161
-.L164:
-	sh	zero,8(a5)
-	ret
+	beqz	a4,.L164
+	j	.L161
 	.size	usleep, .-usleep
 	.section	.rodata
 	.align	2

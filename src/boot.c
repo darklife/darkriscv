@@ -53,7 +53,7 @@ void boot(void)
             printf("boot0: text@%d data@%d stack@%d\n",
                 (unsigned int)boot,
                 (unsigned int)&utimers,
-                (unsigned int)&tmp);
+                (unsigned int)&tmp+16);
         
             main();
         }
@@ -65,9 +65,7 @@ void boot(void)
 
     while(1)
     {
-        utimers++;
-        //io.led  ^= 1; // change led
-        io.gpio ^= 1; // change gpio
+        io.led  = !(1048576&utimers++);
         io.irq  = IRQ_TIMR;  // clear interrupts and switch context
     }
 }

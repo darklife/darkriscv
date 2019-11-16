@@ -664,7 +664,7 @@ module darksocv
   initial
   begin
     $dumpfile("darksocv.vcd");
-    $dumpvars(0, core0);
+    $dumpvars();
   end
 `endif
 

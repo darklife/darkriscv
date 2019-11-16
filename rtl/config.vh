@@ -75,7 +75,7 @@
 // performance impact.  Note: threading is currently supported only in the
 // 3-stage pipeline version.
 
-//`define __THREADING__ 
+`define __THREADING__
 
 // performance measurement:
 //
@@ -96,7 +96,7 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 
-//`define __MAC16X16__
+`define __MAC16X16__
 
 // RV32I vs RV32E:
 //
@@ -194,7 +194,7 @@
 
 `ifndef BOARD_ID
     `define BOARD_ID 0    
-    `define BOARD_CK 61440000   
+    `define BOARD_CK 100000000   
 `endif
     
 `ifdef BOARD_CK_REF
