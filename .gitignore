@@ -1,0 +1,9 @@
+tmp/*
+sim/darksocv
+sim/darksocv.vcd
+*.ld
+*.lst
+*.map
+*.mem
+*.s
+*.o

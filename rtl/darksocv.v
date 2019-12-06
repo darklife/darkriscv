@@ -122,6 +122,7 @@ module darksocv
     //`define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
 
     wire DCM_LOCKED;
+    wire CLK;
     
     // useful script to calculate MUL/DIV values:
     // 
@@ -130,7 +131,8 @@ module darksocv
     // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz. not so useful after I discovered 
     // that my evaluation board already has external clock generator :D
     
-   DCM_SP #(
+`ifndef OLIMEX_ICE40HX8K
+    DCM_SP #(
       .CLKDV_DIVIDE(2.0),                   // CLKDV divide value
                                             // (1.5,2,2.5,3,3.5,4,4.5,5,5.5,6,6.5,7,7.5,8,9,10,11,12,13,14,15,16).
       .CLKFX_DIVIDE(`BOARD_CK_DIV),                     // Divide value on CLKFX outputs - D - (1-32)
@@ -169,6 +171,22 @@ module darksocv
       //.PSINCDEC(PSINCDEC), // 1-bit input: Phase shift increment/decrement input
       .RST(IRES[7])            // 1-bit input: Active high reset input
    );
+`else
+    SB_PLL40_CORE #(
+        .FEEDBACK_PATH("SIMPLE"),
+        .DIVR(`BOARD_CK_DIVR),
+        .DIVF(`BOARD_CK_DIVF),
+        .DIVQ(`BOARD_CK_DIVQ),
+        .FILTER_RANGE(`BOARD_CK_FILTER)
+    )
+    SB_PLL40_CORE_inst (
+        .LOCK(DCM_LOCKED),
+        .RESETB(IRES[7]),
+        .BYPASS(1'b0),
+        .REFERENCECLK(XCLK),
+        .PLLOUTCORE(CLK)
+    );
+`endif
 
     reg [7:0] DRES = -1;
     

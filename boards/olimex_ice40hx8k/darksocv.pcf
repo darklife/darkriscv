@@ -1,0 +1,16 @@
+set_io XCLK J3
+
+set_io XRES K11
+
+set_io LED[3] E4 # PIO3_00/IOL_1A 
+set_io LED[2] B2 # PIO3_01/IOL_1B
+set_io LED[1] R16
+set_io LED[0] M12
+
+set_io UART_RXD L11
+set_io UART_TXD T16
+
+set_io DEBUG[3] P15 # TDO
+set_io DEBUG[2] P14 # TCK
+set_io DEBUG[1] R15 # TMS
+set_io DEBUG[0] R14 # TDI
