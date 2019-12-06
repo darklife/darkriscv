@@ -75,7 +75,7 @@
 // performance impact.  Note: threading is currently supported only in the
 // 3-stage pipeline version.
 
-`define __THREADING__
+//`define __THREADING__
 
 // performance measurement:
 //
@@ -96,7 +96,7 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 
-`define __MAC16X16__
+//`define __MAC16X16__
 
 // RV32I vs RV32E:
 //
@@ -116,11 +116,12 @@
 // the stack can be positioned in the top of RAM and does not match with the
 // .data.
 
-`define __HARVARD__
+`define __RESETPC__ 32'd0
+`define __RESETSP__ 32'd8192
 
 // full harvard architecture:
 // 
-// When defined, enforses that the instruction and data buses are connected
+// When defined, enforces that the instruction and data buses are connected
 // to fully separate memory banks.  Although the darkriscv always use
 // harvard architecture in the core, with separate instruction and data
 // buses, the logic levels outside the core can use different architectures
@@ -134,8 +135,7 @@
 //
 // for spartan-7 devices, always use full harvard architecture!
 
-`define __RESETPC__ 32'd0
-`define __RESETSP__ 32'd8192
+`define __HARVARD__
 
 // board definition:
 // 
@@ -192,16 +192,65 @@
     `define BOARD_CK 50000000
 `endif
 
+`ifdef OLIMEX_ICE40HX8K
+    `define BOARD_ID 4
+    `define BOARD_CK_REF 100000000
+    `ifdef __3STAGE__
+        `ifdef __THREADING__
+	    `define BOARD_CK_30
+	`elsif __MAC16X16__
+	    `define BOARD_CK_25
+	`else
+	    `define BOARD_CK_40
+	`endif
+    `else
+        `ifdef __MAC16X16__
+	    `define BOARD_CK_16
+	`else
+            `define BOARD_CK_25
+	`endif
+    `endif
+    `ifdef BOARD_CK_40
+    	`define BOARD_CK 40000000
+	`define BOARD_CK_DIVR 4'd4
+	`define BOARD_CK_DIVF 7'd31
+	`define BOARD_CK_DIVQ 3'd4
+	`define BOARD_CK_FILTER 3'd2
+    `elsif BOARD_CK_30
+    	`define BOARD_CK 30000000
+	`define BOARD_CK_DIVR 4'd4
+	`define BOARD_CK_DIVF 7'd47
+	`define BOARD_CK_DIVQ 3'd5
+	`define BOARD_CK_FILTER 3'd2
+    `elsif BOARD_CK_25
+        `define BOARD_CK 25000000
+	`define BOARD_CK_DIVR 4'd0
+	`define BOARD_CK_DIVF 7'd7
+	`define BOARD_CK_DIVQ 3'd5
+	`define BOARD_CK_FILTER 3'd5
+    `elsif BOARD_CK_16
+        `define BOARD_CK 16250000
+	`define BOARD_CK_DIVR 4'd4
+	`define BOARD_CK_DIVF 7'd51
+	`define BOARD_CK_DIVQ 3'd6
+	`define BOARD_CK_FILTER 3'd2
+    `else
+        `undef WARNING_PREPROCESSOR_SHOULD_NOT_REACH_THIS_LOCATION
+    `endif
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
     `define BOARD_CK 100000000   
 `endif
     
 `ifdef BOARD_CK_REF
+`ifndef BOARD_CK
     `define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
 `endif
+`endif
 
-// darkuart baudrate automtically calculated according to board clock:
+// darkuart baudrate automatically calculated according to board clock:
 
 `ifndef __UARTSPEED__ 
   `define __UARTSPEED__ 115200
