@@ -35,8 +35,11 @@ NET XRES            LOC = T8  | PULLUP;
 #NET UART_RXD        LOC = A4; # compatible w/ QMTech USB/UART board, but not tested! 
 #NET UART_TXD        LOC = B5; # compatible w/ QMTech USB/UART board, but not tested!
 
-NET UART_RXD        LOC = P12 | PULLUP;
-NET UART_TXD        LOC = M10;
+#NET UART_RXD        LOC = P12 | PULLUP;
+#NET UART_TXD        LOC = M10;
+
+NET UART_RXD        LOC = E16; # devboard J2-15
+NET UART_TXD        LOC = E15; # devboard J2-16
 
 NET LED[3]          LOC = B12;
 NET LED[2]          LOC = C11;

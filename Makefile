@@ -45,10 +45,10 @@ HARVARD = 1
 #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
  CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
  ICARUS = /usr/local/bin/iverilog
- BOARD  = avnet_microboard_lx9
+#BOARD  = avnet_microboard_lx9
 #BOARD  = xilinx_ac701_a200
-#BOARD  = qmtech_sdram_lx16
-#
+ BOARD  = qmtech_sdram_lx16
+
 # now you can just type 'make'
 
 ifdef HARVARD
