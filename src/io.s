@@ -44,8 +44,7 @@ board_name:
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC0:
-	.string	"unknown host x86"
-	.zero	3
+	.string	"qmtech spartan7 s15"
 .LC1:
 	.string	"xilinx ac701 artix-7 a200"
 	.zero	2

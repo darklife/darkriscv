@@ -1,0 +1,7 @@
+tmp/*
+sim/darksocv
+sim/darksocv.vcd
+*~
+*/*~
+.DS_Store
+*/.DS_Store

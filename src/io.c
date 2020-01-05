@@ -60,6 +60,6 @@ char *board_name(int id)
            id==1 ? "avnet microboard spartan-6 lx9": 
            id==2 ? "xilinx ac701 artix-7 a200" :
            id==3 ? "qmtech sdram lx16" :
-           id==4 ? "unknown host x86" :
+           id==4 ? "qmtech spartan7 s15" :
                    "unknown";
 }

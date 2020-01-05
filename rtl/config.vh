@@ -190,6 +190,16 @@
 `ifdef QMTECH_SDRAM_LX16
     `define BOARD_ID 3
     `define BOARD_CK 50000000
+    `define INVRES 1
+`endif
+
+`ifdef QMTECH_SPARTAN7_S15
+    `define BOARD_ID 4
+    `define BOARD_CK_REF 50000000 
+    `define BOARD_CK_MUL 20
+    `define BOARD_CK_DIV 10
+    `define VIVADO 1 
+    `define INVRES 1
 `endif
 
 `ifndef BOARD_ID
