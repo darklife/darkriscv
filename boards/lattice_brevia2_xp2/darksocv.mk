@@ -67,3 +67,4 @@ $(BIT): $(BOOT) $(RTLS)
 
 clean:
 	-rm -v $(TMP)/*
+	rm -rf $(BOARD)/$(IMPL)
