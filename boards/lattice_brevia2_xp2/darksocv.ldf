@@ -2,6 +2,7 @@
 <BaliProject version="3.2" title="darksocv" device="LFXP2-5E-6TN144C" default_implementation="impl1">
     <Options/>
     <Implementation title="impl1" dir="impl1" description="impl1" synthesis="lse" default_strategy="Strategy1">
+        <Options HDL_PARAM="LATTICE_BREVIA2_XP2=1" def_top="darksocv"/>
         <Options/>
         <Source name="../../rtl/darkriscv.v" type="Verilog" type_short="Verilog">
             <Options/>
