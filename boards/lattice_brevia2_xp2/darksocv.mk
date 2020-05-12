@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018, Marcelo Samsoniuk
+# Copyright (c) 2020, Ivan Vasilev <ivan@zmeiresearch.com>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -32,28 +32,24 @@
 # board LatticeXP2 Brevia 2
 BOARD  = lattice_brevia2_xp2
 DEVICE = LFXP2-5E-6TN144C
-
-
-ISE = ../boards/$(BOARD)
-RTL = ../rtl
-SRC = ../src
+DIAMOND_PATH=/usr/local/diamond/3.11_x64
+IMPL = impl1
 TMP = ../tmp
 
-XST = $(ISE)/darksocv.xst
-SYR = $(TMP)/darksocv.syr
-UCF = $(ISE)/darksocv.ucf
-IMP = $(ISE)/darksocv.imp
-NGC = $(TMP)/darksocv.ngc
-NGD = $(TMP)/darksocv.ngd
-PCF = $(TMP)/darksocv.pcf
-NCD = $(TMP)/darksocv.ncd
-TWX = $(TMP)/darksocv.twx
-TWR = $(TMP)/darksocv.twr
-BIT = $(TMP)/darksocv.bit
-MAP = $(TMP)/darksocv_map.ncd
-UT  = $(ISE)/darksocv.ut
 
-PRJS = $(ISE)/darksocv.prj
+# Expected by Lattice Diamond
+export TEMP=../tmp
+export LSC_INI_PATH=""
+export LSC_DIAMOND=true
+export TCL_LIBRARY=$(DIAMOND_PATH)/tcltk/lib/tcl8.5
+export FOUNDRY=$(DIAMOND_PATH)/ispFPGA
+export PATH:=$(FOUNDRY)/bin/lin64:${PATH}
+
+
+RTL = ../rtl
+SRC = ../src
+BIT = $(TMP)/darksocv.bit
+
 RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v $(RTL)/config.vh
 
 ifdef HARVARD
@@ -62,30 +58,12 @@ else
 	BOOT = $(SRC)/darksocv.mem
 endif
 
-IMP  = $(ISE)/darksocv.imp
+default: build
 
-default: all
-
-$(NGC): $(PRJS) $(BOOT) $(RTLS)
-	cd $(TMP) && xst -intstyle ise -ifn $(XST) -ofn $(SYR)
-
-$(NGD): $(NGC) $(UCF) $(BOOT) $(RTLS)
-	cd $(TMP) && ngdbuild -intstyle ise -dd _ngo -nt timestamp -uc $(UCF) -p $(DEVICE) $(NGC) $(NGD)
-
-$(PCF): $(NGD) $(BOOT) $(UCF) $(RTLS)
-	cd $(TMP) && map -intstyle ise -p $(DEVICE) -w -logic_opt on -ol high -t 1 -xt 0 -register_duplication on -r 4 -global_opt off -mt 2 -detail -ir off -ignore_keep_hierarchy -pr off -lc auto -power off -o $(MAP) $(NGD) $(PCF)
-
-$(NCD): $(PCF) $(BOOT) $(UCF) $(RTLS)
-	cd $(TMP) && par -w -intstyle ise -ol high -mt 2 $(MAP) $(NCD) $(PCF)
-	cd $(TMP) && trce -intstyle ise -v 3 -s 2 -n 3 -fastpaths -xml $(TWX) $(NCD) -o $(TWR) $(PCF)
-
-$(BIT): $(UT) $(NCD) $(BOOT) $(UCF) $(RTLS)
-	cd $(TMP) && bitgen -intstyle ise -f $(UT) $(NCD)
-
-all: $(BIT) $(BOOT) $(UCF) $(RTLS)
-
-install: $(BIT) $(BOOT) $(UCF) $(RTLS)
-	cd $(TMP) && impact -batch $(IMP)
+$(BIT): $(BOOT) $(RTLS)
+	echo PATH: $$PATH
+	cd $(BOARD) && $(DIAMOND_PATH)/bin/lin64/diamondc darksocv.tcl 2>&1 | tee darksocv_build.log
+	cp $(BOARD)/$(IMPL)/darksocv_impl1.jed $(BIT)
 
 clean:
 	-rm -v $(TMP)/*
