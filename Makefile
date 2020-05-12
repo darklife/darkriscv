@@ -48,6 +48,7 @@ HARVARD = 1
 #BOARD  = avnet_microboard_lx9
 #BOARD  = xilinx_ac701_a200
  BOARD  = qmtech_sdram_lx16
+#BOARD  = lattice_brevia2_xp2 
 
 # now you can just type 'make'
 
