@@ -66,6 +66,8 @@ Notes:
 * There are quite a lot of warnings during the build. No effort has been made
   to clear (or even understand) them. There are probably bugs hiding there 
   as well.
+* The default 50MHz oscillator is used as the core clock. Using a PLL, the core
+  could probably go faster, but this is outside the scope of the current work.
 * There seems to be an issue (race condition of sorts?) with the interaction 
   UART/Timer/Threading. The sympthoms are either the simulation outputing '01'
   or nothing at all, the actual board doing the same, the actual board not 
