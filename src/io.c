@@ -61,5 +61,6 @@ char *board_name(int id)
            id==2 ? "xilinx ac701 artix-7 a200" :
            id==3 ? "qmtech sdram lx16" :
            id==4 ? "qmtech spartan7 s15" :
+           id==5 ? "lattice brevia2 lxp2" :
                    "unknown";
 }

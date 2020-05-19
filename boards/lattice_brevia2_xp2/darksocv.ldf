@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<BaliProject version="3.2" title="darksocv" device="LFXP2-5E-6TN144C" default_implementation="impl1">
+    <Options/>
+    <Implementation title="impl1" dir="impl1" description="impl1" synthesis="lse" default_strategy="Strategy1">
+        <Options HDL_PARAM="LATTICE_BREVIA2_XP2=1" def_top="darksocv"/>
+        <Options/>
+        <Source name="../../rtl/darkriscv.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../../rtl/darksocv.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="../../rtl/darkuart.v" type="Verilog" type_short="Verilog">
+            <Options/>
+        </Source>
+        <Source name="darksocv.lpf" type="Logic Preference" type_short="LPF">
+            <Options/>
+        </Source>
+    </Implementation>
+    <Strategy name="Strategy1" file="darksocv1.sty"/>
+</BaliProject>

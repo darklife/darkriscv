@@ -202,6 +202,12 @@
     `define INVRES 1
 `endif
 
+`ifdef LATTICE_BREVIA2_XP2
+    `define BOARD_ID 5
+    `define BOARD_CK 50000000
+    `define INVRES 1
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
     `define BOARD_CK 100000000   

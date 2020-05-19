@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2018, Marcelo Samsoniuk
+# Copyright (c) 2020, Ivan Vasilev <ivan@zmeiresearch.com>
 # All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -28,52 +28,43 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 #
 # ===8<--------------------------------------------------------- cut here!
-#
-# This the root makefile and the function of this file is call other
-# makefiles. Of course, you need first set the GCC compiler path/name, the
-# simulator path/name and the board model:
-#
-   ARCH = rv32e
-#  ARCH = rv32i
-#ENDIAN = _le
-#ENDIAN = _be
-HARVARD = 1
-# CROSS = riscv-elf
-# CROSS = riscv32-unknown-elf
-# CROSS = riscv32-embedded-elf
-  CROSS = riscv32-embedded$(ENDIAN)-elf
-#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
- CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
- ICARUS = /usr/local/bin/iverilog
-#BOARD  = avnet_microboard_lx9
-#BOARD  = xilinx_ac701_a200
- BOARD  = qmtech_sdram_lx16
-#BOARD  = lattice_brevia2_xp2 
 
-# now you can just type 'make'
+# board LatticeXP2 Brevia 2
+BOARD  = lattice_brevia2_xp2
+DEVICE = LFXP2-5E-6TN144C
+DIAMOND_PATH=/usr/local/diamond/3.11_x64
+IMPL = impl1
+TMP = ../tmp
+
+
+# Expected by Lattice Diamond
+export TEMP=../tmp
+export LSC_INI_PATH=""
+export LSC_DIAMOND=true
+export TCL_LIBRARY=$(DIAMOND_PATH)/tcltk/lib/tcl8.5
+export FOUNDRY=$(DIAMOND_PATH)/ispFPGA
+export PATH:=$(FOUNDRY)/bin/lin64:${PATH}
+
+
+RTL = ../rtl
+SRC = ../src
+BIT = $(TMP)/darksocv.bit
+
+RTLS = $(RTL)/darksocv.v $(RTL)/darkriscv.v $(RTL)/darkuart.v $(RTL)/config.vh
 
 ifdef HARVARD
-	MTYPE = HARVARD=1
-	ROM = src/darksocv.rom.mem                  # requires gcc for riscv
-	RAM = src/darksocv.ram.mem                  # requires gcc for riscv
-else	
-	MEM = src/darksocv.mem
+	BOOT = $(SRC)/darksocv.rom.mem $(SRC)/darksocv.ram.mem
+else
+	BOOT = $(SRC)/darksocv.mem
 endif
-	
-SIM = sim/darksocv.vcd                      # requires icarus verilog 
-BIT = tmp/darksocv.bit                      # requires FPGA build tool
 
-default: all
+default: build
 
-all:
-	make -C src all             CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH) $(MTYPE)
-	make -C sim all             ICARUS=$(ICARUS) $(MTYPE)
-	make -C boards all          BOARD=$(BOARD) $(MTYPE)
-
-install:
-	make -C boards install      BOARD=$(BOARD)
+$(BIT): $(BOOT) $(RTLS)
+	echo PATH: $$PATH
+	cd $(BOARD) && $(DIAMOND_PATH)/bin/lin64/diamondc darksocv.tcl 2>&1 | tee darksocv_build.log
+	cp $(BOARD)/$(IMPL)/darksocv_impl1.jed $(BIT)
 
 clean:
-	make -C src clean
-	make -C sim clean
-	make -C boards clean        BOARD=$(BOARD)
+	-rm -v $(TMP)/*
+	rm -rf $(BOARD)/$(IMPL)
