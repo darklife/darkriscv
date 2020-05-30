@@ -208,6 +208,14 @@
     `define INVRES 1
 `endif
 
+`ifdef PISWORDS_RS485_LX9
+    `define BOARD_ID 6
+    `define BOARD_CK_REF 50000000
+    `define BOARD_CK_MUL 4
+    `define BOARD_CK_DIV 2
+    `define INVRES 1
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
     `define BOARD_CK 100000000   

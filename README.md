@@ -57,7 +57,7 @@ implementations, the *DarkRISCV* has lots of impressive features:
 - implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
 - works up to 100MHz (spartan-6) and sustain 1 clock per instruction most of time
 - flexible harvard architecture (easy to integrate a cache controller)
-- works fine in a real spartan-6 (lx9/lx16/lx45 up to 100MHz)
+- works fine in a real xilinx and lattice FPGAs
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
 - uses only around 1000-1500 LUTs (depending of enabled features)
 - no interlock between pipeline stages 
@@ -68,14 +68,14 @@ Some extra features are planned for the furure or under development:
 - interrupt controller (under tests)
 - cache controller (under tests)
 - gpio and timer (under tests)
-- sdram controller
-- branch predictor 
+- sdram controller w/ data scrambler
+- branch predictor (under tests)
 - ethernet controller (GbE)
 - multi-threading (coarse-grained MT)
 - multi-processing (SMP)
 - network on chip (NoC)
 - rv32e support (less registers, more threads)
-- rv64i support
+- rv64i support (not so easy as appears...)
 - 16x16-bit MAC instruction (under tests!)
 - big-endian support
 - user/supervisor modes
@@ -123,8 +123,8 @@ specification and the *DarkRISCV* started to execute the first instructions
 correctly at 75MHz and with one clock per instruction, which not only
 resembles a fast and nice 68040 and can beat some Coldfires!  wow!  :)
 
-After the success of the first nigth, I started to work in order to fix
-small details in the hardware and software implementation. 
+After the success of the first nigth of work, I started to work in order to
+fix small details in the hardware and software implementation.
 
 ## Directory Description
 
@@ -162,35 +162,52 @@ it will eventually work.
 
 And, when everything is correctly configured, the result will be something like this:
 
-```$ make
-make -C src darksocv.rom    CROSS=riscv32-embedded-elf CCPATH=/usr/local/share/gcc-riscv32-embedded-elf/bin/
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S boot.c -o boot.s
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S stdio.c -o stdio.s
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S main.c -o main.s
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S io.c -o io.s
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -fomit-frame-pointer -march=rv32i -D__RISCV__ -S banner.c -o banner.s
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c boot.s -o boot.o
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c stdio.s -o stdio.o
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c main.s -o main.o
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c io.s -o io.o
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32i -c banner.s -o banner.o
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-ld -Tdarksocv.ld -Map=darksocv.map  boot.o stdio.o main.o io.o banner.o -o darksocv.o
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objcopy -O binary darksocv.o darksocv.bin
+```$ 
+# make
+make -C src all             CROSS=riscv32-embedded-elf CCPATH=/usr/local/share/gcc-riscv32-embedded-elf/bin/ ARCH=rv32e HARVARD=1
+make[1]: Entering directory `/home/marcelo/Documents/Verilog/darkriscv/v38/src'
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -march=rv32e -mabi=ilp32e -D__RISCV__ -DBUILD="\"Sat, 30 May 2020 00:55:20 -0300\"" -DARCH="\"rv32e\"" -S boot.c -o boot.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32e -c boot.s -o boot.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -march=rv32e -mabi=ilp32e -D__RISCV__ -DBUILD="\"Sat, 30 May 2020 00:55:20 -0300\"" -DARCH="\"rv32e\"" -S stdio.c -o stdio.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32e -c stdio.s -o stdio.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -march=rv32e -mabi=ilp32e -D__RISCV__ -DBUILD="\"Sat, 30 May 2020 00:55:21 -0300\"" -DARCH="\"rv32e\"" -S main.c -o main.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32e -c main.s -o main.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -march=rv32e -mabi=ilp32e -D__RISCV__ -DBUILD="\"Sat, 30 May 2020 00:55:21 -0300\"" -DARCH="\"rv32e\"" -S io.c -o io.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32e -c io.s -o io.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-gcc -Wall -I./include -Os -march=rv32e -mabi=ilp32e -D__RISCV__ -DBUILD="\"Sat, 30 May 2020 00:55:21 -0300\"" -DARCH="\"rv32e\"" -S banner.c -o banner.s
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-as -march=rv32e -c banner.s -o banner.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-cpp -P  -DHARVARD=1 darksocv.ld.src darksocv.ld
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-ld -Tdarksocv.ld -Map=darksocv.map -m elf32lriscv  boot.o stdio.o main.o io.o banner.o -o darksocv.o
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-ld: warning: section `.data' type changed to PROGBITS
 /usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objdump -d darksocv.o > darksocv.lst
-hexdump -ve '1/4 "%08x\n"' -n 4096 darksocv.bin | grep -v 00000000 > darksocv.rom
-wc -l darksocv.rom
-     754 darksocv.rom
-make -C src darksocv.ram    CROSS=riscv32-embedded-elf CCPATH=/usr/local/share/gcc-riscv32-embedded-elf/bin/
-hexdump -ve '1/4 "%08x\n"' -s 4096 darksocv.bin > darksocv.ram
-wc -l darksocv.ram
-     249 darksocv.ram
-make -C sim all             ICARUS=/usr/local/bin/iverilog
-/usr/local/bin/iverilog -o darksocv.o ../rtl/darkriscv.v ../rtl/darksocv.v ../rtl/darkuart.v darksimv.v
-./darksocv.o
-WARNING: ../rtl/darksocv.v:204: $readmemh(../src/darksocv.rom): Not enough words in the file for the requested range [0:1023].
-WARNING: ../rtl/darksocv.v:205: $readmemh(../src/darksocv.ram): Not enough words in the file for the requested range [0:1023].
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objcopy -O binary  darksocv.o darksocv.text --only-section .text* 
+hexdump -ve '1/4 "%08x\n"' darksocv.text > darksocv.rom.mem
+#xxd -p -c 4 -g 4 darksocv.o > darksocv.rom.mem
+rm darksocv.text
+wc -l darksocv.rom.mem
+1016 darksocv.rom.mem
+echo rom ok.
+rom ok.
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objcopy -O binary  darksocv.o darksocv.data --only-section .*data*
+hexdump -ve '1/4 "%08x\n"' darksocv.data > darksocv.ram.mem
+#xxd -p -c 4 -g 4 darksocv.o > darksocv.ram.mem
+rm darksocv.data
+wc -l darksocv.ram.mem
+317 darksocv.ram.mem
+echo ram ok.
+ram ok.
+echo sources ok.
+sources ok.
+make[1]: Leaving directory `/home/marcelo/Documents/Verilog/darkriscv/v38/src'
+make -C sim all             ICARUS=/usr/local/bin/iverilog HARVARD=1
+make[1]: Entering directory `/home/marcelo/Documents/Verilog/darkriscv/v38/sim'
+/usr/local/bin/iverilog -I ../rtl -o darksocv darksimv.v ../rtl/darksocv.v ../rtl/darkuart.v ../rtl/darkriscv.v
+./darksocv
+WARNING: ../rtl/darksocv.v:280: $readmemh(../src/darksocv.rom.mem): Not enough words in the file for the requested range [0:1023].
+WARNING: ../rtl/darksocv.v:281: $readmemh(../src/darksocv.ram.mem): Not enough words in the file for the requested range [0:1023].
 VCD info: dumpfile darksocv.vcd opened for output.
-:)
+reset (startup)
+
               vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                   vvvvvvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -215,15 +232,22 @@ rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
 
        INSTRUCTION SETS WANT TO BE FREE
 
+boot0: text@0 data@4096 stack@8192
 board: simulation only (id=0)
-core0: darkriscv at 100.0MHz
-uart0: baudrate counter=868
-timr0: periodic timer=100
+build: darkriscv fw build Sat, 30 May 2020 00:55:21 -0300
+core0: darkriscv@100.0MHz with rv32e+MT+MAC
+uart0: 115200 bps (div=868)
+timr0: periodic timer=1000000Hz (io.timer=99)
 
 Welcome to DarkRISCV!
 > no UART input, finishing simulation...
-make -C boards all          BOARD=avnet_microboard_lx9
-cd ../tmp && xst -intstyle ise -ifn ../boards/avnet_microboard_lx9/darksocv.xst -ofn ../tmp/darksocv.syr
+echo simulation ok.
+simulation ok.
+make[1]: Leaving directory `/home/marcelo/Documents/Verilog/darkriscv/v38/sim'
+make -C boards all          BOARD=piswords_rs485_lx9 HARVARD=1
+make[1]: Entering directory `/home/marcelo/Documents/Verilog/darkriscv/v38/boards'
+cd ../tmp && xst -intstyle ise -ifn ../boards/piswords_rs485_lx9/darksocv.xst -ofn ../tmp/darksocv.syr
+Reading design: ../boards/piswords_rs485_lx9/darksocv.prj
 
 *** lots of weird FPGA related messages here *** 
 
@@ -234,14 +258,14 @@ done.
 
 Which means that the software compiled and liked correctly, the simulation 
 worked correctly and the FPGA build produced a image that can be loaded in 
-your FPGA board with a *make install* (case you has a FPGA board, of course).
+your FPGA board with a *make install* (case you has a FPGA board and, of
+course, you have a JTAG support script in the board directory).
 
 Case the FPGA is correctly programmed and the UART is attached to a terminal
 emulator, the FPGA will be configured with the DarkRISCV, which will run the
 test software and produce the following result:
 
 ```
-:)
               vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
                   vvvvvvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvvvvvv
@@ -266,10 +290,12 @@ rrrrrrrrrrrrrrrrrrrrrr  rrrrrrrrrrrrrrrrrrrrrr
 
        INSTRUCTION SETS WANT TO BE FREE
 
-board: avnet microboard spartan-6 lx9 (id=1)
-core0: darkriscv at 100.0MHz
-uart0: baudrate counter=868
-timr0: periodic timer=0
+boot0: text@0 data@4096 stack@8192
+board: piswords rs485 lx9 (id=6)
+build: darkriscv fw build Fri, 29 May 2020 23:56:39 -0300
+core0: darkriscv@100.0MHz with rv32e+MT+MAC
+uart0: 115200 bps (div=868)
+timr0: periodic timer=1000000Hz (io.timer=99)
 
 Welcome to DarkRISCV!
 > 
@@ -277,13 +303,13 @@ Welcome to DarkRISCV!
 
 The beautiful ASCII RISCV logo was produced by Andrew Waterman! [6]
 
-As long as the build works, it is possible start make changes, but 
-my recommendation when working with soft processors is not work in the hardware 
-and software at the same time! This means that is better freeze the
-hardware and work only with the software or freeze the software and work
-only with the hardware. It is perfectly possible make your research in 
-both, but not at the same time, otherwise you find the *DarkRISCV*
-in a non-working state after software and hardware changes and will not be 
+As long as the build works, it is possible start make changes, but my
+recommendation when working with soft processors is *not work* in the
+hardware and software *at the same time*!  This means that is better freeze
+the hardware and work only with the software *or* freeze the software and
+work only with the hardware.  It is perfectly possible make your research in
+both, but not at the same time, otherwise you find the *DarkRISCV* in a
+non-working state after software and hardware changes and you will not be
 sure where the problem is.
 
 ### "src" Directory
@@ -303,6 +329,14 @@ hexadecimal and separated in ROM and RAM files (which are loaded by the Verilog
 code in the blockRAMs). The linker also produces a *darksocv.lst* with a 
 complete list of the code generated and the *darsocv.map*, which shows the
 map of all functions and variables in the produced code.
+
+The firmware concept is very simple:
+
+- boot.c contains the boot code
+- main.c contains the main application code (shell)
+- banner.c contains the riscv banner
+- stdio.c contains a small version of stdio
+- io.c contains the IO interfaces
 
 Extra code can be easily added in the compilation by editing the *src/Makefile*.
 
@@ -335,15 +369,22 @@ the 115200 bps requires lots dead simulation time.
 
 ### "rtl" Directory
 
-TODO: write something here about the RTL directory.
+The RTL directory contains the *DarkRISCV* core and some auxiliary files,
+such as the DarkSoCV (a small system-on-chip with ROM, RAM and IO),
+the DarkUART (a small UART for debug) and the configuration file, where is
+possible enable and disable some features that are described in the
+Implementation Notes section.
 
 ### "board" Directory
 
 The current supported boards are:
 
-- board/avnet_microboard_lx9
-- board/qmtech_sdram_lx16
-- board/xilinx_ac701_a200
+- avnet_microboard_lx9
+- lattice_brevia2_xp2
+- piswords_rs485_lx9
+- qmtech_sdram_lx16
+- qmtech_spartan7_s15
+- xilinx_ac701_a200
 
 The organization is self-explained, w/ the vender, board and FPGA model
 in the name of the directory. Each  *board* directory contains the project 
@@ -357,21 +398,28 @@ Anyway, although not wired, the build always gives you a good estimation
 about the FPGA utilization and about the timing (because the UART output 
 ensures that the complete processor must be synthesized).
 
-## Implementation Notes
+As long there are much supported boards, there is no way to test all boards
+everytime, which means that sometimes the changes regarding one board may
+affect other board in a wrong way.
 
-TODO: re-write this section.
+## Implementation Notes*
+
+[*This section is kept for reference, but the description may not match
+exactly with the current code]
 
 Since my target is the ultra-low-cost Xilinx Spartan-6 family of FPGAs, the
 project is currently based in the Xilinx ISE 14.7 for Linux, which is the
-latest available ISE.  However, there is no explicit reference for Xilinx
-elements and all logic is inferred directly from Verilog, which means that
-the project is easily portable to other FPGA families and easily portable to
-other environments (I will try add support for other FPGAs and tools in the
-future).
+latest available ISE version.  However, there is no explicit reference for
+Xilinx elements and all logic is inferred directly from Verilog, which means
+that the project is easily portable to other FPGA families and easily
+portable to other environments, as can be observed in the case of Lattice
+XP2 support.  Anyway, keep in mind that certain Verilog structures may not
+work well in some FPGAs.
 
 In the last update I included a way to test the firmware in the x86 host,
 which helps as lot, since is possible interact with the firmware and fix
-quickly some obvious bugs.
+quickly some obvious bugs. Of course, the x86 code does not run the boot.c
+code, since makes no sense (?) run the RISCV boot code in the x86.
 
 Anyway, as main recomendation when working with softcores try never work in
 the hardware and in the software at the same time!  Start with the minimum
@@ -384,8 +432,9 @@ The RV32I specification itself is really impressive and easy to implement
 little-endian bus (opposed to the network oriented big-endian bus found in
 the 680x0 family), but after some empirical tests it is easy to make work.
 
-In the future I will probably release a way to make the *DarkRISCV* work in
-big-endian and probably support both endians in a statically way.
+The funny information here is that, after lots of research regarding add
+support for big-endian in the *DarkRISCV*, I found no way to make the GCC
+generate the code and data correctly.
 
 Another drawback in the specification is the lacking of delayed branches.
 Although i understand that they are bad from the conceptual point of view,
@@ -394,12 +443,23 @@ lack of delayed branches or branch predictor in the *DarkRISCV* may reduce
 between 20 and 30% the performance, in a way that the real measured
 performance may be between 1.25 and 1.66 clocks per instruction.
 
-The original 2-stage pipeline design has a small problem concerning the ROM
-and RAM timing, in a way that, in order to pre-fetch and execute the
+Although the branch prediction is not complex to implement, I found the
+experimental multi-threading support far more interesting, as long enable
+use the idle time in the branches to swap the processor thread.  Anyway, I
+will try debug the branch prediction code in order to improve the
+single-thread performance.
+
+The core supports 2 or 3-state pipelines and, although the main logic is
+almost the same, there are huge difference in how they works. Just for
+reference, the following section reflects the historic evolution of the
+core and may not reflect the current core code.
+
+The original 2-stage pipeline design has a small problem concerning
+the ROM and RAM timing, in a way that, in order to pre-fetch and execute the
 instruction in two clocks and keep the pre-fetch continously working at the
 rate of 1 instruction per clock (and the same in the execution), the ROM and
-RAM must respond before the next clock. This means that the memories must be
-combinational or, at least, use a 2-phase clock.
+RAM must respond before the next clock.  This means that the memories must
+be combinational or, at least, use a 2-phase clock.
 
 The first solution for the 2-stage pipeline version with a 2-phase clock is
 the default solution and makes the *DarkRISCV* work as a pseudo 4-stage
@@ -468,7 +528,7 @@ between the decode and execute stages.
 
 Currently, the most expensive path in the Spartan-6 is the address bus
 for the data side of the core (connected to RAM and peripherals). The
-problem regards to the fact that the following acions must be done in a
+problem regards to the fact that the following actions must be done in a
 single clock:
 
 - generate the DADDR[31:0] = REG[SPTR][31:0]+EXTSIG(IMM[11:0])
@@ -490,13 +550,13 @@ branches.
 Just for reference, I registered some details regarding the performance
 measurements:
 
-The current firmware example runs in the 3-stage
-pipeline version clocked at 100MHz runs at a verified performance of 62
-MIPS.  The theorical 100MIPS performance is not reached 5% due to the extra
-wait-state in the load instruction and 32% due to pipeline flushes after
-taken branches.  The 2-stage pipeline version, in the other side, runs at a
-verified performance of 79MIPS with the same clock.  The only loss regards
-to 20% due to pipeline flushes after a taken branch.
+The current firmware example runs in the 3-stage pipeline version clocked at
+100MHz runs at a verified performance of 62 MIPS.  The theorical 100MIPS
+performance is not reached 5% due to the extra wait-state in the load
+instruction and 32% due to pipeline flushes after taken branches.  The
+2-stage pipeline version, in the other side, runs at a verified performance
+of 79MIPS with the same clock.  The only loss regards to 20% due to pipeline
+flushes after a taken branch.
 
 Of course, the impact of the pipeline flush depends also from the software
 and, as long the software is currently optimized for size. When compiled
@@ -513,11 +573,11 @@ And although the 2-stage version is 15% faster than the 3-stage version, the
 3-stage version can reach better clocks and, by this way, will provide
 better performance.
 
-Regarding the flush, it is required after a taken branch, as long the RISCV
-does not supports delayed branches. The solution for this problem is
-implement a branch cache (branch predictor), in a way that the core
+Regarding the pipeline flush, it is required after a taken branch, as long
+the RISCV does not supports delayed branches.  The solution for this problem
+is implement a branch cache (branch predictor), in a way that the core
 populates a cache with the last branches and can predict the future
-branches. In some inicial tests, the branch prediction with a 4 elements
+branches.  In some inicial tests, the branch prediction with a 4 elements
 entry appers to reach a hit ratio of 60%.
 
 Another possibility is use the flush time to other tasks, for example handle
@@ -552,11 +612,11 @@ NOTE: the interrupt controller is currently working only with the -Os
 flag in the gcc!
 
 About the new MAC instruction, it is implemented in a very preliminary way
-with the OPCDE 7'b1111111.  I am checking about the possibility to use the
-p.mac instruction, but at this time the instruction is hand encoded in the
-mac() function available in the stdio.c (i.e.  the darkriscv libc). The
-details about include new instructions and make it work with GCC can be
-found in the reference [5].
+with the OPCDE 7'b1111111 (this works, but it is a very bad decision!).  I
+am checking about the possibility to use the p.mac instruction, but at this
+time the instruction is hand encoded in the mac() function available in the
+stdio.c (i.e.  the darkriscv libc).  The details about include new
+instructions and make it work with GCC can be found in the reference [5].
 
 The preliminary tests pointed, as expected, that the performance decreases
 to 90MHz and although it was possible run at 100MHz with a non-zero timing
@@ -643,8 +703,6 @@ Vivado and make some interesting tests.  The only problem in the conversion
 is that the UCF file is not converted, which means that a new XDC file with
 the pin description must be created.
 
-TODO: udpate the performance measurement in the Vivado.
-
 The Vivado is very slow compared to ISE and needs *lots of time* to
 synthesise and inform a minimal feedback about the performance...  but after
 some weeks waiting, and lots of empirical calculations, I get some numbers
@@ -669,6 +727,9 @@ wait state in the load instruction and 2 extra clocks in the taken branches
 in order to flush the pipeline.  The 2-state pipeline requires no extra wait
 states and only 1 extra clock in the taken branches, but runs with less
 performance (56MHz).
+
+Well, my conclusion after some years of research is that the branch
+prediction solve lots of problems regarding the performance.
 
 ## Development Tools
 
@@ -767,7 +828,7 @@ Finally, the last update regarding the software included  new option to
 build a x86 version in order to help the development by testing exactly the
 same firmware in the x86.
 
-TODO: Add support for RV32E: in a preliminary way, it is possible build the gcc with the folllowing configuration:
+In a preliminary way, it is possible build the gcc for RV32E with the folllowing configuration:
 
     git clone --depth=1 git://gcc.gnu.org/git/gcc.git gcc
     git clone --depth=1 git://sourceware.org/git/binutils-gdb.git
@@ -786,36 +847,46 @@ TODO: Add support for RV32E: in a preliminary way, it is possible build the gcc 
     export PATH=$PATH:/usr/local/share/gcc-riscv32-embedded-elf/bin/
     riscv32-embedded-elf-gcc -v
 
-TODO: add support in gcc for riscv big-endian in the future.
+Currently, I found no easy way to make the GCC build big-endian code for
+RISCV. Instead, the easy way is make the endian switch directly in the IO
+device or in the memory region.
+
+As long is not so easy build the GCC in some machines, I left in a public
+share the source and the pre-compiled binary set of GCC tools for RV32E:
+
+https://drive.google.com/drive/folders/1GYkqDg5JBVeocUIG2ljguNUNX0TZ-ic6?usp=sharing
+
+As far as i remember it was compiled in a Slackware Linux or something like,
+anyway, it worked fine in the Windows 10 w/ WSL and in other linux-like
+environments.
 
 ## Development Boards
 
 Currently, the following boards are supported:
 
 - Avnet Microboard LX9: equipped with a Xilinx Spartan-6 LX9 running at 100MHz
-- XilinX AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz (?)
-- QMTech SDRAM LX16: equipped with a Xilinx Spartan-6 LX16 running at 50MHz (?)
-- Lattice Brevia2 XP2: equipped with a Lattice XP2-6 running at 50MHz (?)
+- XilinX AC701 A200: equipped with a Xilinx Artix-7 A200 running at 90MHz
+- QMTech SDRAM LX16: equipped with a Xilinx Spartan-6 LX16 running at 100MHz
+- QMTech NORAM S15: equipped with a Xilinx Spartan-7 S15 running at 100MHz
+- Lattice Brevia2 XP2: equipped with a Lattice XP2-6 running at 50MHz
+- Piswords RS485 LX9: equipped with a Xilinx Spartan-6 LX9 running at 100MHz
 
 The speeds are related to available clocks in the boards and different
-clocks may be generated by programming a DCM.
+clocks may be generated by programming a clock generator. The Spartan-6 is
+found in most boards and the core runs fine at ~100MHz, regardless the
+frequency of the main oscillator (typically 50MHz).
 
-Both Avnet and Xilinx boards supports a 115200 bps UART for console, 4xLEDs
-for debug and on-chip 4KB ROM and 4KB RAM (as well the RESET button to
-restart the core and the DEBUG signals for an oscilloscope).  I received two
-Spartan-6 LX16 boards from QMTECH and this board does not includes the JTAG
-neither the UART/USB port.  Thanks to an external JTAG adapter and an
-external USB/UART converter, the board is now working fine and support all
-features from the other boards (UART, LEDs, RESET and DEBUG).  
+All Xilinx based boards typically supports a 115200 bps UART for console,
+some LEDs for debug and on-chip 4KB ROM and 4KB RAM (as well the RESET
+button to restart the core and the DEBUG signals for an oscilloscope).
+
+In the case of QMTECH boards, that does not include the JTAG neither the
+UART/USB port, and external USB/UART converter and a low-cost JTAG adapter
+can solve the problem easily!
 
 The Lattice Brevia is clocked by the on-board 50MHz oscillator, with the 
 UART operating at 115200bps and the LED and DEBUG ports wired to the on-
 board LEDs.
-
-Support for 100Mbps ethernet in the Microboard LX9 board is under
-development, but I am not sure about the 1GbE ethernet in the AC701 A200,
-since the card is shared with other developers and must be returned 
-shortly.
 
 In the software side, a small shell is available with some basic commands:
 
@@ -840,23 +911,41 @@ Useful memory areas:
 - 7680: the end of RAM (stack)
 
 As long the *DarkRISCV* uses separate instruction and data buses, it is not
-possible dump the ROM area. It is obviously that a unified ROM/RAM memory
-works better, but it requires a intermediary separated cache in order to
-avoid concurrency between the instruction and data buses.
+possible dump the ROM area.  However, this limitation is not present when
+the option __HARVARD__ is activated, as long the core is constructed in a
+way that the ROM bus is conected to one bus from a dual-ported memory and
+the RAM bus is connected to a different bus from the same dual-ported
+memory. From the *DarkRISCV* point of view, they are fully separated and
+independent buses, but in reality they area in the same memory area, which
+makes possible the data bus change the area where the code is stored. With
+this feature, it will be possible in the future create loadable codes from
+the FLASH memory! :)
 
 ## Acknowledgments
 
-Special thanks to the Friends of DarkRISCV: Paulo Matias (jedi master and 
-verilog guru), Paulo Bernard (co-worker and verilog guru), Evandro Hauenstein 
-(co-worker and git guru), Lucas Mendes (technology guru), Marcelo Toledo 
-(technology guru), Fabiano Silos (technology guru and darkriscv beta tester), 
-Guilherme Barile (technology guru and first guy to post anything about the 
-darkriscv [2]), Alasdair Allan (technology guru, posted an article about the 
-darkriscv [3]) and Gareth Halfacree (technology guru, posted an article 
-about the darkriscv [3].  Special thanks to all people who directly and 
-indirectly contributed to this project, including the company I work for.
+Special thanks to my old colleagues from the Verilog/VHDL/IT area:
 
-TODO: add more friends in this list! :)
+- Paulo Matias (jedi master and verilog/bluespec/riscv guru)
+- Paulo Bernard (co-worker and verilog guru)
+- Evandro Hauenstein (co-worker and git guru)
+- Lucas Mendes (technology guru)
+- Marcelo Toledo (technology guru)
+- Fabiano Silos (technology guru)
+
+Also, special thanks to the "friends of darkriscv" that found the project in
+the internet and contributed in any way to make it better: 
+
+- Guilherme Barile (technology guru and first guy to post anything about the darkriscv! [2]).
+- Alasdair Allan (technology guru, posted an article about the darkriscv [3]) 
+- Gareth Halfacree (technology guru, posted an article about the DarkRISCV [4])
+- Ivan Vasilev (ported DarkRISCV for Lattice Brevia XP2!)
+- timdudu from github (fix in the LDATA and found a bug in the BCC instruction)
+- hyf6661669 from github (lots of contributions, including the fixes regarding the AUIPC and S{B,W,L} instructions, ModelSIM simulation, the memory byte select used by store/load instructions and much more!)
+- All other colleagues from github that contributed with fixes, corrections and suggestions.
+
+Finally, thanks to all people who directly and indirectly contributed to
+this project, including the company I work for and all colleagues that
+tested the *DarkRISCV*.
 
 ## References
 

@@ -6,29 +6,33 @@ minutes:
 
     cp -rp avnet_micrboard_lx9 vendor_board_fpga
 
-In the case of Vivado, the easy way is use an ISE board AC701 w/ Artix-7 as
-template, convert it to Vivado and then change it for the desired target
-(for example, an Spartan-7).
+In the case of Vivado, the easy way is use the QMTech Spartan-7 board as
+template. In the case of Vivado, there is no automation as found in the
+other FPGAs.
 
-Current board status:
+Current supported board/FPGAs:
 
-    avnet_microboard_lx9    fully tested
-    qmtech_sdram_lx16       build ok
-    xilinx_ac701_a200       build ok
+    avnet_microboard_lx9
+    qmtech_sdram_lx16
+    qmtech spartan7 s15
+    xilinx_ac701_a200
+    lattice brevia2 lxp2
+    piswords rs485 lx9
 
 I am working in a way to make the directory structure better, but it is not
-so easy make everything work at the same time!  :)
+so easy make everything work at the same time! :)
 
 Proposed structure:
 
     boards/vendor_boardname_fpga/               top level directory
     boards/vendor_boardname_fpga/darksocv.mk    top level makefile
-    boards/vendor_boardname_fpga/darksocv.*     other configuration files
+    boards/vendor_boardname_fpga/darksocv.*     other files (board/fpga specific)
 
-In this directory is possible:
+In the current directory is possible set:
 
     make BOARD=avnet_microboard_lx9 all         # build fpga for $BOARD
     make install                                # program fpga
 
 Of course, the FPGA programming via JTAG depends of some configurations
-which are different in different environments.
+which are different in different environments. Please check the README file
+regarding the board!

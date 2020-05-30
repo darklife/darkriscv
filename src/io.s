@@ -14,8 +14,12 @@ board_name:
 	beq	a0,a5,.L6
 	li	a5,4
 	beq	a0,a5,.L7
-	lui	a0,%hi(.LC5)
-	addi	a0,a0,%lo(.LC5)
+	li	a5,5
+	beq	a0,a5,.L8
+	li	a5,6
+	beq	a0,a5,.L9
+	lui	a0,%hi(.LC7)
+	addi	a0,a0,%lo(.LC7)
 	ret
 .L3:
 	lui	a0,%hi(.LC2)
@@ -26,14 +30,22 @@ board_name:
 	addi	a0,a0,%lo(.LC3)
 	ret
 .L5:
-	lui	a0,%hi(.LC1)
-	addi	a0,a0,%lo(.LC1)
-	ret
-.L6:
 	lui	a0,%hi(.LC4)
 	addi	a0,a0,%lo(.LC4)
 	ret
+.L6:
+	lui	a0,%hi(.LC5)
+	addi	a0,a0,%lo(.LC5)
+	ret
 .L7:
+	lui	a0,%hi(.LC1)
+	addi	a0,a0,%lo(.LC1)
+	ret
+.L8:
+	lui	a0,%hi(.LC6)
+	addi	a0,a0,%lo(.LC6)
+	ret
+.L9:
 	lui	a0,%hi(.LC0)
 	addi	a0,a0,%lo(.LC0)
 	ret
@@ -44,19 +56,25 @@ board_name:
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC0:
-	.string	"qmtech spartan7 s15"
+	.string	"piswords rs485 lx9"
+	.zero	1
 .LC1:
-	.string	"xilinx ac701 artix-7 a200"
-	.zero	2
+	.string	"qmtech spartan7 s15"
 .LC2:
 	.string	"simulation only"
 .LC3:
-	.string	"avnet microboard spartan-6 lx9"
-	.zero	1
+	.string	"avnet microboard lx9"
+	.zero	3
 .LC4:
-	.string	"qmtech sdram lx16"
+	.string	"xilinx ac701 a200"
 	.zero	2
 .LC5:
+	.string	"qmtech sdram lx16"
+	.zero	2
+.LC6:
+	.string	"lattice brevia2 lxp2"
+	.zero	3
+.LC7:
 	.string	"unknown"
 	.section	.sbss,"aw",@nobits
 	.align	2

@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2018, Marcelo Samsoniuk
 # All rights reserved.
 # 
@@ -26,55 +25,21 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
-#
-# ===8<--------------------------------------------------------- cut here!
-#
-# This the root makefile and the function of this file is call other
-# makefiles. Of course, you need first set the GCC compiler path/name, the
-# simulator path/name and the board model:
-#
-   ARCH = rv32e
-#  ARCH = rv32i
-#ENDIAN = _le
-#ENDIAN = _be
-HARVARD = 1
-# CROSS = riscv-elf
-# CROSS = riscv32-unknown-elf
-# CROSS = riscv32-embedded-elf
-  CROSS = riscv32-embedded$(ENDIAN)-elf
-#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
- CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
- ICARUS = /usr/local/bin/iverilog
-#BOARD  = avnet_microboard_lx9
-#BOARD  = xilinx_ac701_a200
-#BOARD  = qmtech_sdram_lx16
-#BOARD  = lattice_brevia2_xp2 
-BOARD = piswords_rs485_lx9
 
-# now you can just type 'make'
+# Piswords RS485 LX9
 
-ifdef HARVARD
-	MTYPE = HARVARD=1
-	ROM = src/darksocv.rom.mem                  # requires gcc for riscv
-	RAM = src/darksocv.ram.mem                  # requires gcc for riscv
-else	
-	MEM = src/darksocv.mem
-endif
-	
-SIM = sim/darksocv.vcd                      # requires icarus verilog 
-BIT = tmp/darksocv.bit                      # requires FPGA build tool
+NET XCLK            LOC = P55 | PERIOD = 50MHz HIGH 50%;
+NET XRES            LOC = P44  | PULLDOWN;
 
-default: all
+NET UART_RXD        LOC = P47;
+NET UART_TXD        LOC = P48;
 
-all:
-	make -C src all             CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH) $(MTYPE)
-	make -C sim all             ICARUS=$(ICARUS) $(MTYPE)
-	make -C boards all          BOARD=$(BOARD) $(MTYPE)
+NET LED[3]          LOC = P61; # LED8
+NET LED[2]          LOC = P62; # LED7
+NET LED[1]          LOC = P66; # LED6
+NET LED[0]          LOC = P67; # LED5
 
-install:
-	make -C boards install      BOARD=$(BOARD)
-
-clean:
-	make -C src clean
-	make -C sim clean
-	make -C boards clean        BOARD=$(BOARD)
+NET DEBUG[3]        LOC = P112; # P2-39
+NET DEBUG[2]        LOC = P115; # P2-37
+NET DEBUG[1]        LOC = P117; # P2-35
+NET DEBUG[0]        LOC = P119; # P2-33

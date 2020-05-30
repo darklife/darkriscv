@@ -52,7 +52,7 @@ struct DARKIO {
     unsigned short led;     // 08/09
     unsigned short gpio;    // 0a/0b
 
-    unsigned timer;         // 0c
+    unsigned int timer;     // 0c
 };
 
 extern volatile struct DARKIO io;

@@ -43,9 +43,7 @@ void boot(void)
     // thread #0
 
     if(tmp==0)
-    {
-        putchar('0'+tmp);
-    
+    {    
         while(1)
         {
             banner();
@@ -60,8 +58,6 @@ void boot(void)
     }
 
     // thread #1
-
-    putchar('0'+tmp);
 
     while(1)
     {

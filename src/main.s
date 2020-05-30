@@ -525,7 +525,7 @@ main:
 	.string	"board: %s (id=%d)\n"
 	.zero	1
 .LC4:
-	.string	"Fri, 15 Nov 2019 04:50:42 -0300"
+	.string	"Sat, 30 May 2020 00:55:21 -0300"
 .LC5:
 	.string	"build: darkriscv fw build %s\n"
 	.zero	2

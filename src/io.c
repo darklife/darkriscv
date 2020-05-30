@@ -57,10 +57,11 @@ volatile int utimers = 0; // number of microseconds
 char *board_name(int id)
 {
     return id==0 ? "simulation only" : 
-           id==1 ? "avnet microboard spartan-6 lx9": 
-           id==2 ? "xilinx ac701 artix-7 a200" :
+           id==1 ? "avnet microboard lx9": 
+           id==2 ? "xilinx ac701 a200" :
            id==3 ? "qmtech sdram lx16" :
            id==4 ? "qmtech spartan7 s15" :
            id==5 ? "lattice brevia2 lxp2" :
+           id==6 ? "piswords rs485 lx9" :
                    "unknown";
 }

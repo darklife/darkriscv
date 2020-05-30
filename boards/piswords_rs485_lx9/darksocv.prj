@@ -1,0 +1,3 @@
+verilog work "../rtl/darkriscv.v"
+verilog work "../rtl/darksocv.v"
+verilog work "../rtl/darkuart.v"
