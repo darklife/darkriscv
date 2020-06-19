@@ -37,7 +37,7 @@
 #  ARCH = rv32i
 #ENDIAN = _le
 #ENDIAN = _be
-HARVARD = 1
+#HARVARD = 1
 # CROSS = riscv-elf
 # CROSS = riscv32-unknown-elf
 # CROSS = riscv32-embedded-elf
@@ -47,9 +47,9 @@ HARVARD = 1
  ICARUS = /usr/local/bin/iverilog
 #BOARD  = avnet_microboard_lx9
 #BOARD  = xilinx_ac701_a200
-#BOARD  = qmtech_sdram_lx16
+BOARD  = qmtech_sdram_lx16
 #BOARD  = lattice_brevia2_xp2 
-BOARD = piswords_rs485_lx9
+#BOARD = piswords_rs485_lx9
 
 # now you can just type 'make'
 

@@ -1,8 +1,7 @@
 MEMORY
 {
     IO (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x10
-    ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x1000
-    RAM (rw!x) : ORIGIN = 0x00001000, LENGTH = 0x1000
+    MEM (rwx) : ORIGIN = 0x00000000, LENGTH = 0x2000
 }
 SECTIONS
 {
@@ -14,7 +13,7 @@ SECTIONS
     {
         boot.o(.text)
         *(.text)
-    } > ROM
+    } > MEM
     .data :
     {
         *(.sbss)
@@ -23,5 +22,5 @@ SECTIONS
         *(.bss)
         *(.rela*)
  *(COMMON)
-    } > RAM
+    } > MEM
 }

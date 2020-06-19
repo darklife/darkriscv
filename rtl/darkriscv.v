@@ -306,12 +306,14 @@ module darkriscv
                          FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REGX : U1REG+S2REGX) :
                          FCT3==1 ? U1REG<<U2REGX[4:0] :                         
                          //FCT3==5 ? 
-`ifdef MODEL_TECH        
-                         FCT7[5]==0||U1REG[31]==0 ? U1REG>>U2REGX[4:0] : -((-U1REG)>>U2REGX[4:0]; // workaround for modelsim
-`else
-                         FCT7[5] ? U1REG>>>U2REGX[4:0] : U1REG>>U2REGX[4:0]; // (FCT7[5] ? U1REG>>>U2REG[4:0] : U1REG>>U2REG[4:0])
-`endif                        
-
+                         
+// maybe the $signed solves the problem for MODELSIM too! needs to be tested!
+//`ifdef MODEL_TECH        
+//                         FCT7[5] ? -((-U1REG)>>U2REGX[4:0]; // workaround for modelsim
+//`else
+                         FCT7[5] ? $signed(S1REG>>>U2REGX[4:0]) : // (FCT7[5] ? U1REG>>>U2REG[4:0] : 
+//`endif                        
+                                   U1REG>>U2REGX[4:0];
 `ifdef __MAC16X16__
 
     // MAC instruction rd += s1*s2 (OPCODE==7'b1111111)

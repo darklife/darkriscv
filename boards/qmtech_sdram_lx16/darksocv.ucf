@@ -29,25 +29,19 @@
 # QMtech SDRAM/LX16 board
 
 NET XCLK            LOC = A10 | PERIOD = 50MHz HIGH 50%;
-
 NET XRES            LOC = T8  | PULLUP;
-
-#NET UART_RXD        LOC = A4; # compatible w/ QMTech USB/UART board, but not tested! 
-#NET UART_TXD        LOC = B5; # compatible w/ QMTech USB/UART board, but not tested!
-
-#NET UART_RXD        LOC = P12 | PULLUP;
-#NET UART_TXD        LOC = M10;
-
-NET UART_RXD        LOC = E16; # devboard J2-15
-NET UART_TXD        LOC = E15; # devboard J2-16
 
 NET LED[3]          LOC = B12;
 NET LED[2]          LOC = C11;
-
 NET LED[1]          LOC = T9; # board led
 NET LED[0]          LOC = R9; # board led
+	
+# QMtech expansion board -> connector -> SDRAM/LX16 board
 
-NET DEBUG[3]        LOC = B8; # J4-1
-NET DEBUG[2]        LOC = C7; # J4-2
-NET DEBUG[1]        LOC = B6; # J4-3
-NET DEBUG[0]        LOC = B5; # J4-4
+NET UART_RXD        LOC = E16; # F22 -> J2-15 -> E15
+NET UART_TXD        LOC = E15; # G22 -> J2-16 -> E16
+
+NET DEBUG[3]        LOC = L14; # P23 -> J2-40 -> L14
+NET DEBUG[2]        LOC = L16; # P24 -> J2-39 -> L16
+NET DEBUG[1]        LOC = K16; # N21 -> J2-38 -> K16
+NET DEBUG[0]        LOC = K15; # N22 -> J2-37 -> K15

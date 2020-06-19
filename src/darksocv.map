@@ -8,8 +8,7 @@ Memory Configuration
 
 Name             Origin             Length             Attributes
 IO               0x0000000080000000 0x0000000000000010 rw !x
-ROM              0x0000000000000000 0x0000000000001000 x !rw
-RAM              0x0000000000001000 0x0000000000001000 rw !x
+MEM              0x0000000000000000 0x0000000000002000 xrw
 *default*        0x0000000000000000 0xffffffffffffffff
 
 Linker script and memory map
@@ -59,49 +58,49 @@ Linker script and memory map
  .text          0x0000000000000834       0x74 banner.o
                 0x0000000000000834                banner
 
-.text.startup   0x00000000000008a8      0x738
- .text.startup  0x00000000000008a8      0x738 main.o
+.text.startup   0x00000000000008a8      0x768
+ .text.startup  0x00000000000008a8      0x768 main.o
                 0x00000000000008a8                main
 
-.data           0x0000000000001000      0x4f4
+.data           0x0000000000001010      0x510
  *(.sbss)
- .sbss          0x0000000000001000        0x8 io.o
-                0x0000000000001000                utimers
-                0x0000000000001004                threads
- .sbss          0x0000000000001008        0x4 stdio.o
+ .sbss          0x0000000000001010        0x8 io.o
+                0x0000000000001010                utimers
+                0x0000000000001014                threads
+ .sbss          0x0000000000001018        0x4 stdio.o
  *(.rodata*)
  .rodata.str1.4
-                0x000000000000100c       0x98 io.o
+                0x000000000000101c       0x98 io.o
  .rodata.str1.4
-                0x00000000000010a4       0x21 boot.o
- *fill*         0x00000000000010c5        0x3 
- .rodata        0x00000000000010c8       0x40 stdio.o
+                0x00000000000010b4       0x21 boot.o
+ *fill*         0x00000000000010d5        0x3 
+ .rodata        0x00000000000010d8       0x40 stdio.o
  .rodata.str1.4
-                0x0000000000001108       0x19 stdio.o
- *fill*         0x0000000000001121        0x3 
+                0x0000000000001118       0x19 stdio.o
+ *fill*         0x0000000000001131        0x3 
  .rodata.str1.4
-                0x0000000000001124      0x2bf main.o
-                                        0x2c3 (size before relaxing)
- *fill*         0x00000000000013e3        0x1 
+                0x0000000000001134      0x2db main.o
+                                        0x2df (size before relaxing)
+ *fill*         0x000000000000140f        0x1 
  .rodata.str1.4
-                0x00000000000013e4      0x110 banner.o
+                0x0000000000001410      0x110 banner.o
                                         0x10d (size before relaxing)
  *(.data)
- .data          0x00000000000014f4        0x0 io.o
- .data          0x00000000000014f4        0x0 boot.o
- .data          0x00000000000014f4        0x0 stdio.o
- .data          0x00000000000014f4        0x0 main.o
- .data          0x00000000000014f4        0x0 banner.o
+ .data          0x0000000000001520        0x0 io.o
+ .data          0x0000000000001520        0x0 boot.o
+ .data          0x0000000000001520        0x0 stdio.o
+ .data          0x0000000000001520        0x0 main.o
+ .data          0x0000000000001520        0x0 banner.o
  *(.bss)
- .bss           0x00000000000014f4        0x0 io.o
- .bss           0x00000000000014f4        0x0 boot.o
- .bss           0x00000000000014f4        0x0 stdio.o
- .bss           0x00000000000014f4        0x0 main.o
- .bss           0x00000000000014f4        0x0 banner.o
+ .bss           0x0000000000001520        0x0 io.o
+ .bss           0x0000000000001520        0x0 boot.o
+ .bss           0x0000000000001520        0x0 stdio.o
+ .bss           0x0000000000001520        0x0 main.o
+ .bss           0x0000000000001520        0x0 banner.o
  *(.rela*)
- .rela.text     0x00000000000014f4        0x0 io.o
+ .rela.text     0x0000000000001520        0x0 io.o
  .rela.text.startup
-                0x00000000000014f4        0x0 io.o
+                0x0000000000001520        0x0 io.o
  *(COMMON)
 LOAD boot.o
 LOAD stdio.o

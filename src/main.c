@@ -191,6 +191,12 @@ int main(void)
               printf("mac = %d\n",mac(acc,x,y));
           }
           else
+          if(!strcmp(argv[0],"srai"))
+          {
+              int acc = xtoi(argv[1]);
+              printf("srai %x >> 1 = %x\n",acc,acc>>1);
+          }
+          else
           if(argv[0][0])
           {
               printf("command: [%s] not found.\n"

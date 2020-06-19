@@ -116,7 +116,7 @@
 // the stack can be positioned in the top of RAM and does not match with the
 // .data.
 
-`define __HARVARD__
+//`define __HARVARD__
 
 // full harvard architecture:
 // 
@@ -189,7 +189,9 @@
 
 `ifdef QMTECH_SDRAM_LX16
     `define BOARD_ID 3
-    `define BOARD_CK 50000000
+    `define BOARD_CK_REF 50000000
+    `define BOARD_CK_MUL 4
+    `define BOARD_CK_DIV 2
     `define INVRES 1
 `endif
 

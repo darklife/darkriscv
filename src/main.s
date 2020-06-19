@@ -38,7 +38,7 @@ main:
 	andi	s1,s1,0xff
 	andi	t1,t1,0xff
 	mv	s0,a5
-	bgt	a3,a4,.L39
+	bgt	a3,a4,.L40
 	lui	a4,%hi(.LC1)
 	addi	a4,a4,%lo(.LC1)
 .L2:
@@ -51,7 +51,7 @@ main:
 	li	a5,1256
 	lw	t1,4(sp)
 	lw	a4,8(sp)
-	beq	a0,a5,.L40
+	beq	a0,a5,.L41
 	lui	a5,%hi(.LC1)
 	addi	a5,a5,%lo(.LC1)
 .L3:
@@ -101,7 +101,7 @@ main:
 	call	puts
 	li	a0,10
 	call	usleep
-.L38:
+.L39:
 	lui	a5,%hi(.LC11)
 	addi	a0,a5,%lo(.LC11)
 	call	printf
@@ -129,7 +129,7 @@ main:
 	bne	s0,a5,.L4
 .L5:
 	lw	s0,28(sp)
-	beqz	s0,.L38
+	beqz	s0,.L39
 	lui	a1,%hi(.LC13)
 	addi	a1,a1,%lo(.LC13)
 	mv	a0,s0
@@ -138,12 +138,12 @@ main:
 	lui	a0,%hi(.LC14)
 	addi	a0,a0,%lo(.LC14)
 	call	printf
-	j	.L38
-.L39:
+	j	.L39
+.L40:
 	lui	a4,%hi(.LC0)
 	addi	a4,a4,%lo(.LC0)
 	j	.L2
-.L40:
+.L41:
 	lui	a5,%hi(.LC2)
 	addi	a5,a5,%lo(.LC2)
 	j	.L3
@@ -152,7 +152,7 @@ main:
 	addi	a1,a1,%lo(.LC15)
 	mv	a0,s0
 	call	strcmp
-	beqz	a0,.L65
+	beqz	a0,.L66
 	lui	a1,%hi(.LC18)
 	addi	a1,a1,%lo(.LC18)
 	mv	a0,s0
@@ -205,7 +205,7 @@ main:
 	lw	a5,4(sp)
 	addi	s0,s0,16
 	bne	s0,a5,.L16
-	j	.L38
+	j	.L39
 .L11:
 	lui	a1,%hi(.LC21)
 	li	a2,2
@@ -222,13 +222,13 @@ main:
 .L18:
 	lbu	a4,2(s0)
 	li	a5,109
-	bne	a4,a5,.L41
+	bne	a4,a5,.L42
 	lw	a0,32(sp)
 	call	xtoi
 	sw	a0,20(sp)
 	li	a5,2
 	li	a4,3
-.L68:
+.L70:
 	sw	a4,16(sp)
 	addi	a4,a5,1
 	sw	a4,12(sp)
@@ -248,13 +248,13 @@ main:
 	bne	a5,s1,.L28
 	li	a0,10
 	call	putchar
-	j	.L38
-.L41:
+	j	.L39
+.L42:
 	li	a4,1
 	sw	a4,20(sp)
 	li	a5,1
 	li	a4,2
-	j	.L68
+	j	.L70
 .L28:
 	lw	a5,16(sp)
 	lbu	a4,0(s0)
@@ -293,7 +293,7 @@ main:
 	slli	a5,s1,2
 	add	a5,a5,a4
 	lw	a1,0(a5)
-.L69:
+.L71:
 	lui	a5,%hi(.LC20)
 	addi	a0,a5,%lo(.LC20)
 	call	printf
@@ -352,7 +352,7 @@ main:
 	mv	a1,a5
 	add	a4,a4,a3
 	sw	a5,0(a4)
-	j	.L69
+	j	.L71
 .L19:
 	lui	a1,%hi(.LC23)
 	addi	a1,a1,%lo(.LC23)
@@ -371,9 +371,9 @@ main:
 	lui	a0,%hi(.LC24)
 	addi	a0,a0,%lo(.LC24)
 	lhu	a1,8(a5)
-.L67:
+.L68:
 	call	printf
-	j	.L38
+	j	.L39
 .L29:
 	lui	a1,%hi(.LC25)
 	addi	a1,a1,%lo(.LC25)
@@ -390,7 +390,7 @@ main:
 	lui	a0,%hi(.LC26)
 	addi	a0,a0,%lo(.LC26)
 	lw	a1,12(a5)
-	j	.L67
+	j	.L68
 .L31:
 	lui	a1,%hi(.LC27)
 	addi	a1,a1,%lo(.LC27)
@@ -409,7 +409,7 @@ main:
 	lui	a0,%hi(.LC28)
 	addi	a0,a0,%lo(.LC28)
 	lhu	a1,10(a5)
-	j	.L67
+	j	.L68
 .L33:
 	lui	a1,%hi(.LC29)
 	addi	a1,a1,%lo(.LC29)
@@ -427,7 +427,7 @@ main:
 	mv	a1,a0
 	lui	a0,%hi(.LC30)
 	addi	a0,a0,%lo(.LC30)
-	j	.L67
+	j	.L68
 .L35:
 	lui	a1,%hi(.LC31)
 	addi	a1,a1,%lo(.LC31)
@@ -439,8 +439,8 @@ main:
 	mv	s0,a0
 	lw	a0,36(sp)
 	call	atoi
-	mv	s1,a0
 	mv	a1,a0
+	mv	s1,a0
 	mv	a0,s0
 	call	__modsi3
 	sw	a0,4(sp)
@@ -451,8 +451,9 @@ main:
 	mv	a1,a0
 	lui	a0,%hi(.LC32)
 	addi	a0,a0,%lo(.LC32)
+.L69:
 	call	printf
-	j	.L38
+	j	.L39
 .L36:
 	lui	a1,%hi(.LC33)
 	addi	a1,a1,%lo(.LC33)
@@ -476,15 +477,28 @@ main:
 	mv	a1,a0
 	lui	a0,%hi(.LC34)
 	addi	a0,a0,%lo(.LC34)
-	j	.L67
+	j	.L68
 .L37:
+	lui	a1,%hi(.LC35)
+	addi	a1,a1,%lo(.LC35)
+	mv	a0,s0
+	call	strcmp
+	bnez	a0,.L38
+	lw	a0,32(sp)
+	call	xtoi
+	mv	a1,a0
+	srai	a2,a0,1
+	lui	a0,%hi(.LC36)
+	addi	a0,a0,%lo(.LC36)
+	j	.L69
+.L38:
 	lbu	a5,0(s0)
-	beqz	a5,.L38
-	lui	a0,%hi(.LC35)
+	beqz	a5,.L39
+	lui	a0,%hi(.LC37)
 	mv	a1,s0
-	addi	a0,a0,%lo(.LC35)
-	j	.L67
-.L65:
+	addi	a0,a0,%lo(.LC37)
+	j	.L68
+.L66:
 	lui	a0,%hi(.LC16)
 	addi	a0,a0,%lo(.LC16)
 	call	printf
@@ -525,7 +539,7 @@ main:
 	.string	"board: %s (id=%d)\n"
 	.zero	1
 .LC4:
-	.string	"Sat, 30 May 2020 00:55:21 -0300"
+	.string	"Thu, 18 Jun 2020 21:02:13 -0300"
 .LC5:
 	.string	"build: darkriscv fw build %s\n"
 	.zero	2
@@ -608,5 +622,11 @@ main:
 	.string	"mac = %d\n"
 	.zero	2
 .LC35:
+	.string	"srai"
+	.zero	3
+.LC36:
+	.string	"srai %x >> 1 = %x\n"
+	.zero	1
+.LC37:
 	.string	"command: [%s] not found.\nvalid commands: clear, dump <hex>, led <hex>, timer <dec>, gpio <hex>\n                mul <dec> <dec>, div <dec> <dec>, mac <dec> <dec> <dec>\n                rd[m][bwl] <hex> [<hex> when m], wr[m][bwl] <hex> <hex> [<hex> when m]\n"
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"
