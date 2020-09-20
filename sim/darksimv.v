@@ -54,9 +54,12 @@ module darksimv;
     wire TX;
     wire RX = 1;
 
-    wire [3:0] LED;
-    wire [3:0] DEBUG;
-
-    darksocv darksocv(CLK,|RES,RX,TX,LED,DEBUG);
+    darksocv darksocv
+    (
+        .XCLK(CLK),
+        .XRES(|RES),
+        .UART_RXD(RX),
+        .UART_TXD(TX)
+    );
 
 endmodule

@@ -218,9 +218,14 @@
     `define INVRES 1
 `endif
 
+`ifdef DIGILENT_SPARTAN3_S200
+    `define BOARD_ID 7
+    `define BOARD_CK 50000000
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
-    `define BOARD_CK 100000000   
+    `define BOARD_CK 100000000
 `endif
     
 `ifdef BOARD_CK_REF

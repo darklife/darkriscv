@@ -1,4 +1,3 @@
-#
 # Copyright (c) 2018, Marcelo Samsoniuk
 # All rights reserved.
 # 
@@ -26,56 +25,32 @@
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
-#
-# ===8<--------------------------------------------------------- cut here!
-#
-# This the root makefile and the function of this file is call other
-# makefiles. Of course, you need first set the GCC compiler path/name, the
-# simulator path/name and the board model:
-#
-   ARCH = rv32e
-#  ARCH = rv32i
-#ENDIAN = _le
-#ENDIAN = _be
-#HARVARD = 1
-# CROSS = riscv-elf
-# CROSS = riscv32-unknown-elf
-# CROSS = riscv32-embedded-elf
-  CROSS = riscv32-embedded$(ENDIAN)-elf
-#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
- CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
- ICARUS = /usr/local/bin/iverilog
-#BOARD  = avnet_microboard_lx9
-#BOARD  = xilinx_ac701_a200
-#BOARD  = qmtech_sdram_lx16
-#BOARD  = lattice_brevia2_xp2 
-#BOARD = piswords_rs485_lx9
-BOARD = digilent_spartan3_s200
 
-# now you can just type 'make'
+#NET "CLK" TNM_NET = CLK;
 
-ifdef HARVARD
-	MTYPE = HARVARD=1
-	ROM = src/darksocv.rom.mem                  # requires gcc for riscv
-	RAM = src/darksocv.ram.mem                  # requires gcc for riscv
-else	
-	MEM = src/darksocv.mem
-endif
-	
-SIM = sim/darksocv.vcd                      # requires icarus verilog 
-BIT = tmp/darksocv.bit                      # requires FPGA build tool
+# without cache controller
+#TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
 
-default: all
+# with cache controller
+#TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
 
-all:
-	make -C src all             CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH) $(MTYPE)
-	make -C sim all             ICARUS=$(ICARUS) $(MTYPE)
-	make -C boards all          BOARD=$(BOARD) $(MTYPE)
+# Digilent Spartan3 S200
 
-install:
-	make -C boards install      BOARD=$(BOARD)
+NET XCLK            LOC = T9 | PERIOD = 50MHz HIGH 50%;
+#NET XCLK            LOC = K15 | PERIOD = 66MHz HIGH 50%;
+#NET XCLK            LOC = V10 | PERIOD = 40MHz HIGH 50%;
 
-clean:
-	make -C src clean
-	make -C sim clean
-	make -C boards clean        BOARD=$(BOARD)
+NET XRES            LOC = M13  | PULLDOWN;
+
+NET UART_RXD        LOC = T13  | PULLUP;
+NET UART_TXD        LOC = R13;
+
+NET LED[3]          LOC = K12;
+NET LED[2]          LOC = P14;
+NET LED[1]          LOC = L12;
+NET LED[0]          LOC = N14;
+
+NET DEBUG[3]        LOC = P13; # J4-1
+NET DEBUG[2]        LOC = N12; # J4-2
+NET DEBUG[1]        LOC = P12; # J4-3
+NET DEBUG[0]        LOC = P11; # J4-4

@@ -61,7 +61,12 @@ void boot(void)
 
     while(1)
     {
-        io.led  = !(1048576&utimers++);
+        if(!utimers--)
+        {
+            io.led++;
+            utimers=999999;
+        }
+        
         io.irq  = IRQ_TIMR;  // clear interrupts and switch context
     }
 }

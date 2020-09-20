@@ -5,35 +5,40 @@
 	.globl	boot
 	.type	boot, @function
 boot:
-	lui	a4,%hi(threads)
-	lw	a5,%lo(threads)(a4)
+	lui	a5,%hi(threads)
+	lw	a4,%lo(threads)(a5)
 	addi	sp,sp,-16
 	sw	s0,8(sp)
-	addi	a3,a5,1
-	sw	a3,%lo(threads)(a4)
-	lui	a4,%hi(io)
+	addi	a3,a4,1
+	sw	a3,%lo(threads)(a5)
+	lui	a5,%hi(io)
 	sw	ra,12(sp)
 	sw	s1,4(sp)
-	andi	a5,a5,1
-	addi	a3,a4,%lo(io)
+	andi	a4,a4,1
+	addi	a3,a5,%lo(io)
 	li	a2,-128
-	sw	a5,0(sp)
+	sw	a4,0(sp)
 	sb	a2,3(a3)
 	lui	s0,%hi(utimers)
-	beqz	a5,.L5
-	addi	a4,a4,%lo(io)
-	li	a3,-128
+	beqz	a4,.L6
+	li	a3,999424
+	addi	a5,a5,%lo(io)
+	addi	a3,a3,575
 .L2:
-	lw	a5,%lo(utimers)(s0)
-	addi	a2,a5,1
-	srli	a5,a5,20
-	xori	a5,a5,1
-	sw	a2,%lo(utimers)(s0)
-	andi	a5,a5,1
-	sh	a5,8(a4)
-	sb	a3,3(a4)
+	lw	a4,%lo(utimers)(s0)
+	addi	a1,a4,-1
+	sw	a1,%lo(utimers)(s0)
+	bnez	a4,.L4
+	lhu	a4,8(a5)
+	addi	a4,a4,1
+	slli	a4,a4,16
+	srli	a4,a4,16
+	sh	a4,8(a5)
+	sw	a3,%lo(utimers)(s0)
+.L4:
+	sb	a2,3(a5)
 	j	.L2
-.L5:
+.L6:
 	lui	s1,%hi(boot)
 .L3:
 	call	banner

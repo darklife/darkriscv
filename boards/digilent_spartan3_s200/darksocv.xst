@@ -1,0 +1,57 @@
+set -tmpdir "../tmp"
+set -xsthdpdir "../tmp/"
+run
+-ifn ../boards/digilent_spartan3_s200/darksocv.prj
+-ifmt mixed
+-ofn darksocv
+-ofmt NGC
+-p xc3s200-4-ft256
+-top darksocv
+-opt_mode Speed
+-opt_level 1
+-iuc NO
+-keep_hierarchy No
+-netlist_hierarchy As_Optimized
+-rtlview Yes
+-glob_opt AllClockNets
+-read_cores YES
+-write_timing_constraints NO
+-cross_clock_analysis NO
+-hierarchy_separator /
+-bus_delimiter <>
+-case Maintain
+-slice_utilization_ratio 100
+-bram_utilization_ratio 100
+-verilog2001 YES
+-define { DIGILENT_SPARTAN3_S200=1 }
+-fsm_extract YES -fsm_encoding Auto
+-safe_implementation No
+-fsm_style LUT
+-ram_extract Yes
+-ram_style Auto
+-rom_extract Yes
+-mux_style Auto
+-decoder_extract YES
+-priority_extract Yes
+-shreg_extract YES
+-shift_extract YES
+-xor_collapse YES
+-rom_style Auto
+-auto_bram_packing NO
+-mux_extract Yes
+-resource_sharing YES
+-async_to_sync NO
+-mult_style Auto
+-iobuf YES
+-max_fanout 100000
+-bufg 8
+-register_duplication YES
+-register_balancing No
+-slice_packing YES
+-optimize_primitives NO
+-use_clock_enable Auto
+-use_sync_set Auto
+-use_sync_reset Auto
+-iob Auto
+-equivalent_register_removal YES
+-slice_utilization_ratio_maxmargin 5
