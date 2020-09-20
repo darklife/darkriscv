@@ -156,6 +156,78 @@ following organization:
 - [board](board): support and examples for different boards (currently via Xilinx ISE)
 - [tmp](tmp): empty, but the ISE will create lots of files here)
 
+
+Setup Instructions:
+
+Step 1: Clone the DarkRISC repo to your local using below code.
+git clone https://github.com/darklife/darkriscv.git
+
+Pre Setup Guide for MacOS:
+
+The document encompasses all the dependencies and steps to install those dependencies to successfully utilize the Darriscv ecosystem on MacOS.
+
+Essentially, the ecosystem cannot be utilized in MacOS because of on of the dependencies Xilinx ISE 14.7 Design suit, which currently do not support MacOS. 
+
+In order to overcome this issue, we need to install Linux/Windows on MacOS by using below two methods:
+
+a) WineSkin, which is a kind of Windows emulator that runs the Windows application natively but intercepts and emulate the Windows calls to map directly in the macOS.
+b) VirtualBox (or VMware, Parallels, etc) in order to run a complete Windows OS or Linux, which appears to be far better than the WineSkin option.
+
+I used the second method and installed VMware Fusion to install Linux Mint. Please find below the links I used to obtain download files.
+
+Dependencies:
+
+1.  Icarus Verilog
+a.  Bison
+b.  GNU
+c.  G++
+d.  FLEX
+
+2.  Xilinx 14.7 ISE
+
+
+Icarus Verilog Setup:
+
+The steps have been condensed for linux operating system. Complete steps for all other OS platforms are available on https://iverilog.fandom.com/wiki/Installation_Guide.
+
+Step 1: Download Verilog download tar file from ftp://ftp.icarus.com/pub/eda/verilog/ . Always install the latest version. Verilog-10.3 is the latest version as of now.
+
+Step 2: Extract the tar file using ‘% tar -zxvf verilog-version.tar.gz’.
+
+Step 3: Go to the Verilog folder using ‘cd Verilog-version’. Here it is cd Verilog-10.3.
+
+Step 4: Check if you have the following libraries installed: Flex, Bison, g++ and gcc. If not use ‘sudo apt-get install flex bison g++ gcc’ in terminal to install. Restart the system once for effects to change place.
+
+Step 5: Run the below commands in directory Verilog-10.3
+1.  ./configure
+2.  Make
+3.  Sudo make install
+
+Step 6: Use ‘sudo apt-get install verilog’ to install Verilog.
+
+Optional Step: sudo apt-get install gtkwave
+
+Xilinx Setup:
+
+Follow the below video on youtube for complete installation.
+
+https://www.youtube.com/watch?v=meO-b6Ib17Y
+
+Note: Make sure you have libncurses libraries installed in linux. 
+
+If not use the below codes:
+
+1.  For 64 bit architechure
+a.  Sudo apt-get install libncurses5 libncursesw-dev
+2.  For 32 bit architecture
+a.  Sudo apt-get install libncurses5:i386
+
+Once all pre-requisites are installed, go to root directory and run the below code:
+
+cd darkrisc 
+make (use sudo if required)
+
+
 The top level *Makefile* is responsible to build everything, but it must 
 be edited first, in a way that the user at least must select the compiler 
 path and the target board.
@@ -167,7 +239,7 @@ By default, the top level *Makefile* uses:
 	ICARUS = /usr/local/bin/iverilog
 	BOARD  = avnet_microboard_lx9
 	
-Tust update the configuration according to your system configuration, 
+Just update the configuration according to your system configuration, 
 type *make* and hope everything is in the correct location! You probably will
 need fix some paths and set some others in the PATH environment variable, but
 it will eventually work.
