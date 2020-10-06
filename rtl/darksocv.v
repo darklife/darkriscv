@@ -93,6 +93,7 @@
     `define BOARD_CK 100000000   
 `endif
 */
+
 module darksocv
 (
     input        XCLK,      // external clock
@@ -130,7 +131,7 @@ module darksocv
     // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz. not so useful after I discovered 
     // that my evaluation board already has external clock generator :D
 
-    `ifdef VIVADO
+    `ifdef XILINX7CLK
     
        MMCME2_BASE #(
        .BANDWIDTH("OPTIMIZED"),   // Jitter programming (OPTIMIZED, HIGH, LOW)

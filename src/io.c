@@ -64,5 +64,6 @@ char *board_name(int id)
            id==5 ? "lattice brevia2 lxp2" :
            id==6 ? "piswords rs485 lx9" :
            id==7 ? "digilent spartan3 s200" :
+           id==8 ? "aliexpress hpc/40gbe k420" :
                    "unknown";
 }

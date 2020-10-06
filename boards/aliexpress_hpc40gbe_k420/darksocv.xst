@@ -1,0 +1,55 @@
+set -tmpdir "../tmp"
+set -xsthdpdir "../tmp/"
+run
+-ifn ../boards/aliexpress_hpc40gbe_k420/darksocv.prj
+-ofn darksocv
+-ofmt NGC
+-p xc7k420t-2-ffg901
+-top darksocv
+-opt_mode Speed
+-opt_level 2
+-power NO
+-iuc NO
+-keep_hierarchy No
+-netlist_hierarchy As_Optimized
+-rtlview Yes
+-glob_opt AllClockNets
+-read_cores YES
+-write_timing_constraints NO
+-cross_clock_analysis NO
+-hierarchy_separator /
+-bus_delimiter <>
+-case Maintain
+-slice_utilization_ratio 100
+-bram_utilization_ratio 100
+-dsp_utilization_ratio 100
+-lc Auto
+-reduce_control_sets Auto
+-fsm_extract YES -fsm_encoding Auto
+-safe_implementation No
+-fsm_style LUT
+-ram_extract Yes
+-ram_style Auto
+-rom_extract Yes
+-shreg_extract YES
+-rom_style Auto
+-auto_bram_packing NO
+-resource_sharing YES
+-async_to_sync NO
+-shreg_min_size 2
+-use_dsp48 Auto
+-iobuf YES
+-max_fanout 100000
+-bufg 16
+-register_duplication YES
+-register_balancing Yes
+-move_first_stage YES
+-move_last_stage YES
+-optimize_primitives NO
+-use_clock_enable Auto
+-use_sync_set Auto
+-use_sync_reset Auto
+-iob Auto
+-equivalent_register_removal YES
+-slice_utilization_ratio_maxmargin 5
+-define ALIEXPRESS_HPC40GBE_K420=1

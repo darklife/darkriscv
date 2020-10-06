@@ -200,6 +200,7 @@
     `define BOARD_CK_REF 50000000 
     `define BOARD_CK_MUL 20
     `define BOARD_CK_DIV 10
+    `define XILINX7CLK 1
     `define VIVADO 1 
     `define INVRES 1
 `endif
@@ -221,6 +222,16 @@
 `ifdef DIGILENT_SPARTAN3_S200
     `define BOARD_ID 7
     `define BOARD_CK 50000000
+`endif
+
+`ifdef ALIEXPRESS_HPC40GBE_K420
+    `define BOARD_ID 8
+    //`define BOARD_CK 200000000
+    `define BOARD_CK_REF 100000000
+    `define BOARD_CK_MUL 11
+    `define BOARD_CK_DIV 5
+    `define XILINX7CLK 1
+    `define INVRES 1    
 `endif
 
 `ifndef BOARD_ID
