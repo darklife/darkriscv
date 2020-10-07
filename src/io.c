@@ -65,5 +65,6 @@ char *board_name(int id)
            id==6 ? "piswords rs485 lx9" :
            id==7 ? "digilent spartan3 s200" :
            id==8 ? "aliexpress hpc/40gbe k420" :
+           id==9 ? "qmtech artix7 a35" :
                    "unknown";
 }
