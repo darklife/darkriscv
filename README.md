@@ -13,7 +13,7 @@ Opensource RISC-V implemented from scratch in one night!
 - [Implementation Notes](#implementation-notes)
 - [Development Tools](#development-tools)
 - [Development Boards](#development-boards)
-- [Creating a RISC-V from scratch on-line](#scratch)
+- [Creating a RISCV from scratch](#creating-a-riscv-from-scratch)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 
@@ -1011,7 +1011,7 @@ makes possible the data bus change the area where the code is stored. With
 this feature, it will be possible in the future create loadable codes from
 the FLASH memory! :)
 
-## Creating a RISC-V from scratch on-line
+## Creating a RISCV from scratch
 
 I found that some people are very reticent about the possibility of 
 designing a RISC-V processor in one night. Of course, it is not so easy 
