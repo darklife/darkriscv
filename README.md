@@ -13,6 +13,7 @@ Opensource RISC-V implemented from scratch in one night!
 - [Implementation Notes](#implementation-notes)
 - [Development Tools](#development-tools)
 - [Development Boards](#development-boards)
+- [Creating a RISC-V from scratch on-line](#scratch)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 
@@ -1009,6 +1010,54 @@ independent buses, but in reality they area in the same memory area, which
 makes possible the data bus change the area where the code is stored. With
 this feature, it will be possible in the future create loadable codes from
 the FLASH memory! :)
+
+## Creating a RISC-V from scratch on-line
+
+I found that some people are very reticent about the possibility of 
+designing a RISC-V processor in one night. Of course, it is not so easy 
+as it appears and, in fact, it require a lot of experience, planning and 
+luck. Also, the fact that the processor correctly run some few instructions 
+and put some garbage in the serial port does not really means that the 
+design is perfect, instead you will need lots and lots of debug time 
+in order to fix all hidden problems.
+
+Just in case, I found a set of online videos from my friend (Lucas Teske)
+that shows the design of a RISC-V processor from scratch:
+
+- https://www.twitch.tv/videos/840983740 Register bank (4h50)
+- https://www.twitch.tv/videos/845651672 Program counter and ALU (3h49)
+- https://www.twitch.tv/videos/846763347 ALU tests, CPU top level (3h47) 
+- https://www.twitch.tv/videos/848921415 Computer problems and microcode planning (8h19)
+- https://www.twitch.tv/videos/850859857 instruction decode and execute (part 1/3 8h56)
+- https://www.twitch.tv/videos/852082786 instruction decode and execute (part 2/3 10h56)
+- TBD instruction decode and execute (part 3/3)
+- TBD tests in the Lattice FPGA
+
+Unfortunately the video set is currently in portuguese only and there a lot of
+parallel discussions about technology, including the fix of the Teske's notebook
+online! I hope in the future will be possible edit the video set and, maybe, 
+create english subtitles.
+
+About the processor itself, it is a microcode oriented concept with a classic 
+von neumann archirecture, designed to support more easily different ISAs. It is really
+very different than the traditional RISC cores that we found around! Also, it includes 
+a very good eco-system around opensource tools, such as Icarus, Yosys and gtkWave!
+
+Although not finished yet (95% done!), I think it is very illustrative about the RISC-V design:
+
+- rv32e instruction set: very reduced (37) and very ortogonal bit patterns (6) 
+- rv32e register set: 16x32-bit register bank and a 32-bit program counter
+- rv32e ALU with basic operations for reg/imm and reg/reg instructions
+- rv32e instruction decode: very simple to understand, very direct to implement
+- rv32e software support: the GCC support provides an easy way to generate code and test it!
+
+The Teske's proposal is not design the faster RISC-V core ever (we already have lots 
+of faster cores with CPI ~ 1, such as the darkriscv, vexriscv, etc), but create a clean, 
+reliable and compreensive RISC-V core.
+
+You can check the code in the following repository:
+
+- https://github.com/racerxdl/riskow
 
 ## Acknowledgments
 
