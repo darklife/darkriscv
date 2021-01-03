@@ -1027,10 +1027,10 @@ that shows the design of a RISC-V processor from scratch:
 - https://www.twitch.tv/videos/840983740 Register bank (4h50)
 - https://www.twitch.tv/videos/845651672 Program counter and ALU (3h49)
 - https://www.twitch.tv/videos/846763347 ALU tests, CPU top level (3h47) 
-- https://www.twitch.tv/videos/848921415 Computer problems and microcode planning (8h19)
-- https://www.twitch.tv/videos/850859857 instruction decode and execute (part 1/3 8h56)
-- https://www.twitch.tv/videos/852082786 instruction decode and execute (part 2/3 10h56)
-- TBD instruction decode and execute (part 3/3)
+- https://www.twitch.tv/videos/848921415 Computer problems and microcode planning (08h19)
+- https://www.twitch.tv/videos/850859857 instruction decode and execute - part 1/3 (08h56)
+- https://www.twitch.tv/videos/852082786 instruction decode and execute - part 2/3 (10h56)
+- https://www.twitch.tv/videos/858055433 instruction decode and execute - part 3/3 - SoC simulation (10h24)
 - TBD tests in the Lattice FPGA
 
 Unfortunately the video set is currently in portuguese only and there a lot of
