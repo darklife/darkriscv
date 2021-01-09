@@ -94,52 +94,48 @@ module darkriscv
 
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XMAC; //, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XMAC, XRES=1; //, XFCC, XCCC;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
 
     always@(posedge CLK)
-    begin        
-        if(!HLT)
-        begin
-            XIDATA <= /*RES ? { ALL0[31:12], 5'd2, ALL0[6:0] } : HLT ? XIDATA : */IDATA;
-            
-            XLUI   <= /*RES ? 0 : HLT ? XLUI   : */IDATA[6:0]==`LUI;
-            XAUIPC <= /*RES ? 0 : HLT ? XAUIPC : */IDATA[6:0]==`AUIPC;
-            XJAL   <= /*RES ? 0 : HLT ? XJAL   : */IDATA[6:0]==`JAL;
-            XJALR  <= /*RES ? 0 : HLT ? XJALR  : */IDATA[6:0]==`JALR;        
+    begin
+        XIDATA <= XRES ? 0 : HLT ? XIDATA : IDATA;
+        
+        XLUI   <= XRES ? 0 : HLT ? XLUI   : IDATA[6:0]==`LUI;
+        XAUIPC <= XRES ? 0 : HLT ? XAUIPC : IDATA[6:0]==`AUIPC;
+        XJAL   <= XRES ? 0 : HLT ? XJAL   : IDATA[6:0]==`JAL;
+        XJALR  <= XRES ? 0 : HLT ? XJALR  : IDATA[6:0]==`JALR;        
 
-            XBCC   <= /*RES ? 0 : HLT ? XBCC   : */IDATA[6:0]==`BCC;
-            XLCC   <= /*RES ? 0 : HLT ? XLCC   : */IDATA[6:0]==`LCC;
-            XSCC   <= /*RES ? 0 : HLT ? XSCC   : */IDATA[6:0]==`SCC;
-            XMCC   <= /*RES ? 0 : HLT ? XMCC   : */IDATA[6:0]==`MCC;
+        XBCC   <= XRES ? 0 : HLT ? XBCC   : IDATA[6:0]==`BCC;
+        XLCC   <= XRES ? 0 : HLT ? XLCC   : IDATA[6:0]==`LCC;
+        XSCC   <= XRES ? 0 : HLT ? XSCC   : IDATA[6:0]==`SCC;
+        XMCC   <= XRES ? 0 : HLT ? XMCC   : IDATA[6:0]==`MCC;
 
-            XRCC   <= /*RES ? 0 : HLT ? XRCC   : */IDATA[6:0]==`RCC;
-            XMAC   <= /*RES ? 0 : HLT ? XRCC   : */IDATA[6:0]==`MAC;
-            //XFCC   <= RES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
-            //XCCC   <= RES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
+        XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
+        XMAC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`MAC;
+        //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
+        //XCCC   <= XRES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
 
-            // signal extended immediate, according to the instruction type:
+        // signal extended immediate, according to the instruction type:
+        
+        XSIMM  <= XRES ? 0 : HLT ? XSIMM :
+                 IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                 IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                 IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                 IDATA[6:0]==`LUI||
+                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                      { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
+        // non-signal extended immediate, according to the instruction type:
 
-            
-            XSIMM  <= /*RES ? 0 : HLT ? SIMM :*/
-                     IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                     IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                     IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                     IDATA[6:0]==`LUI||
-                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                          { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
-            // non-signal extended immediate, according to the instruction type:
-
-            XUIMM  <= /*RES ? 0: HLT ? UIMM :*/
-                     IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                     IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                     IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                     IDATA[6:0]==`LUI||
-                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                          { ALL0[31:12], IDATA[31:20] }; // i-type
-        end
+        XUIMM  <= XRES ? 0: HLT ? XUIMM :
+                 IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                 IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                 IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                 IDATA[6:0]==`LUI||
+                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                      { ALL0[31:12], IDATA[31:20] }; // i-type
     end
 
     // decode: after XIDATA
@@ -153,15 +149,15 @@ module darkriscv
 
     `ifdef __RV32E__
     
-        reg [4:0] RESMODE = 0;
+        reg [4:0] RESMODE = -1;
 
-        wire [4:0] DPTR   = RES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
+        wire [4:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
         wire [4:0] S1PTR  = { XMODE, XIDATA[18:15] };
         wire [4:0] S2PTR  = { XMODE, XIDATA[23:20] };
     `else
-        reg [5:0] RESMODE = 0;
+        reg [5:0] RESMODE = -1;
 
-        wire [5:0] DPTR   = RES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
+        wire [5:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
         wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
         wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
     `endif
@@ -174,15 +170,15 @@ module darkriscv
 
     `ifdef __RV32E__    
     
-        reg [3:0] RESMODE = 0;
+        reg [3:0] RESMODE = -1;
     
-        wire [3:0] DPTR   = RES ? RESMODE : XIDATA[10: 7]; // set SP_RESET when RES==1
+        wire [3:0] DPTR   = XRES ? RESMODE : XIDATA[10: 7]; // set SP_RESET when RES==1
         wire [3:0] S1PTR  = XIDATA[18:15];
         wire [3:0] S2PTR  = XIDATA[23:20];
     `else
-        reg [4:0] RESMODE = 0;
+        reg [4:0] RESMODE = -1;
     
-        wire [4:0] DPTR   = RES ? RESMODE : XIDATA[11: 7]; // set SP_RESET when RES==1
+        wire [4:0] DPTR   = XRES ? RESMODE : XIDATA[11: 7]; // set SP_RESET when RES==1
         wire [4:0] S1PTR  = XIDATA[19:15];
         wire [4:0] S2PTR  = XIDATA[24:20];    
     `endif
@@ -227,15 +223,6 @@ module darkriscv
         reg [31:0] REG1 [0:63];	// general-purpose 32x32-bit registers (s1)
         reg [31:0] REG2 [0:63];	// general-purpose 32x32-bit registers (s2)    
     `endif
-/*
-    integer i; 
-    initial 
-    for(i=0;i!=64;i=i+1) 
-    begin
-        REG1[i] = 0; // makes the simulation looks better!
-        REG2[i] = 0; // makes the simulation looks better!
-    end
-*/
 `else
 `ifdef __3STAGE__
     reg [31:0] NXPC2;       // 32-bit program counter t+2
@@ -250,15 +237,6 @@ module darkriscv
         reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
         reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
     `endif
-/*
-    integer i; 
-    initial 
-    for(i=0;i!=32;i=i+1) 
-    begin
-        REG1[i] = 0; // makes the simulation looks better!
-        REG2[i] = 0; // makes the simulation looks better!
-    end
-*/
 `endif
 
     // source-1 and source-1 register selection
@@ -268,7 +246,7 @@ module darkriscv
     
     wire          [31:0] U1REG = REG1[S1PTR];
     wire          [31:0] U2REG = REG2[S2PTR];
-    
+
     // L-group of instructions (OPCODE==7'b0000011)
 
     wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
@@ -333,23 +311,23 @@ module darkriscv
     // J/B-group of instructions (OPCODE==7'b1100011)
     
     wire BMUX       = BCC==1 && (
-                          FCT3==4 ? S1REG< S2REG : // blt
+                          FCT3==4 ? S1REG< S2REGX : // blt
                           FCT3==5 ? S1REG>=S2REG : // bge
-                          FCT3==6 ? U1REG< U2REG : // bltu
+                          FCT3==6 ? U1REG< U2REGX : // bltu
                           FCT3==7 ? U1REG>=U2REG : // bgeu
-                          FCT3==0 ? U1REG==U2REG : // beq
-                          FCT3==1 ? U1REG!=U2REG : // bne
-                                    0);
+                          FCT3==0 ? !(U1REG^S2REGX) : //U1REG==U2REG : // beq
+                          /*FCT3==1 ? */ U1REG^S2REGX); //U1REG!=U2REG); // bne
+                                    //0);
 
     wire        JREQ = (JAL||JALR||BMUX);
-    wire [31:0] JVAL = SIMM + (JALR ? U1REG : PC);
+    wire [31:0] JVAL = JALR ? DADDR : PC+SIMM; // SIMM + (JALR ? U1REG : PC);
 
 `ifdef __PERFMETER__
     integer clocks=0, user=0, super=0, halt=0, flush=0;
 
     always@(posedge CLK)
     begin
-        if(!RES)
+        if(!XRES)
         begin
             clocks = clocks+1;
 
@@ -379,21 +357,23 @@ module darkriscv
 
     always@(posedge CLK)
     begin
-        RESMODE <= RESMODE +1;
+        RESMODE <= RES ? -1 : RESMODE ? RESMODE-1 : 0;
+        
+        XRES <= |RESMODE;
 
 `ifdef __3STAGE__
-	    FLUSH <= RES ? 2 : HLT ? FLUSH :        // reset and halt                              
+	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt                              
 	                       FLUSH ? FLUSH-1 :                           
 	                       (JAL||JALR||BMUX) ? 2 : 0;  // flush the pipeline!
 `else
-        FLUSH <= RES ? 1 : HLT ? FLUSH :        // reset and halt
+        FLUSH <= XRES ? 1 : HLT ? FLUSH :        // reset and halt
                        (JAL||JALR||BMUX);  // flush the pipeline!
 `endif
 
 `ifdef __RV32E__
-        REG1[DPTR] <=   RES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+        REG1[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
 `else
-        REG1[DPTR] <=   RES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+        REG1[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
 `endif
                        HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
@@ -406,14 +386,12 @@ module darkriscv
 `ifdef __MAC16X16__                  
                        MAC ? REG2[DPTR]+KDATA :
 `endif
-                       //MCC ? MDATA :
-                       //RCC ? RDATA : 
                        //CCC ? CDATA : 
                              REG1[DPTR];
 `ifdef __RV32E__
-        REG2[DPTR] <=   RES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0) :        // reset sp
+        REG2[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0) :        // reset sp
 `else        
-        REG2[DPTR] <=   RES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0) :        // reset sp
+        REG2[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0) :        // reset sp
 `endif        
                        HLT ? REG2[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
@@ -426,8 +404,6 @@ module darkriscv
 `ifdef __MAC16X16__
                        MAC ? REG2[DPTR]+KDATA :
 `endif                       
-                       //MCC ? MDATA :
-                       //RCC ? RDATA : 
                        //CCC ? CDATA : 
                              REG2[DPTR];
 
@@ -435,31 +411,31 @@ module darkriscv
 
 `ifdef __THREADING__
 
-        NXPC <= /*RES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
+        NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
 
-        NXPC2[RES ? RESMODE[0] : XMODE] <=  RES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
+        NXPC2[RES ? RESMODE[0] : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
-        XMODE <= RES ? 0 : HLT ? XMODE :        // reset and halt
+        XMODE <= XRES ? 0 : HLT ? XMODE :        // reset and halt
 	             XMODE==0&& IREQ&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
                  XMODE==1&&!IREQ&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
 
 `else
-        NXPC <= /*RES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
+        NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
 	
-	    NXPC2 <=  RES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
+	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
 
 `endif
 
 `else
-        NXPC <= RES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
+        NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
 `endif
-        PC   <= /*RES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
+        PC   <= /*XRES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
     end
 
     // IO and memory interface
@@ -490,6 +466,6 @@ module darkriscv
     assign IADDR = NXPC;
 `endif
 
-    assign DEBUG = { RES, |FLUSH, WR, RD };
+    assign DEBUG = { XRES, |FLUSH, WR, RD };
 
 endmodule

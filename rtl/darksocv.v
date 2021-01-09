@@ -31,69 +31,6 @@
 `timescale 1ns / 1ps
 `include "../rtl/config.vh"
 
-// the following defines are user defined:
-
-//`define __ICACHE__              // instruction cache
-//`define __DCACHE__              // data cache (bug: simulation only)
-//`define __WAITSTATES__          // wait-state tests, no cache
-//`define __3STAGE__              // single phase 3-state pipeline 
-//`define __THREADING__           // interrupt controller
-
-// the board is automatically defined in the xst/xise files via 
-// Makefile or ISE otherwise, please define you board name here:
-
-//`define AVNET_MICROBOARD_LX9
-//`define XILINX_AC701_A200
-//`define QMTECH_SDRAM_LX16
-
-// the following defines are automatically defined:
-/*
-`ifdef __ICARUS__
-    `define SIMULATION 1
-`endif
-
-`ifdef XILINX_ISIM
-    `define SIMULATION 2
-`endif
-
-`ifdef MODEL_TECH
-    `define SIMULATION 3
-`endif
-
-`ifdef XILINX_SIMULATOR
-    `define SIMULATION 4
-`endif
-
-`ifdef AVNET_MICROBOARD_LX9
-    `define BOARD_ID 1
-    `define BOARD_CK 100000000
-    
-    // example of DCM logic:
-    //
-    //`define BOARD_CK_REF 66666666 
-    //`define BOARD_CK_MUL 3
-    //`define BOARD_CK_DIV 2
-`endif
-
-`ifdef XILINX_AC701_A200
-    `define BOARD_ID 2
-    //`define BOARD_CK 90000000
-    `define BOARD_CK_REF 90000000 
-    `define BOARD_CK_MUL 4
-    `define BOARD_CK_DIV 2
-`endif
-
-`ifdef QMTECH_SDRAM_LX16
-    `define BOARD_ID 3
-    `define BOARD_CK 50000000
-`endif
-
-`ifndef BOARD_ID
-    `define BOARD_ID 0    
-    `define BOARD_CK 100000000   
-`endif
-*/
-
 module darksocv
 (
     input        XCLK,      // external clock
@@ -385,18 +322,34 @@ module darksocv
     
 `endif
 
+
+`ifdef __3STAGE__    
+
+    reg [31:0] ROMFF2 = 0;
+    reg        HLT2   = 0;
+
     always@(posedge CLK) // stage #0.5    
     begin
-`ifdef __3STAGE__    
-        if(!HLT)
-`endif
+        if(HLT)
         begin
-`ifdef __HARVARD__
-            ROMFF <= ROM[IADDR[11:2]];
-`else
-            ROMFF <= MEM[IADDR[12:2]];
-`endif
+            ROMFF2 <= ROMFF;
         end
+        
+        HLT2 <= HLT;
+    end
+    
+    assign IDATA = HLT2 ? ROMFF2 : ROMFF;
+`else    
+    assign IDATA = ROMFF;
+`endif
+
+    always@(posedge CLK) // stage #0.5    
+    begin
+`ifdef __HARVARD__
+        ROMFF <= ROM[IADDR[11:2]];
+`else
+        ROMFF <= MEM[IADDR[12:2]];
+`endif
     end
 
     //assign IDATA = ROM[IADDR[11:2]];
@@ -410,7 +363,7 @@ module darksocv
 //        end
 //    end
     
-    assign IDATA = ROMFF;
+//    assign IDATA = ROMFF;
 
 `endif
 
