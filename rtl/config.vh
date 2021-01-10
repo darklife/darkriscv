@@ -75,7 +75,7 @@
 // performance impact.  Note: threading is currently supported only in the
 // 3-stage pipeline version.
 
-`define __THREADING__
+//`define __THREADING__
 
 // performance measurement:
 //
@@ -96,7 +96,7 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 
-`define __MAC16X16__
+//`define __MAC16X16__
 
 // RV32I vs RV32E:
 //
@@ -116,7 +116,7 @@
 // the stack can be positioned in the top of RAM and does not match with the
 // .data.
 
-//`define __HARVARD__
+`define __HARVARD__
 
 // full harvard architecture:
 // 
@@ -131,6 +131,19 @@
 // advantage of a single memory bank is that the .text and .data areas can
 // be better allocated, but in this case is not possible protect the .text
 // area as in the case of separate memory banks.
+
+`define __FLEXBUZZ__
+
+// flexbuzz interface (experimental):
+//
+// A new data bus interface similar to a well known c*ldfire bus interface, in 
+// a way that part of the bus routing is moved to the core, in a way that 
+// is possible support different bus widths (8, 16 or 32 bit) and endians more 
+// easily (the new interface is natively big-endian, but the endian can be adjusted
+// in the bus interface dinamically). Similarly to the standard 32-bit interface, 
+// the external logic must detect the RD/WR operation quick enough and assert HLT 
+// in order to insert wait-states and perform the required multiplexing to fit 
+// the DLEN operand size in the data bus width available.
 
 `define __RESETPC__ 32'd0
 `define __RESETSP__ 32'd8192

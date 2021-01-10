@@ -72,11 +72,15 @@ module darkriscv
     input      [31:0] DATAI, // data bus (input)
     output     [31:0] DATAO, // data bus (output)
     output     [31:0] DADDR, // addr bus
-    
+
+`ifdef __FLEXBUZZ__
+    output     [ 2:0] DLEN, // data length
+    output            RW,   // data read/write
+`else    
     output     [ 3:0] BE,   // byte enable
-    
     output            WR,    // write enable
     output            RD,    // read enable 
+`endif    
     
     output [3:0]  DEBUG      // old-school osciloscope based debug! :)
 );
@@ -249,6 +253,12 @@ module darkriscv
 
     // L-group of instructions (OPCODE==7'b0000011)
 
+`ifdef __FLEXBUZZ__
+
+    wire [31:0] LDATA = FCT3[1:0]==0 ? { FCT3[2]==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } :
+                        FCT3[1:0]==1 ? { FCT3[2]==0&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } :
+                                        DATAI;
+`else
     wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
                                              DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
                                              DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
@@ -256,9 +266,16 @@ module darkriscv
                         FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
                                                              { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
                                              DATAI;
+`endif
 
     // S-group of instructions (OPCODE==7'b0100011)
 
+`ifdef __FLEXBUZZ__
+
+    wire [31:0] SDATA = U2REG; /* FCT3==0 ? { ALL0 [31: 8], U2REG[ 7:0] } :
+                        FCT3==1 ? { ALL0 [31:16], U2REG[15:0] } :
+                                    U2REG;*/
+`else
     wire [31:0] SDATA = FCT3==0 ? ( DADDR[1:0]==3 ? { U2REG[ 7: 0], ALL0 [23:0] } : 
                                     DADDR[1:0]==2 ? { ALL0 [31:24], U2REG[ 7:0], ALL0[15:0] } : 
                                     DADDR[1:0]==1 ? { ALL0 [31:16], U2REG[ 7:0], ALL0[7:0] } :
@@ -266,6 +283,7 @@ module darkriscv
                         FCT3==1 ? ( DADDR[1]==1   ? { U2REG[15: 0], ALL0 [15:0] } :
                                                     { ALL0 [31:16], U2REG[15:0] } ) :
                                     U2REG;
+`endif
 
     // C-group not implemented yet!
     
@@ -443,11 +461,16 @@ module darkriscv
     assign DATAO = SDATA; // SCC ? SDATA : 0;
     assign DADDR = U1REG + SIMM; // (SCC||LCC) ? U1REG + SIMM : 0;
 
-    assign RD = LCC;
-    assign WR = SCC;
-    
     // based in the Scc and Lcc   
 
+`ifdef __FLEXBUZZ__
+    assign RW      = !SCC;
+    assign DLEN[0] = (SCC||LCC)&&FCT3[1:0]==0;
+    assign DLEN[1] = (SCC||LCC)&&FCT3[1:0]==1;
+    assign DLEN[2] = (SCC||LCC)&&FCT3[1:0]==2;
+`else
+    assign RD = LCC;
+    assign WR = SCC;
     assign BE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
                                      DADDR[1:0]==2 ? 4'b0100 : 
                                      DADDR[1:0]==1 ? 4'b0010 :
@@ -455,6 +478,7 @@ module darkriscv
                 FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
                                                      4'b0011 ) :
                                                      4'b1111; // sw/lw
+`endif
 
 `ifdef __3STAGE__
 `ifdef __THREADING__
@@ -466,6 +490,6 @@ module darkriscv
     assign IADDR = NXPC;
 `endif
 
-    assign DEBUG = { XRES, |FLUSH, WR, RD };
+    assign DEBUG = { XRES, |FLUSH, SCC, LCC };
 
 endmodule

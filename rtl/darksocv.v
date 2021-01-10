@@ -255,6 +255,13 @@ module darksocv
     wire        WR,RD;
     wire [3:0]  BE;
 
+`ifdef __FLEXBUZZ__
+    wire [31:0] XATAO;        
+    wire [31:0] XATAI;
+    wire [ 2:0] DLEN;
+    wire        RW;
+`endif
+
     wire [31:0] IOMUX [0:3];
 
     reg  [15:0] GPIOFF = 0;
@@ -448,6 +455,40 @@ module darksocv
 `else
 
     // no cache!
+
+    `ifdef __FLEXBUZZ__
+    
+    // must work just exactly as the default interface, since we have no
+    // flexbuzz devices available yet (i.e., all devices are 32-bit now)
+                                            
+    assign XATAI = DLEN[0] ? ( DADDR[1:0]==3 ? DATAI[31:24] :
+                               DADDR[1:0]==2 ? DATAI[23:16] :
+                               DADDR[1:0]==1 ? DATAI[15: 8] :
+                                               DATAI[ 7: 0] ):
+                   DLEN[1] ? ( DADDR[1]==1   ? DATAI[31:16] : 
+                                               DATAI[15: 0] ):
+                                               DATAI;
+   
+    assign DATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        XATAO[ 7: 0], 24'hx } :
+                               DADDR[1:0]==2 ? {  8'hx, XATAO[ 7: 0], 16'hx } :
+                               DADDR[1:0]==1 ? { 16'hx, XATAO[ 7: 0],  8'hx } :
+                                               { 24'hx, XATAO[ 7: 0]        } ):
+                   DLEN[1] ? ( DADDR[1]==1   ? { XATAO[15: 0], 16'hx } :
+                                               { 16'hx, XATAO[15: 0] } ):
+                                                 XATAO;
+
+    assign RD = DLEN&&RW==1;
+    assign WR = DLEN&&RW==0;
+    
+    assign BE =    DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
+                               DADDR[1:0]==2 ? 4'b0100 : 
+                               DADDR[1:0]==1 ? 4'b0010 : 
+                                               4'b0001 ) :
+                   DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
+                                               4'b0011 ) :
+                                               4'b1111;  // 32-bit
+
+    `endif
 
     reg [31:0] RAMFF;
 `ifdef __WAITSTATES__
@@ -672,12 +713,21 @@ module darksocv
 `endif        
         .IDATA(IDATA),
         .IADDR(IADDR),
+        .DADDR(DADDR),
+
+`ifdef __FLEXBUZZ__
+        .DATAI(XATAI),
+        .DATAO(XATAO),
+        .DLEN(DLEN),
+        .RW(RW),
+`else
         .DATAI(DATAI),
         .DATAO(DATAO),
-        .DADDR(DADDR),        
         .BE(BE),
         .WR(WR),
         .RD(RD),
+`endif
+
         .DEBUG(KDEBUG)
     );
 

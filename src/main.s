@@ -10,12 +10,12 @@
 	.globl	main
 	.type	main, @function
 main:
-	addi	sp,sp,-136
-	sw	s0,128(sp)
+	addi	sp,sp,-120
+	sw	s0,112(sp)
 	lui	s0,%hi(io)
 	lbu	a0,%lo(io)(s0)
-	sw	ra,132(sp)
-	sw	s1,124(sp)
+	sw	ra,116(sp)
+	sw	s1,108(sp)
 	call	board_name
 	lbu	a2,%lo(io)(s0)
 	mv	a1,a0
@@ -28,17 +28,15 @@ main:
 	addi	a0,a0,%lo(.LC5)
 	call	printf
 	addi	a5,s0,%lo(io)
-	lbu	s1,1(a5)
-	lbu	t1,2(a5)
-	lui	a5,%hi(threads)
-	lw	a3,%lo(threads)(a5)
-	addi	a2,s0,%lo(io)
-	li	a4,1
-	sw	a2,0(sp)
-	andi	s1,s1,0xff
+	lui	s1,%hi(threads)
+	lbu	t1,1(a5)
+	lbu	t0,2(a5)
+	lw	a4,%lo(threads)(s1)
+	li	a5,1
 	andi	t1,t1,0xff
-	mv	s0,a5
-	bgt	a3,a4,.L40
+	andi	t0,t0,0xff
+	addi	s0,s0,%lo(io)
+	bgt	a4,a5,.L29
 	lui	a4,%hi(.LC1)
 	addi	a4,a4,%lo(.LC1)
 .L2:
@@ -46,48 +44,48 @@ main:
 	li	a1,16
 	li	a0,1000
 	sw	a4,8(sp)
-	sw	t1,4(sp)
+	sw	t0,4(sp)
+	sw	t1,0(sp)
 	call	mac
 	li	a5,1256
-	lw	t1,4(sp)
+	lw	t1,0(sp)
+	lw	t0,4(sp)
 	lw	a4,8(sp)
-	beq	a0,a5,.L41
+	beq	a0,a5,.L30
 	lui	a5,%hi(.LC1)
 	addi	a5,a5,%lo(.LC1)
 .L3:
 	lui	a3,%hi(.LC6)
 	lui	a0,%hi(.LC7)
-	mv	a2,t1
+	mv	a2,t0
+	mv	a1,t1
 	addi	a3,a3,%lo(.LC6)
-	mv	a1,s1
 	addi	a0,a0,%lo(.LC7)
 	call	printf
-	lw	a5,0(sp)
-	sw	zero,%lo(threads)(s0)
+	sw	zero,%lo(threads)(s1)
+	lhu	a1,6(s0)
 	lui	a0,%hi(.LC8)
-	lhu	a1,6(a5)
 	addi	a0,a0,%lo(.LC8)
 	call	printf
-	lw	a5,0(sp)
+	lbu	a0,1(s0)
+	lbu	s1,2(s0)
+	lw	a4,12(s0)
+	lw	a2,12(s0)
 	li	a1,999424
 	addi	a1,a1,576
-	lbu	a0,1(a5)
-	lbu	s0,2(a5)
-	lw	a5,12(a5)
-	andi	s0,s0,0xff
-	sw	a5,8(sp)
-	lw	a5,0(sp)
-	lw	a2,12(a5)
 	sw	a2,4(sp)
+	sw	a4,8(sp)
 	call	__mulsi3
+	andi	s1,s1,0xff
 	li	a1,8192
-	mv	s1,a0
+	sw	a0,0(sp)
 	addi	a1,a1,1808
-	mv	a0,s0
+	mv	a0,s1
 	call	__mulsi3
-	lw	a5,8(sp)
-	add	a0,s1,a0
-	addi	a1,a5,1
+	lw	a4,8(sp)
+	lw	a5,0(sp)
+	addi	a1,a4,1
+	add	a0,a5,a0
 	call	__udivsi3
 	lw	a2,4(sp)
 	mv	a1,a0
@@ -101,92 +99,93 @@ main:
 	call	puts
 	li	a0,10
 	call	usleep
-.L39:
+.L28:
 	lui	a5,%hi(.LC11)
 	addi	a0,a5,%lo(.LC11)
 	call	printf
 	li	a2,64
 	li	a1,0
-	addi	a0,sp,60
+	addi	a0,sp,44
 	call	memset
 	li	a1,64
-	addi	a0,sp,60
+	addi	a0,sp,44
 	call	gets
-	li	s0,0
-	addi	a0,sp,60
-	lui	s1,%hi(.LC12)
+	li	s1,0
+	addi	a0,sp,44
+	lui	a4,%hi(.LC12)
 .L4:
-	addi	a1,s1,%lo(.LC12)
+	addi	a1,a4,%lo(.LC12)
 	call	strtok
-	slli	a5,s0,2
-	addi	a4,sp,124
+	addi	a4,sp,108
+	slli	a5,s1,2
 	add	a5,a4,a5
 	sw	a0,-96(a5)
+	lui	a4,%hi(.LC12)
 	beqz	a0,.L5
-	addi	s0,s0,1
+	addi	s1,s1,1
 	li	a5,8
 	li	a0,0
-	bne	s0,a5,.L4
+	bne	s1,a5,.L4
 .L5:
-	lw	s0,28(sp)
-	beqz	s0,.L39
+	lw	s1,12(sp)
+	beqz	s1,.L28
 	lui	a1,%hi(.LC13)
 	addi	a1,a1,%lo(.LC13)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
 	bnez	a0,.L9
 	lui	a0,%hi(.LC14)
 	addi	a0,a0,%lo(.LC14)
 	call	printf
-	j	.L39
-.L40:
+	j	.L28
+.L29:
 	lui	a4,%hi(.LC0)
 	addi	a4,a4,%lo(.LC0)
 	j	.L2
-.L41:
+.L30:
 	lui	a5,%hi(.LC2)
 	addi	a5,a5,%lo(.LC2)
 	j	.L3
 .L9:
 	lui	a1,%hi(.LC15)
 	addi	a1,a1,%lo(.LC15)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
-	beqz	a0,.L66
+	beqz	a0,.L50
 	lui	a1,%hi(.LC18)
 	addi	a1,a1,%lo(.LC18)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
 	bnez	a0,.L11
-	lw	s0,32(sp)
-	beqz	s0,.L12
-	mv	a0,s0
+	lw	s1,16(sp)
+	beqz	s1,.L12
+	mv	a0,s1
 	call	xtoi
-	mv	s0,a0
+	mv	s1,a0
 .L12:
-	addi	a5,s0,256
-	sw	a5,4(sp)
-	lui	s1,%hi(.LC19)
+	addi	a5,s1,256
+	sw	a5,0(sp)
 .L16:
-	mv	a1,s0
-	addi	a0,s1,%lo(.LC19)
+	lui	a5,%hi(.LC19)
+	mv	a1,s1
+	addi	a0,a5,%lo(.LC19)
 	call	printf
 	li	a4,0
 	lui	a2,%hi(.LC20)
 .L13:
-	add	a3,s0,a4
+	add	a3,s1,a4
 	lbu	a1,0(a3)
 	addi	a0,a2,%lo(.LC20)
-	sw	a4,8(sp)
+	sw	a4,4(sp)
 	call	printf
-	lw	a4,8(sp)
+	lw	a4,4(sp)
 	li	a3,16
 	lui	a2,%hi(.LC20)
 	addi	a4,a4,1
 	bne	a4,a3,.L13
 	li	a4,0
 .L15:
-	add	a3,s0,a4
+	add	a3,s1,a4
 	lbu	a0,0(a3)
 	li	a2,94
 	addi	a3,a0,-32
@@ -194,311 +193,160 @@ main:
 	bleu	a3,a2,.L14
 	li	a0,46
 .L14:
-	sw	a4,8(sp)
+	sw	a4,4(sp)
 	call	putchar
-	lw	a4,8(sp)
+	lw	a4,4(sp)
 	li	a3,16
 	addi	a4,a4,1
 	bne	a4,a3,.L15
 	li	a0,10
 	call	putchar
-	lw	a5,4(sp)
-	addi	s0,s0,16
-	bne	s0,a5,.L16
-	j	.L39
+	lw	a5,0(sp)
+	addi	s1,s1,16
+	bne	s1,a5,.L16
+	j	.L28
 .L11:
 	lui	a1,%hi(.LC21)
-	li	a2,2
 	addi	a1,a1,%lo(.LC21)
-	mv	a0,s0
-	call	strncmp
-	beqz	a0,.L18
-	lui	a1,%hi(.LC22)
-	li	a2,2
-	addi	a1,a1,%lo(.LC22)
-	mv	a0,s0
-	call	strncmp
-	bnez	a0,.L19
-.L18:
-	lbu	a4,2(s0)
-	li	a5,109
-	bne	a4,a5,.L42
-	lw	a0,32(sp)
+	mv	a0,s1
+	call	strcmp
+	bnez	a0,.L18
+	lw	a0,16(sp)
+	beqz	a0,.L19
 	call	xtoi
-	sw	a0,20(sp)
-	li	a5,2
-	li	a4,3
-.L70:
-	sw	a4,16(sp)
-	addi	a4,a5,1
-	sw	a4,12(sp)
-	slli	a5,a5,2
-	addi	a4,sp,124
-	add	a5,a4,a5
-	lw	a0,-96(a5)
-	li	s1,0
-	call	xtoi
-	sw	a0,4(sp)
-	mv	a1,a0
-	lui	a0,%hi(.LC19)
-	addi	a0,a0,%lo(.LC19)
-	call	printf
-.L21:
-	lw	a5,20(sp)
-	bne	a5,s1,.L28
-	li	a0,10
-	call	putchar
-	j	.L39
-.L42:
-	li	a4,1
-	sw	a4,20(sp)
-	li	a5,1
-	li	a4,2
-	j	.L70
-.L28:
-	lw	a5,16(sp)
-	lbu	a4,0(s0)
-	add	a5,s0,a5
-	sw	a5,8(sp)
-	li	a5,114
-	bne	a4,a5,.L22
-	lw	a5,8(sp)
-	lbu	a4,0(a5)
-	li	a5,98
-	bne	a4,a5,.L23
-	lw	a5,4(sp)
-	add	a5,a5,s1
-	lbu	a1,0(a5)
-	lui	a5,%hi(.LC20)
-	addi	a0,a5,%lo(.LC20)
-	call	printf
-.L23:
-	lw	a5,8(sp)
-	lbu	a4,0(a5)
-	li	a5,119
-	bne	a4,a5,.L24
-	lw	a4,4(sp)
-	slli	a5,s1,1
-	add	a5,a5,a4
-	lh	a1,0(a5)
-	lui	a5,%hi(.LC20)
-	addi	a0,a5,%lo(.LC20)
-	call	printf
-.L24:
-	lw	a5,8(sp)
-	lbu	a4,0(a5)
-	li	a5,108
-	bne	a4,a5,.L25
-	lw	a4,4(sp)
-	slli	a5,s1,2
-	add	a5,a5,a4
-	lw	a1,0(a5)
-.L71:
-	lui	a5,%hi(.LC20)
-	addi	a0,a5,%lo(.LC20)
-	call	printf
-.L25:
-	addi	s1,s1,1
-	j	.L21
-.L22:
-	lw	a5,12(sp)
-	addi	a4,sp,124
-	addi	a5,a5,1
-	sw	a5,24(sp)
-	lw	a5,12(sp)
-	slli	a5,a5,2
-	add	a5,a4,a5
-	lw	a0,-96(a5)
-	call	xtoi
-	lw	a4,8(sp)
-	mv	a5,a0
-	lbu	a3,0(a4)
-	li	a4,98
-	bne	a3,a4,.L26
-	lw	a4,4(sp)
-	lui	a5,%hi(.LC20)
-	andi	a1,a0,0xff
-	add	a4,a4,s1
-	sb	a0,0(a4)
-	sw	a0,12(sp)
-	addi	a0,a5,%lo(.LC20)
-	call	printf
-	lw	a5,12(sp)
-.L26:
-	lw	a4,8(sp)
-	lbu	a3,0(a4)
-	li	a4,119
-	bne	a3,a4,.L27
-	slli	a1,a5,16
-	sw	a5,12(sp)
-	lw	a5,4(sp)
-	slli	a4,s1,1
-	srai	a1,a1,16
-	add	a4,a4,a5
-	lui	a5,%hi(.LC20)
-	addi	a0,a5,%lo(.LC20)
-	sh	a1,0(a4)
-	call	printf
-	lw	a5,12(sp)
-.L27:
-	lw	a4,8(sp)
-	lw	a2,24(sp)
-	lbu	a3,0(a4)
-	sw	a2,12(sp)
-	li	a4,108
-	bne	a3,a4,.L25
-	lw	a3,4(sp)
-	slli	a4,s1,2
-	mv	a1,a5
-	add	a4,a4,a3
-	sw	a5,0(a4)
-	j	.L71
+	slli	a0,a0,16
+	srli	a0,a0,16
+	sh	a0,8(s0)
 .L19:
+	lhu	a1,8(s0)
+	lui	a0,%hi(.LC22)
+	addi	a0,a0,%lo(.LC22)
+.L52:
+	call	printf
+	j	.L28
+.L18:
 	lui	a1,%hi(.LC23)
 	addi	a1,a1,%lo(.LC23)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
-	bnez	a0,.L29
-	lw	a0,32(sp)
-	beqz	a0,.L30
-	call	xtoi
-	lw	a5,0(sp)
-	slli	a0,a0,16
-	srli	a0,a0,16
-	sh	a0,8(a5)
-.L30:
-	lw	a5,0(sp)
+	bnez	a0,.L20
+	lw	a0,16(sp)
+	beqz	a0,.L21
+	call	atoi
+	sw	a0,12(s0)
+.L21:
 	lui	a0,%hi(.LC24)
+	lw	a1,12(s0)
 	addi	a0,a0,%lo(.LC24)
-	lhu	a1,8(a5)
-.L68:
-	call	printf
-	j	.L39
-.L29:
+	j	.L52
+.L20:
 	lui	a1,%hi(.LC25)
 	addi	a1,a1,%lo(.LC25)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
-	bnez	a0,.L31
-	lw	a0,32(sp)
-	beqz	a0,.L32
-	call	atoi
-	lw	a5,0(sp)
-	sw	a0,12(a5)
-.L32:
-	lw	a5,0(sp)
-	lui	a0,%hi(.LC26)
-	addi	a0,a0,%lo(.LC26)
-	lw	a1,12(a5)
-	j	.L68
-.L31:
-	lui	a1,%hi(.LC27)
-	addi	a1,a1,%lo(.LC27)
-	mv	a0,s0
-	call	strcmp
-	bnez	a0,.L33
-	lw	a0,32(sp)
-	beqz	a0,.L34
+	bnez	a0,.L22
+	lw	a0,16(sp)
+	beqz	a0,.L23
 	call	xtoi
-	lw	a5,0(sp)
 	slli	a0,a0,16
 	srli	a0,a0,16
-	sh	a0,10(a5)
-.L34:
-	lw	a5,0(sp)
-	lui	a0,%hi(.LC28)
-	addi	a0,a0,%lo(.LC28)
-	lhu	a1,10(a5)
-	j	.L68
-.L33:
-	lui	a1,%hi(.LC29)
-	addi	a1,a1,%lo(.LC29)
-	mv	a0,s0
+	sh	a0,10(s0)
+.L23:
+	lui	a0,%hi(.LC26)
+	lhu	a1,10(s0)
+	addi	a0,a0,%lo(.LC26)
+	j	.L52
+.L22:
+	lui	a1,%hi(.LC27)
+	addi	a1,a1,%lo(.LC27)
+	mv	a0,s1
 	call	strcmp
-	bnez	a0,.L35
-	lw	a0,32(sp)
+	bnez	a0,.L24
+	lw	a0,16(sp)
 	call	atoi
-	mv	s0,a0
-	lw	a0,36(sp)
+	mv	s1,a0
+	lw	a0,20(sp)
 	call	atoi
 	mv	a1,a0
-	mv	a0,s0
+	mv	a0,s1
 	call	__mulsi3
+	mv	a1,a0
+	lui	a0,%hi(.LC28)
+	addi	a0,a0,%lo(.LC28)
+	j	.L52
+.L24:
+	lui	a1,%hi(.LC29)
+	addi	a1,a1,%lo(.LC29)
+	mv	a0,s1
+	call	strcmp
+	bnez	a0,.L25
+	lw	a0,16(sp)
+	call	atoi
+	mv	s1,a0
+	lw	a0,20(sp)
+	call	atoi
+	mv	a1,a0
+	sw	a0,4(sp)
+	mv	a0,s1
+	call	__modsi3
+	lw	a5,4(sp)
+	sw	a0,0(sp)
+	mv	a0,s1
+	mv	a1,a5
+	call	__divsi3
+	lw	a2,0(sp)
 	mv	a1,a0
 	lui	a0,%hi(.LC30)
 	addi	a0,a0,%lo(.LC30)
-	j	.L68
-.L35:
+.L53:
+	call	printf
+	j	.L28
+.L25:
 	lui	a1,%hi(.LC31)
 	addi	a1,a1,%lo(.LC31)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
-	bnez	a0,.L36
-	lw	a0,32(sp)
+	bnez	a0,.L26
+	lw	a0,16(sp)
 	call	atoi
-	mv	s0,a0
-	lw	a0,36(sp)
-	call	atoi
-	mv	a1,a0
 	mv	s1,a0
-	mv	a0,s0
-	call	__modsi3
-	sw	a0,4(sp)
-	mv	a1,s1
-	mv	a0,s0
-	call	__divsi3
-	lw	a2,4(sp)
+	lw	a0,20(sp)
+	call	atoi
+	sw	a0,0(sp)
+	lw	a0,24(sp)
+	call	atoi
+	lw	a1,0(sp)
+	slli	a2,a0,16
+	srai	a2,a2,16
+	slli	a1,a1,16
+	srai	a1,a1,16
+	mv	a0,s1
+	call	mac
 	mv	a1,a0
 	lui	a0,%hi(.LC32)
 	addi	a0,a0,%lo(.LC32)
-.L69:
-	call	printf
-	j	.L39
-.L36:
+	j	.L52
+.L26:
 	lui	a1,%hi(.LC33)
 	addi	a1,a1,%lo(.LC33)
-	mv	a0,s0
+	mv	a0,s1
 	call	strcmp
-	bnez	a0,.L37
-	lw	a0,32(sp)
-	call	atoi
-	mv	s0,a0
-	lw	a0,36(sp)
-	call	atoi
-	mv	s1,a0
-	lw	a0,40(sp)
-	call	atoi
-	slli	a2,a0,16
-	slli	a1,s1,16
-	srai	a1,a1,16
-	srai	a2,a2,16
-	mv	a0,s0
-	call	mac
-	mv	a1,a0
-	lui	a0,%hi(.LC34)
-	addi	a0,a0,%lo(.LC34)
-	j	.L68
-.L37:
-	lui	a1,%hi(.LC35)
-	addi	a1,a1,%lo(.LC35)
-	mv	a0,s0
-	call	strcmp
-	bnez	a0,.L38
-	lw	a0,32(sp)
+	bnez	a0,.L27
+	lw	a0,16(sp)
 	call	xtoi
 	mv	a1,a0
 	srai	a2,a0,1
-	lui	a0,%hi(.LC36)
-	addi	a0,a0,%lo(.LC36)
-	j	.L69
-.L38:
-	lbu	a5,0(s0)
-	beqz	a5,.L39
-	lui	a0,%hi(.LC37)
-	mv	a1,s0
-	addi	a0,a0,%lo(.LC37)
-	j	.L68
-.L66:
+	lui	a0,%hi(.LC34)
+	addi	a0,a0,%lo(.LC34)
+	j	.L53
+.L27:
+	lbu	a5,0(s1)
+	beqz	a5,.L28
+	lui	a0,%hi(.LC35)
+	mv	a1,s1
+	addi	a0,a0,%lo(.LC35)
+	j	.L52
+.L50:
 	lui	a0,%hi(.LC16)
 	addi	a0,a0,%lo(.LC16)
 	call	printf
@@ -518,11 +366,11 @@ main:
 	lui	a0,%hi(.LC17)
 	addi	a0,a0,%lo(.LC17)
 	call	puts
-	lw	ra,132(sp)
-	lw	s0,128(sp)
-	lw	s1,124(sp)
+	lw	ra,116(sp)
+	lw	s0,112(sp)
+	lw	s1,108(sp)
 	li	a0,0
-	addi	sp,sp,136
+	addi	sp,sp,120
 	jr	ra
 	.size	main, .-main
 	.section	.rodata.str1.4,"aMS",@progbits,1
@@ -539,7 +387,7 @@ main:
 	.string	"board: %s (id=%d)\n"
 	.zero	1
 .LC4:
-	.string	"Thu, 18 Jun 2020 21:02:13 -0300"
+	.string	"Sun, 10 Jan 2021 18:33:44 -0200"
 .LC5:
 	.string	"build: darkriscv fw build %s\n"
 	.zero	2
@@ -586,47 +434,41 @@ main:
 .LC20:
 	.string	"%x "
 .LC21:
-	.string	"rd"
-	.zero	1
-.LC22:
-	.string	"wr"
-	.zero	1
-.LC23:
 	.string	"led"
-.LC24:
+.LC22:
 	.string	"led = %x\n"
 	.zero	2
-.LC25:
+.LC23:
 	.string	"timer"
 	.zero	2
-.LC26:
+.LC24:
 	.string	"timer = %d\n"
-.LC27:
+.LC25:
 	.string	"gpio"
 	.zero	3
-.LC28:
+.LC26:
 	.string	"gpio = %x\n"
 	.zero	1
-.LC29:
+.LC27:
 	.string	"mul"
-.LC30:
+.LC28:
 	.string	"mul = %d\n"
 	.zero	2
-.LC31:
+.LC29:
 	.string	"div"
-.LC32:
+.LC30:
 	.string	"div = %d, mod = %d\n"
-.LC33:
+.LC31:
 	.string	"mac"
-.LC34:
+.LC32:
 	.string	"mac = %d\n"
 	.zero	2
-.LC35:
+.LC33:
 	.string	"srai"
 	.zero	3
-.LC36:
+.LC34:
 	.string	"srai %x >> 1 = %x\n"
 	.zero	1
-.LC37:
+.LC35:
 	.string	"command: [%s] not found.\nvalid commands: clear, dump <hex>, led <hex>, timer <dec>, gpio <hex>\n                mul <dec> <dec>, div <dec> <dec>, mac <dec> <dec> <dec>\n                rd[m][bwl] <hex> [<hex> when m], wr[m][bwl] <hex> <hex> [<hex> when m]\n"
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"

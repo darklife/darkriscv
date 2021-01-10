@@ -112,7 +112,7 @@ int main(void)
               }
           }
           else
-          if(!strncmp(argv[0],"rd",2)||!strncmp(argv[0],"wr",2))
+          if(0) // if(!strncmp(argv[0],"rd",2)||!strncmp(argv[0],"wr",2))
           {
               int kp = 2,
                   i = 1,j,k,w,

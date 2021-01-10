@@ -20,8 +20,12 @@ board_name:
 	beq	a0,a5,.L9
 	li	a5,7
 	beq	a0,a5,.L10
-	lui	a0,%hi(.LC8)
-	addi	a0,a0,%lo(.LC8)
+	li	a5,8
+	beq	a0,a5,.L11
+	li	a5,9
+	beq	a0,a5,.L12
+	lui	a0,%hi(.LC10)
+	addi	a0,a0,%lo(.LC10)
 	ret
 .L3:
 	lui	a0,%hi(.LC2)
@@ -44,14 +48,22 @@ board_name:
 	addi	a0,a0,%lo(.LC6)
 	ret
 .L8:
-	lui	a0,%hi(.LC1)
-	addi	a0,a0,%lo(.LC1)
-	ret
-.L9:
 	lui	a0,%hi(.LC7)
 	addi	a0,a0,%lo(.LC7)
 	ret
+.L9:
+	lui	a0,%hi(.LC8)
+	addi	a0,a0,%lo(.LC8)
+	ret
 .L10:
+	lui	a0,%hi(.LC1)
+	addi	a0,a0,%lo(.LC1)
+	ret
+.L11:
+	lui	a0,%hi(.LC9)
+	addi	a0,a0,%lo(.LC9)
+	ret
+.L12:
 	lui	a0,%hi(.LC0)
 	addi	a0,a0,%lo(.LC0)
 	ret
@@ -62,11 +74,11 @@ board_name:
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC0:
+	.string	"qmtech artix7 a35"
+	.zero	2
+.LC1:
 	.string	"digilent spartan3 s200"
 	.zero	1
-.LC1:
-	.string	"lattice brevia2 lxp2"
-	.zero	3
 .LC2:
 	.string	"simulation only"
 .LC3:
@@ -81,9 +93,15 @@ board_name:
 .LC6:
 	.string	"qmtech spartan7 s15"
 .LC7:
+	.string	"lattice brevia2 lxp2"
+	.zero	3
+.LC8:
 	.string	"piswords rs485 lx9"
 	.zero	1
-.LC8:
+.LC9:
+	.string	"aliexpress hpc/40gbe k420"
+	.zero	2
+.LC10:
 	.string	"unknown"
 	.section	.sbss,"aw",@nobits
 	.align	2
