@@ -61,7 +61,7 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -I./include -Os -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS = -Wall -fcommon -I./include -Os -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv # -Ttext=0
 CPFLAGS = -P 
