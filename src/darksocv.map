@@ -20,14 +20,14 @@ Linker script and memory map
  COMMON         0x0000000080000000       0x10 io.o
                 0x0000000080000000                io
 
-.text           0x0000000000000000      0x8f4
+.text           0x0000000000000000      0x8f8
  boot.o(.text)
  .text          0x0000000000000000       0xa4 boot.o
                 0x0000000000000000                boot
  *(.text)
  .text          0x00000000000000a4       0xd0 io.o
                 0x00000000000000a4                board_name
- .text          0x0000000000000174      0x70c stdio.o
+ .text          0x0000000000000174      0x710 stdio.o
                 0x0000000000000174                getchar
                 0x0000000000000190                putchar
                 0x00000000000001d0                gets
@@ -49,19 +49,19 @@ Linker script and memory map
                 0x000000000000069c                __umulsi3
                 0x00000000000006d0                __mulsi3
                 0x0000000000000728                __udiv_umod_si3
-                0x0000000000000778                __udivsi3
-                0x0000000000000780                __umodsi3
-                0x0000000000000788                __div_mod_si3
-                0x000000000000080c                __divsi3
-                0x0000000000000814                __modsi3
-                0x000000000000081c                usleep
- .text          0x0000000000000880        0x0 main.o
- .text          0x0000000000000880       0x74 banner.o
-                0x0000000000000880                banner
+                0x000000000000077c                __udivsi3
+                0x0000000000000784                __umodsi3
+                0x000000000000078c                __div_mod_si3
+                0x0000000000000810                __divsi3
+                0x0000000000000818                __modsi3
+                0x0000000000000820                usleep
+ .text          0x0000000000000884        0x0 main.o
+ .text          0x0000000000000884       0x74 banner.o
+                0x0000000000000884                banner
 
-.text.startup   0x00000000000008f4      0x53c
- .text.startup  0x00000000000008f4      0x53c main.o
-                0x00000000000008f4                main
+.text.startup   0x00000000000008f8      0x53c
+ .text.startup  0x00000000000008f8      0x53c main.o
+                0x00000000000008f8                main
 
 .data           0x0000000000001000      0x550
  *(.sbss)

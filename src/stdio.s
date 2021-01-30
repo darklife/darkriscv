@@ -538,28 +538,30 @@ __udiv_umod_si3:
 .L125:
 	mv	a0,a1
 	ret
-.L127:
+.L128:
 	slli	a5,a5,1
 	slli	a1,a1,1
 .L126:
-	bgtu	a0,a1,.L127
+	bleu	a0,a1,.L127
+	bgez	a1,.L128
+.L127:
 	mv	a4,a1
 	li	a1,0
-.L128:
-	beqz	a0,.L130
-	bnez	a5,.L131
-.L130:
+.L129:
+	beqz	a0,.L131
+	bnez	a5,.L132
+.L131:
 	bnez	a2,.L125
 	mv	a1,a0
 	j	.L125
-.L131:
-	bltu	a0,a4,.L129
+.L132:
+	bltu	a0,a4,.L130
 	sub	a0,a0,a4
 	add	a1,a1,a5
-.L129:
+.L130:
 	srli	a5,a5,1
 	srli	a4,a4,1
-	j	.L128
+	j	.L129
 	.size	__udiv_umod_si3, .-__udiv_umod_si3
 	.align	2
 	.globl	__udivsi3
@@ -579,42 +581,42 @@ __umodsi3:
 	.globl	__div_mod_si3
 	.type	__div_mod_si3, @function
 __div_mod_si3:
-	beqz	a1,.L154
+	beqz	a1,.L156
 	addi	sp,sp,-16
 	sw	s0,8(sp)
 	sw	ra,12(sp)
 	sw	s1,4(sp)
 	mv	a5,a2
 	li	s0,0
-	bgez	a0,.L142
+	bgez	a0,.L144
 	sub	a0,zero,a0
 	li	s0,1
-.L142:
+.L144:
 	li	s1,0
-	bgez	a1,.L143
+	bgez	a1,.L145
 	sub	a1,zero,a1
 	li	s1,1
-.L143:
+.L145:
 	mv	a2,a5
 	sw	a5,0(sp)
 	call	__udiv_umod_si3
 	lw	a5,0(sp)
 	mv	a1,a0
-	beqz	a5,.L144
-	beq	s0,s1,.L141
+	beqz	a5,.L146
+	beq	s0,s1,.L143
 	sub	a1,zero,a0
-.L141:
+.L143:
 	lw	ra,12(sp)
 	lw	s0,8(sp)
 	lw	s1,4(sp)
 	mv	a0,a1
 	addi	sp,sp,16
 	jr	ra
-.L144:
-	beqz	s0,.L141
+.L146:
+	beqz	s0,.L143
 	sub	a1,zero,a0
-	j	.L141
-.L154:
+	j	.L143
+.L156:
 	mv	a0,a1
 	ret
 	.size	__div_mod_si3, .-__div_mod_si3
@@ -639,35 +641,35 @@ usleep:
 	lui	a5,%hi(threads)
 	lw	a4,%lo(threads)(a5)
 	li	a5,1
-	ble	a4,a5,.L171
+	ble	a4,a5,.L173
 	li	a4,-1
 	lui	a5,%hi(utimers)
-.L160:
+.L162:
 	addi	a0,a0,-1
-	bne	a0,a4,.L163
+	bne	a0,a4,.L165
 	ret
-.L171:
+.L173:
 	lui	a5,%hi(io)
 	li	a3,-1
 	addi	a5,a5,%lo(io)
 	li	a2,-128
-.L161:
-	addi	a0,a0,-1
-	bne	a0,a3,.L165
-	ret
 .L163:
-	lw	a3,%lo(utimers)(a5)
-.L162:
-	lw	a2,%lo(utimers)(a5)
-	beq	a2,a3,.L162
-	j	.L160
+	addi	a0,a0,-1
+	bne	a0,a3,.L167
+	ret
 .L165:
-	sb	a2,3(a5)
+	lw	a3,%lo(utimers)(a5)
 .L164:
+	lw	a2,%lo(utimers)(a5)
+	beq	a2,a3,.L164
+	j	.L162
+.L167:
+	sb	a2,3(a5)
+.L166:
 	lbu	a4,3(a5)
 	andi	a4,a4,0xff
-	beqz	a4,.L164
-	j	.L161
+	beqz	a4,.L166
+	j	.L163
 	.size	usleep, .-usleep
 	.section	.rodata
 	.align	2

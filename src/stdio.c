@@ -306,7 +306,7 @@ unsigned __udiv_umod_si3(unsigned x,unsigned y,int opt)
 
     if(!y) return 0;
 
-    for(aux=1,acc=y;acc<x;aux<<=1,acc<<=1,y=acc);
+    for(aux=1;y<x&&!(y&(1<<31));aux<<=1,y<<=1);
     for(acc=0;x&&aux;aux>>=1,y>>=1) if(y<=x) x-=y,acc+=aux;
 
     return opt ? acc : x;
