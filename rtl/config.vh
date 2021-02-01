@@ -66,14 +66,32 @@
 
 `define __3STAGE__
 
+// read-modify-write cycle:
+//
+// Generate RMW cycles when writing in the memory. This option basically 
+// makes the read and write cycle symmetric and may work better in the cases
+// when the 32-bit memory does not support separate write enables for 
+// separate 16-bit and 8-bit words. Typically, the RMW cycle results in a
+// decrease of 5% in the performance (not the clock, but the instruction
+// pipeline eficiency) due to memory wait-states.
+// Additional note: the RMW cycle is required for -O3 compilation!
+
+//`define __RMW_CYCLE__
+
 // muti-threading support:
 //
-// Decreases clock performance by 10% (90MHz), but enables two contexts
-// (threads) in the core.  They start in the same code, but the "interrupt"
-// handling is locked in a separate loop and the conext switch is always
-// delayed until the next pipeline flush, in order to decrease the
-// performance impact.  Note: threading is currently supported only in the
-// 3-stage pipeline version.
+// Decreases clock performance by 20% (80MHz), but enables two contexts
+// (threads) in the core. The threads work in symmetrical way, which means
+// that they will start with the same exactly core parameters (same initial
+// PC, same initial SP, etc). The boot.s code is designed to handle this
+// difference and set each thread to different applications.
+// Notes: 
+// a) threading is currently supported only in the 3-stage pipeline version.
+// b) the old experimental "interrupt mode" was removed, which means that
+//    the multi-thread mode does not make anything "visible" other than
+//    increment the gpio register.
+// c) the threading in the non interrupt mode just shares the core 50%/50%,
+//    in a way that the single-thread performance is reduced.
 
 //`define __THREADING__
 
@@ -81,10 +99,10 @@
 //
 // The performance measurement can be done in the simulation level by
 // eabling the __PERFMETER__ define, in order to check how the clock cycles
-// are used in the core.  The value defines how many clocks are computed
-// before print the result.
+// are used in the core. The report is displayed when the FINISH_REQ signal
+// is actived by the UART.
 
-//`define __PERFMETER__ 70000
+`define __PERFMETER__
 
 // mac instruction: 
 // 
@@ -106,18 +124,6 @@
 
 `define __RV32E__
 
-// initial PC and SP
-//
-// it is possible program the initial PC and SP.  Typically, the PC is set
-// to address 0, representing the start of ROM memory and the SP is set to
-// the final of RAM memory.  In the linker, the start of ROM memory matches
-// with the .text area, which is defined in the boot.c code and the start of
-// RAM memory matches with the .data and other volatile data, in a way that
-// the stack can be positioned in the top of RAM and does not match with the
-// .data.
-
-`define __HARVARD__
-
 // full harvard architecture:
 // 
 // When defined, enforses that the instruction and data buses are connected
@@ -132,7 +138,7 @@
 // be better allocated, but in this case is not possible protect the .text
 // area as in the case of separate memory banks.
 
-`define __FLEXBUZZ__
+//`define __HARVARD__
 
 // flexbuzz interface (experimental):
 //
@@ -144,6 +150,18 @@
 // the external logic must detect the RD/WR operation quick enough and assert HLT 
 // in order to insert wait-states and perform the required multiplexing to fit 
 // the DLEN operand size in the data bus width available.
+
+`define __FLEXBUZZ__
+
+// initial PC and SP
+//
+// it is possible program the initial PC and SP.  Typically, the PC is set
+// to address 0, representing the start of ROM memory and the SP is set to
+// the final of RAM memory.  In the linker, the start of ROM memory matches
+// with the .text area, which is defined in the boot.c code and the start of
+// RAM memory matches with the .data and other volatile data, in a way that
+// the stack can be positioned in the top of RAM and does not match with the
+// .data.
 
 `define __RESETPC__ 32'd0
 `define __RESETSP__ 32'd8192

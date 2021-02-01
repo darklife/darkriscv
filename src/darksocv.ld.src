@@ -58,15 +58,9 @@ MEMORY
 
 SECTIONS
 {
-    .io :
-    {
-        io.o(COMMON)
-
-    } > IO
-
     .text :
     {
-        boot.o(.text)
+        *(.boot)
         *(.text)
 #if HARVARD
     } > ROM
@@ -75,15 +69,23 @@ SECTIONS
 #endif
     .data :
     {
-        *(.sbss)    
         *(.rodata*)
         *(.data)
+        _global = . + 0x800;
+        *(.sbss)    
         *(.bss)
-        *(.rela*)
-	*(COMMON)
+	_heap = .;
+
 #if HARVARD
     } > RAM
+
+   PROVIDE ( _stack = ORIGIN(RAM) + LENGTH(RAM) );
+
 #else
     } > MEM
+
+   PROVIDE ( _stack = ORIGIN(MEM) + LENGTH(MEM) );
 #endif
+
+    .io : { io.o(COMMON) } > IO
 }

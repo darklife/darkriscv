@@ -1,58 +1,121 @@
-	.file	"boot.c"
+/*
+ * Copyright (c) 2018, Marcelo Samsoniuk
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * * Redistributions of source code must retain the above copyright notice, this
+ *   list of conditions and the following disclaimer.
+ * 
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ *   this list of conditions and the following disclaimer in the documentation
+ *   and/or other materials provided with the distribution.
+ * 
+ * * Neither the name of the copyright holder nor the names of its
+ *   contributors may be used to endorse or promote products derived from
+ *   this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
 	.option nopic
 	.text
+	.section .boot
 	.align	2
-	.globl	boot
-	.type	boot, @function
-boot:
-	lui	a5,%hi(threads)
-	lw	a4,%lo(threads)(a5)
-	addi	sp,sp,-16
-	sw	s0,8(sp)
-	addi	a3,a4,1
-	sw	a3,%lo(threads)(a5)
-	lui	a5,%hi(io)
-	sw	ra,12(sp)
-	sw	s1,4(sp)
-	andi	a4,a4,1
-	addi	a3,a5,%lo(io)
-	li	a2,-128
-	sw	a4,0(sp)
-	sb	a2,3(a3)
-	lui	s0,%hi(utimers)
-	beqz	a4,.L6
-	li	a3,999424
-	addi	a5,a5,%lo(io)
-	addi	a3,a3,575
-.L2:
-	lw	a4,%lo(utimers)(s0)
-	addi	a1,a4,-1
-	sw	a1,%lo(utimers)(s0)
-	bnez	a4,.L4
-	lhu	a4,8(a5)
-	addi	a4,a4,1
-	slli	a4,a4,16
-	srli	a4,a4,16
-	sh	a4,8(a5)
-	sw	a3,%lo(utimers)(s0)
-.L4:
-	sb	a2,3(a5)
-	j	.L2
-.L6:
-	lui	s1,%hi(boot)
-.L3:
-	call	banner
-	lui	a0,%hi(.LC0)
-	addi	a3,sp,16
-	addi	a2,s0,%lo(utimers)
-	addi	a1,s1,%lo(boot)
-	addi	a0,a0,%lo(.LC0)
+	.globl  check4rv32i
+
+/*
+	boot:
+	- read and increent thread counter
+	- case not zero, jump to multi thread boot
+	- otherwise continue	
+*/
+
+_boot:
+
+	la	a0,threads
+	lw 	a1,0(a0)
+	addi	a2,a1,1
+	sw	a2,0(a0)
+	la	a3,io
+	bne	a1,x0,_multi_thread_boot
+
+/*
+	normal boot here:
+	- set stack
+	- set global pointer
+	- plot boot banner
+	- print memory setup
+	- call main
+	- repeat forever
+*/
+
+_normal_boot:
+
+	la	sp,_stack
+	la	gp,_global
+
+	call 	banner
+
+	la	a3,_stack
+	la	a2,_heap
+	sub	a4,a3,a2
+	la	a1,_boot
+	la	a0,_boot0msg
 	call	printf
+
 	call	main
-	j	.L3
-	.size	boot, .-boot
-	.section	.rodata.str1.4,"aMS",@progbits,1
+
+	j	_normal_boot
+
+/*
+	multi-thread boot:
+	- set io base
+	- write thread number to io.gpio
+	- increent thread number
+	- repeat forever
+*/
+
+_multi_thread_boot:
+
+	sh	a1,10(a3)
+	addi	a1,a1,1
+	j 	_multi_thread_boot
+
+/*
+	rv32e/rv32i detection:
+	- set x15 0
+	- set x31 1
+	- sub x31-x15 and return the value
+	why this works?!
+	- the rv32i have separate x15 and x31, but the rv32e will make x15 = x31
+	- this "feature" probably works only in the darkriscv! :)
+*/
+
+check4rv32i:
+
+        .word 	0x00000793 	/* addi    x15,x0,0   */
+        .word   0x00100f93	/* addi    x31,x0,1   */
+        .word   0x40ff8533	/* sub     a0,x31,x15 */
+
+	ret
+
+/*
+	data segment here!
+*/
+
+	.section .rodata
 	.align	2
-.LC0:
-	.string	"boot0: text@%d data@%d stack@%d\n"
-	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"
+
+_boot0msg:
+	.string	"boot0: text@%d data@%d stack@%d (%d bytes free)\n"

@@ -5,67 +5,49 @@
 	.globl	board_name
 	.type	board_name, @function
 board_name:
-	beqz	a0,.L3
-	li	a5,1
-	beq	a0,a5,.L4
-	li	a5,2
-	beq	a0,a5,.L5
-	li	a5,3
-	beq	a0,a5,.L6
-	li	a5,4
-	beq	a0,a5,.L7
-	li	a5,5
-	beq	a0,a5,.L8
-	li	a5,6
-	beq	a0,a5,.L9
-	li	a5,7
-	beq	a0,a5,.L10
-	li	a5,8
-	beq	a0,a5,.L11
-	li	a5,9
-	beq	a0,a5,.L12
-	lui	a0,%hi(.LC10)
-	addi	a0,a0,%lo(.LC10)
-	ret
-.L3:
-	lui	a0,%hi(.LC2)
-	addi	a0,a0,%lo(.LC2)
-	ret
-.L4:
-	lui	a0,%hi(.LC3)
-	addi	a0,a0,%lo(.LC3)
-	ret
-.L5:
-	lui	a0,%hi(.LC4)
-	addi	a0,a0,%lo(.LC4)
-	ret
-.L6:
-	lui	a0,%hi(.LC5)
-	addi	a0,a0,%lo(.LC5)
-	ret
-.L7:
-	lui	a0,%hi(.LC6)
-	addi	a0,a0,%lo(.LC6)
-	ret
-.L8:
-	lui	a0,%hi(.LC7)
-	addi	a0,a0,%lo(.LC7)
-	ret
-.L9:
-	lui	a0,%hi(.LC8)
-	addi	a0,a0,%lo(.LC8)
-	ret
-.L10:
-	lui	a0,%hi(.LC1)
-	addi	a0,a0,%lo(.LC1)
-	ret
-.L11:
-	lui	a0,%hi(.LC9)
-	addi	a0,a0,%lo(.LC9)
-	ret
-.L12:
-	lui	a0,%hi(.LC0)
-	addi	a0,a0,%lo(.LC0)
+	.LA2: auipc	a5,%pcrel_hi(.LC2)
+	addi	a5,a5,%pcrel_lo(.LA2)
+	beqz	a0,.L1
+	.LA3: auipc	a5,%pcrel_hi(.LC3)
+	li	a4,1
+	addi	a5,a5,%pcrel_lo(.LA3)
+	beq	a0,a4,.L1
+	.LA4: auipc	a5,%pcrel_hi(.LC4)
+	li	a4,2
+	addi	a5,a5,%pcrel_lo(.LA4)
+	beq	a0,a4,.L1
+	.LA5: auipc	a5,%pcrel_hi(.LC5)
+	li	a4,3
+	addi	a5,a5,%pcrel_lo(.LA5)
+	beq	a0,a4,.L1
+	.LA6: auipc	a5,%pcrel_hi(.LC6)
+	li	a4,4
+	addi	a5,a5,%pcrel_lo(.LA6)
+	beq	a0,a4,.L1
+	.LA7: auipc	a5,%pcrel_hi(.LC7)
+	li	a4,5
+	addi	a5,a5,%pcrel_lo(.LA7)
+	beq	a0,a4,.L1
+	.LA8: auipc	a5,%pcrel_hi(.LC8)
+	li	a4,6
+	addi	a5,a5,%pcrel_lo(.LA8)
+	beq	a0,a4,.L1
+	.LA1: auipc	a5,%pcrel_hi(.LC1)
+	li	a4,7
+	addi	a5,a5,%pcrel_lo(.LA1)
+	beq	a0,a4,.L1
+	.LA9: auipc	a5,%pcrel_hi(.LC9)
+	li	a4,8
+	addi	a5,a5,%pcrel_lo(.LA9)
+	beq	a0,a4,.L1
+	.LA0: auipc	a5,%pcrel_hi(.LC0)
+	li	a4,9
+	addi	a5,a5,%pcrel_lo(.LA0)
+	beq	a0,a4,.L1
+	.LA10: auipc	a5,%pcrel_hi(.LC10)
+	addi	a5,a5,%pcrel_lo(.LA10)
+.L1:
+	mv	a0,a5
 	ret
 	.size	board_name, .-board_name
 	.globl	utimers

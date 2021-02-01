@@ -1,27 +1,24 @@
 MEMORY
 {
     IO (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x10
-    ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x1000
-    RAM (rw!x) : ORIGIN = 0x00001000, LENGTH = 0x1000
+    MEM (rwx) : ORIGIN = 0x00000000, LENGTH = 0x2000
 }
 SECTIONS
 {
-    .io :
-    {
-        io.o(COMMON)
-    } > IO
     .text :
     {
-        boot.o(.text)
+        *(.boot)
         *(.text)
-    } > ROM
+    } > MEM
     .data :
     {
-        *(.sbss)
         *(.rodata*)
         *(.data)
+        _global = . + 0x800;
+        *(.sbss)
         *(.bss)
-        *(.rela*)
- *(COMMON)
-    } > RAM
+ _heap = .;
+    } > MEM
+   PROVIDE ( _stack = ORIGIN(MEM) + LENGTH(MEM) );
+    .io : { io.o(COMMON) } > IO
 }

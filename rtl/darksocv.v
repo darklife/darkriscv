@@ -510,11 +510,19 @@ module darksocv
     reg [1:0] DACK = 0;
     
     wire WHIT = 1;
-    wire DHIT = !((RD||WR) && DACK!=1); // the WR operatio does not need ws. in this config.
+    wire DHIT = !((RD
+            `ifdef __RMW_CYCLE__
+                    ||WR		// worst code ever! but it is 3:12am...
+            `endif
+                    ) && DACK!=1); // the WR operatio does not need ws. in this config.
     
     always@(posedge CLK) // stage #1.0
     begin
-        DACK <= RES ? 0 : DACK ? DACK-1 : (RD||WR) ? 1 : 0; // wait-states
+        DACK <= RES ? 0 : DACK ? DACK-1 : (RD
+            `ifdef __RMW_CYCLE__
+                    ||WR		// 2nd worst code ever!
+            `endif
+                    ) ? 1 : 0; // wait-states
     end
 
 `else
@@ -544,7 +552,7 @@ module darksocv
     always@(posedge CLK)
     begin    
 
-`ifdef __3STAGE__
+`ifdef __RMW_CYCLE__
 
         // read-modify-write operation w/ 1 wait-state:
 
@@ -566,15 +574,15 @@ module darksocv
 `else
         // write-only operation w/ 0 wait-states:
     `ifdef __HARVARD__
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
     `else
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[12]==1&&*/BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
     `endif
 `endif
 
@@ -687,6 +695,9 @@ module darksocv
       //.IRQ(BOARD_IRQ[1]),
       .RXD(UART_RXD),
       .TXD(UART_TXD),
+`ifdef SIMULATION
+      .FINISH_REQ(FINISH_REQ),
+`endif            
       .DEBUG(UDEBUG)
     );
 
@@ -708,9 +719,9 @@ module darksocv
 `endif
         .RES(RES),
         .HLT(HLT),
-`ifdef __THREADING__        
-        .IREQ(|(IREQ^IACK)),
-`endif        
+//`ifdef __THREADING__        
+//        .IREQ(|(IREQ^IACK)),
+//`endif        
         .IDATA(IDATA),
         .IADDR(IADDR),
         .DADDR(DADDR),
@@ -728,6 +739,9 @@ module darksocv
         .RD(RD),
 `endif
 
+`ifdef SIMULATION
+        .FINISH_REQ(FINISH_REQ),
+`endif
         .DEBUG(KDEBUG)
     );
 

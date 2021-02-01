@@ -62,9 +62,9 @@ module darkriscv
     input             RES,   // reset
     input             HLT,   // halt
     
-`ifdef __THREADING__    
-    input             IREQ,  // irq req
-`endif    
+//`ifdef __THREADING__    
+//    input             IREQ,  // irq req
+//`endif    
 
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
@@ -81,7 +81,10 @@ module darkriscv
     output            WR,    // write enable
     output            RD,    // read enable 
 `endif    
-    
+
+`ifdef SIMULATION
+    input	  FINISH_REQ,
+`endif
     output [3:0]  DEBUG      // old-school osciloscope based debug! :)
 );
 
@@ -91,7 +94,7 @@ module darkriscv
     wire [31:0] ALL1  = -1;
 
 `ifdef __THREADING__
-    reg XMODE = 0;     // 0 = user, 1 = exception
+    reg XMODE = 0;     // thread ptr
 `endif
     
     // pre-decode: IDATA is break apart as described in the RV32I specification
@@ -340,8 +343,9 @@ module darkriscv
     wire        JREQ = (JAL||JALR||BMUX);
     wire [31:0] JVAL = JALR ? DADDR : PC+SIMM; // SIMM + (JALR ? U1REG : PC);
 
+`ifdef SIMULATION
 `ifdef __PERFMETER__
-    integer clocks=0, user=0, super=0, halt=0, flush=0;
+    integer clocks=0, thread0=0, thread1=0, load=0, store=0, flush=0, halt=0;
 
     always@(posedge CLK)
     begin
@@ -349,28 +353,56 @@ module darkriscv
         begin
             clocks = clocks+1;
 
+            if(HLT)
+            begin
+                     if(SCC)	store = store+1;
+                else if(LCC)	load  = load +1;
+                else 		halt  = halt +1;            
+            end
+            else
+            begin
+                if(FLUSH)
+                begin
+                    flush=flush+1;
+                end
+                else
+                begin
     `ifdef __THREADING__
     
-            if(XMODE==0 && !HLT && !FLUSH)      user  = user +1;
-            if(XMODE==1 && !HLT && !FLUSH)      super = super+1;
+                    if(XMODE==0)      thread0 = thread0+1;
+                    if(XMODE==1)      thread1 = thread1+1;
     `else    
-            if(!HLT && !FLUSH)                  user  = user +1;
+                    thread0 = thread0 +1;
     `endif
-
-            if(HLT)             halt=halt+1;
-            if(FLUSH)           flush=flush+1;
+                end
+            end
                 
-            if(clocks && clocks%`__PERFMETER__==0)     
+            if(FINISH_REQ)
             begin
-                $display("%d clocks: %0d%% user, %0d%% super, %0d%% ws, %0d%% flush",
-                    clocks,
-                    100*user/clocks,
-                    100*super/clocks,
-                    100*halt/clocks,
-                    100*flush/clocks);
+                $display("****************************************************************************");
+                $display("DarkRISCV Pipeline Report:");
+                $display("core0  clocks: %0d",clocks);
+                
+                $display("core0 running: %0d%% (%0d%% thread0, %0d%% thread1)",
+                    100.0*(thread0+thread1)/clocks,
+                    100.0*thread0/clocks,
+                    100.0*thread1/clocks);
+                    
+                $display("core0  halted: %0d%% (%0d%% load, %0d%% store, %0d%% busy)",
+                    100.0*(load+store)/clocks,
+                    100.0*load/clocks,
+                    100.0*store/clocks,
+                    100.0*halt/clocks);
+                    
+                $display("core0 stalled: %0d%%",100.0*flush/clocks);
+                $display("****************************************************************************");                    
+                $finish();
             end
         end
     end
+`else
+    $finish();
+`endif
 `endif
 
     always@(posedge CLK)
@@ -436,8 +468,8 @@ module darkriscv
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
         XMODE <= XRES ? 0 : HLT ? XMODE :        // reset and halt
-	             XMODE==0&& IREQ&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
-                 XMODE==1&&!IREQ&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
+	             XMODE==0/*&& IREQ*/&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
+                 XMODE==1/*&&!IREQ*/&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
 
 `else
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;

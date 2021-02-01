@@ -88,6 +88,10 @@ module darkuart
 
     input           RXD,            // UART recv line
     output          TXD,            // UART xmit line
+
+`ifdef SIMULATION
+    output reg	    FINISH_REQ = 0,
+`endif
     
     output [3:0]    DEBUG           // osc debug
 );
@@ -140,8 +144,8 @@ module darkuart
                 
                 if(DATAI[15:8]==">") // prompt '>'
                 begin
-                    $display(" no UART input, finishing simulation...");
-                    $finish();
+                    $display(" no UART input, end simulation request...");
+                    FINISH_REQ <= 1;
                 end
 `else
                 UART_XREQ <= !UART_XACK;    // activate UART!

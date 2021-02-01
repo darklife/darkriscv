@@ -61,12 +61,12 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -I./include -Os -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS = -Wall -fcommon -ffreestanding -I./include -O2 -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv # -Ttext=0
 CPFLAGS = -P 
 
-#CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
+CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
@@ -76,9 +76,9 @@ OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian bl
 ODFLAGS = -d
 
 PROJ = darksocv
-OBJS = boot.o stdio.o main.o io.o banner.o
-ASMS = boot.s stdio.s main.s io.s banner.s
-SRCS = boot.c stdio.c main.c io.c banner.c
+OBJS = main.o stdio.o io.o banner.o boot.o
+ASMS = main.s stdio.s io.s banner.s
+SRCS = main.c stdio.c io.c banner.c boot.s
 
 #include app/Makefile.in
 
@@ -96,7 +96,7 @@ all: $(TARGETS) $(DEPS)
 	echo sources ok.
 
 clean:
-	-rm *.s *.o $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin,ld}
+	-rm $(ASMS) $(OBJS) $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin,ld,o}
 
 %.o: %.s
 	$(AS) $(ASFLAGS) -c $< -o $@

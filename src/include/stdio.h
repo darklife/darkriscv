@@ -53,5 +53,6 @@ int atoi(char *);
 int xtoi(char *);
 int mac(int,short,short);
 void usleep(int);
+int check4rv32i(void);
 
 #endif

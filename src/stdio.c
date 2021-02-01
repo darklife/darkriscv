@@ -34,12 +34,26 @@
 
 #ifdef __RISCV__
 
+// idle time, update timer and blink the led! :)
+
+void _idle(void)
+{
+    if(io.irq&IRQ_TIMR)
+    {
+      if(!utimers--)
+      {
+        io.led++;
+        utimers=999999;
+      }
+      io.irq = IRQ_TIMR;
+    }
+}
+
 // putchar and getchar uses the "low-level" io
 
 int getchar(void)
 {
-  while((io.uart.stat&2)==0); // uart empty, wait...
-  
+  while((io.uart.stat&2)==0) _idle(); // uart empty, wait...
   return io.uart.fifo;
 }
 
@@ -47,17 +61,17 @@ int putchar(int c)
 {
   if(c=='\n')
   {
-    while(io.uart.stat&1); // uart busy, wait...
+    while(io.uart.stat&1) _idle(); // uart busy, wait...
     io.uart.fifo = '\r';  
   }
   
-  while(io.uart.stat&1); // uart busy, wait...
+  while(io.uart.stat&1) _idle(); // uart busy, wait...
   return io.uart.fifo = c;
 }
 
 #endif
 
-// high-level functions uses the getchar/putchar
+// high-level functions use the getchar/putchar
 
 char *gets(char *p,int s)
 {
@@ -99,8 +113,8 @@ void putstr(char *p)
 
 int puts(char *p)
 {
-  putstr(p);
-  return putchar('\n');
+    putstr(p);
+    return putchar('\n');
 }
 
 void putdx(unsigned i, int mode) // mode1 = dec, mode0 = hex
@@ -349,16 +363,6 @@ int __modsi3(int x,int y)
 
 void usleep(int delay)
 {
-    if(threads>1)
-    {
-        while(delay--)
-        {
-            int t0 = utimers;
-            
-            while(t0==utimers);
-        }
-    }
-    else
     {
         while(delay--) 
         {
