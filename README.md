@@ -172,16 +172,25 @@ git clone https://github.com/darklife/darkriscv.git
 
 Pre Setup Guide for MacOS:
 
-The document encompasses all the dependencies and steps to install those dependencies to successfully utilize the Darriscv ecosystem on MacOS.
+The document encompasses all the dependencies and steps to install those
+dependencies to successfully utilize the Darriscv ecosystem on MacOS.
 
-Essentially, the ecosystem cannot be utilized in MacOS because of on of the dependencies Xilinx ISE 14.7 Design suit, which currently do not support MacOS. 
+Essentially, the ecosystem cannot be utilized in MacOS because of on of the
+dependencies Xilinx ISE 14.7 Design suit, which currently do not support
+MacOS.
 
-In order to overcome this issue, we need to install Linux/Windows on MacOS by using below two methods:
+In order to overcome this issue, we need to install Linux/Windows on MacOS
+by using below two methods:
 
-a) WineSkin, which is a kind of Windows emulator that runs the Windows application natively but intercepts and emulate the Windows calls to map directly in the macOS.
-b) VirtualBox (or VMware, Parallels, etc) in order to run a complete Windows OS or Linux, which appears to be far better than the WineSkin option.
+a) WineSkin, which is a kind of Windows emulator that runs the Windows
+application natively but intercepts and emulate the Windows calls to map
+directly in the macOS.  
 
-I used the second method and installed VMware Fusion to install Linux Mint. Please find below the links I used to obtain download files.
+b) VirtualBox (or VMware, Parallels, etc) in order to run a complete Windows
+OS or Linux, which appears to be far better than the WineSkin option.
+
+I used the second method and installed VMware Fusion to install Linux Mint. 
+Please find below the links I used to obtain download files.
 
 Dependencies:
 
@@ -196,15 +205,22 @@ d.  FLEX
 
 Icarus Verilog Setup:
 
-The steps have been condensed for linux operating system. Complete steps for all other OS platforms are available on https://iverilog.fandom.com/wiki/Installation_Guide.
+The steps have been condensed for linux operating system.  Complete steps
+for all other OS platforms are available on
+https://iverilog.fandom.com/wiki/Installation_Guide.
 
-Step 1: Download Verilog download tar file from ftp://ftp.icarus.com/pub/eda/verilog/ . Always install the latest version. Verilog-10.3 is the latest version as of now.
+Step 1: Download Verilog download tar file from
+ftp://ftp.icarus.com/pub/eda/verilog/ .  Always install the latest version. 
+Verilog-10.3 is the latest version as of now.
 
 Step 2: Extract the tar file using ‘% tar -zxvf verilog-version.tar.gz’.
 
-Step 3: Go to the Verilog folder using ‘cd Verilog-version’. Here it is cd Verilog-10.3.
+Step 3: Go to the Verilog folder using ‘cd Verilog-version’.  Here it is cd
+Verilog-10.3.
 
-Step 4: Check if you have the following libraries installed: Flex, Bison, g++ and gcc. If not use ‘sudo apt-get install flex bison g++ gcc’ in terminal to install. Restart the system once for effects to change place.
+Step 4: Check if you have the following libraries installed: Flex, Bison,
+g++ and gcc.  If not use ‘sudo apt-get install flex bison g++ gcc’ in
+terminal to install.  Restart the system once for effects to change place.
 
 Step 5: Run the below commands in directory Verilog-10.3
 1.  ./configure
@@ -230,7 +246,8 @@ a.  Sudo apt-get install libncurses5 libncursesw-dev
 2.  For 32 bit architecture
 a.  Sudo apt-get install libncurses5:i386
 
-Once all pre-requisites are installed, go to root directory and run the below code:
+Once all pre-requisites are installed, go to root directory and run the
+below code:
 
 cd darkrisc 
 make (use sudo if required)
@@ -247,12 +264,13 @@ By default, the top level *Makefile* uses:
 	ICARUS = /usr/local/bin/iverilog
 	BOARD  = avnet_microboard_lx9
 	
-Just update the configuration according to your system configuration, 
-type *make* and hope everything is in the correct location! You probably will
-need fix some paths and set some others in the PATH environment variable, but
-it will eventually work.
+Just update the configuration according to your system configuration, type
+*make* and hope everything is in the correct location!  You probably will
+need fix some paths and set some others in the PATH environment variable,
+but it will eventually work.
 
-And, when everything is correctly configured, the result will be something like this:
+And, when everything is correctly configured, the result will be something
+like this:
 
 ```$ 
 # make
@@ -807,9 +825,10 @@ And one number for speed grade 3 devices:
 
 - Kintex-7:	221MHz
 
-Although Vivado is far slow and shows pessimistic numbers for the same FPGAs when 
-compared with ISE, I guess Vivado is more realistic and, at least, it supports the
-new Spartan-7, which shows very good numbers (almost the same as the Artix-7!).
+Although Vivado is far slow and shows pessimistic numbers for the same FPGAs
+when compared with ISE, I guess Vivado is more realistic and, at least, it
+supports the new Spartan-7, which shows very good numbers (almost the same
+as the Artix-7!).
 
 That values are only for reference.  The real values depends of some options
 in the core, such as the number of pipeline stages, who the memories are
@@ -1040,15 +1059,16 @@ that shows the design of a RISC-V processor from scratch:
 - https://www.twitch.tv/videos/858055433 instruction decode and execute - part 3/3 - SoC simulation (10h24)
 - TBD tests in the Lattice FPGA
 
-Unfortunately the video set is currently in portuguese only and there a lot of
-parallel discussions about technology, including the fix of the Teske's notebook
-online! I hope in the future will be possible edit the video set and, maybe, 
-create english subtitles.
+Unfortunately the video set is currently in portuguese only and there a lot
+of parallel discussions about technology, including the fix of the Teske's
+notebook online!  I hope in the future will be possible edit the video set
+and, maybe, create english subtitles.
 
-About the processor itself, it is a microcode oriented concept with a classic 
-von neumann archirecture, designed to support more easily different ISAs. It is really
-very different than the traditional RISC cores that we found around! Also, it includes 
-a very good eco-system around opensource tools, such as Icarus, Yosys and gtkWave!
+About the processor itself, it is a microcode oriented concept with a
+classic von neumann archirecture, designed to support more easily different
+ISAs.  It is really very different than the traditional RISC cores that we
+found around!  Also, it includes a very good eco-system around opensource
+tools, such as Icarus, Yosys and gtkWave!
 
 Although not finished yet (95% done!), I think it is very illustrative about the RISC-V design:
 
@@ -1058,9 +1078,9 @@ Although not finished yet (95% done!), I think it is very illustrative about the
 - rv32e instruction decode: very simple to understand, very direct to implement
 - rv32e software support: the GCC support provides an easy way to generate code and test it!
 
-The Teske's proposal is not design the faster RISC-V core ever (we already have lots 
-of faster cores with CPI ~ 1, such as the darkriscv, vexriscv, etc), but create a clean, 
-reliable and compreensive RISC-V core.
+The Teske's proposal is not design the faster RISC-V core ever (we already
+have lots of faster cores with CPI ~ 1, such as the darkriscv, vexriscv,
+etc), but create a clean, reliable and compreensive RISC-V core.
 
 You can check the code in the following repository:
 
@@ -1078,7 +1098,7 @@ Special thanks to my old colleagues from the Verilog/VHDL/IT area:
 - Fabiano Silos (technology guru)
 
 Also, special thanks to the "friends of darkriscv" that found the project in
-the internet and contributed in any way to make it better: 
+the internet and contributed in any way to make it better:
 
 - Guilherme Barile (technology guru and first guy to post anything about the darkriscv! [2]).
 - Alasdair Allan (technology guru, posted an article about the darkriscv [3]) 
