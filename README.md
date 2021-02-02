@@ -4,6 +4,7 @@ Opensource RISC-V implemented from scratch in one night!
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [History](#history)
 - [Project Background](#project-background)
 - [Directory Description](#directory-description)
 - ["src" Directory](#src-directory)
@@ -23,6 +24,46 @@ Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
 *DarkRISCV* softcore started as an proof of concept for the opensource
 RISC-V instruction set.  
 
+Although the code is small and crude when compared with other RISC-V
+implementations, the *DarkRISCV* has lots of impressive features:
+
+- implements most of the RISC-V RV32E instruction set
+- implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
+- works up to 220MHz in a kintex-7 and up to 100MHz in a cheap spartan-6
+- can sustain 1 clock per instruction most of time
+- flexible harvard architecture (easy to integrate a cache controller)
+- works fine in a real xilinx, altera and lattice FPGAs
+- works fine with gcc 9.0.0 for RISC-V (no patches required!)
+- uses between 1000-1500LUTs (core only with LUT6 technology, depending of enabled features)
+- optional RV32E support (works better with LUT4 FPGAs)
+- optional 16x16-bit MAC instruction (for digital signal processing) 
+- optional coarse-grained multi-threading (MT)
+- no interlock between pipeline stages!
+- BSD license: can be used anywhere with no restrictions!
+
+Some extra features are planned for the furure or under development:
+
+- interrupt controller (under tests)
+- cache controller (under tests)
+- gpio and timer (under tests)
+- sdram controller w/ data scrambler
+- branch predictor (under tests)
+- ethernet controller (GbE)
+- multi-processing (SMP)
+- network on chip (NoC)
+- rv64i support (not so easy as it appears...)
+- dynamic bus sizing and big-endian support
+- user/supervisor modes
+- debug support
+- misaligned memory access
+- bridge for 8/16/32-bit buses 
+
+And much other features!
+
+Feel free to make suggestions and good hacking! o/
+
+## History
+
 The initial concept was based in my other early 16-bit RISC processors and
 composed by a simplified two stage pipeline, where a instruction is fetch
 from a instruction memory in the first clock and then the instruction is
@@ -40,7 +81,7 @@ nights of work and the help of lots of colleagues, the *DarkRISCV* reached a
 very good quality result, in a way that the code compiled by the standard
 GCC for RV32I worked fine.
 
-Nowadays, after two years of development, a three stage pipeline working
+After two years of development, a three stage pipeline working
 with a single clock phase is also available, resulting in a better
 distribution between the decode and execute stages.  In this case the
 instruction is fetch in the first clock from a blockram, decoded in the
@@ -55,43 +96,9 @@ pipeline version can reach a instruction per clock (IPC) of 0.7, smaller
 than the measured IPC of 0.85 in the case of the 2-stage pipeline version.
 
 Anyway, with the 3-stage pipeline and some other expensive optimizations,
-the *DarkRISCV* can reach 100MHz in a low-cost Spartan-6, which results in
+the *DarkRISCV* can reach up to 100MHz in a low-cost Spartan-6, which results in
 more performance when compared with the 2-stage pipeline version (typically
 50MHz).
-
-Although the code is small and crude when compared with other RISC-V
-implementations, the *DarkRISCV* has lots of impressive features:
-
-- implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
-- works up to 100MHz (spartan-6) and sustain 1 clock per instruction most of time
-- flexible harvard architecture (easy to integrate a cache controller)
-- works fine in a real xilinx and lattice FPGAs
-- works fine with gcc 9.0.0 for RISC-V (no patches required!)
-- uses between 1000-1500LUTs, depending of enabled features (Xilinx LUT6)
-- optional RV32E support (works better with LUT4 FPGAs)
-- optional 16x16-bit MAC instruction (for signal processing) 
-- optional coarse-grained multi-threading (MT)
-- no interlock between pipeline stages 
-- BSD license: can be used anywhere with no restrictions!
-
-Some extra features are planned for the furure or under development:
-
-- interrupt controller (under tests)
-- cache controller (under tests)
-- gpio and timer (under tests)
-- sdram controller w/ data scrambler
-- branch predictor (under tests)
-- ethernet controller (GbE)
-- multi-processing (SMP)
-- network on chip (NoC)
-- rv64i support (not so easy as appears...)
-- dynamic bus size and big-endian support
-- user/supervisor modes
-- debug support
-
-And much other features!
-
-Feel free to make suggestions and good hacking! o/
 
 ## Project Background
 
