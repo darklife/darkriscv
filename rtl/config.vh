@@ -80,20 +80,27 @@
 
 // muti-threading support:
 //
-// Decreases clock performance by 20% (80MHz), but enables two contexts
-// (threads) in the core. The threads work in symmetrical way, which means
-// that they will start with the same exactly core parameters (same initial
-// PC, same initial SP, etc). The boot.s code is designed to handle this
-// difference and set each thread to different applications.
+// Decreases clock performance by 20% (80MHz), but enables two or more 
+// contexts (threads) in the core. The threads work in symmetrical way, 
+// which means that they will start with the same exactly core parameters 
+// (same initial PC, same initial SP, etc). The boot.s code is designed 
+// to handle this difference and set each thread to different 
+// applications.
 // Notes: 
 // a) threading is currently supported only in the 3-stage pipeline version.
 // b) the old experimental "interrupt mode" was removed, which means that
 //    the multi-thread mode does not make anything "visible" other than
 //    increment the gpio register.
-// c) the threading in the non interrupt mode just shares the core 50%/50%,
-//    in a way that the single-thread performance is reduced.
+// c) the threading in the non-interrupt mode switches when the program flow
+//    changes, i.e. every jal instruction. When the core is idle, it is 
+//    probably in a jal loop.
 
 //`define __THREADING__
+
+// number of threads: between 2 and n. Of course, it requires more and 
+// more FPGA space in order to implement it, depending of the FPGA technology. 
+
+`define NTHREADS 4
 
 // performance measurement:
 //
@@ -280,6 +287,18 @@
     
 `ifdef BOARD_CK_REF
     `define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
+`endif
+
+// the 3-stage pipeline is required when the threading mode is enabled,
+// also, we need a non-null number of threads (default 2)
+
+`ifdef __THREADING__
+    `ifndef __3STAGE__
+        `define __3STAGE__
+    `endif
+    `ifndef NTHREADS
+        `define NTHREADS 2
+    `endif
 `endif
 
 // darkuart baudrate automtically calculated according to board clock:

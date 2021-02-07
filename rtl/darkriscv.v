@@ -94,7 +94,7 @@ module darkriscv
     wire [31:0] ALL1  = -1;
 
 `ifdef __THREADING__
-    reg XMODE = 0;     // thread ptr
+    reg [$clog2(`NTHREADS)-1:0] XMODE = 0;     // thread ptr
 `endif
     
     // pre-decode: IDATA is break apart as described in the RV32I specification
@@ -153,28 +153,21 @@ module darkriscv
 `endif
 
 `ifdef __THREADING__    
-
     `ifdef __RV32E__
     
-        reg [4:0] RESMODE = -1;
+        reg [$clog2(`NTHREADS)+3:0] RESMODE = -1;
 
-        wire [4:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
-        wire [4:0] S1PTR  = { XMODE, XIDATA[18:15] };
-        wire [4:0] S2PTR  = { XMODE, XIDATA[23:20] };
+        wire [$clog2(`NTHREADS)+3:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
+        wire [$clog2(`NTHREADS)+3:0] S1PTR  = { XMODE, XIDATA[18:15] };
+        wire [$clog2(`NTHREADS)+3:0] S2PTR  = { XMODE, XIDATA[23:20] };
     `else
-        reg [5:0] RESMODE = -1;
+        reg [$clog2(`NTHREADS)+4:0] RESMODE = -1;
 
-        wire [5:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
-        wire [5:0] S1PTR  = { XMODE, XIDATA[19:15] };
-        wire [5:0] S2PTR  = { XMODE, XIDATA[24:20] };
+        wire [$clog2(`NTHREADS)+4:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
+        wire [$clog2(`NTHREADS)+4:0] S1PTR  = { XMODE, XIDATA[19:15] };
+        wire [$clog2(`NTHREADS)+4:0] S2PTR  = { XMODE, XIDATA[24:20] };
     `endif
-
-    wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
-    wire [2:0] FCT3   = XIDATA[14:12];
-    wire [6:0] FCT7   = XIDATA[31:25];
-
 `else
-
     `ifdef __RV32E__    
     
         reg [3:0] RESMODE = -1;
@@ -189,12 +182,11 @@ module darkriscv
         wire [4:0] S1PTR  = XIDATA[19:15];
         wire [4:0] S2PTR  = XIDATA[24:20];    
     `endif
+`endif
 
     wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
     wire [2:0] FCT3   = XIDATA[14:12];
     wire [6:0] FCT7   = XIDATA[31:25];
-
-`endif
 
     wire [31:0] SIMM  = XSIMM;
     wire [31:0] UIMM  = XUIMM;
@@ -217,25 +209,21 @@ module darkriscv
     //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
 `ifdef __THREADING__
-`ifdef __3STAGE__
-    reg [31:0] NXPC2 [0:1];       // 32-bit program counter t+2
-`endif
-    reg [31:0] NXPC;        // 32-bit program counter t+1
-    reg [31:0] PC;		    // 32-bit program counter t+0
+    `ifdef __3STAGE__
+        reg [31:0] NXPC2 [0:`NTHREADS-1];       // 32-bit program counter t+2
+    `endif
 
     `ifdef __RV32E__
-        reg [31:0] REG1 [0:31];	// general-purpose 16x32-bit registers (s1)
-        reg [31:0] REG2 [0:31];	// general-purpose 16x32-bit registers (s2)
+        reg [31:0] REG1 [0:16*`NTHREADS-1];	// general-purpose 16x32-bit registers (s1)
+        reg [31:0] REG2 [0:16*`NTHREADS-1];	// general-purpose 16x32-bit registers (s2)
     `else
-        reg [31:0] REG1 [0:63];	// general-purpose 32x32-bit registers (s1)
-        reg [31:0] REG2 [0:63];	// general-purpose 32x32-bit registers (s2)    
+        reg [31:0] REG1 [0:32*`NTHREADS-1];	// general-purpose 32x32-bit registers (s1)
+        reg [31:0] REG2 [0:32*`NTHREADS-1];	// general-purpose 32x32-bit registers (s2)    
     `endif
 `else
-`ifdef __3STAGE__
-    reg [31:0] NXPC2;       // 32-bit program counter t+2
-`endif
-    reg [31:0] NXPC;        // 32-bit program counter t+1
-    reg [31:0] PC;		    // 32-bit program counter t+0
+    `ifdef __3STAGE__
+        reg [31:0] NXPC2;       // 32-bit program counter t+2
+    `endif
 
     `ifdef __RV32E__
         reg [31:0] REG1 [0:15];	// general-purpose 16x32-bit registers (s1)
@@ -245,6 +233,9 @@ module darkriscv
         reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
     `endif
 `endif
+
+    reg [31:0] NXPC;        // 32-bit program counter t+1
+    reg [31:0] PC;		    // 32-bit program counter t+0
 
     // source-1 and source-1 register selection
 
@@ -344,65 +335,77 @@ module darkriscv
     wire [31:0] JVAL = JALR ? DADDR : PC+SIMM; // SIMM + (JALR ? U1REG : PC);
 
 `ifdef SIMULATION
-`ifdef __PERFMETER__
-    integer clocks=0, thread0=0, thread1=0, load=0, store=0, flush=0, halt=0;
+    `ifdef __PERFMETER__
 
-    always@(posedge CLK)
-    begin
-        if(!XRES)
+        integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
+
+    `ifdef __THREADING__
+        integer thread[0:`NTHREADS-1];
+        integer i;
+        
+        initial for(i=0;i!=`NTHREADS;i=i+1) thread[i] = 0;
+    `endif
+    
+        always@(posedge CLK)
         begin
-            clocks = clocks+1;
+            if(!XRES)
+            begin
+                clocks = clocks+1;
 
-            if(HLT)
-            begin
-                     if(SCC)	store = store+1;
-                else if(LCC)	load  = load +1;
-                else 		halt  = halt +1;            
-            end
-            else
-            begin
-                if(FLUSH)
+                if(HLT)
                 begin
-                    flush=flush+1;
+                         if(SCC)	store = store+1;
+                    else if(LCC)	load  = load +1;
+                    else 		halt  = halt +1;            
                 end
                 else
                 begin
-    `ifdef __THREADING__
-    
-                    if(XMODE==0)      thread0 = thread0+1;
-                    if(XMODE==1)      thread1 = thread1+1;
-    `else    
-                    thread0 = thread0 +1;
-    `endif
+                    if(FLUSH)
+                    begin
+                        flush=flush+1;
+                    end
+                    else
+                    begin
+                    
+        `ifdef __THREADING__
+        
+                        for(i=0;i!=`NTHREADS;i=i+1)
+                                thread[i] = thread[i]+(i==XMODE?1:0);
+        `endif    
+                        running = running +1;
+                    end
+                end
+                    
+                if(FINISH_REQ)
+                begin
+                    $display("****************************************************************************");
+                    $display("DarkRISCV Pipeline Report:");
+                    $display("core0  clocks: %0d",clocks);
+
+                    $display("core0: running %0d%%",100.0*running/clocks);
+
+         `ifdef __THREADING__
+                    for(i=0;i!=`NTHREADS;i=i+1) $display("  thread%0d: running %0d%%",i,100.0*thread[i]/clocks);
+         `endif
+
+                    $display("core0:  halted %0d%% (%0d%% load, %0d%% store, %0d%% busy)",
+                        100.0*(load+store)/clocks,
+                        100.0*load/clocks,
+                        100.0*store/clocks,
+                        100.0*halt/clocks);
+                        
+                    $display("core0: stalled %0d%%",100.0*flush/clocks);
+
+
+
+                    $display("****************************************************************************");                    
+                    $finish();
                 end
             end
-                
-            if(FINISH_REQ)
-            begin
-                $display("****************************************************************************");
-                $display("DarkRISCV Pipeline Report:");
-                $display("core0  clocks: %0d",clocks);
-                
-                $display("core0 running: %0d%% (%0d%% thread0, %0d%% thread1)",
-                    100.0*(thread0+thread1)/clocks,
-                    100.0*thread0/clocks,
-                    100.0*thread1/clocks);
-                    
-                $display("core0  halted: %0d%% (%0d%% load, %0d%% store, %0d%% busy)",
-                    100.0*(load+store)/clocks,
-                    100.0*load/clocks,
-                    100.0*store/clocks,
-                    100.0*halt/clocks);
-                    
-                $display("core0 stalled: %0d%%",100.0*flush/clocks);
-                $display("****************************************************************************");                    
-                $finish();
-            end
         end
-    end
-`else
-    $finish();
-`endif
+    `else
+        $finish();
+    `endif
 `endif
 
     always@(posedge CLK)
@@ -459,26 +462,27 @@ module darkriscv
 
 `ifdef __3STAGE__
 
-`ifdef __THREADING__
+    `ifdef __THREADING__
 
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
 
-        NXPC2[RES ? RESMODE[0] : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
+        NXPC2[XRES ? RESMODE[$clog2(`NTHREADS)-1:0] : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
         XMODE <= XRES ? 0 : HLT ? XMODE :        // reset and halt
-	             XMODE==0/*&& IREQ*/&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
-                 XMODE==1/*&&!IREQ*/&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
+                            JAL ? XMODE+1 : XMODE;
+	             //XMODE==0/*&& IREQ*/&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
+                 //XMODE==1/*&&!IREQ*/&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
 
-`else
+    `else
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
 	
 	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
 
-`endif
+    `endif
 
 `else
         NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
@@ -513,11 +517,11 @@ module darkriscv
 `endif
 
 `ifdef __3STAGE__
-`ifdef __THREADING__
-	assign IADDR = NXPC2[XMODE];
-`else
-    assign IADDR = NXPC2;
-`endif    
+    `ifdef __THREADING__
+        assign IADDR = NXPC2[XMODE];
+    `else
+        assign IADDR = NXPC2;
+    `endif    
 `else
     assign IADDR = NXPC;
 `endif
