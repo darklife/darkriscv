@@ -264,7 +264,7 @@
     `define BOARD_ID 8
     //`define BOARD_CK 200000000
     `define BOARD_CK_REF 100000000
-    `define BOARD_CK_MUL 11
+    `define BOARD_CK_MUL 12
     `define BOARD_CK_DIV 5
     `define XILINX7CLK 1
     `define INVRES 1    
