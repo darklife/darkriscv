@@ -173,6 +173,14 @@
 `define __RESETPC__ 32'd0
 `define __RESETSP__ 32'd8192
 
+// UART queue: 
+// 
+// Optional RX/TX queue for communication oriented applications. The concept
+// foreseen 256 bytes for TX and RX, in a way that frames up to 128 bytes can
+// be easily exchanged via UART.
+
+//`define __UARTQUEUE__
+
 // board definition:
 // 
 // The board is automatically defined in the xst/xise files via Makefile or

@@ -66,7 +66,7 @@
 
 // UART registers
 // 
-// 0: status register ro, 1 = xmit busy, 2 = recv busy
+// 0: status register ro, 1 = xmit busy, 2 = recv bfusy
 // 1: buffer register rw, w = xmit fifo, r = recv fifo
 // 2: baud rate msb   rw (not used)
 // 3: baud rate lsb   rw (not used)
@@ -100,22 +100,48 @@ module darkuart
     reg         UART_IREQ  = 0;     // UART interrupt req
     reg         UART_IACK  = 0;     // UART interrupt ack
 
+`ifdef __UARTQUEUE__
+    reg [ 7:0]  UART_XFIFO [0:255]; // UART TX FIFO
+    wire [7:0]  UART_XTMP;          // UART TX FIFO
+    reg [ 8:0]  UART_XREQ  = 0;     // xmit request (core side)
+    reg [ 8:0]  UART_XACK  = 0;     // xmit ack (uart side)
+`else
     reg [ 7:0]  UART_XFIFO = 0;     // UART TX FIFO
     reg         UART_XREQ  = 0;     // xmit request (core side)
     reg         UART_XACK  = 0;     // xmit ack (uart side)
-    reg [15:0]  UART_XBAUD = 0;    // baud rate counter
+`endif
+    reg [15:0]  UART_XBAUD = 0;     // baud rate counter
     reg [ 3:0]  UART_XSTATE= 0;     // idle state
 
+`ifdef __UARTQUEUE__
+    reg [ 7:0]  UART_RFIFO [0:255]; // UART RX FIFO
+    reg [ 7:0]  UART_RTMP  = 0;     // UART RX FIFO
+    reg [ 8:0]  UART_RREQ  = 0;     // request (uart side)
+    reg [ 8:0]  UART_RACK  = 0;     // ack (core side)
+`else
     reg [ 7:0]  UART_RFIFO = 0;     // UART RX FIFO
     reg         UART_RREQ  = 0;     // request (uart side)
     reg         UART_RACK  = 0;     // ack (core side)
-    reg [15:0]  UART_RBAUD = 0;    // baud rate counter
+`endif
+    reg [15:0]  UART_RBAUD = 0;     // baud rate counter
     reg [ 3:0]  UART_RSTATE= 0;     // idle state
 
     reg [2:0]   UART_RXDFF = -1;
 
-    wire [7:0]  UART_STATE = { 6'd0, UART_RREQ^UART_RACK, UART_XREQ^UART_XACK };
+`ifdef __UARTQUEUE__
+    wire [7:0]  UART_STATE = { 6'd0, UART_RREQ!=UART_RACK, UART_XREQ==(UART_XACK^9'h100) };
 
+    integer i;
+    
+    initial
+    for(i=0;i!=256;i=i+1)
+    begin
+        UART_RFIFO[i] = 0;
+        UART_XFIFO[i] = 0;
+    end
+`else
+    wire [7:0]  UART_STATE = { 6'd0, UART_RREQ!=UART_RACK, UART_XREQ!=UART_XACK };    
+`endif
     reg [7:0]   UART_STATEFF = 0;
 
     // bus interface
@@ -128,7 +154,7 @@ module darkuart
         begin
             if(BE[1])
             begin
-                UART_XFIFO <= DATAI[15:8];
+
 `ifdef SIMULATION
                 // print the UART output to console! :)
                 if(DATAI[15:8]!=13) // remove the '\r'
@@ -148,7 +174,16 @@ module darkuart
                     FINISH_REQ <= 1;
                 end
 `else
+    `ifdef __UARTQUEUE__
+                if(UART_XREQ!=(UART_XACK^9'h100))
+                begin
+                    UART_XFIFO[UART_XREQ[7:0]] <= DATAI[15:8];
+                    UART_XREQ <= UART_XREQ+1;
+                end
+    `else            
+                UART_XFIFO <= DATAI[15:8];
                 UART_XREQ <= !UART_XACK;    // activate UART!
+    `endif
 `endif
             end
             //if(BE[2]) UART_TIMER[ 7:0] <= DATAI[23:16];
@@ -163,14 +198,21 @@ module darkuart
         else
         if(RD)
         begin
+`ifdef __UARTQUEUE__
+            if(BE[1]) UART_RACK     <= UART_RACK!=UART_RREQ?UART_RACK+1:UART_RACK; // fifo ready
+`else
             if(BE[1]) UART_RACK     <= UART_RREQ; // fifo ready
+`endif
             if(BE[0]) UART_STATEFF <= UART_STATE; // state update, clear irq
         end
     end
     
     assign IRQ   = |(UART_STATE^UART_STATEFF);
-
+`ifdef __UARTQUEUE__
+    assign DATAO = { UART_TIMER, UART_RFIFO[UART_RACK[7:0]], UART_STATE };
+`else
     assign DATAO = { UART_TIMER, UART_RFIFO, UART_STATE };
+`endif
 
     // xmit path: 6(IDLE), 7(START), 8, 9, 10, 11, 12, 13, 14, 15, 0(STOP), 1(ACK)
     
@@ -180,13 +222,22 @@ module darkuart
                       UART_XBAUD ? UART_XBAUD-1 : UART_TIMER;           // while() { while(xbaud--); xbaud=timer }
 
         UART_XSTATE <= RES||UART_XSTATE==`UART_STATE_ACK  ? `UART_STATE_IDLE :
-                            UART_XSTATE==`UART_STATE_IDLE ? UART_XSTATE+(UART_XREQ^UART_XACK) :
+                            UART_XSTATE==`UART_STATE_IDLE ? UART_XSTATE+(UART_XREQ!=UART_XACK) :
                                                             UART_XSTATE+(UART_XBAUD==0);
-                                                           
+`ifdef __UARTQUEUE__
+        UART_XACK   <= RES ? UART_XREQ : UART_XSTATE==`UART_STATE_ACK && UART_XACK!=UART_XREQ  ? UART_XACK+1 : UART_XACK;
+`else                                                           
         UART_XACK   <= RES||UART_XSTATE==`UART_STATE_ACK  ? UART_XREQ : UART_XACK;
+`endif        
     end
 
+`ifdef __UARTQUEUE__
+    assign UART_XTMP = UART_XFIFO[UART_XACK[7:0]];
+    
+    assign TXD = UART_XSTATE[3] ? UART_XTMP[UART_XSTATE[2:0]] : UART_XSTATE==`UART_STATE_START ? 0 : 1;
+`else
     assign TXD = UART_XSTATE[3] ? UART_XFIFO[UART_XSTATE[2:0]] : UART_XSTATE==`UART_STATE_START ? 0 : 1;
+`endif
 
     // recv path: 6(IDLE), 7(START), 8, 9, 10, 11, 12, 13, 14, 15, 0(STOP), 1(ACK)
 
@@ -202,11 +253,22 @@ module darkuart
                             UART_RSTATE==`UART_STATE_IDLE ? UART_RSTATE+(UART_RXDFF[2:1]==2'b10) : // start bit detection
                                                             UART_RSTATE+(UART_RBAUD==0);
                                                             
+`ifdef __UARTQUEUE__
+        if(UART_RSTATE==`UART_STATE_ACK&&(UART_RREQ!=(UART_RACK^9'h100)))
+        begin
+            UART_RREQ <= UART_RREQ+1;
+            UART_RFIFO[UART_RREQ[7:0]] <= UART_RTMP;
+        end
+`else
         UART_RREQ <= UART_RSTATE==`UART_STATE_ACK ? !UART_RACK : UART_RREQ;
-
+`endif
         if(UART_RSTATE[3]) 
         begin
+`ifdef __UARTQUEUE__  
+            UART_RTMP[UART_RSTATE[2:0]] <= UART_RXDFF[2];
+`else
             UART_RFIFO[UART_RSTATE[2:0]] <= UART_RXDFF[2];
+`endif
         end
     end
 
