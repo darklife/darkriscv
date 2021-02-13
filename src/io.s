@@ -32,20 +32,24 @@ board_name:
 	li	a4,6
 	addi	a5,a5,%pcrel_lo(.LA8)
 	beq	a0,a4,.L1
-	.LA1: auipc	a5,%pcrel_hi(.LC1)
-	li	a4,7
-	addi	a5,a5,%pcrel_lo(.LA1)
-	beq	a0,a4,.L1
 	.LA9: auipc	a5,%pcrel_hi(.LC9)
-	li	a4,8
+	li	a4,7
 	addi	a5,a5,%pcrel_lo(.LA9)
 	beq	a0,a4,.L1
-	.LA0: auipc	a5,%pcrel_hi(.LC0)
-	li	a4,9
-	addi	a5,a5,%pcrel_lo(.LA0)
+	.LA1: auipc	a5,%pcrel_hi(.LC1)
+	li	a4,8
+	addi	a5,a5,%pcrel_lo(.LA1)
 	beq	a0,a4,.L1
 	.LA10: auipc	a5,%pcrel_hi(.LC10)
+	li	a4,9
 	addi	a5,a5,%pcrel_lo(.LA10)
+	beq	a0,a4,.L1
+	.LA0: auipc	a5,%pcrel_hi(.LC0)
+	li	a4,10
+	addi	a5,a5,%pcrel_lo(.LA0)
+	beq	a0,a4,.L1
+	.LA11: auipc	a5,%pcrel_hi(.LC11)
+	addi	a5,a5,%pcrel_lo(.LA11)
 .L1:
 	mv	a0,a5
 	ret
@@ -56,11 +60,11 @@ board_name:
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC0:
-	.string	"qmtech artix7 a35"
-	.zero	2
-.LC1:
-	.string	"digilent spartan3 s200"
+	.string	"aliexpress hpc/40gbe ku040"
 	.zero	1
+.LC1:
+	.string	"aliexpress hpc/40gbe k420"
+	.zero	2
 .LC2:
 	.string	"simulation only"
 .LC3:
@@ -81,9 +85,12 @@ board_name:
 	.string	"piswords rs485 lx9"
 	.zero	1
 .LC9:
-	.string	"aliexpress hpc/40gbe k420"
-	.zero	2
+	.string	"digilent spartan3 s200"
+	.zero	1
 .LC10:
+	.string	"qmtech artix7 a35"
+	.zero	2
+.LC11:
 	.string	"unknown"
 	.section	.sbss,"aw",@nobits
 	.align	2

@@ -280,6 +280,16 @@
     `define INVRES 1
 `endif
 
+`ifdef ALIEXPRESS_HPC40GBE_XKCU040
+    `define BOARD_ID 10
+    //`define BOARD_CK 200000000
+    `define BOARD_CK_REF 100000000
+    `define BOARD_CK_MUL 10
+    `define BOARD_CK_DIV 4
+    `define XILINX7CLK 1
+    `define INVRES 1
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
     `define BOARD_CK 100000000
