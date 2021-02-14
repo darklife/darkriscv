@@ -292,8 +292,8 @@
     `define BOARD_ID 10
     //`define BOARD_CK 200000000
     `define BOARD_CK_REF 100000000
-    `define BOARD_CK_MUL 10
-    `define BOARD_CK_DIV 4
+    `define BOARD_CK_MUL 8  // x8/2 = 400MHZ (overclock!)
+    `define BOARD_CK_DIV 2  // vivado reco. = 250MHz
     `define XILINX7CLK 1
     `define INVRES 1
 `endif

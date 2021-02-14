@@ -1,7 +1,14 @@
-# QMTech Spartan-7 board
+# HPC 2x40GbE XCKU040 board
 
-set_property CFGBVS VCCO                        [current_design]
-set_property CONFIG_VOLTAGE 3.3                 [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+set_property BITSTREAM.CONFIG.CCLK_TRISTATE TRUE [current_design]
+set_property BITSTREAM.CONFIG.CONFIGRATE 66 [current_design]
+set_property CONFIG_VOLTAGE 2.5 [current_design]
+set_property CFGBVS VCCO [current_design]
+set_property BITSTREAM.CONFIG.SPI_32BIT_ADDR YES [current_design]
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 8 [current_design]
+set_property BITSTREAM.CONFIG.SPI_FALL_EDGE YES [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN PULLUP [current_design]
 
 set_property -dict { PACKAGE_PIN D23 IOSTANDARD LVCMOS18 } [get_ports { XCLK }];
 create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { XCLK }];

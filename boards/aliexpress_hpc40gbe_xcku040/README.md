@@ -26,11 +26,17 @@ pins, with some labels in chinese and some small errors, but not bad at all.
 
 This board appears to work well when overclocked and, in fact, it exceeds
 the darkriscv frequency register, so the frequencies above 250MHz will
-appears weird! For example, when working at 266MHz::
+appears weird! 
+
+For example, when working at 400MHz::
 
     boot0: text@0 data@6268 stack@8192 (1924 bytes free)
     board: aliexpress hpc/40gbe ku040 (id=10)
     build: Mon, 01 Feb 2021 04:06:48 -0300 for rv32e
-    core0/thread0: darkriscv@10.66MHz rv32e <- ?!?
+    core0/thread0: darkriscv@144.00MHz rv32e <- frequency reg overflow
     uart0: 115200 bps (div=2314)
-    timr0: frequency=40075Hz (io.timer=265) <-- ?!?
+    timr0: frequency=40075Hz (io.timer=399) <-- 400M/(399+1)=1us
+
+Finally, be careful that the Ultrascale needs TWO boot images, so you need
+generate the primary and secondary MCS file (just select in Vivado the
+option to generate the FLASH image and the wizard will generate them).
