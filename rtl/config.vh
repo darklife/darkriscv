@@ -266,6 +266,7 @@
 `ifdef DIGILENT_SPARTAN3_S200
     `define BOARD_ID 7
     `define BOARD_CK 50000000
+    `define __RMW_CYCLE__
 `endif
 
 `ifdef ALIEXPRESS_HPC40GBE_K420

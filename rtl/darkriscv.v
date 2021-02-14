@@ -239,11 +239,12 @@ module darkriscv
 
     // source-1 and source-1 register selection
 
-    wire signed   [31:0] S1REG = REG1[S1PTR];
-    wire signed   [31:0] S2REG = REG2[S2PTR];
-    
     wire          [31:0] U1REG = REG1[S1PTR];
     wire          [31:0] U2REG = REG2[S2PTR];
+
+    wire signed   [31:0] S1REG = U1REG;
+    wire signed   [31:0] S2REG = U2REG;
+    
 
     // L-group of instructions (OPCODE==7'b0000011)
 
