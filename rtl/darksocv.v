@@ -545,7 +545,8 @@ module darksocv
 
     //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[11:2]];
     
-    reg [31:0] IOMUXFF;
+    reg [31:0] IOMUXFF = 0;
+    reg [31:0] XADDR   = 0;
 
     //individual byte/word/long selection, thanks to HYF!
     
@@ -586,11 +587,13 @@ module darksocv
     `endif
 `endif
 
+        XADDR <= DADDR; // 1 clock delayed
         IOMUXFF <= IOMUX[DADDR[3:2]]; // read w/ 2 wait-states
     end    
 
     //assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
-    assign DATAI = DADDR[31] ? /*IOMUX[DADDR[3:2]]*/ IOMUXFF  : RAMFF;
+    //assign DATAI = DADDR[31] ? IOMUXFF : RAMFF;
+    assign DATAI = XADDR[31] ? IOMUX[XADDR[3:2]] : RAMFF;
 
 `endif
 

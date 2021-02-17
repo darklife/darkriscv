@@ -332,8 +332,9 @@ module darkriscv
                           /*FCT3==1 ? */ U1REG^S2REGX); //U1REG!=U2REG); // bne
                                     //0);
 
+    wire [31:0] PCSIMM = PC+SIMM;
     wire        JREQ = (JAL||JALR||BMUX);
-    wire [31:0] JVAL = JALR ? DADDR : PC+SIMM; // SIMM + (JALR ? U1REG : PC);
+    wire [31:0] JVAL = JALR ? DADDR : PCSIMM; // SIMM + (JALR ? U1REG : PC);
 
 `ifdef SIMULATION
     `ifdef __PERFMETER__
@@ -431,7 +432,7 @@ module darkriscv
 `endif
                        HLT ? REG1[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
-                     AUIPC ? PC+SIMM :
+                     AUIPC ? PCSIMM :
                       JAL||
                       JALR ? NXPC :
                        LUI ? SIMM :
@@ -449,7 +450,7 @@ module darkriscv
 `endif        
                        HLT ? REG2[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
-                     AUIPC ? PC+SIMM :
+                     AUIPC ? PCSIMM :
                       JAL||
                       JALR ? NXPC :
                        LUI ? SIMM :
