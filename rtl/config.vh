@@ -30,24 +30,6 @@
 
 `timescale 1ns / 1ps
 
-// memory architecture
-//
-// TODO: fix the different memory architecture concepts:
-// status:
-// ICACHE: works without interrupt
-// DCACHE: does not work!
-// WAITSTATE: works
-// 
-//`define __ICACHE__              // instruction cache
-//`define __DCACHE__              // data cache (bug: simulation only)
-//`define __WAITSTATES__          // wait-state tests, no cache
-
-// peripheral configuration
-//
-// UART speed is set in bits per second, typically 115200 bps:
-
-`define __UARTSPEED__ 115200
-
 // darkriscv/darksocv configuration
 // 
 // pipeline stages:
@@ -65,7 +47,7 @@
 // wait-state, which means sometimes the read performance is reduced.
 
 `define __3STAGE__
-
+//
 // read-modify-write cycle:
 //
 // Generate RMW cycles when writing in the memory. This option basically 
@@ -100,7 +82,7 @@
 // number of threads: between 2 and n. Of course, it requires more and 
 // more FPGA space in order to implement it, depending of the FPGA technology. 
 
-`define NTHREADS 4
+//`define NTHREADS 4
 
 // performance measurement:
 //
@@ -160,6 +142,25 @@
 
 `define __FLEXBUZZ__
 
+// instruction wait-states:
+// 
+// option to add wait-states in order to use the 2-stage pipeline AND a 
+// single phase clock... decrease the IPC, but increases the clock from 50 to 80MHz! 
+// maybe, in the future, can use associated to a large 64 or 128 bit burst based 
+// bus in order to get a quick 2-stage pipeline w/ an efficient instruction bus.
+// do not forget to see the cache options below!
+
+//`define __WAITSTATES__
+
+// instruction and data caches:
+// 
+// the option for instruction and data caches were developed for 2-stage 
+// version and, of course, is part of the original effort to make the core
+// more efficient when the wait-states are enabled.
+
+//`define __ICACHE__
+//`define __DCACHE__ // not working, must debug it! :(
+
 // initial PC and SP
 //
 // it is possible program the initial PC and SP.  Typically, the PC is set
@@ -172,6 +173,12 @@
 
 `define __RESETPC__ 32'd0
 `define __RESETSP__ 32'd8192
+
+// peripheral configuration
+//
+// UART speed is set in bits per second, typically 115200 bps:
+
+`define __UARTSPEED__ 115200
 
 // UART queue: 
 // 
@@ -217,9 +224,11 @@
     `define BOARD_CK_REF 100000000
     `define BOARD_CK_MUL 2
     `ifdef __3STAGE__
-        `define BOARD_CK_DIV 2 // 100MHz 
+        `define BOARD_CK_DIV 2 // 3-stage, 0-ws, 100MHz
+    `elsif __WAITSTATES__
+        `define BOARD_CK_DIV 2 // 2-stage, 1-ws, 100MHz
     `else
-        `define BOARD_CK_DIV 4 // 50MHz
+        `define BOARD_CK_DIV 4 // 2-stage, 0-ws, 50MHz
     `endif
 `endif
 

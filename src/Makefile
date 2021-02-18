@@ -98,10 +98,10 @@ all: $(TARGETS) $(DEPS)
 clean:
 	-rm $(ASMS) $(OBJS) $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin,ld,o}
 
-%.o: %.s
+%.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@
 
-%.s: %.c
+%.s: %.c Makefile
 	$(CC) $(CCFLAGS) -S $< -o $@
 
 $(PROJ).ld: $(PROJ).ld.src

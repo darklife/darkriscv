@@ -63,10 +63,18 @@ module darksocv
     
     // useful script to calculate MUL/DIV values:
     // 
-    // awk 'BEGIN { for(m=2;m<=32;m++) for(d=1;d<=32;d++) print 66.666*m/d,m,d }' | sort -n
+    // awk 'BEGIN { 
+    //   ref=66.6; target=97.4; 
+    //   for(m=2;m<=32;m++) for(d=1;d<=32;d++) { 
+    //     mul=ref*m; delta=target-(mul/d); 
+    //     if(mul>=600&&mul<=1600) print (delta<0?-delta:delta),mul/d,mul,m,d;
+    //   } 
+    // }' | sort -nr
     // 
-    // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz. not so useful after I discovered 
-    // that my evaluation board already has external clock generator :D
+    // example: reference w/ 66MHz, m=19, d=13 and fx=97.4MHz; 
+    // not so useful after I discovered that my evaluation board already has an external clock generator :D
+    // 
+    // important remark: the xilinx-7 pll requires a ref*mul bandwidth between 0.6 and 1.6GHz!
 
     `ifdef XILINX7CLK
     
@@ -290,8 +298,11 @@ module darksocv
 
     always@(posedge CLK)
     begin
+    `ifdef __HARVARD__
         ROMFF <= ROM[IADDR[11:2]];
-
+    `else
+        ROMFF <= MEM[IADDR[12:2]];
+    `endif
         if(IFFX2)
         begin
             IFFX2 <= 0;
@@ -400,7 +411,11 @@ module darksocv
 
     always@(posedge CLK)
     begin
+    `ifdef __HARVARD__
         RAMFF <= RAM[DADDR[11:2]];
+    `else
+        RAMFF <= MEM[DADDR[12:2]];
+    `endif
 
         if(FFX2)
         begin
@@ -413,24 +428,23 @@ module darksocv
         if(!WHIT)
         begin
             //individual byte/word/long selection, thanks to HYF!
+        `ifdef __HARVARD__
             if(BE[0]) RAM[DADDR[11:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
             if(BE[1]) RAM[DADDR[11:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
             if(BE[2]) RAM[DADDR[11:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
             if(BE[3]) RAM[DADDR[11:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];        
-
+        `else
+            if(BE[0]) MEM[DADDR[12:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+            if(BE[1]) MEM[DADDR[12:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
+            if(BE[2]) MEM[DADDR[12:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
+            if(BE[3]) MEM[DADDR[12:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];                
+        `endif
             DCACHE[DPTR][0 * 8 + 7: 0 * 8] <= BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8];
             DCACHE[DPTR][1 * 8 + 7: 1 * 8] <= BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8];
             DCACHE[DPTR][2 * 8 + 7: 2 * 8] <= BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8];
             DCACHE[DPTR][3 * 8 + 7: 3 * 8] <= BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8];
 
             DCACHE[DPTR][55:32] <= DADDR[31:8];
-            
-            //DCACHE[DPTR] <= { DADDR[31:8],
-            //                        BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
-            //                        BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
-            //                        BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
-            //                        BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
-            //                };
 
             DTAG[DPTR]   <= FFX; // cached!
             WTAG         <= FFX;
@@ -716,6 +730,8 @@ module darksocv
     core0 
     (
 `ifdef __3STAGE__
+        .CLK(CLK),
+`elsif  __WAITSTATES__
         .CLK(CLK),
 `else
         .CLK(!CLK),
