@@ -56,7 +56,6 @@
 // separate 16-bit and 8-bit words. Typically, the RMW cycle results in a
 // decrease of 5% in the performance (not the clock, but the instruction
 // pipeline eficiency) due to memory wait-states.
-// Additional note: the RMW cycle is required for -O3 compilation!
 
 //`define __RMW_CYCLE__
 
@@ -140,7 +139,7 @@
 // in order to insert wait-states and perform the required multiplexing to fit 
 // the DLEN operand size in the data bus width available.
 
-`define __FLEXBUZZ__
+//`define __FLEXBUZZ__
 
 // instruction wait-states:
 // 
@@ -318,14 +317,14 @@
 `endif
 
 // the 3-stage pipeline is required when the threading mode is enabled,
-// also, we need a non-null number of threads (default 2)
+// also, we need a non-null number of threads (default 4)
 
 `ifdef __THREADING__
     `ifndef __3STAGE__
         `define __3STAGE__
     `endif
     `ifndef NTHREADS
-        `define NTHREADS 2
+        `define NTHREADS 4
     `endif
 `endif
 

@@ -62,9 +62,9 @@ module darkriscv
     input             RES,   // reset
     input             HLT,   // halt
     
-//`ifdef __THREADING__    
-//    input             IREQ,  // irq req
-//`endif    
+`ifdef __THREADING__    
+    output [$clog2(`NTHREADS)-1:0] TPTR,  // thread pointer
+`endif    
 
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
@@ -82,10 +82,9 @@ module darkriscv
     output            RD,    // read enable 
 `endif    
 
-`ifdef SIMULATION
-    input	  FINISH_REQ,
-`endif
-    output [3:0]  DEBUG      // old-school osciloscope based debug! :)
+    output            IDLE,   // idle output
+    
+    output [3:0]  DEBUG       // old-school osciloscope based debug! :)
 );
 
     // dummy 32-bit words w/ all-0s and all-1s: 
@@ -95,6 +94,8 @@ module darkriscv
 
 `ifdef __THREADING__
     reg [$clog2(`NTHREADS)-1:0] XMODE = 0;     // thread ptr
+    
+    assign TPTR = XMODE;
 `endif
     
     // pre-decode: IDATA is break apart as described in the RV32I specification
@@ -297,14 +298,13 @@ module darkriscv
                          FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REGX : U1REG+S2REGX) :
                          FCT3==1 ? U1REG<<U2REGX[4:0] :                         
                          //FCT3==5 ? 
-                         
-// maybe the $signed solves the problem for MODELSIM too! needs to be tested!
-//`ifdef MODEL_TECH        
-//                         FCT7[5] ? -((-U1REG)>>U2REGX[4:0]; // workaround for modelsim
-//`else
-                         FCT7[5] ? $signed(S1REG>>>U2REGX[4:0]) : // (FCT7[5] ? U1REG>>>U2REG[4:0] : 
-//`endif                        
-                                   U1REG>>U2REGX[4:0];
+                         !FCT7[5] ? U1REG>>U2REGX[4:0] :
+`ifdef MODEL_TECH        
+                         FCT7[5] ? -((-U1REG)>>U2REGX[4:0]; // workaround for modelsim
+`else
+                                   $signed(S1REG>>>U2REGX[4:0]);  // (FCT7[5] ? U1REG>>>U2REG[4:0] : 
+`endif                        
+
 `ifdef __MAC16X16__
 
     // MAC instruction rd += s1*s2 (OPCODE==7'b1111111)
@@ -336,79 +336,7 @@ module darkriscv
     wire        JREQ = (JAL||JALR||BMUX);
     wire [31:0] JVAL = JALR ? DADDR : PCSIMM; // SIMM + (JALR ? U1REG : PC);
 
-`ifdef SIMULATION
-    `ifdef __PERFMETER__
 
-        integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
-
-    `ifdef __THREADING__
-        integer thread[0:`NTHREADS-1];
-        integer i;
-        
-        initial for(i=0;i!=`NTHREADS;i=i+1) thread[i] = 0;
-    `endif
-    
-        always@(posedge CLK)
-        begin
-            if(!XRES)
-            begin
-                clocks = clocks+1;
-
-                if(HLT)
-                begin
-                         if(SCC)	store = store+1;
-                    else if(LCC)	load  = load +1;
-                    else 		halt  = halt +1;            
-                end
-                else
-                begin
-                    if(FLUSH)
-                    begin
-                        flush=flush+1;
-                    end
-                    else
-                    begin
-                    
-        `ifdef __THREADING__
-        
-                        for(i=0;i!=`NTHREADS;i=i+1)
-                                thread[i] = thread[i]+(i==XMODE?1:0);
-        `endif    
-                        running = running +1;
-                    end
-                end
-                    
-                if(FINISH_REQ)
-                begin
-                    $display("****************************************************************************");
-                    $display("DarkRISCV Pipeline Report:");
-                    $display("core0  clocks: %0d",clocks);
-
-                    $display("core0: running %0d%%",100.0*running/clocks);
-
-         `ifdef __THREADING__
-                    for(i=0;i!=`NTHREADS;i=i+1) $display("  thread%0d: running %0d%%",i,100.0*thread[i]/clocks);
-         `endif
-
-                    $display("core0:  halted %0d%% (%0d%% load, %0d%% store, %0d%% busy)",
-                        100.0*(load+store)/clocks,
-                        100.0*load/clocks,
-                        100.0*store/clocks,
-                        100.0*halt/clocks);
-                        
-                    $display("core0: stalled %0d%%",100.0*flush/clocks);
-
-
-
-                    $display("****************************************************************************");                    
-                    $finish();
-                end
-            end
-        end
-    `else
-        $finish();
-    `endif
-`endif
 
     always@(posedge CLK)
     begin
@@ -527,6 +455,8 @@ module darkriscv
 `else
     assign IADDR = NXPC;
 `endif
+
+    assign IDLE = |FLUSH;
 
     assign DEBUG = { XRES, |FLUSH, SCC, LCC };
 

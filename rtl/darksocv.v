@@ -722,6 +722,10 @@ module darksocv
 
     wire [3:0] KDEBUG;
 
+`ifdef __THREADING__
+    wire [$clog2(`NTHREADS)-1:0] TPTR;
+`endif    
+
     darkriscv
 //    #(
 //        .RESET_PC(32'h00000000),
@@ -738,9 +742,9 @@ module darksocv
 `endif
         .RES(RES),
         .HLT(HLT),
-//`ifdef __THREADING__        
-//        .IREQ(|(IREQ^IACK)),
-//`endif        
+`ifdef __THREADING__        
+        .TPTR(TPTR),
+`endif        
         .IDATA(IDATA),
         .IADDR(IADDR),
         .DADDR(DADDR),
@@ -758,22 +762,92 @@ module darksocv
         .RD(RD),
 `endif
 
-`ifdef SIMULATION
-        .FINISH_REQ(FINISH_REQ),
-`endif
+        .IDLE(IDLE),
+
         .DEBUG(KDEBUG)
     );
-
-`ifdef __ICARUS__
-  initial
-  begin
-    $dumpfile("darksocv.vcd");
-    $dumpvars();
-  end
-`endif
 
     assign LED   = LEDFF[3:0];
     
     assign DEBUG = { GPIOFF[0], XTIMER, WR, RD }; // UDEBUG;
+
+`ifdef SIMULATION
+
+    `ifdef __PERFMETER__
+
+        integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
+
+    `ifdef __THREADING__
+        integer thread[0:`NTHREADS-1];
+        integer j;
+        
+        initial for(j=0;j!=`NTHREADS;j=j+1) thread[j] = 0;
+    `endif
+    
+        always@(posedge CLK)
+        begin
+            if(!RES)
+            begin
+                clocks = clocks+1;
+
+                if(HLT)
+                begin
+                         if(WR)	store = store+1;
+                    else if(RD)	load  = load +1;
+                    else 		halt  = halt +1;            
+                end
+                else
+                if(IDLE)
+                begin
+                    flush=flush+1;
+                end
+                else
+                begin
+                    
+        `ifdef __THREADING__
+                    for(j=0;j!=`NTHREADS;j=j+1)
+                            thread[j] = thread[j]+(j==TPTR?1:0);
+        `endif    
+                    running = running +1;
+                end
+                    
+                if(FINISH_REQ)
+                begin
+                    $display("****************************************************************************");
+                    $display("DarkRISCV Pipeline Report:");
+                    $display("core0  clocks: %0d",clocks);
+
+                    $display("core0: running %0d%%",100.0*running/clocks);
+
+         `ifdef __THREADING__
+                    for(j=0;j!=`NTHREADS;j=j+1) $display("  thread%0d: running %0d%%",j,100.0*thread[j]/clocks);
+         `endif
+
+                    $display("core0:  halted %0d%% (%0d%% d-bus load, %0d%% d-bus store, %0d%% i-bus)",
+                        100.0*(load+store+halt)/clocks,
+                        100.0*load/clocks,
+                        100.0*store/clocks,
+                        100.0*halt/clocks);
+                        
+                    $display("core0:    idle %0d%%",100.0*flush/clocks);
+
+                    $display("****************************************************************************");                    
+                    $finish();
+                end
+            end
+        end
+    `else
+        always@(posedge CLK) if(FINISH_REQ) $finish();
+    `endif
+    
+    `ifdef __ICARUS__
+      initial
+      begin
+        $dumpfile("darksocv.vcd");
+        $dumpvars();
+      end
+    `endif
+
+`endif
 
 endmodule
