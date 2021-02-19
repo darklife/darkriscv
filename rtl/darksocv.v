@@ -723,7 +723,7 @@ module darksocv
     wire [3:0] KDEBUG;
 
 `ifdef __THREADING__
-    wire [$clog2(`NTHREADS)-1:0] TPTR;
+    wire [`PTHREADS-1:0] TPTR;
 `endif    
 
     darkriscv
@@ -778,7 +778,7 @@ module darksocv
         integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
 
     `ifdef __THREADING__
-        integer thread[0:`NTHREADS-1];
+        integer thread[0:`NTHREADS-1],curtptr=0,cnttptr=0;
         integer j;
         
         initial for(j=0;j!=`NTHREADS;j=j+1) thread[j] = 0;
@@ -807,6 +807,12 @@ module darksocv
         `ifdef __THREADING__
                     for(j=0;j!=`NTHREADS;j=j+1)
                             thread[j] = thread[j]+(j==TPTR?1:0);
+                            
+                    if(TPTR!=curtptr)
+                    begin
+                        curtptr = TPTR;
+                        cnttptr = cnttptr+1;
+                    end
         `endif    
                     running = running +1;
                 end
@@ -814,23 +820,21 @@ module darksocv
                 if(FINISH_REQ)
                 begin
                     $display("****************************************************************************");
-                    $display("DarkRISCV Pipeline Report:");
-                    $display("core0  clocks: %0d",clocks);
+                    $display("DarkRISCV Pipeline Report (%0d clocks):",clocks);
 
-                    $display("core0: running %0d%%",100.0*running/clocks);
-
-         `ifdef __THREADING__
-                    for(j=0;j!=`NTHREADS;j=j+1) $display("  thread%0d: running %0d%%",j,100.0*thread[j]/clocks);
-         `endif
-
-                    $display("core0:  halted %0d%% (%0d%% d-bus load, %0d%% d-bus store, %0d%% i-bus)",
+                    $display("core0: %0d%% running, %0d%% waiting (%0d%% i-bus, %0d%% d-bus/rd, %0d%% d-bus/wr), %0d%% idle",
+                        100.0*running/clocks,
                         100.0*(load+store+halt)/clocks,
+                        100.0*halt/clocks,
                         100.0*load/clocks,
                         100.0*store/clocks,
-                        100.0*halt/clocks);
-                        
-                    $display("core0:    idle %0d%%",100.0*flush/clocks);
+                        100.0*flush/clocks);
 
+         `ifdef __THREADING__
+                    for(j=0;j!=`NTHREADS;j=j+1) $display("  thread%0d: %0d%% running",j,100.0*thread[j]/clocks);
+                    
+                    $display("%0d thread switches, %0d clocks/threads",cnttptr,clocks/cnttptr);
+         `endif
                     $display("****************************************************************************");                    
                     $finish();
                 end

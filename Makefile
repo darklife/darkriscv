@@ -31,52 +31,25 @@
 #
 # This the root makefile and the function of this file is call other
 # makefiles. Of course, you need first set the GCC compiler path/name, the
-# simulator path/name and the board model:
+# simulator path/name and the board model in the respective directories:
 #
-   ARCH = rv32e
-#  ARCH = rv32i
-#ENDIAN = _le
-#ENDIAN = _be
-#HARVARD = 1
-# CROSS = riscv-elf
-# CROSS = riscv32-unknown-elf
-# CROSS = riscv32-embedded-elf
-  CROSS = riscv32-embedded$(ENDIAN)-elf
-#CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
- CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
- ICARUS = /usr/local/bin/iverilog
-#BOARD  = avnet_microboard_lx9
-#BOARD  = xilinx_ac701_a200
-#BOARD  = qmtech_sdram_lx16
-#BOARD  = lattice_brevia2_xp2 
-#BOARD = piswords_rs485_lx9
-#BOARD = digilent_spartan3_s200
-BOARD = aliexpress_hpc40gbe_k420
-
-# now you can just type 'make'
-
-ifdef HARVARD
-	MTYPE = HARVARD=1
-	ROM = src/darksocv.rom.mem                  # requires gcc for riscv
-	RAM = src/darksocv.ram.mem                  # requires gcc for riscv
-else	
-	MEM = src/darksocv.mem
-endif
-	
-SIM = sim/darksocv.vcd                      # requires icarus verilog 
-BIT = tmp/darksocv.bit                      # requires FPGA build tool
+# - src/Makefile
+# - sim/Makefile
+# - board/Makefile
+#
+# After configure each Makefile, you can just type 'make'
 
 default: all
 
 all:
-	make -C src all             CROSS=$(CROSS) CCPATH=$(CCPATH) ARCH=$(ARCH) $(MTYPE)
-	make -C sim all             ICARUS=$(ICARUS) $(MTYPE)
-	make -C boards all          BOARD=$(BOARD) $(MTYPE)
+	make -C src all
+	make -C sim all
+	make -C boards all
 
 install:
-	make -C boards install      BOARD=$(BOARD)
+	make -C boards install
 
 clean:
 	make -C src clean
 	make -C sim clean
-	make -C boards clean        BOARD=$(BOARD)
+	make -C boards clean

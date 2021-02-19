@@ -47,7 +47,7 @@ ifndef CROSS
     
     CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-    HARVARD = 1
+    #HARVARD = 1
 endif
 
 ifndef BUILD

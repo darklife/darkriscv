@@ -47,7 +47,7 @@
 // wait-state, which means sometimes the read performance is reduced.
 
 `define __3STAGE__
-//
+
 // read-modify-write cycle:
 //
 // Generate RMW cycles when writing in the memory. This option basically 
@@ -75,13 +75,11 @@
 // c) the threading in the non-interrupt mode switches when the program flow
 //    changes, i.e. every jal instruction. When the core is idle, it is 
 //    probably in a jal loop.
+// The number of threads must be 2**n
 
 //`define __THREADING__
-
-// number of threads: between 2 and n. Of course, it requires more and 
-// more FPGA space in order to implement it, depending of the FPGA technology. 
-
-//`define NTHREADS 4
+//`define PTHREADS 2
+//`define NTHREADS (2**`PTHREADS)
 
 // performance measurement:
 //
@@ -157,7 +155,7 @@
 // version and, of course, is part of the original effort to make the core
 // more efficient when the wait-states are enabled.
 
-//`define __ICACHE__
+//`define __ICACHE__ // not working, must debug it! :(
 //`define __DCACHE__ // not working, must debug it! :(
 
 // initial PC and SP
@@ -314,18 +312,6 @@
     
 `ifdef BOARD_CK_REF
     `define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
-`endif
-
-// the 3-stage pipeline is required when the threading mode is enabled,
-// also, we need a non-null number of threads (default 4)
-
-`ifdef __THREADING__
-    `ifndef __3STAGE__
-        `define __3STAGE__
-    `endif
-    `ifndef NTHREADS
-        `define NTHREADS 4
-    `endif
 `endif
 
 // darkuart baudrate automtically calculated according to board clock:
