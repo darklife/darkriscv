@@ -35,6 +35,9 @@ INCS = ../rtl/config.vh
 XSIM = darksocv
 VCDS = darksocv.vcd
 
+.PRECIOUS: $(VCDS)	# Do not delete the trace file if simulation is aborted
+.PHONY: $(VCDS)		# Always run the simulation
+
 ifdef HARVARD
 	SRCS = ../src/darksocv.rom.mem ../src/darksocv.ram.mem
 else
