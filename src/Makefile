@@ -26,6 +26,8 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
+SHELL := /bin/bash
+
 ifndef HOST_CC
     HOST_CC = gcc
     HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os
