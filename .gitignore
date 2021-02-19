@@ -5,3 +5,7 @@ sim/darksocv.vcd
 */*~
 .DS_Store
 */.DS_Store
+boards/*/darksocv.cache
+boards/*/darksocv.hw
+boards/*/darksocv.ip_user_files
+boards/*/darksocv.sim
