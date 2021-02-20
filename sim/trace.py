@@ -6,6 +6,7 @@ from vcdvcd import VCDVCD
 import subprocess
 import sys
 import getopt
+import argparse
 
 class Error(Exception):
     """addr2line exception."""
@@ -14,7 +15,7 @@ class Error(Exception):
         Exception.__init__(self, str)
 
 class addr2line:
-    def __init__(self, binary, addr2line = "/opt/riscv32e/bin/riscv32-unknown-elf-addr2line"):
+    def __init__(self, binary, addr2line):
         self.process = subprocess.Popen(
             [addr2line, "-e", binary],
             stdin = subprocess.PIPE,
@@ -38,16 +39,70 @@ class addr2line:
             
         return dbg_info
 
+class source_printer:
+    def __init__(self):
+        self.cache = {}
+
+    def try_print_source(self, line, count):
+        if (line, count) not in self.cache:
+            self.cache[(line, count)] = self.__lookup(line, count)
+
+        print(self.cache[(line, count)])
+
+
+    def __lookup(self, line, count):
+        source = ""
+
+        try:
+            file_name, line_number = filter(None, line.split(':'))
+            line_number = line_number.split(' ', 1)[0]  # get rid of 'discriminator X' stuff
+            #print(f'file: {file_name}, line: {line_number}')
+
+            start_line_number = int(line_number)
+            if count > 1:
+                start_line_number = int(start_line_number - count/2)
+
+            if start_line_number < 0:
+                start_line_number = 0
+            end_line_number = start_line_number + count
+
+            # print(f'file_name: {file_name} => {start_line_number}:{end_line_number}')
+
+            with open(file_name) as src_file:
+                for i, line_content in enumerate(src_file):
+                    if (start_line_number <= i and i < end_line_number):
+                        source += f"{i}:{line_content}"
+
+        except:
+            pass
+            # nothing to do here, error could be missing source file
+            # or addr2line failing to find the PC
+
+        finally:
+            return source if source else "No Source"
+
+
+# Execution starts here
+parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+parser.add_argument("vcdfile", nargs='?', help = "VCD trace file", default="darksocv.vcd")
+parser.add_argument("-of", "--objectfile", help="Object file to look up into", default="../src/darksocv.o")
+parser.add_argument("-a2l", "--addr2line", help="addr2line executable to use", default="/opt/riscv32e/bin/riscv32-unknown-elf-addr2line")
+parser.add_argument("-s", "--source", help="Print out source code line, if possible", action="store_true")
+parser.add_argument("-sl", "--source_lines", help="Number of source code lines to print", default=1, type=int)
+args = parser.parse_args()
+
 # Do the parsing.
-vcd = VCDVCD('darksocv.vcd')
+vcd = VCDVCD(args.vcdfile)
 
 # Get a signal by human readable name.
 signal = vcd['darksimv.darksocv.core0.PC[31:0]']
 
 tv = signal.tv
 
+# A crude "PC"->"line" cache as addr2line calls can be expensive
 cache = {}
-a2l = addr2line("../src/darksocv.o")
+a2l = addr2line(args.objectfile, args.addr2line)
+source_printer = source_printer()
 
 for x in tv:
     time = x[0]
@@ -63,5 +118,7 @@ for x in tv:
             cache[pc] = line
 
     print( f'{time:>12}' + ":" + f'{pc:>10}' + ":" + line)
+    if line != "undef" and args.source:
+        source_printer.try_print_source(line, args.source_lines)
 
 
