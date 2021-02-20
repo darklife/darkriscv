@@ -95,7 +95,7 @@ endif
 .PHONY: all
 
 all: $(TARGETS) $(DEPS)
-	echo sources ok.
+	@echo sources ok.
 
 clean:
 	-rm $(ASMS) $(OBJS) $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin,ld,o}
@@ -119,7 +119,7 @@ $(PROJ).rom.mem: $(PROJ).o
 	#xxd -p -c 4 -g 4 $< > $@
 	rm $(PROJ).text
 	wc -l $@
-	echo rom ok.
+	@echo rom ok.
 
 $(PROJ).ram.mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).data --only-section .*data*
@@ -127,7 +127,7 @@ $(PROJ).ram.mem: $(PROJ).o
 	#xxd -p -c 4 -g 4 $< > $@
 	rm $(PROJ).data
 	wc -l $@
-	echo ram ok.
+	@echo ram ok.
 
 $(PROJ).mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).bin
@@ -135,8 +135,8 @@ $(PROJ).mem: $(PROJ).o
 	#xxd -p -c 4 -g 4 $< > $@
 	rm $(PROJ).bin
 	wc -l $@
-	echo mem ok.
+	@echo mem ok.
 	
 $(PROJ).x86: $(SRCS)
 	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""
-	echo x86 ok.
+	@echo x86 ok.

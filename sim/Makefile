@@ -47,7 +47,7 @@ endif
 DEPS = $(SRCS) $(RTLS) $(INCS)
 
 all: $(VCDS)
-	echo simulation ok.
+	@echo simulation ok.
 
 clean:
 	-rm $(VCDS) $(XSIM)
