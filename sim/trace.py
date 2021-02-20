@@ -81,6 +81,24 @@ class source_printer:
         finally:
             return source if source else "No Source"
 
+class lst_lookuper:
+    def __init__(self, filename):
+        # read the whole listing file in memory
+        with open(filename) as lst_file:
+            self.lst_array = lst_file.readlines()
+
+    def lst_lookup(self, pc):
+        pcstr = " " + str(pc)[2:] + ":\t"
+
+        asm = next((s for s in self.lst_array if pcstr in s), None)
+        if not asm:
+            asm = ""
+        else:
+            # .lst file format is:
+            # <space[s]>address:<tab>binary<spaces><tab>assembly instructuon
+            asm = asm.split("\t", 2)[-1]
+            asm = asm.rstrip()
+        return asm
 
 # Execution starts here
 parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -89,6 +107,8 @@ parser.add_argument("-of", "--objectfile", help="Object file to look up into", d
 parser.add_argument("-a2l", "--addr2line", help="addr2line executable to use", default="/opt/riscv32e/bin/riscv32-unknown-elf-addr2line")
 parser.add_argument("-s", "--source", help="Print out source code line, if possible", action="store_true")
 parser.add_argument("-sl", "--source_lines", help="Number of source code lines to print", default=1, type=int)
+parser.add_argument("-a", "--assembly", help="Print out assembly instruction", action="store_true")
+parser.add_argument("-lf", "--listing_file", help="listing file to read assembly from", default="../src/darksocv.lst")
 args = parser.parse_args()
 
 # Do the parsing.
@@ -103,6 +123,8 @@ tv = signal.tv
 cache = {}
 a2l = addr2line(args.objectfile, args.addr2line)
 source_printer = source_printer()
+if args.assembly:
+    lst_lookuper = lst_lookuper(args.listing_file)
 
 for x in tv:
     time = x[0]
@@ -115,6 +137,8 @@ for x in tv:
             line = cache[pc]
         else:
             line = a2l.lookup(pc)
+            if args.assembly:
+                line += " => " + lst_lookuper.lst_lookup(pc)
             cache[pc] = line
 
     print( f'{time:>12}' + ":" + f'{pc:>10}' + ":" + line)
