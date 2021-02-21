@@ -30,8 +30,10 @@
 
 `timescale 1ns / 1ps
 
-// darkriscv/darksocv configuration
-// 
+////////////////////////////////////////////////////////////////////////////////
+// darkriscv configuration
+////////////////////////////////////////////////////////////////////////////////
+ 
 // pipeline stages:
 // 
 // 2-stage version: core and memory in different clock edges result in less
@@ -45,19 +47,14 @@
 // stage in the pipeline, but keep a good performance most of time
 // (instruction per clock = 1).  of course, read operations require 1
 // wait-state, which means sometimes the read performance is reduced.
-
 `define __3STAGE__
 
-// read-modify-write cycle:
+// RV32I vs RV32E:
 //
-// Generate RMW cycles when writing in the memory. This option basically 
-// makes the read and write cycle symmetric and may work better in the cases
-// when the 32-bit memory does not support separate write enables for 
-// separate 16-bit and 8-bit words. Typically, the RMW cycle results in a
-// decrease of 5% in the performance (not the clock, but the instruction
-// pipeline eficiency) due to memory wait-states.
-
-//`define __RMW_CYCLE__
+// The difference between the RV32I and RV32E regarding the logic space is 
+// minimal in typical applications with modern 5 or 6 input LUT based FPGAs, 
+// but the RV32E is better with old 4 input LUT based FPGAs.
+`define __RV32E__
 
 // muti-threading support:
 //
@@ -76,18 +73,8 @@
 //    changes, i.e. every jal instruction. When the core is idle, it is 
 //    probably in a jal loop.
 // The number of threads must be 2**n (i.e. THREADS = 3 means 8 threads)
-
 //`define __THREADS__ 3
-
-// performance measurement:
 //
-// The performance measurement can be done in the simulation level by
-// eabling the __PERFMETER__ define, in order to check how the clock cycles
-// are used in the core. The report is displayed when the FINISH_REQ signal
-// is actived by the UART.
-
-`define __PERFMETER__
-
 // mac instruction: 
 // 
 // The mac instruction is similar to other register to register
@@ -97,16 +84,43 @@
 // can be used to accelerate the mul/div operations, the mac operation is
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
-
 //`define __MAC16X16__
 
-// RV32I vs RV32E:
+// flexbuzz interface (experimental):
 //
-// The difference between the RV32I and RV32E regarding the logic space is 
-// minimal in typical applications with modern 5 or 6 input LUT based FPGAs, 
-// but the RV32E is better with old 4 input LUT based FPGAs.
+// A new data bus interface similar to a well known c*ldfire bus interface, in 
+// a way that part of the bus routing is moved to the core, in a way that 
+// is possible support different bus widths (8, 16 or 32 bit) and endians more 
+// easily (the new interface is natively big-endian, but the endian can be adjusted
+// in the bus interface dinamically). Similarly to the standard 32-bit interface, 
+// the external logic must detect the RD/WR operation quick enough and assert HLT 
+// in order to insert wait-states and perform the required multiplexing to fit 
+// the DLEN operand size in the data bus width available.
+//`define __FLEXBUZZ__
 
-`define __RV32E__
+// initial PC and SP
+//
+// it is possible program the initial PC and SP.  Typically, the PC is set
+// to address 0, representing the start of ROM memory and the SP is set to
+// the final of RAM memory.  In the linker, the start of ROM memory matches
+// with the .text area, which is defined in the boot.c code and the start of
+// RAM memory matches with the .data and other volatile data, in a way that
+// the stack can be positioned in the top of RAM and does not match with the
+// .data.
+`define __RESETPC__ 32'd0
+`define __RESETSP__ 32'd8192
+
+////////////////////////////////////////////////////////////////////////////////
+// darkocv configuration:
+////////////////////////////////////////////////////////////////////////////////
+
+// performance measurement:
+//
+// The performance measurement can be done in the simulation level by
+// eabling the __PERFMETER__ define, in order to check how the clock cycles
+// are used in the core. The report is displayed when the FINISH_REQ signal
+// is actived by the UART.
+`define __PERFMETER__
 
 // full harvard architecture:
 // 
@@ -121,21 +135,17 @@
 // advantage of a single memory bank is that the .text and .data areas can
 // be better allocated, but in this case is not possible protect the .text
 // area as in the case of separate memory banks.
-
 //`define __HARVARD__
 
-// flexbuzz interface (experimental):
+// read-modify-write cycle:
 //
-// A new data bus interface similar to a well known c*ldfire bus interface, in 
-// a way that part of the bus routing is moved to the core, in a way that 
-// is possible support different bus widths (8, 16 or 32 bit) and endians more 
-// easily (the new interface is natively big-endian, but the endian can be adjusted
-// in the bus interface dinamically). Similarly to the standard 32-bit interface, 
-// the external logic must detect the RD/WR operation quick enough and assert HLT 
-// in order to insert wait-states and perform the required multiplexing to fit 
-// the DLEN operand size in the data bus width available.
-
-//`define __FLEXBUZZ__
+// Generate RMW cycles when writing in the memory. This option basically 
+// makes the read and write cycle symmetric and may work better in the cases
+// when the 32-bit memory does not support separate write enables for 
+// separate 16-bit and 8-bit words. Typically, the RMW cycle results in a
+// decrease of 5% in the performance (not the clock, but the instruction
+// pipeline eficiency) due to memory wait-states.
+//`define __RMW_CYCLE__
 
 // instruction wait-states:
 // 
@@ -144,7 +154,6 @@
 // maybe, in the future, can use associated to a large 64 or 128 bit burst based 
 // bus in order to get a quick 2-stage pipeline w/ an efficient instruction bus.
 // do not forget to see the cache options below!
-
 //`define __WAITSTATES__
 
 // instruction and data caches:
@@ -152,27 +161,10 @@
 // the option for instruction and data caches were developed for 2-stage 
 // version and, of course, is part of the original effort to make the core
 // more efficient when the wait-states are enabled.
-
 //`define __ICACHE__ // not working, must debug it! :(
 //`define __DCACHE__ // not working, must debug it! :(
 
-// initial PC and SP
-//
-// it is possible program the initial PC and SP.  Typically, the PC is set
-// to address 0, representing the start of ROM memory and the SP is set to
-// the final of RAM memory.  In the linker, the start of ROM memory matches
-// with the .text area, which is defined in the boot.c code and the start of
-// RAM memory matches with the .data and other volatile data, in a way that
-// the stack can be positioned in the top of RAM and does not match with the
-// .data.
-
-`define __RESETPC__ 32'd0
-`define __RESETSP__ 32'd8192
-
-// peripheral configuration
-//
 // UART speed is set in bits per second, typically 115200 bps:
-
 `define __UARTSPEED__ 115200
 
 // UART queue: 
@@ -180,14 +172,14 @@
 // Optional RX/TX queue for communication oriented applications. The concept
 // foreseen 256 bytes for TX and RX, in a way that frames up to 128 bytes can
 // be easily exchanged via UART.
-
 //`define __UARTQUEUE__
 
+////////////////////////////////////////////////////////////////////////////////
 // board definition:
-// 
+////////////////////////////////////////////////////////////////////////////////
+ 
 // The board is automatically defined in the xst/xise files via Makefile or
 // ISE. Case it is not the case, please define you board name here:
-
 //`define AVNET_MICROBOARD_LX9
 //`define XILINX_AC701_A200
 //`define QMTECH_SDRAM_LX16
