@@ -36,14 +36,15 @@
 default: all
 
 ifdef BOARD
-    include $(BOARD)/darksocv.mk
 
-all: ../tmp/darksocv.bit
-	@echo build ok.
+include $(BOARD)/darksocv.mk
 
 else
 
 all:
 	@echo no board selected to build, done.
+
+clean:
+	@echo no board selected to clean, done.
 
 endif
