@@ -722,8 +722,8 @@ module darksocv
 
     wire [3:0] KDEBUG;
 
-`ifdef __THREADING__
-    wire [`PTHREADS-1:0] TPTR;
+`ifdef __THREADS__
+    wire [`__THREADS__-1:0] TPTR;
 `endif    
 
     darkriscv
@@ -742,7 +742,7 @@ module darksocv
 `endif
         .RES(RES),
         .HLT(HLT),
-`ifdef __THREADING__        
+`ifdef __THREADS__        
         .TPTR(TPTR),
 `endif        
         .IDATA(IDATA),
@@ -777,11 +777,11 @@ module darksocv
 
         integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
 
-    `ifdef __THREADING__
-        integer thread[0:`NTHREADS-1],curtptr=0,cnttptr=0;
+    `ifdef __THREADS__
+        integer thread[0:(2**`__THREADS__)-1],curtptr=0,cnttptr=0;
         integer j;
         
-        initial for(j=0;j!=`NTHREADS;j=j+1) thread[j] = 0;
+        initial for(j=0;j!=(2**`__THREADS__);j=j+1) thread[j] = 0;
     `endif
     
         always@(posedge CLK)
@@ -804,8 +804,8 @@ module darksocv
                 else
                 begin
                     
-        `ifdef __THREADING__
-                    for(j=0;j!=`NTHREADS;j=j+1)
+        `ifdef __THREADS__
+                    for(j=0;j!=(2**`__THREADS__);j=j+1)
                             thread[j] = thread[j]+(j==TPTR?1:0);
                             
                     if(TPTR!=curtptr)
@@ -830,8 +830,8 @@ module darksocv
                         100.0*store/clocks,
                         100.0*flush/clocks);
 
-         `ifdef __THREADING__
-                    for(j=0;j!=`NTHREADS;j=j+1) $display("  thread%0d: %0d%% running",j,100.0*thread[j]/clocks);
+         `ifdef __THREADS__
+                    for(j=0;j!=(2**`__THREADS__);j=j+1) $display("  thread%0d: %0d%% running",j,100.0*thread[j]/clocks);
                     
                     $display("%0d thread switches, %0d clocks/threads",cnttptr,clocks/cnttptr);
          `endif

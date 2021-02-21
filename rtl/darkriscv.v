@@ -62,8 +62,8 @@ module darkriscv
     input             RES,   // reset
     input             HLT,   // halt
     
-`ifdef __THREADING__    
-    output [`PTHREADS-1:0] TPTR,  // thread pointer
+`ifdef __THREADS__    
+    output [`__THREADS__-1:0] TPTR,  // thread pointer
 `endif    
 
     input      [31:0] IDATA, // instruction data bus
@@ -92,8 +92,8 @@ module darkriscv
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
 
-`ifdef __THREADING__
-    reg [`PTHREADS-1:0] XMODE = 0;     // thread ptr
+`ifdef __THREADS__
+    reg [`__THREADS__-1:0] XMODE = 0;     // thread ptr
     
     assign TPTR = XMODE;
 `endif
@@ -153,20 +153,20 @@ module darkriscv
     reg FLUSH = -1;  // flush instruction pipeline
 `endif
 
-`ifdef __THREADING__    
+`ifdef __THREADS__    
     `ifdef __RV32E__
     
-        reg [`PTHREADS+3:0] RESMODE = -1;
+        reg [`__THREADS__+3:0] RESMODE = -1;
 
-        wire [`PTHREADS+3:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
-        wire [`PTHREADS+3:0] S1PTR  = { XMODE, XIDATA[18:15] };
-        wire [`PTHREADS+3:0] S2PTR  = { XMODE, XIDATA[23:20] };
+        wire [`__THREADS__+3:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
+        wire [`__THREADS__+3:0] S1PTR  = { XMODE, XIDATA[18:15] };
+        wire [`__THREADS__+3:0] S2PTR  = { XMODE, XIDATA[23:20] };
     `else
-        reg [`PTHREADS+4:0] RESMODE = -1;
+        reg [`__THREADS__+4:0] RESMODE = -1;
 
-        wire [`PTHREADS+4:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
-        wire [`PTHREADS+4:0] S1PTR  = { XMODE, XIDATA[19:15] };
-        wire [`PTHREADS+4:0] S2PTR  = { XMODE, XIDATA[24:20] };
+        wire [`__THREADS__+4:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
+        wire [`__THREADS__+4:0] S1PTR  = { XMODE, XIDATA[19:15] };
+        wire [`__THREADS__+4:0] S2PTR  = { XMODE, XIDATA[24:20] };
     `endif
 `else
     `ifdef __RV32E__    
@@ -209,17 +209,17 @@ module darkriscv
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
-`ifdef __THREADING__
+`ifdef __THREADS__
     `ifdef __3STAGE__
-        reg [31:0] NXPC2 [0:`NTHREADS-1];       // 32-bit program counter t+2
+        reg [31:0] NXPC2 [0:(2**`__THREADS__)-1];       // 32-bit program counter t+2
     `endif
 
     `ifdef __RV32E__
-        reg [31:0] REG1 [0:16*`NTHREADS-1];	// general-purpose 16x32-bit registers (s1)
-        reg [31:0] REG2 [0:16*`NTHREADS-1];	// general-purpose 16x32-bit registers (s2)
+        reg [31:0] REG1 [0:16*(2**`__THREADS__)-1];	// general-purpose 16x32-bit registers (s1)
+        reg [31:0] REG2 [0:16*(2**`__THREADS__)-1];	// general-purpose 16x32-bit registers (s2)
     `else
-        reg [31:0] REG1 [0:32*`NTHREADS-1];	// general-purpose 32x32-bit registers (s1)
-        reg [31:0] REG2 [0:32*`NTHREADS-1];	// general-purpose 32x32-bit registers (s2)    
+        reg [31:0] REG1 [0:32*(2**`__THREADS__)-1];	// general-purpose 32x32-bit registers (s1)
+        reg [31:0] REG2 [0:32*(2**`__THREADS__)-1];	// general-purpose 32x32-bit registers (s2)    
     `endif
 `else
     `ifdef __3STAGE__
@@ -392,11 +392,11 @@ module darkriscv
 
 `ifdef __3STAGE__
 
-    `ifdef __THREADING__
+    `ifdef __THREADS__
 
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
 
-        NXPC2[XRES ? RESMODE[`PTHREADS-1:0] : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
+        NXPC2[XRES ? RESMODE[`__THREADS__-1:0] : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
@@ -447,7 +447,7 @@ module darkriscv
 `endif
 
 `ifdef __3STAGE__
-    `ifdef __THREADING__
+    `ifdef __THREADS__
         assign IADDR = NXPC2[XMODE];
     `else
         assign IADDR = NXPC2;
