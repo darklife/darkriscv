@@ -75,11 +75,9 @@
 // c) the threading in the non-interrupt mode switches when the program flow
 //    changes, i.e. every jal instruction. When the core is idle, it is 
 //    probably in a jal loop.
-// The number of threads must be 2**n
+// The number of threads must be 2**n (i.e. THREADS = 3 means 8 threads)
 
-//`define __THREADING__
-//`define PTHREADS 2
-//`define NTHREADS (2**`PTHREADS)
+//`define __THREADS__ 3
 
 // performance measurement:
 //
