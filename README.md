@@ -15,6 +15,8 @@ Opensource RISC-V implemented from scratch in one night!
 - [Development Tools](#development-tools)
 - [Development Boards](#development-boards)
 - [Creating a RISCV from scratch](#creating-a-riscv-from-scratch)
+- [Academic Papers and Applications](#academic-papers-and-applications)
+- [Performance Comparisons](#performance-comparisons)
 - [Acknowledgments](#acknowledgments)
 - [References](#references)
 
@@ -29,19 +31,21 @@ implementations, the *DarkRISCV* has lots of impressive features:
 
 - implements most of the RISC-V RV32E instruction set
 - implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
-- works up to 220MHz in a kintex-7 and up to 100MHz in a cheap spartan-6
-- can sustain 1 clock per instruction most of time
-- flexible harvard architecture (easy to integrate a cache controller)
-- works fine in a real xilinx, altera and lattice FPGAs
+- works up to 250MHz in a ultrascale ku040 (400MHz w/ overclock!)
+- up to 100MHz in a cheap spartan-6, fits in small spartan-3E such as XC3S100E!
+- can sustain 1 clock per instruction most of time (typically 71% of time)
+- flexible harvard architecture (easy to integrate a cache controller, bus bridges, etc)
+- works fine in a real xilinx (spartan-3, spartan-6, spartan-7, artix-7, kintex-7 and kintex ultrascale)
+- works fine with some real altera and lattice FPGAs
 - works fine with gcc 9.0.0 for RISC-V (no patches required!)
-- uses between 1000-1500LUTs (core only with LUT6 technology, depending of enabled features)
+- uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
 - optional RV32E support (works better with LUT4 FPGAs)
 - optional 16x16-bit MAC instruction (for digital signal processing) 
 - optional coarse-grained multi-threading (MT)
 - no interlock between pipeline stages!
 - BSD license: can be used anywhere with no restrictions!
 
-Some extra features are planned for the furure or under development:
+Some extra features are planned for the future or under development:
 
 - interrupt controller (under tests)
 - cache controller (under tests)
@@ -1085,6 +1089,39 @@ etc), but create a clean, reliable and compreensive RISC-V core.
 You can check the code in the following repository:
 
 - https://github.com/racerxdl/riskow
+
+## Academic Papers and Applications
+
+In a funny way, the DarkRISCV appears in some academic papers, sometimes in a comparative way, sometimes as a laboratory mouse.
+
+- Design and Implementation of a 256-Bit RISC-V-Based Dynamically Scheduled Very Long Instruction Word on FPGA -- Here we found an interesting comparison between the DarkRISCV versus a huge 8-way VLIW core, as well the Kronos RISCV, the PicoRV32 and the NEORV32. Nice results for DarkRISCV: 2nd place w/ IPC 0.71 and 1st place with only 1500LUTs. https://ieeexplore.ieee.org/iel7/6287639/8948470/09200617.pdf
+
+- ReCon: From the Bitstream to Piracy Detection -- Interesting paper about IP piracy detection, basically how detect an IP inside an bitstream, they used the PicoRV32, OpenRISC and DarkRISCV as IPs to be detected. https://homes.luddy.indiana.edu/lukefahr/papers/skipper_paine20.pdf
+
+- A Low-Cost Fault-Tolerant RISC-V Processor for Space Systems -- Here we found an interesting comparison between low-cost RISCV cores, but in this case the DarkRISCV performs very badly against the PicoRV32, mRISCV, Ibex and a radiation hardned RISCV core. Not sure about the tools and the target, as long I have no access to the paper, just some pictures. https://www.semanticscholar.org/paper/A-Low-Cost-Fault-Tolerant-RISC-V-Processor-for-Santos-Luza/b8cd0b62ac914678f1999df09a4b77b857178d33 
+
+- Fault Classification and Vulnerability Analysis of Microprocessors -- No much information, since the paper will released only in 2022, but the abstract is very interesting, basically they will inject lots of faults in the PicoRV32 and DarkRISCV in order to see what happens. https://repository.tudelft.nl/islandora/object/uuid:4c85a1ba-2721-4563-bb13-31d506d9c906?collection=education
+
+## Performance Comparisons
+
+I tried prepare a fair performance comparison between the DarkRISCV and different FPGAs, but it is not so easy as it appears! The first problem is locate HDL versions of each core, since the tools require verilog or VHDL files in order to build something. The second problem is decide what compile: there are lots of combinations of top level blocks, with different peripherals and concepts. In this case, I included only the core. The third problem regards to the core configuration: it is not easy or clear how to configure them to the minimum area or maximum speed, so I just used the default configuration for all cores. In short words, I solved the problem in a dummy way (which reflects the reality in 95% of time).
+
+As long I have separate builds for each core, there is the final problem: how analyse the results and rank the cores. My option was calculate how many MIPS is possible in a fixed FPGA, in this case the Kintex-7 K420 with 260600 LUTs of 6-inputs. Different cores will require different amount of LUTs, just divide the total number by the required ammount and we have the theorical number of cores per FPGA (peak cores/FPGA). Also, different cores have different theorical peak IPC. guessed numbers and, according to the synthesis tool in the default setup, will run at different maximum frequencies. As long we know the number of instruction per clock and the maximum number of clocks per second (the maximum frequency), we have the maximum number of instructions per second (peak MIPS) per core. As long we also knows about the maximum number of cores, we can calculate the maximum peak MIPS per FPGA.
+
+The following list is far from complete, but it is my suggestion to compare different cores:
+
+	LUT	FF	DSP	BRAM	IPC (peak)	MaxFreq (peak)	cores/K420 (peak)	MIPS/K420 (peak)	REPO
+DarkRISCV	1177	246	0	0	1	150.096	221.410365335599	33232.8101954121	https://github.com/darklife/darkriscv
+VexRISCV	1993	1345	4	5	1	214.237	130.757651781234	28013.1270446563	https://github.com/m-labs/VexRiscv-verilog
+PicoRV32	1291	568	0	1	0.25	309.733	201.859024012393	15630.6002711077	https://github.com/cliffordwolf/picorv32
+SERV	217	174	0	0	0.03125	367.417	1200.92165898618	13788.7197868664	https://github.com/olofk/serv
+RPU	2943	1103	12	1	1	111.863	88.5490995582739	9905.36792388719	https://github.com/Domipheus/RPU
+UE RISC-V	3676	2289	4	0	1	124.292	70.892274211099	8811.34254624592	https://github.com/ultraembedded/riscv
+UE BiRISC-V	15667	6324	4	0	2	87.706	16.6336886449224	2917.74859258314	https://github.com/ultraembedded/biriscv![image]
+
+Are that results fair enough? from my point of view, as long the conditions are the same, yes. Are that results true enough? from my point of view, maybe. At least two cases does not match: the DarkRISCV reaches up to 240MHz in the same FPGA when the top level is in the build. Not sure why the core only result in smaller maximum frequency, but the point is try to find a way to compare different cores, so it is okay. The second case is the SERV, which shows a maximum frequency of 367MHz and up to 1200 cores/FPGA. In fact, I tested up to 1000 SERV cores in that FPGA and appears to be possivel fit between 1100 and 1200 cores as result of optimizations across the multi-core hierarchy. The bad news is that the maximum clock barely reached 128MHz per core. Again, the point is try to find a way to compare differnt cores, so it is okay.
+
+For sure that numbers will be very useful for future designers and the message is clear: keep it simple! also, keep the expectives very low! :)
 
 ## Acknowledgments
 
