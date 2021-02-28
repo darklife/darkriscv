@@ -1,6 +1,8 @@
 # DarkRISCV
 Opensource RISC-V implemented from scratch in one night!
 
+![darkriscv](https://user-images.githubusercontent.com/42520878/109411184-01075f80-797f-11eb-8932-5b916133561a.jpg)
+
 ## Table of Contents
 
 - [Introduction](#introduction)
