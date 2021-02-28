@@ -1102,6 +1102,15 @@ In a funny way, the DarkRISCV appears in some academic papers, sometimes in a co
 
 - Fault Classification and Vulnerability Analysis of Microprocessors -- No much information, since the paper will released only in 2022, but the abstract is very interesting, basically they will inject lots of faults in the PicoRV32 and DarkRISCV in order to see what happens. https://repository.tudelft.nl/islandora/object/uuid:4c85a1ba-2721-4563-bb13-31d506d9c906?collection=education
 
+Regarding real world applications, standard embbeded C code typically runs very well with DarkRISCV. Some examples of applications currently in use:
+
+- microcontroller programmers (JTAG and other complex protocols)
+- data compression/decompression (LZ streams)
+- cryptography (RSA and SHA256, requires hardware accelerators)
+- digital signal processing (requires mac instruction)
+
+In the case of RSA, the simple inclusion of a pipelined 32x32-bit multiplier mapped via IO (i.e. not the M extension, instead an IO mapped register accessible via load/store instructions) increased the RSA performance by a factor of 20x when compared to the bare RV32E instruction set. In the case of SHA256, a complete SHA256 accelerator in hardware and mapped via IO can transfor seconds of processing in few miliseconds. In both cases, no need for complex instruction integration in the core, no need to wait -- the core and the accelerator can work in parallel.
+
 ## Performance Comparisons
 
 I tried prepare a fair performance comparison between the DarkRISCV and different FPGAs, but it is not so easy as it appears! The first problem is locate HDL versions of each core, since the tools require verilog or VHDL files in order to build something. The second problem is decide what compile: there are lots of combinations of top level blocks, with different peripherals and concepts. In this case, I included only the core. The third problem regards to the core configuration: it is not easy or clear how to configure them to the minimum area or maximum speed, so I just used the default configuration for all cores. In short words, I solved the problem in a dummy way (which reflects the reality in 95% of time).
