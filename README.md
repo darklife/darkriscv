@@ -1110,18 +1110,18 @@ As long I have separate builds for each core, there is the final problem: how an
 
 The following list is far from complete, but it is my suggestion to compare different cores:
 
-	Core		LUT	FF	DSP	BRAM	IPC	MFreq	Ncores	MIPS/k7		REPO
-	DarkRISCV	1177	246	0	0	1	150	221	33232		https://github.com/darklife/darkriscv
-	VexRISCV	1993	1345	4	5	1	214	130	28013		https://github.com/m-labs/VexRiscv-verilog
-	PicoRV32	1291	568	0	1	0.25	309	201	15630		https://github.com/cliffordwolf/picorv32
-	SERV		217	174	0	0	0.03125	367	1200	13788		https://github.com/olofk/serv
-	RPU		2943	1103	12	1	1	111	88	9905		https://github.com/Domipheus/RPU
-	UE RISC-V	3676	2289	4	0	1	124	70	8811		https://github.com/ultraembedded/riscv
-	UE BiRISC-V	15667	6324	4	0	2	87	16	2917		https://github.com/ultraembedded/biriscv
+	Core		LUT	FF	DSP	BRAM	IPC	MFreq	Ncores	MIPS/k7	REPO
+	DarkRISCV	1177	246	0	0	1	150	221	33232	https://github.com/darklife/darkriscv
+	VexRISCV	1993	1345	4	5	1	214	130	28013	https://github.com/m-labs/VexRiscv-verilog
+	PicoRV32	1291	568	0	1	1/4	309	201	15630	https://github.com/cliffordwolf/picorv32
+	SERV		217	174	0	0	1/32	367	1200	13788	https://github.com/olofk/serv
+	RPU		2943	1103	12	1	1	111	88	9905	https://github.com/Domipheus/RPU
+	UE RISC-V	3676	2289	4	0	1	124	70	8811	https://github.com/ultraembedded/riscv
+	UE BiRISC-V	15667	6324	4	0	2	87	16	2917	https://github.com/ultraembedded/biriscv
 
 Are that results fair enough? from my point of view, as long the conditions are the same, yes. Are that results true enough? from my point of view, maybe. At least two cases does not match: the DarkRISCV reaches up to 240MHz in the same FPGA when the top level is in the build. Not sure why the core only result in smaller maximum frequency, but the point is try to find a way to compare different cores, so it is okay. The second case is the SERV, which shows a maximum frequency of 367MHz and up to 1200 cores/FPGA. In fact, I tested up to 1000 SERV cores in that FPGA and appears to be possivel fit between 1100 and 1200 cores as result of optimizations across the multi-core hierarchy. The bad news is that the maximum clock barely reached 128MHz per core. Again, the point is try to find a way to compare differnt cores, so it is okay.
 
-For sure that numbers will be very useful for future designers and the message is clear: keep it simple! also, keep the expectives very low! :)
+For sure that numbers will be very useful for future designers and the message is clear: keep it simple! Also, keep your expectives very, very low! :)
 
 ## Acknowledgments
 
