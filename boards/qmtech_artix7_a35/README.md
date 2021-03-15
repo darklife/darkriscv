@@ -43,7 +43,7 @@ Currently, only the USB/serial adapter is supported.
 
 Instructions:
 
-- open the darksocv.xpr in Vivado (see how to install Vivado [here] (https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_2/ug973-vivado-release-notes-install-license.pdf))
+- open the darksocv.xpr in Vivado (see how to install Vivado [here](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_2/ug973-vivado-release-notes-install-license.pdf))
 - build the FPGA bitstream (no need to build the ROM/RAM files)
 - open the hardware manager
 - connect to FPGA and program it with the generated bitstream
