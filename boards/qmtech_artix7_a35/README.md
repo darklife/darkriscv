@@ -25,6 +25,8 @@ Regarding the board features, in the core board we can find:
 - one switch (used as RESET)
 - lots and lots of GPIO pins that are connected to the carrier board
 
+You can find more documentation about this board here: http://www.chinaqmtech.com/download_fpga
+
 In the carrier board we can find:
 
 - USB/serial (cp2102)
@@ -41,7 +43,7 @@ Currently, only the USB/serial adapter is supported.
 
 Instructions:
 
-- open the darksocv.xpr in Vivado
+- open the darksocv.xpr in Vivado (see how to install Vivado [here] (https://www.xilinx.com/support/documentation/sw_manuals/xilinx2018_2/ug973-vivado-release-notes-install-license.pdf))
 - build the FPGA bitstream (no need to build the ROM/RAM files)
 - open the hardware manager
 - connect to FPGA and program it with the generated bitstream
