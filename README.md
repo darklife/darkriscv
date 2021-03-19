@@ -1054,7 +1054,11 @@ design is perfect, instead you will need lots and lots of debug time
 in order to fix all hidden problems.
 
 Just in case, I found a set of online videos from my friend (Lucas Teske)
-that shows the design of a RISC-V processor from scratch:
+that shows the design of a RISC-V processor from scratch (playlist with 9 videos):
+
+- https://www.youtube.com/playlist?list=PLEP_M2UAh9q52a-w3ZUEChEoG_ROeMa88
+
+Alternatively, there are the original videos in the twitch:
 
 - https://www.twitch.tv/videos/840983740 Register bank (4h50)
 - https://www.twitch.tv/videos/845651672 Program counter and ALU (3h49)
@@ -1064,6 +1068,7 @@ that shows the design of a RISC-V processor from scratch:
 - https://www.twitch.tv/videos/852082786 instruction decode and execute - part 2/3 (10h56)
 - https://www.twitch.tv/videos/858055433 instruction decode and execute - part 3/3 - SoC simulation (10h24)
 - TBD tests in the Lattice FPGA
+- TBD tests in the Lattice FPGA w/ LCD display
 
 Unfortunately the video set is currently in portuguese only and there a lot
 of parallel discussions about technology, including the fix of the Teske's
