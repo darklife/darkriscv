@@ -348,7 +348,7 @@ module darksocv
 
     always@(posedge CLK) // stage #0.5    
     begin
-        if(HLT)
+        if(HLT^HLT2)
         begin
             ROMFF2 <= ROMFF;
         end
