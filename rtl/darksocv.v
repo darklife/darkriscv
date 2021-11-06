@@ -612,7 +612,7 @@ module darksocv
 `endif
 
     // io for debug
-
+    
     reg [7:0] IREQ = 0;
     reg [7:0] IACK = 0;
     
@@ -709,7 +709,7 @@ module darksocv
       .BE(BE),
       .DATAI(DATAO),
       .DATAO(IOMUX[1]),
-      //.IRQ(BOARD_IRQ[1]),
+      //.IRQ(UART_IRQ),
       .RXD(UART_RXD),
       .TXD(UART_TXD),
 `ifdef SIMULATION
@@ -745,6 +745,9 @@ module darksocv
 `ifdef __THREADS__        
         .TPTR(TPTR),
 `endif        
+`ifdef __INTERRUPT__
+        .INT(|BOARD_IRQ),
+`endif
         .IDATA(IDATA),
         .IADDR(IADDR),
         .DADDR(DADDR),
@@ -769,7 +772,7 @@ module darksocv
 
     assign LED   = LEDFF[3:0];
     
-    assign DEBUG = { GPIOFF[0], XTIMER, WR, RD }; // UDEBUG;
+    assign DEBUG = { XTIMER, KDEBUG[2:0] }; // UDEBUG;
 
 `ifdef SIMULATION
 

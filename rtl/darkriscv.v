@@ -45,8 +45,8 @@
 
 // not implemented opcodes:
 
-`define FCC     7'b00011_11      // fencex
-`define CCC     7'b11100_11      // exx, csrxx
+//`define FCC     7'b00011_11      // fencex
+`define CCC     7'b11100_11      // exx, csrxx, mret
 
 // configuration file
 
@@ -65,6 +65,10 @@ module darkriscv
 `ifdef __THREADS__    
     output [`__THREADS__-1:0] TPTR,  // thread pointer
 `endif    
+
+`ifdef __INTERRUPT__
+    input             INT,   // interrupt request
+`endif
 
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
@@ -102,7 +106,7 @@ module darkriscv
 
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XMAC, XRES=1; //, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XMAC, XRES=1, XCCC; //, XFCC, XCCC;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
@@ -124,7 +128,7 @@ module darkriscv
         XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
         XMAC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`MAC;
         //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
-        //XCCC   <= XRES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
+        XCCC   <= XRES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
 
         // signal extended immediate, according to the instruction type:
         
@@ -207,7 +211,7 @@ module darkriscv
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
     wire    MAC = FLUSH ? 0 : XMAC; // OPCODE==7'b0110011; //FCT3
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
-    //wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
+    wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
 `ifdef __THREADS__
     `ifdef __3STAGE__
@@ -281,9 +285,25 @@ module darkriscv
                                     U2REG;
 `endif
 
-    // C-group not implemented yet!
-    
-    wire [31:0] CDATA = 0;	// status register istructions not implemented yet
+    // C-group: CSRRW
+
+`ifdef __INTERRUPT__
+
+    reg [31:0] MEPC  = 0;
+    reg [31:0] MTVEC = 0;
+    reg        MIE   = 0;
+    reg        MIP   = 0;
+
+    wire [31:0] CDATA = XIDATA[31:20]==12'h344 ? MIP  : // machine interrupt pending
+                        XIDATA[31:20]==12'h304 ? MIE   : // machine interrupt enable
+                        XIDATA[31:20]==12'h341 ? MEPC  : // machine exception PC
+                        XIDATA[31:20]==12'h305 ? MTVEC : // machine vector table
+                                                 0;	 // unknown
+                                                 
+    wire MRET = CCC && FCT3==0;
+    wire CSRW = CCC && FCT3==1;
+    wire CSRR = CCC && FCT3==2;
+`endif
 
     // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
 
@@ -346,13 +366,51 @@ module darkriscv
 
 `ifdef __3STAGE__
 	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt                              
-	                       FLUSH ? FLUSH-1 :                           
-	                       (JAL||JALR||BMUX) ? 2 : 0;  // flush the pipeline!
+	                       FLUSH ? FLUSH-1 :
+    `ifdef __INTERRUPT__
+                            MRET ? 2 : 
+    `endif                           
+	                       JREQ ? 2 : 0;  // flush the pipeline!
 `else
         FLUSH <= XRES ? 1 : HLT ? FLUSH :        // reset and halt
-                       (JAL||JALR||BMUX);  // flush the pipeline!
+                       JREQ;  // flush the pipeline!
 `endif
-
+`ifdef __INTERRUPT__
+        if(XRES)
+        begin
+            MTVEC <= 0;
+            MEPC  <= 0;
+            MIP   <= 0;
+            MIE   <= 0;
+        end
+        else
+        if(MIP&&MIE&&JREQ)
+        begin
+            MEPC <= JVAL;
+            MIP  <= 1;
+            MIE  <= 0;
+        end
+        else
+        if(CSRW)
+        begin
+            case(XIDATA[31:20])
+                12'h305: MTVEC <= S1REG;
+                12'h341: MEPC  <= S1REG;
+                12'h304: MIE   <= S1REG;
+            endcase
+        end
+        else
+        if(MRET)
+        begin
+            MIP <= 0;
+            MIE <= 1;
+        end
+        else
+        if(INT==1&&MIE==1)
+        begin
+            MIP <= 1;
+        end
+`endif
 `ifdef __RV32E__
         REG1[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
 `else
@@ -369,7 +427,9 @@ module darkriscv
 `ifdef __MAC16X16__                  
                        MAC ? REG2[DPTR]+KDATA :
 `endif
-                       //CCC ? CDATA : 
+`ifdef __INTERRUPT__
+                       CSRR ? CDATA : 
+`endif
                              REG1[DPTR];
 `ifdef __RV32E__
         REG2[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0) :        // reset sp
@@ -386,8 +446,10 @@ module darkriscv
                   MCC||RCC ? RMDATA:
 `ifdef __MAC16X16__
                        MAC ? REG2[DPTR]+KDATA :
-`endif                       
-                       //CCC ? CDATA : 
+`endif
+`ifdef __INTERRUPT__                       
+                       CSRR ? CDATA : 
+`endif
                              REG2[DPTR];
 
 `ifdef __3STAGE__
@@ -402,13 +464,17 @@ module darkriscv
 
         XMODE <= XRES ? 0 : HLT ? XMODE :        // reset and halt
                             JAL ? XMODE+1 : XMODE;
-	             //XMODE==0/*&& IREQ*/&&(JAL||JALR||BMUX) ? 1 :         // wait pipeflush to switch to irq
-                 //XMODE==1/*&&!IREQ*/&&(JAL||JALR||BMUX) ? 0 : XMODE;  // wait pipeflush to return from irq
+	             //XMODE==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
+                 //XMODE==1/*&&!IREQ*/&&JREQ ? 0 : XMODE;  // wait pipeflush to return from irq
 
     `else
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
 	
 	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
+        `ifdef __INTERRUPT__
+                     MRET ? MEPC : 
+                    MIE&&MIP&&JREQ ? MTVEC : // pending interrupt + pipeline flush                    
+        `endif
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
 
@@ -457,7 +523,10 @@ module darkriscv
 `endif
 
     assign IDLE = |FLUSH;
-
-    assign DEBUG = { XRES, |FLUSH, SCC, LCC };
+`ifdef __INTERRUPT__
+    assign DEBUG = { INT, MIP, MIE, MRET };
+`else
+    assign DEBUG = { XRES, IDLE, SCC, LCC };
+`endif
 
 endmodule

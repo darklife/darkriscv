@@ -84,7 +84,7 @@
 // can be used to accelerate the mul/div operations, the mac operation is
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
-//`define __MAC16X16__
+`define __MAC16X16__
 
 // flexbuzz interface (experimental):
 //
@@ -96,7 +96,22 @@
 // the external logic must detect the RD/WR operation quick enough and assert HLT 
 // in order to insert wait-states and perform the required multiplexing to fit 
 // the DLEN operand size in the data bus width available.
-//`define __FLEXBUZZ__
+`define __FLEXBUZZ__
+
+// interrupt support
+// 
+// The interrupt support in the core uses the machine registers mtvec and 
+// mepc, which means support the control special register instruction csrrw,
+// in a way that is possible read/write the mtvec and mepc.
+// the interrupt itself works like the thread switch, with the difference
+// that:
+// a) the PC will be saved in the mepc register
+// b)the PC will receive the mtvec value
+// c) single interrupt, which means that the mtvec offset is always zero
+// The interrupt support cannot be used with threading (because makes no 
+// much sense?)... also, it requires the 3 stage pipeline (again, makes no
+// much sense use it with the 2-stage pipeline).
+`define __INTERRUPT__
 
 // initial PC and SP
 //
@@ -165,7 +180,7 @@
 //`define __DCACHE__ // not working, must debug it! :(
 
 // UART speed is set in bits per second, typically 115200 bps:
-`define __UARTSPEED__ 115200
+//`define __UARTSPEED__ 115200
 
 // UART queue: 
 // 

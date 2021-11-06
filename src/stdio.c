@@ -34,26 +34,11 @@
 
 #ifdef __RISCV__
 
-// idle time, update timer and blink the led! :)
-
-void _idle(void)
-{
-    if(io.irq&IRQ_TIMR)
-    {
-      if(!utimers--)
-      {
-        io.led++;
-        utimers=999999;
-      }
-      io.irq = IRQ_TIMR;
-    }
-}
-
 // putchar and getchar uses the "low-level" io
 
 int getchar(void)
 {
-  while((io.uart.stat&2)==0) _idle(); // uart empty, wait...
+  while((io.uart.stat&2)==0); // uart empty, wait...
   return io.uart.fifo;
 }
 
@@ -61,11 +46,11 @@ int putchar(int c)
 {
   if(c=='\n')
   {
-    while(io.uart.stat&1) _idle(); // uart busy, wait...
+    while(io.uart.stat&1); // uart busy, wait...
     io.uart.fifo = '\r';  
   }
   
-  while(io.uart.stat&1) _idle(); // uart busy, wait...
+  while(io.uart.stat&1); // uart busy, wait...
   return io.uart.fifo = c;
 }
 
@@ -369,4 +354,49 @@ void usleep(int delay)
             for(io.irq=IRQ_TIMR;!io.irq;);
         }
     }
+}
+
+void set_mtvec(void (*f)(void))
+{
+#ifdef __RISCV__
+    __asm__("csrw mtvec,a0"); 
+#endif
+}
+
+int get_mtvec(int dummy)
+{
+#ifdef __RISCV__
+    __asm__("csrr a0,mtvec"); 
+#endif
+    return dummy;
+}
+
+void set_mepc(void (*f)(void))
+{
+#ifdef __RISCV__
+    __asm__("csrw mepc,a0"); 
+#endif
+}
+
+int get_mepc(int dummy)
+{
+#ifdef __RISCV__
+    __asm__("csrr a0,mepc"); 
+#endif
+    return dummy;
+}
+
+void set_mie(void (*f)(void))
+{
+#ifdef __RISCV__
+    __asm__("csrw mie,a0"); 
+#endif
+}
+
+int get_mie(int dummy)
+{
+#ifdef __RISCV__
+    __asm__("csrr a0,mie"); 
+#endif
+    return dummy;
 }

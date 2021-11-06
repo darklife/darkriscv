@@ -31,6 +31,25 @@
 #include <io.h>
 #include <stdio.h>
 
+void irq_handler(void) __attribute__ ((interrupt ("machine")));
+
+void irq_handler(void)
+{
+    if(io.irq == IRQ_TIMR)
+    {
+        if(!utimers--)
+        {
+            io.led++;
+            utimers=999999;
+        }
+        io.irq = IRQ_TIMR;
+    }
+
+    return;
+}
+
+volatile int lalala = 0xdeadbeef;
+
 int main(void)
 {
     printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
@@ -49,8 +68,25 @@ int main(void)
     
     threads = 0; // prepare for the next restart
 
+
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
     printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*1000000u+io.board_ck*10000u)/(io.timer+1),io.timer);
+
+    set_mtvec(irq_handler);
+    
+    unsigned mtvec = get_mtvec(0);
+    
+    if(mtvec)
+    {
+        printf("mtvec: handler@%x, enabling interrupts...\n",mtvec);
+        set_mie(1);
+        printf("mtvec: interrupts enabled!\n");
+    }
+    else
+        printf("mtvec: not found (polling only)\n");
+
+    io.irq = IRQ_TIMR; // clear interrupts
+    
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
@@ -63,6 +99,28 @@ int main(void)
 
         printf("> ");
         memset(buffer,0,sizeof(buffer));
+        
+        if(mtvec==0)
+        {
+            while(1)
+            {            
+                if(io.irq&IRQ_TIMR)
+                {
+                    if(!utimers--)
+                    {
+                        io.led++;
+                        utimers=999999;
+                    }
+                    io.irq = IRQ_TIMR;
+                }
+                
+                if(io.uart.stat&2)
+                {
+                    break;
+                }
+            }
+        }
+        
         gets(buffer,sizeof(buffer));
         
         char *argv[8];
