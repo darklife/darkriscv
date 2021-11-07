@@ -386,7 +386,7 @@ int get_mepc(int dummy)
     return dummy;
 }
 
-void set_mie(void (*f)(void))
+void set_mie(int dummy)
 {
 #ifdef __RISCV__
     __asm__("csrw mie,a0"); 
