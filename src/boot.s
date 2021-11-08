@@ -33,6 +33,13 @@
 	.section .boot
 	.align	2
 	.globl  check4rv32i
+    .globl  set_mtvec
+    .globl  set_mepc
+    .globl  set_mie
+    .globl  get_mtvec
+    .globl  get_mepc
+    .globl  get_mie
+    .globl  get_mip
 
 /*
 	boot:
@@ -109,6 +116,38 @@ check4rv32i:
         .word   0x40ff8533	/* sub     a0,x31,x15 */
 
 	ret
+
+/*
+    access to CSR registers (set/get)
+*/
+
+set_mtvec:
+    csrw mtvec,a0
+    ret
+
+set_mepc:
+    csrw mepc,a0
+    ret
+
+set_mie:
+    csrw mie,a0
+    ret
+
+get_mtvec:
+    csrr a0,mtvec
+    ret
+
+get_mepc:
+    csrr a0,mepc
+    ret
+
+get_mie:
+    csrr a0,mie
+    ret
+
+get_mip:
+    csrr a0,mip
+    ret
 
 /*
 	data segment here!

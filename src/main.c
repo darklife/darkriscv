@@ -48,7 +48,7 @@ void irq_handler(void)
     return;
 }
 
-volatile int lalala = 0xdeadbeef;
+volatile int heapcheck = 0xdeadbeef;
 
 int main(void)
 {
@@ -74,11 +74,11 @@ int main(void)
 
     set_mtvec(irq_handler);
     
-    unsigned mtvec = get_mtvec(0);
+    unsigned mtvec = get_mtvec();
     
     if(mtvec)
     {
-        printf("mtvec: handler@%x, enabling interrupts...\n",mtvec);
+        printf("mtvec: handler@%d, enabling interrupts...\n",mtvec);
         set_mie(1);
         printf("mtvec: interrupts enabled!\n");
     }
@@ -264,6 +264,11 @@ int main(void)
                      "                mul <dec> <dec>, div <dec> <dec>, mac <dec> <dec> <dec>\n"
                      "                rd[m][bwl] <hex> [<hex> when m], wr[m][bwl] <hex> <hex> [<hex> when m]\n",
                      argv[0]);
+          }
+          
+          if(heapcheck!=0xdeadbeef)
+          {
+              printf("out of memory detected, a reboot is recommended...\n");
           }
        }
     }

@@ -183,10 +183,9 @@ main:
 	.LA28: auipc	a0,%pcrel_hi(irq_handler)
 	addi	a0,a0,%pcrel_lo(.LA28)
 	call	set_mtvec
-	li	a0,0
 	call	get_mtvec
 	sw	a0,16(sp)
-	beqz	a0,.L77
+	beqz	a0,.L79
 	lw	a1,16(sp)
 	.LA34: auipc	a0,%pcrel_hi(.LC12)
 	addi	a0,a0,%pcrel_lo(.LA34)
@@ -207,7 +206,7 @@ main:
 	.LA39: auipc	a0,%pcrel_hi(.LC16)
 	addi	a0,a0,%pcrel_lo(.LA39)
 	call	printf
-.L46:
+.L48:
 	.LA40: auipc	a0,%pcrel_hi(.LC17)
 	addi	a0,a0,%pcrel_lo(.LA40)
 	call	printf
@@ -216,7 +215,7 @@ main:
 	addi	a0,sp,52
 	call	memset
 	lw	a5,16(sp)
-	beqz	a5,.L78
+	beqz	a5,.L80
 .L20:
 	li	a1,64
 	addi	a0,sp,52
@@ -224,7 +223,7 @@ main:
 	addi	s1,sp,20
 	li	s0,1
 	j	.L17
-.L79:
+.L81:
 	call	strtok
 	sw	a0,0(s1)
 	li	a5,8
@@ -238,53 +237,62 @@ main:
 	li	a5,1
 	addi	a1,a1,%pcrel_lo(.LA49)
 	li	a0,0
-	bne	s0,a5,.L79
-	.LA79: auipc	a1,%pcrel_hi(.LC18)
-	addi	a1,a1,%pcrel_lo(.LA79)
+	bne	s0,a5,.L81
+	.LA81: auipc	a1,%pcrel_hi(.LC18)
+	addi	a1,a1,%pcrel_lo(.LA81)
 	addi	a0,sp,52
 	call	strtok
 	sw	a0,0(s1)
 	bnez	a0,.L21
 .L26:
 	lw	s0,20(sp)
-	beqz	s0,.L46
+	beqz	s0,.L48
 	.LA50: auipc	a1,%pcrel_hi(.LC19)
 	addi	a1,a1,%pcrel_lo(.LA50)
 	mv	a0,s0
 	call	strcmp
-	beqz	a0,.L80
+	beqz	a0,.L82
 	.LA52: auipc	a1,%pcrel_hi(.LC21)
 	addi	a1,a1,%pcrel_lo(.LA52)
 	mv	a0,s0
 	call	strcmp
-	beqz	a0,.L74
+	beqz	a0,.L76
 	.LA55: auipc	a1,%pcrel_hi(.LC24)
 	addi	a1,a1,%pcrel_lo(.LA55)
 	mv	a0,s0
 	call	strcmp
-	beqz	a0,.L81
+	beqz	a0,.L83
 	.LA58: auipc	a1,%pcrel_hi(.LC27)
 	addi	a1,a1,%pcrel_lo(.LA58)
 	mv	a0,s0
 	call	strcmp
-	bnez	a0,.L36
+	bnez	a0,.L37
 	lw	a0,24(sp)
-	beqz	a0,.L37
+	beqz	a0,.L38
 	call	xtoi
 	slli	a0,a0,16
 	.LA59: auipc	a5,%pcrel_hi(io)
 	srli	a0,a0,16
 	addi	a5,a5,%pcrel_lo(.LA59)
 	sh	a0,8(a5)
-.L37:
+.L38:
 	.LA60: auipc	a5,%pcrel_hi(io)
 	addi	a5,a5,%pcrel_lo(.LA60)
 	lhu	a1,8(a5)
 	.LA61: auipc	a0,%pcrel_hi(.LC28)
 	addi	a0,a0,%pcrel_lo(.LA61)
 	call	printf
-	j	.L46
-.L78:
+.L29:
+	.LA79: auipc	a5,%pcrel_hi(heapcheck)
+	lw	a4,%pcrel_lo(.LA79)(a5)
+	li	a5,-559038464
+	addi	a5,a5,-273
+	beq	a4,a5,.L48
+	.LA80: auipc	a0,%pcrel_hi(.LC42)
+	addi	a0,a0,%pcrel_lo(.LA80)
+	call	printf
+	j	.L48
+.L80:
 	li	a2,999424
 	li	a1,-128
 	addi	a2,a2,575
@@ -324,24 +332,24 @@ main:
 .L19:
 	sb	a1,3(a3)
 	j	.L18
-.L80:
+.L82:
 	.LA51: auipc	a0,%pcrel_hi(.LC20)
 	addi	a0,a0,%pcrel_lo(.LA51)
 	call	printf
-	j	.L46
-.L81:
+	j	.L29
+.L83:
 	lw	a5,24(sp)
 	sw	a5,8(sp)
-	beqz	a5,.L31
+	beqz	a5,.L32
 	mv	a0,a5
 	call	xtoi
 	sw	a0,8(sp)
-.L31:
+.L32:
 	lw	a5,8(sp)
 	addi	s1,a5,16
 	addi	a5,a5,256
 	sw	a5,12(sp)
-.L35:
+.L36:
 	lw	a5,8(sp)
 	.LA56: auipc	a0,%pcrel_hi(.LC25)
 	addi	a0,a0,%pcrel_lo(.LA56)
@@ -349,7 +357,7 @@ main:
 	mv	s0,a5
 	call	printf
 	lw	a5,8(sp)
-.L32:
+.L33:
 	lbu	a1,0(a5)
 	.LA57: auipc	a0,%pcrel_hi(.LC26)
 	addi	a5,a5,1
@@ -357,18 +365,18 @@ main:
 	sw	a5,4(sp)
 	call	printf
 	lw	a5,4(sp)
-	bne	s1,a5,.L32
-.L34:
+	bne	s1,a5,.L33
+.L35:
 	lbu	a0,0(s0)
 	li	a4,94
 	addi	s0,s0,1
 	addi	a5,a0,-32
 	andi	a5,a5,0xff
-	bleu	a5,a4,.L33
+	bleu	a5,a4,.L34
 	li	a0,46
-.L33:
+.L34:
 	call	putchar
-	bne	s1,s0,.L34
+	bne	s1,s0,.L35
 	lw	a5,8(sp)
 	li	a0,10
 	addi	s1,s1,16
@@ -377,29 +385,29 @@ main:
 	sw	a5,8(sp)
 	call	putchar
 	lw	a4,12(sp)
-	bne	a4,s0,.L35
-	j	.L46
-.L36:
+	bne	s0,a4,.L36
+	j	.L29
+.L37:
 	.LA62: auipc	a1,%pcrel_hi(.LC29)
 	addi	a1,a1,%pcrel_lo(.LA62)
 	mv	a0,s0
 	call	strcmp
-	bnez	a0,.L38
+	bnez	a0,.L39
 	lw	a0,24(sp)
-	beqz	a0,.L39
+	beqz	a0,.L40
 	call	atoi
 	.LA63: auipc	a5,%pcrel_hi(io)
 	addi	a5,a5,%pcrel_lo(.LA63)
 	sw	a0,12(a5)
-.L39:
+.L40:
 	.LA64: auipc	a5,%pcrel_hi(io)
 	addi	a5,a5,%pcrel_lo(.LA64)
 	lw	a1,12(a5)
 	.LA65: auipc	a0,%pcrel_hi(.LC30)
 	addi	a0,a0,%pcrel_lo(.LA65)
 	call	printf
-	j	.L46
-.L74:
+	j	.L29
+.L76:
 	.LA53: auipc	a0,%pcrel_hi(.LC22)
 	addi	a0,a0,%pcrel_lo(.LA53)
 	li	s0,999424
@@ -425,39 +433,39 @@ main:
 	li	a0,0
 	addi	sp,sp,128
 	jr	ra
-.L38:
+.L39:
 	.LA66: auipc	a1,%pcrel_hi(.LC31)
 	addi	a1,a1,%pcrel_lo(.LA66)
 	mv	a0,s0
 	call	strcmp
-	bnez	a0,.L40
+	bnez	a0,.L41
 	lw	a0,24(sp)
-	beqz	a0,.L41
+	beqz	a0,.L42
 	call	xtoi
 	slli	a0,a0,16
 	.LA67: auipc	a5,%pcrel_hi(io)
 	srli	a0,a0,16
 	addi	a5,a5,%pcrel_lo(.LA67)
 	sh	a0,10(a5)
-.L41:
+.L42:
 	.LA68: auipc	a5,%pcrel_hi(io)
 	addi	a5,a5,%pcrel_lo(.LA68)
 	lhu	a1,10(a5)
 	.LA69: auipc	a0,%pcrel_hi(.LC32)
 	addi	a0,a0,%pcrel_lo(.LA69)
 	call	printf
-	j	.L46
-.L77:
+	j	.L29
+.L79:
 	.LA36: auipc	a0,%pcrel_hi(.LC14)
 	addi	a0,a0,%pcrel_lo(.LA36)
 	call	printf
 	j	.L15
-.L40:
+.L41:
 	.LA70: auipc	a1,%pcrel_hi(.LC33)
 	addi	a1,a1,%pcrel_lo(.LA70)
 	mv	a0,s0
 	call	strcmp
-	bnez	a0,.L42
+	bnez	a0,.L43
 	lw	a0,24(sp)
 	call	atoi
 	mv	s0,a0
@@ -470,18 +478,18 @@ main:
 	.LA71: auipc	a0,%pcrel_hi(.LC34)
 	addi	a0,a0,%pcrel_lo(.LA71)
 	call	printf
-	j	.L46
-.L42:
+	j	.L29
+.L43:
 	.LA72: auipc	a1,%pcrel_hi(.LC35)
 	addi	a1,a1,%pcrel_lo(.LA72)
 	mv	a0,s0
 	call	strcmp
-	beqz	a0,.L82
+	beqz	a0,.L84
 	.LA74: auipc	a1,%pcrel_hi(.LC37)
 	addi	a1,a1,%pcrel_lo(.LA74)
 	mv	a0,s0
 	call	strcmp
-	bnez	a0,.L44
+	bnez	a0,.L45
 	lw	a0,24(sp)
 	call	atoi
 	mv	s0,a0
@@ -500,8 +508,8 @@ main:
 	.LA75: auipc	a0,%pcrel_hi(.LC38)
 	addi	a0,a0,%pcrel_lo(.LA75)
 	call	printf
-	j	.L46
-.L82:
+	j	.L29
+.L84:
 	lw	a0,24(sp)
 	call	atoi
 	mv	s0,a0
@@ -520,21 +528,21 @@ main:
 	.LA73: auipc	a0,%pcrel_hi(.LC36)
 	addi	a0,a0,%pcrel_lo(.LA73)
 	call	printf
-	j	.L46
-.L44:
+	j	.L29
+.L45:
 	.LA76: auipc	a1,%pcrel_hi(.LC39)
 	addi	a1,a1,%pcrel_lo(.LA76)
 	mv	a0,s0
 	call	strcmp
-	beqz	a0,.L83
+	beqz	a0,.L85
 	lbu	a5,0(s0)
-	beqz	a5,.L46
+	beqz	a5,.L29
 	.LA78: auipc	a0,%pcrel_hi(.LC41)
 	mv	a1,s0
 	addi	a0,a0,%pcrel_lo(.LA78)
 	call	printf
-	j	.L46
-.L83:
+	j	.L29
+.L85:
 	lw	a0,24(sp)
 	call	xtoi
 	mv	a1,a0
@@ -542,9 +550,9 @@ main:
 	srai	a2,a1,1
 	addi	a0,a0,%pcrel_lo(.LA77)
 	call	printf
-	j	.L46
+	j	.L29
 	.size	main, .-main
-	.globl	lalala
+	.globl	heapcheck
 	.section	.rodata.str1.4,"aMS",@progbits,1
 	.align	2
 .LC0:
@@ -568,7 +576,7 @@ main:
 	.string	"rv32e"
 	.zero	2
 .LC7:
-	.string	"Sat, 06 Nov 2021 14:57:50 -0300"
+	.string	"Mon, 08 Nov 2021 01:16:13 -0300"
 .LC8:
 	.string	"build: %s for %s\n"
 	.zero	2
@@ -581,7 +589,7 @@ main:
 	.string	"core0/thread%d: darkriscv@%d.%dMHz rv32%s%s%s\n"
 	.zero	1
 .LC12:
-	.string	"mtvec: handler@%x, enabling interrupts...\n"
+	.string	"mtvec: handler@%d, enabling interrupts...\n"
 	.zero	1
 .LC13:
 	.string	"mtvec: interrupts enabled!\n"
@@ -660,10 +668,13 @@ main:
 	.zero	1
 .LC41:
 	.string	"command: [%s] not found.\nvalid commands: clear, dump <hex>, led <hex>, timer <dec>, gpio <hex>\n                mul <dec> <dec>, div <dec> <dec>, mac <dec> <dec> <dec>\n                rd[m][bwl] <hex> [<hex> when m], wr[m][bwl] <hex> <hex> [<hex> when m]\n"
+	.zero	1
+.LC42:
+	.string	"out of memory detected, a reboot is recommended...\n"
 	.section	.sdata,"aw"
 	.align	2
-	.type	lalala, @object
-	.size	lalala, 4
-lalala:
+	.type	heapcheck, @object
+	.size	heapcheck, 4
+heapcheck:
 	.word	-559038737
 	.ident	"GCC: (GNU) 9.0.0 20180818 (experimental)"
