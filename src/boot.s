@@ -134,18 +134,22 @@ set_mie:
     ret
 
 get_mtvec:
+    addi  a0,x0,0
     csrr a0,mtvec
     ret
 
 get_mepc:
+    addi a0,x0,0
     csrr a0,mepc
     ret
 
 get_mie:
+    addi a0,x0,0
     csrr a0,mie
     ret
 
 get_mip:
+    addi a0,x0,0
     csrr a0,mip
     ret
 

@@ -260,9 +260,10 @@ int main(void)
           if(argv[0][0])
           {
               printf("command: [%s] not found.\n"
-                     "valid commands: clear, dump <hex>, led <hex>, timer <dec>, gpio <hex>\n"
-                     "                mul <dec> <dec>, div <dec> <dec>, mac <dec> <dec> <dec>\n"
-                     "                rd[m][bwl] <hex> [<hex> when m], wr[m][bwl] <hex> <hex> [<hex> when m]\n",
+                     "valid commands: clear, dump [hex], led [hex], timer [dec], gpio [hex]\n"
+                     "                mul [dec] [dec], div [dec] [dec], mac [dec] [dec] [dec]\n"
+                     "                reboot, wr[m][bwl] [hex] [hex] [[hex] when m],\n"
+                     "                rd[m][bwl] [hex] [[hex] when m]\n",
                      argv[0]);
           }
           

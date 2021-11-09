@@ -616,7 +616,7 @@ module darksocv
     reg [7:0] IREQ = 0;
     reg [7:0] IACK = 0;
     
-    reg [31:0] TIMERFF;
+    reg [31:0] TIMERFF = 0;
 
     wire [7:0] BOARD_IRQ;
 

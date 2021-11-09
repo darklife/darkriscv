@@ -84,7 +84,7 @@
 // can be used to accelerate the mul/div operations, the mac operation is
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
-`define __MAC16X16__
+//`define __MAC16X16__
 
 // flexbuzz interface (experimental):
 //
@@ -96,7 +96,7 @@
 // the external logic must detect the RD/WR operation quick enough and assert HLT 
 // in order to insert wait-states and perform the required multiplexing to fit 
 // the DLEN operand size in the data bus width available.
-`define __FLEXBUZZ__
+//`define __FLEXBUZZ__
 
 // interrupt support
 // 
@@ -126,8 +126,16 @@
 `define __RESETSP__ 32'd8192
 
 ////////////////////////////////////////////////////////////////////////////////
-// darkocv configuration:
+// darksocv configuration:
 ////////////////////////////////////////////////////////////////////////////////
+
+// interactive simulation:
+// 
+// When enabled, will trick the simulator in order to enable interactive
+// access via the stdin, in a way that is possible type interactive commands,
+// which will make your simulator crazy! unfortunately, it works only with
+// iverilog... at least, Xilinx ISIM does not liket the $fgetc()
+//`define __INTERACTIVE__
 
 // performance measurement:
 //

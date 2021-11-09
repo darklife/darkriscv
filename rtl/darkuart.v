@@ -148,6 +148,9 @@ module darkuart
 
     reg [31:0] DATAOFF = 0;
 
+    reg [1:0] IOREQ = 0;
+    reg [1:0] IOACK = 0;
+
     always@(posedge CLK)
     begin
         if(WR)
@@ -159,19 +162,32 @@ module darkuart
                 // print the UART output to console! :)
                 if(DATAI[15:8]!=13) // remove the '\r'
                 begin
+                    UART_XFIFO <= DATAI[15:8];
                     $write("%c",DATAI[15:8]);
+                    
+                    if(IOREQ==1&&DATAI[15:8]==" ")
+                    begin
+                        $fflush(32'h8000_0001);
+                        IOREQ <= 2;
+                    end
+                    else
+                        IOREQ <= 0;
                 end
                 
-                if(DATAI[15:8]=="#") // break point
-                begin
-                    $display("[checkpoint #]");
-                    $stop();
-                end
+                //if(DATAI[15:8]=="#") // break point
+                //begin
+                //    $display("[checkpoint #]");
+                //    $stop();
+                //end
                 
                 if(DATAI[15:8]==">") // prompt '>'
                 begin
-                    $display(" no UART input, end simulation request...");
+                
+    `ifndef __INTERACTIVE__
+                    $display(" the __INTERACTIVE__ option is disabled, ending simulation...");
                     FINISH_REQ <= 1;
+    `endif                    
+                    if(IOACK==0) IOREQ <= 1;
                 end
 `else
     `ifdef __UARTQUEUE__
@@ -248,7 +264,6 @@ module darkuart
         UART_RBAUD <= UART_RSTATE==`UART_STATE_IDLE ? { 1'b0, UART_TIMER[15:1] } :    // rbaud=timer/2
                       UART_RBAUD ? UART_RBAUD-1 : UART_TIMER;               // while() { while(rbaud--); rbaud=timer }
 
-        
         UART_RSTATE <= RES||UART_RSTATE==`UART_STATE_ACK  ? `UART_STATE_IDLE :
                             UART_RSTATE==`UART_STATE_IDLE ? UART_RSTATE+(UART_RXDFF[2:1]==2'b10) : // start bit detection
                                                             UART_RSTATE+(UART_RBAUD==0);
@@ -260,7 +275,7 @@ module darkuart
             UART_RFIFO[UART_RREQ[7:0]] <= UART_RTMP;
         end
 `else
-        UART_RREQ <= UART_RSTATE==`UART_STATE_ACK ? !UART_RACK : UART_RREQ;
+        UART_RREQ <= (IOACK==2 || UART_RSTATE==`UART_STATE_ACK) ? !UART_RACK : UART_RREQ;
 `endif
         if(UART_RSTATE[3]) 
         begin
@@ -270,6 +285,29 @@ module darkuart
             UART_RFIFO[UART_RSTATE[2:0]] <= UART_RXDFF[2];
 `endif
         end
+`ifdef SIMULATION
+        else
+        if(IOACK==1)
+        begin
+            UART_RFIFO <= $fgetc(32'h8000_0000);
+            IOACK <= 2;
+        end
+        else
+        if(IOACK==2)
+        begin
+            IOACK <= UART_RREQ^UART_RACK ? 3 : 2;
+        end
+        else
+        if(IOACK==3)
+        begin
+            IOACK <= UART_RREQ^UART_RACK ? 3 : (UART_RFIFO=="\n" ? 0 : 1);
+        end
+        else
+        if(IOREQ==2)
+        begin
+            IOACK <= 1;
+        end
+`endif        
     end
 
     //debug
