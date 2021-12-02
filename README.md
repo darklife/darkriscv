@@ -167,7 +167,7 @@ following organization:
 - [src](src): the source code for the test firmware (boot.c, main.c etc in C language)
 - [rtl](rtl): the source code for the *DarkRISCV* core and the support logic (Verilog)
 - [sim](sim): the source code for the simulation to test the rtl files (currently via icarus)
-- [board](board): support and examples for different boards (currently via Xilinx ISE)
+- [boards](boards): support and examples for different boards (currently via Xilinx ISE)
 - [tmp](tmp): empty, but the ISE will create lots of files here)
 
 
