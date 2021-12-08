@@ -318,6 +318,13 @@
     `define INVRES 1
 `endif
 
+`ifdef PAPILIO_DUO_LOGICSTART
+    `define BOARD_ID 11
+    `define BOARD_CK_REF 32000000
+    `define BOARD_CK_MUL 2
+    `define BOARD_CK_DIV 2
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
     `define BOARD_CK 100000000
