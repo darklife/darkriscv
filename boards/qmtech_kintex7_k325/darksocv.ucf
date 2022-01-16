@@ -1,0 +1,58 @@
+# Copyright (c) 2018, Marcelo Samsoniuk
+# All rights reserved.
+# 
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+# 
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+# 
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+# 
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+
+#NET "CLK" TNM_NET = CLK;
+
+# without cache controller
+#TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
+
+# with cache controller
+#TIMESPEC TS_CLK = PERIOD "CLK" 75MHz HIGH 50%;
+
+# QMtech K325 board
+
+NET XCLK            LOC = F22 | IOSTANDARD = LVCMOS33 | PERIOD = 50MHz HIGH 50%;
+#NET XCLK            LOC = K15 | PERIOD = 66MHz HIGH 50%;
+#NET XCLK            LOC = V10 | PERIOD = 40MHz HIGH 50%;
+
+NET XRES            LOC = AF9  | IOSTANDARD = LVCMOS18 | PULLDOWN;
+
+NET UART_RXD        LOC = B12 | IOSTANDARD = LVCMOS33 | PULLUP;  # DBJ2-16 -> U5-16 B12
+NET UART_TXD        LOC = B11 | IOSTANDARD = LVCMOS33;           # DBJ2-15 -> U5-15 B11
+
+NET LED[3]          LOC = U25 | IOSTANDARD = LVCMOS33; # U4
+NET LED[2]          LOC = T23 | IOSTANDARD = LVCMOS33; # U4
+NET LED[1]          LOC = H26 | IOSTANDARD = LVCMOS33;
+NET LED[0]          LOC = J26 | IOSTANDARD = LVCMOS33;
+
+NET DEBUG[3]        LOC = R23 | IOSTANDARD = LVCMOS33; # U4
+NET DEBUG[2]        LOC = P25 | IOSTANDARD = LVCMOS33; # U4
+NET DEBUG[1]        LOC = N23 | IOSTANDARD = LVCMOS33; # U4
+NET DEBUG[0]        LOC = M26 | IOSTANDARD = LVCMOS33; # U4
+
+

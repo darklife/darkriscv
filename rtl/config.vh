@@ -318,6 +318,15 @@
     `define INVRES 1
 `endif
 
+`ifdef QMTECH_KINTEX7_K325
+    `define BOARD_ID 12
+    `define BOARD_CK_REF 50000000
+    `define BOARD_CK_MUL 20
+    `define BOARD_CK_DIV 4
+    `define XILINX7CLK 1
+    `define INVRES 1
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0    
     `define BOARD_CK 100000000
