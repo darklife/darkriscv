@@ -32,6 +32,7 @@
 #BOARD  = xilinx_ac701_a200
 #BOARD  = qmtech_sdram_lx16
 #BOARD = lattice_brevia2_xp2
+#BOARD = papilio_duo_logicstart
 
 default: all
 

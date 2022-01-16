@@ -318,6 +318,13 @@
     `define INVRES 1
 `endif
 
+`ifdef PAPILIO_DUO_LOGICSTART
+    `define BOARD_ID 11
+    `define BOARD_CK_REF 32000000
+    `define BOARD_CK_MUL 2
+    `define BOARD_CK_DIV 2
+`endif
+
 `ifdef QMTECH_KINTEX7_K325
     `define BOARD_ID 12
     `define BOARD_CK_REF 50000000
