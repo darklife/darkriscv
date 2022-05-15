@@ -350,3 +350,21 @@
 `endif
 
 `define  __BAUD__ ((`BOARD_CK/`__UARTSPEED__))
+
+// register number depends of CPU type RV32[EI] and number of threads
+
+`ifdef __THREADS__
+    `undef __INTERRUPT__
+
+    `ifdef __RV32E__
+        `define RLEN 16*(2**`__THREADS__)
+    `else
+        `define RLEN 32*(2**`__THREADS__)
+    `endif
+`else
+    `ifdef __RV32E__
+        `define RLEN 16
+    `else
+        `define RLEN 32
+    `endif
+`endif
