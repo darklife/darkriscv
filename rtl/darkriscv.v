@@ -219,11 +219,9 @@ module darkriscv
     `endif
 
     `ifdef __RV32E__
-        reg [31:0] REG1 [0:16*(2**`__THREADS__)-1];	// general-purpose 16x32-bit registers (s1)
-        reg [31:0] REG2 [0:16*(2**`__THREADS__)-1];	// general-purpose 16x32-bit registers (s2)
+        reg [31:0] REGS [0:16*(2**`__THREADS__)-1];	// general-purpose 16x32-bit registers (s1)
     `else
-        reg [31:0] REG1 [0:32*(2**`__THREADS__)-1];	// general-purpose 32x32-bit registers (s1)
-        reg [31:0] REG2 [0:32*(2**`__THREADS__)-1];	// general-purpose 32x32-bit registers (s2)    
+        reg [31:0] REGS [0:32*(2**`__THREADS__)-1];	// general-purpose 32x32-bit registers (s1)
     `endif
 `else
     `ifdef __3STAGE__
@@ -231,11 +229,9 @@ module darkriscv
     `endif
 
     `ifdef __RV32E__
-        reg [31:0] REG1 [0:15];	// general-purpose 16x32-bit registers (s1)
-        reg [31:0] REG2 [0:15];	// general-purpose 16x32-bit registers (s2)
+        reg [31:0] REGS [0:15];	// general-purpose 16x32-bit registers (s1)
     `else
-        reg [31:0] REG1 [0:31];	// general-purpose 32x32-bit registers (s1)
-        reg [31:0] REG2 [0:31];	// general-purpose 32x32-bit registers (s2)
+        reg [31:0] REGS [0:31];	// general-purpose 32x32-bit registers (s1)
     `endif
 `endif
 
@@ -244,8 +240,8 @@ module darkriscv
 
     // source-1 and source-1 register selection
 
-    wire          [31:0] U1REG = REG1[S1PTR];
-    wire          [31:0] U2REG = REG2[S2PTR];
+    wire          [31:0] U1REG = REGS[S1PTR];
+    wire          [31:0] U2REG = REGS[S2PTR];
 
     wire signed   [31:0] S1REG = U1REG;
     wire signed   [31:0] S2REG = U2REG;
@@ -412,11 +408,11 @@ module darkriscv
         end
 `endif
 `ifdef __RV32E__
-        REG1[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+        REGS[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
 `else
-        REG1[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+        REGS[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
 `endif
-                       HLT ? REG1[DPTR] :        // halt
+                       HLT ? REGS[DPTR] :        // halt
                      !DPTR ? 0 :                // x0 = 0, always!
                      AUIPC ? PCSIMM :
                       JAL||
@@ -425,32 +421,12 @@ module darkriscv
                        LCC ? LDATA :
                   MCC||RCC ? RMDATA:
 `ifdef __MAC16X16__                  
-                       MAC ? REG2[DPTR]+KDATA :
+                       MAC ? REGS[DPTR]+KDATA :
 `endif
 `ifdef __INTERRUPT__
                        CSRR ? CDATA : 
 `endif
-                             REG1[DPTR];
-`ifdef __RV32E__
-        REG2[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0) :        // reset sp
-`else        
-        REG2[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0) :        // reset sp
-`endif        
-                       HLT ? REG2[DPTR] :        // halt
-                     !DPTR ? 0 :                // x0 = 0, always!
-                     AUIPC ? PCSIMM :
-                      JAL||
-                      JALR ? NXPC :
-                       LUI ? SIMM :
-                       LCC ? LDATA :
-                  MCC||RCC ? RMDATA:
-`ifdef __MAC16X16__
-                       MAC ? REG2[DPTR]+KDATA :
-`endif
-`ifdef __INTERRUPT__                       
-                       CSRR ? CDATA : 
-`endif
-                             REG2[DPTR];
+                             REGS[DPTR];
 
 `ifdef __3STAGE__
 
