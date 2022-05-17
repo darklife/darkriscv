@@ -51,7 +51,7 @@ module darksimv;
         
         for(i=0;i!=`RLEN;i=i+1)
         begin
-            $dumpvars(0,soc0.core0.REG1[i]);
+            $dumpvars(0,soc0.core0.REGS[i]);
         end
 `endif
         $display("reset (startup)");

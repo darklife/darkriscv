@@ -111,7 +111,7 @@
 // The interrupt support cannot be used with threading (because makes no 
 // much sense?)... also, it requires the 3 stage pipeline (again, makes no
 // much sense use it with the 2-stage pipeline).
-`define __INTERRUPT__
+//`define __INTERRUPT__
 
 // initial PC and SP
 //
@@ -123,7 +123,7 @@
 // the stack can be positioned in the top of RAM and does not match with the
 // .data.
 `define __RESETPC__ 32'd0
-`define __RESETSP__ 32'd8192
+`define __RESETSP__ 32'd0
 
 ////////////////////////////////////////////////////////////////////////////////
 // darksocv configuration:
