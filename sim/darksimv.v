@@ -41,8 +41,19 @@ module darksimv;
 
     initial while(1) #(500e6/`BOARD_CK) CLK = !CLK; // clock generator w/ freq defined by config.vh
 
+    integer i;
+
     initial
     begin
+`ifdef __ICARUS__
+        $dumpfile("darksocv.vcd");
+        $dumpvars();
+        
+        for(i=0;i!=`RLEN;i=i+1)
+        begin
+            $dumpvars(0,soc0.core0.REG1[i]);
+        end
+`endif
         $display("reset (startup)");
         #1e3    RES = 0;            // wait 1us in reset state
         //#1000e3 RES = 1;            // run  1ms
@@ -54,7 +65,7 @@ module darksimv;
     wire TX;
     wire RX = 1;
 
-    darksocv darksocv
+    darksocv soc0
     (
         .XCLK(CLK),
         .XRES(|RES),

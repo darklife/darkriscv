@@ -846,14 +846,6 @@ module darksocv
     `else
         always@(posedge CLK) if(FINISH_REQ) $finish();
     `endif
-    
-    `ifdef __ICARUS__
-      initial
-      begin
-        $dumpfile("darksocv.vcd");
-        $dumpvars();
-      end
-    `endif
 
 `endif
 
