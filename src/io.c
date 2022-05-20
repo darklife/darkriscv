@@ -69,5 +69,6 @@ char *board_name(int id)
            id==10 ? "aliexpress hpc/40gbe ku040" :
            id==11 ? "papilio duo logicstart" :
            id==12 ? "qmtech kintex-7 k325" :
+           id==13 ? "scarab minispartan6-plus lx9" :
                     "unknown";
 }
