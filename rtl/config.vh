@@ -28,7 +28,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-`timescale 1ns / 1ps
+//`timescale 1ns / 1ps
 
 ////////////////////////////////////////////////////////////////////////////////
 // darkriscv configuration
@@ -129,6 +129,18 @@
 // darksocv configuration:
 ////////////////////////////////////////////////////////////////////////////////
 
+// memory size:
+//
+// The current test firmware requires 8KB of memory, but it depends of the 
+// memory layout: whenthe I-bus and D-bus are both attached in the same BRAM,
+// it is possible assume that 8MB is enough, but when the I-bus and D-bus are
+// attached to separate memories, the I-BRAM requires around 5KB and the 
+// D-BRAM requires about 1.5KB. A safe solution is just simply and set the
+// size as the same.
+// The size is defined as 2**MLEN, i.e. the address bits used in the memory.
+// WARNING: this setup must match with the src/darksocv.ld.src file!
+`define MLEN 13 // MEM[12:0] -> 8KBytes
+
 // interactive simulation:
 // 
 // When enabled, will trick the simulator in order to enable interactive
@@ -145,6 +157,14 @@
 // is actived by the UART.
 `define __PERFMETER__
 
+// icarus register debug:
+// 
+// As most people observed, the icarus verilog does not dump the register
+// bank because icarus does not dump arrays by default. However, it is possible
+// activate this special option in order to dump the register bank. This
+// makes no effect in other simulators, but it appears as a warning.
+//`define __REGDUMP__
+
 // full harvard architecture:
 // 
 // When defined, enforses that the instruction and data buses are connected
@@ -158,6 +178,7 @@
 // advantage of a single memory bank is that the .text and .data areas can
 // be better allocated, but in this case is not possible protect the .text
 // area as in the case of separate memory banks.
+// WARNING: this setup must match with the src/darksocv.ld.src file!
 //`define __HARVARD__
 
 // read-modify-write cycle:

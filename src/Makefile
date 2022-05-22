@@ -106,7 +106,7 @@ clean:
 %.s: %.c Makefile
 	$(CC) $(CCFLAGS) -S $< -o $@
 
-$(PROJ).ld: $(PROJ).ld.src
+$(PROJ).ld: $(PROJ).ld.src Makefile
 	$(CPP) $(CPFLAGS) $(PROJ).ld.src $(PROJ).ld
 	
 $(PROJ).o: $(OBJS) $(PROJ).ld

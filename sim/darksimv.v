@@ -46,6 +46,7 @@ module darksimv;
     initial
     begin
 `ifdef __ICARUS__
+    `ifdef __REGDUMP__
         $dumpfile("darksocv.vcd");
         $dumpvars();
         
@@ -53,6 +54,7 @@ module darksimv;
         begin
             $dumpvars(0,soc0.core0.REGS[i]);
         end
+    `endif
 `endif
         $display("reset (startup)");
         #1e3    RES = 0;            // wait 1us in reset state
