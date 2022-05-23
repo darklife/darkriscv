@@ -55,22 +55,17 @@ int main(void)
     printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
     printf("build: %s for %s\n",BUILD,ARCH);
 
-    for(int i=0;i!=threads;i++)
-    {
-      printf("core0/thread%d: darkriscv@%d.%dMHz rv32%s%s%s\n",
-          i,
-          io.board_cm,                        // board clock MHz
-          io.board_ck,                        // board clock kHz
-          check4rv32i()?"i":"e",              // architecture
-          threads>1?"+MT":"",                 // MT  support
-          mac(1000,16,16)==1256?"+MAC":"");   // MAC support
-    }
+    printf("core%d: ",              io.core_id);                 // core id
+    printf("darkriscv@%dMHz with: ",io.board_cm*2);              // board clock MHz
+    printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
+    if(threads>1)                   printf("MT%d ",threads);     // MT  support
+    if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
+    printf("\n");
     
     threads = 0; // prepare for the next restart
 
-
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
-    printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*1000000u+io.board_ck*10000u)/(io.timer+1),io.timer);
+    printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
 
     set_mtvec(irq_handler);
     

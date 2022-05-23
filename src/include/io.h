@@ -38,7 +38,7 @@ struct DARKIO {
 
     unsigned char board_id; // 00
     unsigned char board_cm; // 01
-    unsigned char board_ck; // 02
+    unsigned char core_id;  // 02
     unsigned char irq;      // 03
 
     struct DARKUART {
