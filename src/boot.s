@@ -74,11 +74,20 @@ _normal_boot:
 
 	call 	banner
 
-	la	a3,_stack
-	la	a2,_heap
-	sub	a4,a3,a2
-	la	a1,_boot
 	la	a0,_boot0msg
+	la	a1,_text
+	la	a2,_etext
+	sub	a2,a2,a1
+	la	a3,_data
+	la	a4,_edata
+	sub	a4,a4,a3
+	la	a5,_stack
+	call	printf
+
+	la	  a0,_boot1msg
+	la	  a1,_stack
+	la	  a2,_edata
+	sub	 a1,a1,a2
 	call	printf
 
 	call	main
@@ -161,4 +170,6 @@ get_mip:
 	.align	2
 
 _boot0msg:
-	.string	"boot0: text@%d data@%d stack@%d (%d bytes free)\n"
+	.string	"boot0: text@%d+%d data@%d+%d stack@%d "
+_boot1msg:
+    .string "(%d bytes free)\n"

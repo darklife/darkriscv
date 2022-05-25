@@ -60,8 +60,10 @@ SECTIONS
 {
     .text :
     {
+        _text = .;
         *(.boot)
-        *(.text)
+        *(.text*)
+        _etext = .;
 #if HARVARD
     } > ROM
 #else
@@ -69,12 +71,13 @@ SECTIONS
 #endif
     .data :
     {
+        _data = .;
         *(.rodata*)
         *(.data)
         _global = . + 0x800;
         *(.sbss)    
         *(.bss)
-	_heap = .;
+	    _edata = .;
 
 #if HARVARD
     } > RAM
