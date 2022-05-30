@@ -270,7 +270,7 @@ module darksocv
     wire        RW;
 `endif
 
-    wire [31:0] IOMUX [0:3];
+    wire [31:0] IOMUX [0:4];
 
     reg  [15:0] GPIOFF = 0;
     reg  [15:0] LEDFF  = 0;
@@ -464,7 +464,7 @@ module darksocv
         end        
     end
     
-    assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]] : DCACHED;
+    assign DATAI = DADDR[31] ? IOMUX[DADDR[4:2]==3'b100 ? 3'b100 : DADDR[3:2]] : DCACHED;
 
 `else
 
@@ -602,12 +602,12 @@ module darksocv
 `endif
 
         XADDR <= DADDR; // 1 clock delayed
-        IOMUXFF <= IOMUX[DADDR[3:2]]; // read w/ 2 wait-states
+        IOMUXFF <= IOMUX[DADDR[4:2]==3'b100 ? 3'b100 : DADDR[3:2]]; // read w/ 2 wait-states
     end    
 
     //assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
     //assign DATAI = DADDR[31] ? IOMUXFF : RAMFF;
-    assign DATAI = XADDR[31] ? IOMUX[XADDR[3:2]] : RAMFF;
+    assign DATAI = XADDR[31] ? IOMUX[XADDR[4:2]==3'b100 ? 3'b100 : XADDR[3:2]] : RAMFF;
 
 `endif
 
@@ -617,6 +617,7 @@ module darksocv
     reg [7:0] IACK = 0;
     
     reg [31:0] TIMERFF = 0;
+    reg [31:0] TIMEUS = 0;
 
     wire [7:0] BOARD_IRQ;
 
@@ -634,6 +635,7 @@ module darksocv
     //assign IOMUX[1] = from UART!
     assign IOMUX[2] = { GPIOFF, LEDFF };
     assign IOMUX[3] = TIMERFF;
+    assign IOMUX[4] = TIMEUS;
 
     reg [31:0] TIMER = 0;
 
@@ -691,6 +693,7 @@ module darksocv
             end
             
             XTIMER  <= XTIMER+(TIMER==0);
+            TIMEUS <= (TIMER == TIMERFF) ? TIMEUS + 1'b1 : TIMEUS;
         end
     end
 

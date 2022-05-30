@@ -129,18 +129,6 @@
 // darksocv configuration:
 ////////////////////////////////////////////////////////////////////////////////
 
-// memory size:
-//
-// The current test firmware requires 8KB of memory, but it depends of the 
-// memory layout: whenthe I-bus and D-bus are both attached in the same BRAM,
-// it is possible assume that 8MB is enough, but when the I-bus and D-bus are
-// attached to separate memories, the I-BRAM requires around 5KB and the 
-// D-BRAM requires about 1.5KB. A safe solution is just simply and set the
-// size as the same.
-// The size is defined as 2**MLEN, i.e. the address bits used in the memory.
-// WARNING: this setup must match with the src/darksocv.ld.src file!
-`define MLEN 13 // MEM[12:0] -> 8KBytes
-
 // interactive simulation:
 // 
 // When enabled, will trick the simulator in order to enable interactive
@@ -180,6 +168,22 @@
 // area as in the case of separate memory banks.
 // WARNING: this setup must match with the src/darksocv.ld.src file!
 //`define __HARVARD__
+
+// memory size:
+//
+// The current test firmware requires 8KB of memory, but it depends of the 
+// memory layout: whenthe I-bus and D-bus are both attached in the same BRAM,
+// it is possible assume that 8MB is enough, but when the I-bus and D-bus are
+// attached to separate memories, the I-BRAM requires around 5KB and the 
+// D-BRAM requires about 1.5KB. A safe solution is just simply and set the
+// size as the same.
+// The size is defined as 2**MLEN, i.e. the address bits used in the memory.
+// WARNING: this setup must match with the src/darksocv.ld.src file!
+`ifdef __HARVARD__
+    `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
+`else
+    `define MLEN 14 // MEM[13:0] -> 16KBytes LENGTH = 0x4000
+`endif
 
 // read-modify-write cycle:
 //

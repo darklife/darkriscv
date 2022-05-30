@@ -45,14 +45,20 @@
 	  more than one core.
 */
 
+
+/* 
+    Set MLEN in rtl/config.vh:
+        HARVARD:    14
+       !HARVARD:    15
+ */
 MEMORY
 {
-    IO  (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x10
+    IO  (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x14
 #if HARVARD
-    ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x2000
-    RAM (rw!x) : ORIGIN = 0x00002000, LENGTH = 0x2000
+    ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x4000
+    RAM (rw!x) : ORIGIN = 0x00004000, LENGTH = 0x4000
 #else
-    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x2000
+    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x8000
 #endif
 }
 
@@ -62,8 +68,9 @@ SECTIONS
     {
         _text = .;
         *(.boot)
-        *(.text*)
-        _etext = .;
+        *(.text)
+        *(.text.*)
+         _etext = .;
 #if HARVARD
     } > ROM
 #else
@@ -78,7 +85,7 @@ SECTIONS
         *(.sbss)    
         *(.bss)
         *(.sdata)
-	    _edata = .;
+        _edata = .;
 
 #if HARVARD
     } > RAM
@@ -91,5 +98,5 @@ SECTIONS
    PROVIDE ( _stack = ORIGIN(MEM) + LENGTH(MEM) );
 #endif
 
-    .io : { io.o(COMMON) } > IO
+    .io : { ./include/io.o(COMMON) } > IO
 }
