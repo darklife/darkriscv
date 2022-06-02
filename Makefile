@@ -47,6 +47,7 @@ all:
 	make -C boards all
 
 install:
+	make -C src all
 	make -C boards install
 
 clean:

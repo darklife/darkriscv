@@ -28,44 +28,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef __IO__
-#define __IO__
-
-extern volatile int threads; // number of threads in the core
-extern volatile int utimers; // microsecond timer
-
-struct DARKIO {
-
-    unsigned char board_id; // 00
-    unsigned char board_cm; // 01
-    unsigned char core_id;  // 02
-    unsigned char irq;      // 03
-
-    struct DARKUART {
-        
-        unsigned char  stat; // 04
-        unsigned char  fifo; // 05
-        unsigned short baud; // 06/07
-
-    } uart;
-
-    unsigned short led;     // 08/09
-    unsigned short gpio;    // 0a/0b
-
-    unsigned int timer;     // 0c
-};
-
-extern volatile struct DARKIO io;
-
-extern char *board_name(int);
+#include <io.h>
 
 #ifdef __RISCV__
-#define kmem 0
+
+volatile struct DARKIO io;
+
 #else
-extern unsigned char kmem[8192];
+
+volatile struct DARKIO io = 
+{
+    4, 100, 0, 0,   // ctrl = { board id, fMHz, fkHz }
+    { 0, 0, 0 },    // uart = { stat, fifo, baud }
+    0,              // led
+    0,              // gpio
+    1000000         // timer
+};
+
+unsigned char kmem[8192] = "darksocv x86 payload test";
+
 #endif
 
-#define IRQ_TIMR 0x80
-#define IRQ_UART 0x02
+volatile int threads = 0; // number of threads
+volatile int utimers = 0; // number of microseconds
 
-#endif
+// board database
+
+char *board_name(int id)
+{
+    return id==0  ? "simulation only" : 
+           id==1  ? "avnet microboard lx9": 
+           id==2  ? "xilinx ac701 a200" :
+           id==3  ? "qmtech sdram lx16" :
+           id==4  ? "qmtech spartan7 s15" :
+           id==5  ? "lattice brevia2 lxp2" :
+           id==6  ? "piswords rs485 lx9" :
+           id==7  ? "digilent spartan3 s200" :
+           id==8  ? "aliexpress hpc/40gbe k420" :
+           id==9  ? "qmtech artix7 a35" :
+           id==10 ? "aliexpress hpc/40gbe ku040" :
+           id==11 ? "papilio duo logicstart" :
+           id==12 ? "qmtech kintex-7 k325" :
+           id==13 ? "scarab minispartan6-plus lx9" :
+                    "unknown";
+}
