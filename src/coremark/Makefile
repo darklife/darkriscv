@@ -42,13 +42,12 @@ ifndef CROSS
     #ENDIAN = _le # gcc for little-endian
     #ENDIAN = _be # gcc for big-endian
 
-    CROSS = riscv32-embedded$(ENDIAN)-elf
+    CROSS = riscv32-unknown-elf
     #CROSS = riscv-elf
     #CROSS = riscv32-unknown-elf
     #CROSS = riscv32-embedded-elf
     
-    CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
-    #CCPATH = /opt/riscv32-gcc/bin/
+    CCPATH = /opt/riscv32-gcc/bin/
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
     #HARVARD = 1
 endif
