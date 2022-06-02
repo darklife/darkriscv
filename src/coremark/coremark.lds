@@ -67,7 +67,7 @@ SECTIONS
     .text :
     {
         _text = .;
-        *(.boot)
+        */start.o(.text)
         *(.text)
         *(.text.*)
          _etext = .;
@@ -98,5 +98,5 @@ SECTIONS
    PROVIDE ( _stack = ORIGIN(MEM) + LENGTH(MEM) );
 #endif
 
-    .io : { ./include/io.o(COMMON) } > IO
+    .io : { */io.o(COMMON) } > IO
 }

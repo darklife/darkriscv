@@ -16,7 +16,7 @@ limitations under the License.
 Original Author: Shay Gal-on
 */
 #include <io.h>
-#include <darkriscv.h>
+#include <stdio.h>
 #include "coremark.h"
 #include "core_portme.h"
 
@@ -171,4 +171,12 @@ portable_fini(core_portable *p)
     io.led = 0;
     ee_printf("CoreMark finish in %d us.\n\n",io.timeus);
     p->portable_id = 0;
+    
+    // makes no sense return here!
+
+    while(1)
+    {
+        usleep(500000);
+        io.led++;    
+    }
 }

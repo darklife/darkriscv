@@ -30,8 +30,9 @@
 
 	.option nopic
 	.text
-	.section .boot
+	.section .text
 	.align	2
+    .globl  _start
 	.globl  check4rv32i
     .globl  set_mtvec
     .globl  set_mepc
@@ -42,14 +43,17 @@
     .globl  get_mip
 
 /*
-	boot:
+	start:
 	- read and increent thread counter
 	- case not zero, jump to multi thread boot
 	- otherwise continue	
 */
 
-_boot:
+_start:
 
+    la  a0,_edata
+    li  a1,0xdeadbeef
+    sw  a1,0(a0)
 	la	a0,threads
 	lw 	a1,0(a0)
 	addi	a2,a1,1
@@ -85,10 +89,17 @@ _normal_boot:
 	call	printf
 
 	la	  a0,_boot1msg
-	la	  a1,_stack
-	la	  a2,_edata
-	sub	 a1,a1,a2
+    la    a1,_stack
+    la    a2,_text
+    sub   a1,a1,a2
+	la	  a2,_stack
+	la	  a3,_edata
+	sub	 a2,a2,a3
 	call	printf
+
+    xor    a0,a0,a0 /* argc = 0 */
+    xor    a1,a1,a1 /* argv = 0 */
+    xor    a2,a2,a2 /* envp = 0 */
 
 	call	main
 
@@ -161,7 +172,6 @@ get_mip:
     addi a0,x0,0
     csrr a0,mip
     ret
-
 /*
 	data segment here!
 */
@@ -170,6 +180,6 @@ get_mip:
 	.align	2
 
 _boot0msg:
-	.string	"boot0: text@%d+%d data@%d+%d stack@%d "
+	.string	"boot0: text@%d+%d data@%d+%d stack@%d\n"
 _boot1msg:
-    .string "(%d bytes free)\n"
+    .string "boot0: total memory %d bytes, %d bytes free\n"

@@ -1,3 +1,4 @@
 *.s
 *.o
 darksocv.*
+coremark.*

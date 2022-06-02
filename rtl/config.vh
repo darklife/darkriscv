@@ -180,9 +180,9 @@
 // The size is defined as 2**MLEN, i.e. the address bits used in the memory.
 // WARNING: this setup must match with the src/darksocv.ld.src file!
 `ifdef __HARVARD__
-    `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
+    `define MLEN 12 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
 `else
-    `define MLEN 14 // MEM[13:0] -> 16KBytes LENGTH = 0x4000
+    `define MLEN 13 // MEM[13:0] -> 16KBytes LENGTH = 0x2000
 `endif
 
 // read-modify-write cycle:

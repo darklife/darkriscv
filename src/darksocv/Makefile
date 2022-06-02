@@ -38,6 +38,9 @@ ifndef CROSS
     ARCH = rv32e
     #ARCH = rv32i
     
+    ABI = ilp32e
+    #ABI = ilp32
+    
     #TODO: better way to switch little/big-endian:
     #ENDIAN = _le # gcc for little-endian
     #ENDIAN = _be # gcc for big-endian
@@ -56,6 +59,10 @@ ifndef BUILD
     BUILD = $(shell date -R)
 endif
 
+ifndef DARKLIBC
+    DARKLIBC = ../darklibc
+endif
+
     CC = $(CCPATH)/$(CROSS)-gcc
     AS = $(CCPATH)/$(CROSS)-as
     LD = $(CCPATH)/$(CROSS)-ld
@@ -63,9 +70,11 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -ffreestanding -I../darklibc -O2 -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS = -Wall -fcommon -ffreestanding -O2
+CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
+CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
-LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv # -Ttext=0
+LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv $(DARKLIBC)/*.o # -Ttext=0
 CPFLAGS = -P 
 
 CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
@@ -78,9 +87,9 @@ OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian bl
 ODFLAGS = -D
 
 PROJ = darksocv
-OBJS = main.o ../darklibc/stdio.o ../darklibc/io.o ../darklibc/banner.o ../darklibc/boot.o
-ASMS = main.s ../darklibc/stdio.s ../darklibc/io.s ../darklibc/banner.s
-SRCS = main.c ../darklibc/stdio.c ../darklibc/io.c ../darklibc/banner.c ../darklibc/boot.s
+OBJS = main.o
+ASMS = main.s
+SRCS = main.c
 
 
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds
@@ -113,7 +122,7 @@ $(PROJ).o: $(OBJS) $(PROJ).ld
 	$(OD) $(ODFLAGS) $@ > $(PROJ).S
 
 $(PROJ).rom.mem: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .text* 
+	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .*text* 
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).text > $@
 	#xxd -p -c 4 -g 4 $< > $@
 	rm $(PROJ).text

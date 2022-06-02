@@ -48,8 +48,6 @@ void irq_handler(void)
     return;
 }
 
-volatile int heapcheck = 0xdeadbeef;
-
 int main(void)
 {
     printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
@@ -262,7 +260,7 @@ int main(void)
                      argv[0]);
           }
           
-          if(heapcheck!=0xdeadbeef)
+          if(_edata!=0xdeadbeef)
           {
               printf("out of memory detected, a reboot is recommended...\n");
           }
