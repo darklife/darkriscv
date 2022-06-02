@@ -91,5 +91,5 @@ SECTIONS
    PROVIDE ( _stack = ORIGIN(MEM) + LENGTH(MEM) );
 #endif
 
-    .io : { io.o(COMMON) } > IO
+    .io : { (COMMON) } > IO
 }

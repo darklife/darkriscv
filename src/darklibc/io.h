@@ -53,6 +53,7 @@ struct DARKIO {
     unsigned short gpio;    // 0a/0b
 
     unsigned int timer;     // 0c
+    unsigned int timeus;    // 10
 };
 
 extern volatile struct DARKIO io;

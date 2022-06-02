@@ -30,7 +30,7 @@ SHELL := /bin/bash
 
 ifndef HOST_CC
     HOST_CC = gcc
-    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -Os
+    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I../common -Os
 endif
 
 ifndef CROSS
@@ -63,7 +63,7 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -ffreestanding -I./include -O2 -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS = -Wall -fcommon -ffreestanding -I../darklibc -O2 -march=$(ARCH) -mabi=ilp32e -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv # -Ttext=0
 CPFLAGS = -P 
@@ -75,16 +75,15 @@ ifdef HARVARD
 endif
 
 OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
-ODFLAGS = -d
+ODFLAGS = -D
 
 PROJ = darksocv
-OBJS = main.o stdio.o io.o banner.o boot.o
-ASMS = main.s stdio.s io.s banner.s
-SRCS = main.c stdio.c io.c banner.c boot.s
+OBJS = main.o ../darklibc/stdio.o ../darklibc/io.o ../darklibc/banner.o ../darklibc/boot.o
+ASMS = main.s ../darklibc/stdio.s ../darklibc/io.s ../darklibc/banner.s
+SRCS = main.c ../darklibc/stdio.c ../darklibc/io.c ../darklibc/banner.c ../darklibc/boot.s
 
-#include app/Makefile.in
 
-DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).ld.src
+DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds
 
 ifdef HARVARD
 	TARGETS = $(PROJ).rom.mem $(PROJ).ram.mem
@@ -98,7 +97,7 @@ all: $(TARGETS) $(DEPS)
 	@echo sources ok.
 
 clean:
-	-rm $(ASMS) $(OBJS) $(PROJ).{bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem}
+	-rm $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem}
 
 %.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@
@@ -106,12 +105,12 @@ clean:
 %.s: %.c Makefile
 	$(CC) $(CCFLAGS) -S $< -o $@
 
-$(PROJ).ld: $(PROJ).ld.src Makefile
-	$(CPP) $(CPFLAGS) $(PROJ).ld.src $(PROJ).ld
+$(PROJ).ld: $(PROJ).lds Makefile
+	$(CPP) $(CPFLAGS) $(PROJ).lds $(PROJ).ld
 	
 $(PROJ).o: $(OBJS) $(PROJ).ld
 	$(LD) $(LDFLAGS) $(OBJS) -o $@
-	$(OD) $(ODFLAGS) $@ > $(PROJ).lst
+	$(OD) $(ODFLAGS) $@ > $(PROJ).S
 
 $(PROJ).rom.mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .text* 
