@@ -46,10 +46,10 @@ module darksimv;
     initial
     begin
 `ifdef __ICARUS__
-    `ifdef __REGDUMP__
         $dumpfile("darksocv.vcd");
         $dumpvars();
-        
+
+    `ifdef __REGDUMP__
         for(i=0;i!=`RLEN;i=i+1)
         begin
             $dumpvars(0,soc0.core0.REGS[i]);
