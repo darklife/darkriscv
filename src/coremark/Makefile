@@ -77,7 +77,7 @@ CCFLAGS = -Wall -fcommon -ffreestanding -O2
 CCFLAGS += -I. -I./src -I$(DARKLIBC)/include $(DFLAGS_STR) -DITERATIONS=4000 -DPERFORMANCE_RUN=1 
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
-LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv $(DARKLIBC)/*.o # -Ttext=0
+LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv # -Ttext=0
 CPFLAGS = -P 
 
 CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
@@ -120,7 +120,7 @@ $(PROJ).ld: $(PROJ).lds
 	$(CPP) $(CPFLAGS) $(PROJ).lds $(PROJ).ld
 	
 $(PROJ).o: $(OBJS) $(PROJ).ld
-	$(LD) $(LDFLAGS) $(OBJS) -o $@
+	$(LD) $(LDFLAGS) $(OBJS) -o $@ $(DARKLIBC)/darklibc.a
 	$(OD) $(ODFLAGS) $@ > $(PROJ).S
 
 $(PROJ).rom.mem: $(PROJ).o

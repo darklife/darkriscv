@@ -61,7 +61,7 @@ SECTIONS
     .text :
     {
         _text = .;
-        */start.o(.text) 
+        *start.o(.text) 
         *(.text*)
         _etext = .;
 #if HARVARD

@@ -96,7 +96,7 @@ TARGETS = $(PROJ).a
 
 .PHONY: all
 
-all: $(DEPS)
+all: $(DEPS) $(TARGETS)
 	@echo sources ok.
 
 clean:
@@ -107,3 +107,6 @@ clean:
 
 %.s: %.c Makefile
 	$(CC) $(CCFLAGS) -S $< -o $@
+
+%.a: $(OBJS) Makefile
+	$(AR) $(ARFLAGS) $@ $(OBJS)
