@@ -32,6 +32,7 @@ APPLICATION = darksocv
 #APPLICATION = coremark
 
 DARKLIBC = darklibc
+#HARVARD = 1
 
 default: all
 

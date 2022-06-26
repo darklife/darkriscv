@@ -60,8 +60,13 @@ SECTIONS
 {
     .text :
     {
-        _text = .;
         *start.o(.text) 
+#if !HARVARD
+        *start.o(.data)
+        *start.o(.rodata)
+#endif
+        . = 768;
+        _text = .;
         *(.text*)
         _etext = .;
 #if HARVARD
@@ -71,6 +76,10 @@ SECTIONS
 #endif
     .data :
     {
+#ifdef HARVARD
+        *start.o(.data)
+        *start.o(.rodata)        
+#endif
         _data = .;
         *(.rodata*)
         *(.data)

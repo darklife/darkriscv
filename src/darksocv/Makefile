@@ -142,6 +142,7 @@ $(PROJ).mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).bin > $@
 	#xxd -p -c 4 -g 4 $< > $@
+	dd if=$(PROJ).bin of=$(PROJ)_uart.bin skip=768 bs=1
 	rm $(PROJ).bin
 	wc -l $@
 	@echo mem ok.

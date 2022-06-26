@@ -41,6 +41,7 @@
     .globl  get_mepc
     .globl  get_mie
     .globl  get_mip
+    .globl  threads
 
 /*
 	start:
@@ -51,9 +52,6 @@
 
 _start:
 
-    la  a0,_edata
-    li  a1,0xdeadbeef
-    sw  a1,0(a0)
 	la	a0,threads
 	lw 	a1,0(a0)
 	addi	a2,a1,1
@@ -61,41 +59,105 @@ _start:
 	la	a3,io
 	bne	a1,x0,_multi_thread_boot
 
+    la  a0,0x80000000
+    lb  a0,0(a0)
+    beq a0,x0,_normal_boot
+
+/*
+    uart boot here:
+    
+    - check for uart 3x w/ 1s timeout
+    - case there is data, download it to main()
+    - otherwise, go to normal boot
+*/
+
+    li  a0,'u'
+    call _uart_putchar
+
+    la a3,main
+    li a4,5
+    li a5,8192000
+
+    _uart_boot_loop1:
+
+        _uart_boot_loop2:
+
+            addi a0,a5,0
+            call _uart_getchar
+
+            blt a0,x0,_uart_boot_exit
+
+            sb a0,0(a3)
+            addi a3,a3,1
+
+            j _uart_boot_loop2
+
+        _uart_boot_exit:
+        
+        li a0,'.'
+        call _uart_putchar
+        addi a4,a4,-1
+        bgt a4,x0,_uart_boot_loop1
+
+    li  a0,'b'
+
+    call _uart_putchar
+
 /*
 	normal boot here:
+
+	- call main
 	- set stack
 	- set global pointer
 	- plot boot banner
-	- print memory setup
-	- call main
 	- repeat forever
 */
 
 _normal_boot:
 
+/*
+    register int c,s;
+    register char *p = rle_logo; // = a3
+   
+    while(*p)
+    {
+        c = *p++; // = a0
+        s = *p++; // = a4
+      
+        while(s--) putchar(c); // uses a0, a1, a2
+    }
+*/
+    addi a0,x0,'\n'
+    call _uart_putchar
+
+    la a3,_rle_banner
+   
+    _rle_banner_loop1:
+ 
+        lbu a0,0(a3)
+        lbu a4,1(a3)
+        addi a3,a3,2
+
+        _rle_banner_loop2:
+
+            call _uart_putchar
+            addi a4,a4,-1
+
+        bgt a4,x0,_rle_banner_loop2
+        
+    bne a0,x0,_rle_banner_loop1    
+
+    la a3,_str_banner
+
+    _str_banner_loop:
+
+        lbu a0,0(a3)
+        call _uart_putchar
+        addi a3,a3,1
+        bne a0,x0,_str_banner_loop
+
 	la	sp,_stack
 	la	gp,_global
-
-	call 	banner
-
-	la	a0,_boot0msg
-	la	a1,_text
-	la	a2,_etext
-	sub	a2,a2,a1
-	la	a3,_data
-	la	a4,_edata
-	sub	a4,a4,a3
-	la	a5,_stack
-	call	printf
-
-	la	  a0,_boot1msg
-    la    a1,_stack
-    la    a2,_text
-    sub   a1,a1,a2
-	la	  a2,_stack
-	la	  a3,_edata
-	sub	 a2,a2,a3
-	call	printf
 
     xor    a0,a0,a0 /* argc = 0 */
     xor    a1,a1,a1 /* argv = 0 */
@@ -103,7 +165,7 @@ _normal_boot:
 
 	call	main
 
-	j	_normal_boot
+	j	_start
 
 /*
 	multi-thread boot:
@@ -118,6 +180,69 @@ _multi_thread_boot:
 	sh	a1,10(a3)
 	addi	a1,a1,1
 	j 	_multi_thread_boot
+
+/* 
+    uart_putchar:
+    
+    - wait until not busy
+    - a0 = char to print
+    - a1 = soc.uart0.stat
+    - a2 = *soc.uart0.stat
+    - a0 = return the same data
+*/
+
+_uart_putchar:
+
+    la a1,0x80000000
+
+    _uart_putchar_busy:
+
+        lb      a2,4(a1)
+        not     a2,a2
+        andi    a2,a2,1
+        beq     a2,x0,_uart_putchar_busy
+
+    sb a0,5(a1)    
+    li a1,'\n'
+
+    bne a0,a1,_uart_putchar_exit
+
+    li a0,'\r'
+    j _uart_putchar    
+
+    _uart_putchar_exit:
+
+        ret
+
+/* 
+    uart_getchar:
+
+    - a0 = time out in loops
+    - a1 = soc.uart0.stat
+    - a2 = *soc.uart0.stat
+    - a0 = return *soc.uart0.fifo or -1
+*/
+
+_uart_getchar:
+
+    la  a1,0x80000000
+
+    _uart_getchar_busy:
+
+        beq     a0,x0,_uart_getchar_tout
+        addi    a0,a0,-1
+
+        lb      a2,4(a1)
+        andi    a2,a2,2
+        beq     a2,x0,_uart_getchar_busy
+
+    lbu a0,5(a1)
+    ret
+
+    _uart_getchar_tout:
+
+        li a0,-1
+        ret
 
 /*
 	rv32e/rv32i detection:
@@ -172,14 +297,41 @@ get_mip:
     addi a0,x0,0
     csrr a0,mip
     ret
+
 /*
-	data segment here!
+    data segment here!
 */
 
-	.section .rodata
-	.align	2
+       .section .rodata
+       .align   2
 
-_boot0msg:
-	.string	"boot0: text@%d+%d data@%d+%d stack@%d\n"
-_boot1msg:
-    .string "boot0: total memory %d bytes, %d bytes free\n"
+_rle_banner:
+
+    .byte 0x20, 0x0e, 0x76, 0x20, 0x0a, 0x01, 0x20, 0x12, 0x76, 0x1c, 0x0a
+    .byte 0x01, 0x72, 0x0d, 0x20, 0x07, 0x76, 0x1a, 0x0a, 0x01, 0x72, 0x10
+    .byte 0x20, 0x06, 0x76, 0x18, 0x0a, 0x01, 0x72, 0x12, 0x20, 0x04, 0x76
+    .byte 0x18, 0x0a, 0x01, 0x72, 0x12, 0x20, 0x04, 0x76, 0x18, 0x0a, 0x01
+    .byte 0x72, 0x12, 0x20, 0x04, 0x76, 0x18, 0x0a, 0x01, 0x72, 0x10, 0x20
+    .byte 0x06, 0x76, 0x16, 0x20, 0x02, 0x0a, 0x01, 0x72, 0x0d, 0x20, 0x07
+    .byte 0x76, 0x16, 0x20, 0x04, 0x0a, 0x01, 0x72, 0x02, 0x20, 0x10, 0x76
+    .byte 0x16, 0x20, 0x06, 0x0a, 0x01, 0x72, 0x02, 0x20, 0x0c, 0x76, 0x18
+    .byte 0x20, 0x06, 0x72, 0x02, 0x0a, 0x01, 0x72, 0x04, 0x20, 0x06, 0x76
+    .byte 0x1a, 0x20, 0x06, 0x72, 0x04, 0x0a, 0x01, 0x72, 0x06, 0x20, 0x06
+    .byte 0x76, 0x16, 0x20, 0x06, 0x72, 0x06, 0x0a, 0x01, 0x72, 0x08, 0x20
+    .byte 0x06, 0x76, 0x12, 0x20, 0x06, 0x72, 0x08, 0x0a, 0x01, 0x72, 0x0a
+    .byte 0x20, 0x06, 0x76, 0x0e, 0x20, 0x06, 0x72, 0x0a, 0x0a, 0x01, 0x72
+    .byte 0x0c, 0x20, 0x06, 0x76, 0x0a, 0x20, 0x06, 0x72, 0x0c, 0x0a, 0x01
+    .byte 0x72, 0x0e, 0x20, 0x06, 0x76, 0x06, 0x20, 0x06, 0x72, 0x0e, 0x0a
+    .byte 0x01, 0x72, 0x10, 0x20, 0x06, 0x76, 0x02, 0x20, 0x06, 0x72, 0x10
+    .byte 0x0a, 0x01, 0x72, 0x12, 0x20, 0x0a, 0x72, 0x12, 0x0a, 0x01, 0x72
+    .byte 0x14, 0x20, 0x06, 0x72, 0x14, 0x0a, 0x01, 0x72, 0x16, 0x20, 0x02
+    .byte 0x72, 0x16, 0x0a, 0x01, 0x0a, 0x01, 0x20, 0x07, 0x00 
+
+_str_banner:
+    .string "INSTRUCTION SETS WANT TO BE FREE\n\n"
+
+        .section .data
+        .align   2
+
+threads:
+    .word  0

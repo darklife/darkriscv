@@ -78,6 +78,8 @@ int  get_mepc(void);
 int  get_mie(void);
 void banner(void);
 
+__attribute__ ((interrupt ("machine"))) void irq_handler(void);
+
 extern unsigned _text;
 extern unsigned _data;
 extern unsigned _etext; 

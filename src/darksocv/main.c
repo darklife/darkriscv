@@ -31,23 +31,6 @@
 #include <io.h>
 #include <stdio.h>
 
-void irq_handler(void) __attribute__ ((interrupt ("machine")));
-
-void irq_handler(void)
-{
-    if(io.irq == IRQ_TIMR)
-    {
-        if(!utimers--)
-        {
-            io.led++;
-            utimers=999999;
-        }
-        io.irq = IRQ_TIMR;
-    }
-
-    return;
-}
-
 int main(void)
 {
     printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
@@ -61,6 +44,15 @@ int main(void)
     printf("\n");
     
     threads = 0; // prepare for the next restart
+
+    printf("bram0: text@%d+%d, data@%d+%d and stack@%d\n",
+        (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
+        (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
+        (unsigned)&_stack);
+        
+    printf("bram0: total memory %d bytes, %d bytes free\n",
+        (unsigned)&_stack-(unsigned)&_text,
+        (unsigned)&_stack-(unsigned)&_edata);
 
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
     printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
@@ -132,17 +124,9 @@ int main(void)
           else
           if(!strcmp(argv[0],"reboot"))
           {
-              int i;
-              
-              printf("core0: reboot in 3 seconds");
-              
-              for(i=0;i!=3;i++) 
-              {
-                  usleep(1000000);
-                  putchar('.');
-              }
-              
-              printf("done.\n");
+              set_mie(0);
+              printf("mtvec: interrupts disabled!\n");
+              printf("rebooting...\n");
                      
               return 0;
           }
