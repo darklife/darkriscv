@@ -41,12 +41,14 @@
 `define SCC     7'b01000_11      // sxx   rs1,rs2,imm[11:0]
 `define MCC     7'b00100_11      // xxxi  rd,rs1,imm[11:0]
 `define RCC     7'b01100_11      // xxx   rd,rs1,rs2 
-`define MAC     7'b11111_11      // mac   rd,rs1,rs2
+`define CCC     7'b11100_11      // exx, csrxx, mret
+
+// proprietary extension (custom-0)
+`define CUS     7'b00010_11      // cus   rd,rs1,rs2,fc3,fct5
 
 // not implemented opcodes:
-
 //`define FCC     7'b00011_11      // fencex
-`define CCC     7'b11100_11      // exx, csrxx, mret
+
 
 // configuration file
 
@@ -106,7 +108,7 @@ module darkriscv
 
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XMAC, XRES=1, XCCC; //, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XRES=1, XCCC; //, XFCC, XCCC;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
@@ -126,7 +128,7 @@ module darkriscv
         XMCC   <= XRES ? 0 : HLT ? XMCC   : IDATA[6:0]==`MCC;
 
         XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
-        XMAC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`MAC;
+        XCUS   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`CUS;
         //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
         XCCC   <= XRES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
 
@@ -209,7 +211,7 @@ module darkriscv
     wire    MCC = FLUSH ? 0 : XMCC; // OPCODE==7'b0010011; //FCT3
     
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
-    wire    MAC = FLUSH ? 0 : XMAC; // OPCODE==7'b0110011; //FCT3
+    wire    CUS = FLUSH ? 0 : XCUS; // OPCODE==7'b0110011; //FCT3
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
 
@@ -295,11 +297,12 @@ module darkriscv
                         XIDATA[31:20]==12'h341 ? MEPC  : // machine exception PC
                         XIDATA[31:20]==12'h305 ? MTVEC : // machine vector table
                                                  0;	 // unknown
-                                                 
-    wire MRET = CCC && FCT3==0;
+
+    wire MRET = CCC && FCT3==0 && S2PTR==2;
     wire CSRW = CCC && FCT3==1;
     wire CSRR = CCC && FCT3==2;
 `endif
+    wire EBRK = CCC && FCT3==0 && S2PTR==1;
 
     // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
 
@@ -327,9 +330,11 @@ module darkriscv
     // 
     // 0000000 01100 01011 100 01100 0110011 xor a2,a1,a2
     // 0000000 01010 01100 000 01010 0110011 add a0,a2,a0
-    // 0000000 01100 01011 000 01010 1111111 mac a0,a1,a2
+    // 0000000 01100 01011 000 01010 0001011 mac a0,a1,a2
     // 
-    // 0000 0000 1100 0101 1000 0101 0111 1111 = 00c5857F
+    // 0000 0000 1100 0101 1000 0101 0000 1011 = 00c5850b
+
+    wire MAC = CUS && FCT3==0;
 
     wire signed [15:0] K1TMP = S1REG[15:0];
     wire signed [15:0] K2TMP = S2REG[15:0];
@@ -462,6 +467,12 @@ module darkriscv
                      NXPC+4;                   // normal flow
 `endif
         PC   <= /*XRES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
+
+        if(EBRK)
+        begin
+            $display("breakpoint at %x",PC);
+            $stop();
+        end
     end
 
     // IO and memory interface

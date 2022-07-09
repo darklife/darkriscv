@@ -54,4 +54,6 @@ int xtoi(char *);
 int mac(int,short,short);
 void usleep(int);
 
+#define EBREAK asm("ebreak")
+
 #endif

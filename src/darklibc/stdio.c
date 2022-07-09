@@ -264,7 +264,7 @@ int xtoi(char *s1)
 int mac(int acc,short x,short y)
 {
 #ifdef __RISCV__
-    __asm__(".word 0x00c5857F"); // mac a0,a1,a2
+    __asm__(".word 0x00c5850b"); // mac a0,a1,a2
     // "template"
     //acc += (x^y);
 #else
