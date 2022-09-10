@@ -54,6 +54,8 @@ int main(void)
         (unsigned)&_stack-(unsigned)&_text,
         (unsigned)&_stack-(unsigned)&_edata);
 
+    _edata = 0xdeadbeef;
+
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
     printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
 

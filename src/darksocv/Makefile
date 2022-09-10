@@ -118,7 +118,7 @@ clean:
 $(PROJ).ld: $(PROJ).lds Makefile
 	$(CPP) $(CPFLAGS) $(PROJ).lds $(PROJ).ld
 	
-$(PROJ).o: $(OBJS) $(PROJ).ld
+$(PROJ).o: $(OBJS) $(PROJ).ld $(DARKLIBC)/darklibc.a
 	$(LD) $(LDFLAGS) $(OBJS) -o $@ $(LDLIBS)
 	$(OD) $(ODFLAGS) $@ > $(PROJ).S
 
