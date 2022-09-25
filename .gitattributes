@@ -1,0 +1,6 @@
+*.v linguist-detectable=true
+*.vh linguist-detectable=true
+*.c linguist-detectable=false
+*.h linguist-detectable=false
+*.s linguist-detectable=false
+Makefile linguist-detectable=false
