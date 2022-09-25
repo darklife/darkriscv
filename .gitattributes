@@ -1,8 +1,3 @@
-*.v linguist-detectable=true
-*.vh linguist-detectable=true
-*.c linguist-detectable=false
-*.h linguist-detectable=false
-*.s linguist-detectable=false
 *.mk linguist-detectable=false
 *akefile linguist-detectable=false
 *.md linguist-detectable=false
