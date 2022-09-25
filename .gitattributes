@@ -1,3 +1,9 @@
 *.v linguist-detectable=true
 *.vh linguist-detectable=true
-* linguist-detectable=false
+*.c linguist-detectable=false
+*.h linguist-detectable=false
+*.s linguist-detectable=false
+*akefile linguist-detectable=false
+*.md linguist-detectable=false
+*.xise linguist-detectable=false
+*.py linguist-detectable=false
