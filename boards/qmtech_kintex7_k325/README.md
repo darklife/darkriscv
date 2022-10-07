@@ -24,7 +24,11 @@ Regarding the board features, in the core board we can find:
 - one switch (used as RESET)
 - lots and lots of GPIO pins that are connected to the carrier board
 
-You can find more documentation about this board here: http://www.chinaqmtech.com/download_fpga
+You can find more documentation about this board here:
+
+- K325T core board: https://github.com/ChinaQMTECH/QMTECH_XC7K325T_CORE_BOARD
+- carrier board manual: https://github.com/ChinaQMTECH/QM_XC7A35T_DDR3/blob/master/QMTECH_Artix-7_XC7A35T_User_Manual(DaughterBoard)-V02.pdf
+- carrier board schematic: https://github.com/ChinaQMTECH/QM_XC7A35T_DDR3/blob/master/Hardware/DB-FPGA-XC7A35T-DDR3-V03.pdf
 
 In the carrier board we can find:
 
