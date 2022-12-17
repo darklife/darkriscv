@@ -1,21 +1,21 @@
 /*
  * Copyright (c) 2018, Marcelo Samsoniuk
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,7 +25,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <io.h>
@@ -36,7 +36,7 @@ volatile struct DARKIO io;
 
 #else
 
-volatile struct DARKIO io = 
+volatile struct DARKIO io =
 {
     4, 100, 0, 0,   // ctrl = { board id, fMHz, fkHz }
     { 0, 0, 0 },    // uart = { stat, fifo, baud }
@@ -55,8 +55,8 @@ volatile int utimers = 0; // number of microseconds
 
 char *board_name(int id)
 {
-    return id==0  ? "simulation only" : 
-           id==1  ? "avnet microboard lx9": 
+    return id==0  ? "simulation only" :
+           id==1  ? "avnet microboard lx9":
            id==2  ? "xilinx ac701 a200" :
            id==3  ? "qmtech sdram lx16" :
            id==4  ? "qmtech spartan7 s15" :
@@ -69,6 +69,9 @@ char *board_name(int id)
            id==11 ? "papilio duo logicstart" :
            id==12 ? "qmtech kintex-7 k325" :
            id==13 ? "scarab minispartan6-plus lx9" :
+           id==14 ? "lattice ecp5-45F colorlighti9" :
+           id==15 ? "lattice ecp5-25F colorlighti5" :
+           id==16 ? "lattice ecp5-85F ulx3s" :
                     "unknown";
 }
 
@@ -151,8 +154,8 @@ void banner(void)
   printf("0x00 };\n");
 
 #else
-  
-  char rle_logo[] = { 
+
+  char rle_logo[] = {
       0x20, 0x0e, 0x76, 0x20, 0x0a, 0x01, 0x20, 0x12, 0x76, 0x1c, 0x0a,
       0x01, 0x72, 0x0d, 0x20, 0x07, 0x76, 0x1a, 0x0a, 0x01, 0x72, 0x10,
       0x20, 0x06, 0x76, 0x18, 0x0a, 0x01, 0x72, 0x12, 0x20, 0x04, 0x76,
@@ -181,15 +184,15 @@ void banner(void)
 
   //printf("\33[H\33[2J");
   putchar('\n');
-  
+
   register int c,s;
   register char *p = rle_logo;
-  
+
   while(*p)
   {
       c = *p++;
       s = *p++;
-      
+
       while(s--) putchar(c);
   }
 

@@ -511,6 +511,9 @@ The current supported boards are:
 - id==11  papilio_duo_logicstart
 - id==12  qmtech_kintex7_k325
 - id==13  scarab_minispartan6-plus_lx9
+- id==14  colorlighti9_ecp45f
+- id==15  colorlighti5_ecp25f
+- id==16  ulx3s_ecp85f
 
 The organization is self-explained, w/ the vender, board and FPGA model
 in the name of the directory. Each  *board* directory contains the project 
