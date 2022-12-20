@@ -33,6 +33,8 @@
 
 int main(void)
 {
+    unsigned mtvec=0;
+
     printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
     printf("build: %s for %s\n",BUILD,ARCH);
 
@@ -45,23 +47,24 @@ int main(void)
     
     threads = 0; // prepare for the next restart
 
-    printf("bram0: text@%d+%d, data@%d+%d and stack@%d\n",
+    printf("bram0: text@%d+%d data@%d+%d stack@%d\n",
         (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
         (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
         (unsigned)&_stack);
         
-    printf("bram0: total memory %d bytes, %d bytes free\n",
-        (unsigned)&_stack-(unsigned)&_text,
+    printf("bram0: %d bytes free\n",
         (unsigned)&_stack-(unsigned)&_edata);
 
     _edata = 0xdeadbeef;
 
     printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
-    printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
+    printf("timr0: %dHz (div=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
+
+#ifndef SMALL
 
     set_mtvec(irq_handler);
     
-    unsigned mtvec = get_mtvec();
+    mtvec = get_mtvec();
     
     if(mtvec)
     {
@@ -71,6 +74,8 @@ int main(void)
     }
     else
         printf("mtvec: not found (polling only)\n");
+
+#endif
 
     io.irq = IRQ_TIMR; // clear interrupts
     
@@ -82,7 +87,7 @@ int main(void)
 
     while(1)
     {
-        char  buffer[64];
+        char  buffer[32];
 
         printf("> ");
         memset(buffer,0,sizeof(buffer));
@@ -109,7 +114,19 @@ int main(void)
         }
         
         gets(buffer,sizeof(buffer));
-        
+
+#ifdef SMALL
+
+        if(!strcmp(buffer,"led"))
+        {
+            printf("led flip!\n");
+            io.led = ~io.led;        
+        }
+
+#endif
+
+#ifndef SMALL
+
         char *argv[8];
         int   argc;
 
@@ -245,11 +262,13 @@ int main(void)
                      "                rd[m][bwl] [hex] [[hex] when m]\n",
                      argv[0]);
           }
-          
+
           if(_edata!=0xdeadbeef)
           {
-              printf("out of memory detected, a reboot is recommended...\n");
+              printf("out of memory detected...\n");
+              return;
           }
        }
+#endif       
     }
 }

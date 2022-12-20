@@ -68,9 +68,10 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -ffreestanding -O2
+CCFLAGS = -Wall -fcommon -ffreestanding -Os
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I./include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+CCFLAGS += -DSMALL # enable this to make the FW smaller!
 ASFLAGS = -march=$(ARCH)
 ARFLAGS = -rcs
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv # -Ttext=0
@@ -86,9 +87,9 @@ OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian bl
 ODFLAGS = -D
 
 PROJ = darklibc
-OBJS = stdio.o io.o start.o
+OBJS = stdio.o io.o small.o # start.o
 ASMS = stdio.s io.s 
-SRCS = stdio.c io.c start.s
+SRCS = stdio.c io.c small.s # start.s
 
 DEPS = $(SRCS) $(ASMS) $(OBJS)
 
@@ -100,7 +101,7 @@ all: $(DEPS) $(TARGETS)
 	@echo sources ok.
 
 clean:
-	-rm $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem}
+	-rm $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a}
 
 %.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@

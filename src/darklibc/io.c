@@ -75,6 +75,8 @@ char *board_name(int id)
                     "unknown";
 }
 
+#ifdef SMALL
+
 __attribute__ ((interrupt ("machine")))
 void irq_handler(void)
 {
@@ -90,6 +92,8 @@ void irq_handler(void)
 
     return;
 }
+
+#endif
 
 #ifdef BANNER
 

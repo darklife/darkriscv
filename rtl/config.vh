@@ -182,7 +182,7 @@
 `ifdef __HARVARD__
     `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
 `else
-    `define MLEN 13 // MEM[13:0] -> 16KBytes LENGTH = 0x2000
+    `define MLEN 12 // MEM[12:0] -> 4KBytes LENGTH = 0x1000
 `endif
 
 // read-modify-write cycle:

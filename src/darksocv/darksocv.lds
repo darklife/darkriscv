@@ -52,7 +52,7 @@ MEMORY
     ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x2000
     RAM (rw!x) : ORIGIN = 0x00002000, LENGTH = 0x2000
 #else
-    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x2000
+    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x1000 /* must match w/ MEM size */
 #endif
 }
 
@@ -60,12 +60,15 @@ SECTIONS
 {
     .text :
     {
+        *small.o(.text)
         *start.o(.text) 
 #if !HARVARD
+        *small.o(.data)
         *start.o(.data)
+        *small.o(.rodata)
         *start.o(.rodata)
 #endif
-        . = 768;
+        /* . = 768; */ /* enable this in order to use the uart boot! */
         _text = .;
         *(.text*)
         _etext = .;
