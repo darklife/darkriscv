@@ -1,21 +1,21 @@
 /*
  * Copyright (c) 2018, Marcelo Samsoniuk
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,7 +25,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include <io.h>
@@ -44,14 +44,14 @@ int main(void)
     if(threads>1)                   printf("MT%d ",threads);     // MT  support
     if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
     printf("\n");
-    
+
     threads = 0; // prepare for the next restart
 
     printf("bram0: text@%d+%d data@%d+%d stack@%d\n",
         (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
         (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
         (unsigned)&_stack);
-        
+
     printf("bram0: %d bytes free\n",
         (unsigned)&_stack-(unsigned)&_edata);
 
@@ -63,9 +63,9 @@ int main(void)
 #ifndef SMALL
 
     set_mtvec(irq_handler);
-    
+
     mtvec = get_mtvec();
-    
+
     if(mtvec)
     {
         printf("mtvec: handler@%d, enabling interrupts...\n",mtvec);
@@ -78,7 +78,7 @@ int main(void)
 #endif
 
     io.irq = IRQ_TIMR; // clear interrupts
-    
+
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
@@ -91,11 +91,11 @@ int main(void)
 
         printf("> ");
         memset(buffer,0,sizeof(buffer));
-        
+
         if(mtvec==0)
         {
             while(1)
-            {            
+            {
                 if(io.irq&IRQ_TIMR)
                 {
                     if(!utimers--)
@@ -105,14 +105,14 @@ int main(void)
                     }
                     io.irq = IRQ_TIMR;
                 }
-                
+
                 if(io.uart.stat&2)
                 {
                     break;
                 }
             }
         }
-        
+
         gets(buffer,sizeof(buffer));
 
 #ifdef SMALL
@@ -120,7 +120,14 @@ int main(void)
         if(!strcmp(buffer,"led"))
         {
             printf("led flip!\n");
-            io.led = ~io.led;        
+            io.led = ~io.led;
+        }
+        else
+        if(!strcmp(buffer,"reboot"))
+        {
+            printf("rebooting...\n");
+
+            return 0;
         }
 
 #endif
@@ -146,7 +153,7 @@ int main(void)
               set_mie(0);
               printf("mtvec: interrupts disabled!\n");
               printf("rebooting...\n");
-                     
+
               return 0;
           }
           else
@@ -155,11 +162,11 @@ int main(void)
               char *p=(char *)(kmem+(argv[1]?xtoi(argv[1]):0));
 
               int i,j;
-              
+
               for(i=0;i!=16;i++)
               {
                   printf("%x: ",(unsigned) p);
-              
+
                   for(j=0;j!=16;j++) printf("%x ",p[j]);
                   for(j=0;j!=16;j++) putchar((p[j]>=32&&p[j]<127)?p[j]:'.');
 
@@ -173,15 +180,15 @@ int main(void)
               int kp = 2,
                   i = 1,j,k,w,
                   vp = 1;
-              
+
               if(argv[0][kp]=='m')
               {
                   i=xtoi(argv[vp++]);
                   kp++;
               }
-          
+
               printf("%x: ",k=xtoi(argv[vp++]));
-              
+
               for(j=0;i--;j++)
               {
                   if(argv[0][0]=='r')
@@ -204,14 +211,14 @@ int main(void)
           if(!strcmp(argv[0],"led"))
           {
               if(argv[1]) io.led = xtoi(argv[1]);
-              
+
               printf("led = %x\n",io.led);
           }
           else
           if(!strcmp(argv[0],"timer"))
           {
               if(argv[1]) io.timer = atoi(argv[1]);
-              
+
               printf("timer = %d\n",io.timer);
           }
           else
@@ -226,7 +233,7 @@ int main(void)
           {
               int x = atoi(argv[1]);
               int y = atoi(argv[2]);
-              
+
               printf("mul = %d\n",x*y);
           }
           else
@@ -269,6 +276,6 @@ int main(void)
               return;
           }
        }
-#endif       
+#endif
     }
 }

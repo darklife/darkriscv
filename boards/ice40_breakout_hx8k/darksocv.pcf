@@ -1,0 +1,23 @@
+
+# Pinout for the iCE40-HX8K Breakout Board
+
+set_io XCLK J3
+
+set_io UART_TXD B12
+set_io UART_RXD B10
+
+# left on J3
+set_io debug_ser_tx T1
+set_io debug_ser_rx R3
+
+set_io -pullup yes XRES   C16
+
+set_io DEBUG[3] B5  # D9
+set_io DEBUG[2] B4  # D8
+set_io DEBUG[1] A2  # D7
+set_io DEBUG[0] A1  # D6
+set_io LED[3] C5  # D5
+set_io LED[2] C4  # D4
+set_io LED[1] B3  # D3
+set_io LED[0] C3  # D2
+

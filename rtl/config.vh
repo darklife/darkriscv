@@ -320,6 +320,13 @@
     `define INVRES 1
 `endif
 
+`ifdef LATTICE_ICE40_BREAKOUT_HX8K
+    `define BOARD_ID 17
+    `define BOARD_CK 65_000_000 // cause we use a pll with 25MHz ref clks
+    `define INVRES 1
+`endif
+
+
 `ifdef PISWORDS_RS485_LX9
     `define BOARD_ID 6
     `define BOARD_CK_REF 50000000

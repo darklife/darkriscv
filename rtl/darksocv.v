@@ -203,6 +203,13 @@ module darksocv
       .clki(XCLK),
       .clko(CLK)
     );
+`elsif LATTICE_ICE40_BREAKOUT_HX8K
+    pll pll_i // 12MHz in, 50 MHz out
+    (
+      .clock_in  (XCLK ),
+      .clock_out (CLK),
+      .locked    (locked)
+    );
 `else
     // when there is no need for a clock generator:
    wire CLK = XCLK;
