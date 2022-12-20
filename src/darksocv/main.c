@@ -39,7 +39,7 @@ int main(void)
     printf("build: %s for %s\n",BUILD,ARCH);
 
     printf("core%d: ",              io.core_id);                 // core id
-    printf("darkriscv@%dMHz with: ",io.board_cm*2);              // board clock MHz
+    printf("darkriscv@%dMHz w/ ",io.board_cm*2);              // board clock MHz
     printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
     if(threads>1)                   printf("MT%d ",threads);     // MT  support
     if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
@@ -57,7 +57,7 @@ int main(void)
 
     _edata = 0xdeadbeef;
 
-    printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
+    printf("uart0: 115.2kbps (div=%d)\n",io.uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
 
 #ifndef SMALL
