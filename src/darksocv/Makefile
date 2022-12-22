@@ -79,7 +79,7 @@ LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -static # -Ttext=0
 LDLIBS  = $(DARKLIBC)/darklibc.a
 CPFLAGS = -P 
 
-CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
+#CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
