@@ -39,7 +39,8 @@
 #
 # After configure each Makefile, you can just type 'make'
 
-default: all
+default:
+	make -C sim
 
 all:
 	make -C src all
@@ -47,7 +48,6 @@ all:
 	make -C boards all
 
 install:
-	make -C src all
 	make -C boards install
 
 clean:

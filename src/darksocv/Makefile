@@ -108,7 +108,7 @@ all: $(TARGETS) $(DEPS)
 	@echo sources ok.
 
 clean:
-	-rm $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem}
+	-rm $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem} $(PROJ)_uart.bin
 
 %.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@
