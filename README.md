@@ -1063,7 +1063,12 @@ Last xmas (2022) our colleague Lucas Teske added support for FuseSoC in the dark
 
 - fusesoc run --target=qmtech_artix7_a35 darklife:darkriscv:darksocv
 
-At this moment, not all boards are really supported yet.
+At this moment, not all boards are really supported yet. Supported boards are:
+
+- Colorlight i9
+- Colorlight i5
+- Lattice iCE40 Devkit
+- QMtech Artix 7 (Vivado)
 
 ## Creating a RISCV from scratch
 
