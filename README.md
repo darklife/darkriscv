@@ -20,7 +20,7 @@ Opensource RISC-V implemented from scratch in one night!
 	- [Development Boards](#development-boards)
 	- [Creating a RISCV from scratch](#creating-a-riscv-from-scratch)
 	- [Academic Papers and Applications](#academic-papers-and-applications)
-	- FuseSoC support (#fusesoc)
+	- [FuseSoC] (#fusesoc)
 	- [Performance Comparisons](#performance-comparisons)
 	- [Acknowledgments](#acknowledgments)
 	- [References](#references)
