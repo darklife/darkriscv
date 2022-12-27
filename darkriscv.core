@@ -1,0 +1,126 @@
+CAPI=2:
+name: darklife:darkriscv:darksocv:1.0.0
+description: Opensource RISC-V implemented from scratch in one night!
+
+filesets:
+  rtl:
+    files:
+        - rtl/config.vh: {is_include_file: true}
+        - rtl/darkriscv.v
+        - rtl/darksocv.v
+        - rtl/darkuart.v
+        - src/darksocv.mem: {is_include_file: true, copyto: ../src/darksocv.mem}
+    file_type: verilogSource
+
+  ice40_breakout_hx8k:
+    files:
+        - boards/ice40_breakout_hx8k/pll.v : { file_type: verilogSource }
+        - boards/ice40_breakout_hx8k/darksocv.pcf : {file_type : PCF}
+
+  colorlighti5:
+    files:
+        - boards/colorlighti5/pll_ref_25MHz.v : { file_type: verilogSource }
+        - boards/colorlighti5/darksocv.lpf : {file_type : LPF}
+
+  colorlighti9:
+    files:
+        - boards/colorlighti5/pll_ref_25MHz.v : { file_type: verilogSource }
+        - boards/colorlighti5/darksocv.lpf : {file_type : LPF}
+
+  qmtech_artix7_a35:
+    files:
+      - boards/qmtech_artix7_a35darksocv.xdc: { file_type: XDC }
+
+  tb:
+    files:
+      - sim/darksimv.v
+    file_type: verilogSource
+
+# Parameters for -D or other synth options
+parameters:
+    LATTICE_ICE40_BREAKOUT_HX8K:
+        datatype : str
+        default: 1
+        paramtype : vlogdefine
+    LATTICE_ECP5_COLORLIGHTI5:
+        datatype : str
+        default: 1
+        paramtype : vlogdefine
+    LATTICE_ECP5_COLORLIGHTI9:
+        datatype : str
+        default: 1
+        paramtype : vlogdefine
+    __YOSYS__:
+        datatype : str
+        default: 1
+        paramtype : vlogdefine
+
+targets:
+    # The "default" target is special in FuseSoC and used in dependencies.
+    # The "&default" is a YAML anchor referenced later.
+    default: &default
+        filesets:
+        - rtl
+        toplevel: darksocv
+
+    # The "sim" target simulates the design. (It could have any name.)
+    sim:
+        # Copy all key/value pairs from the "default" target.
+        <<: *default
+        description: Simulate the design
+        default_tool: icarus
+        filesets_append:
+        - tb
+        toplevel: darksimv
+        tools:
+        icarus:
+            iverilog_options:
+            - -g2012 # Use SystemVerilog-2012
+        modelsim:
+            vlog_options:
+            - -timescale=1ns/1ns
+
+    ice40_breakout_hx8k:
+        default_tool : icestorm
+        description: Lattice iCE40-HX8K development board
+        filesets : [rtl, colorlighti5]
+        parameters: [__YOSYS__, LATTICE_ICE40_BREAKOUT_HX8K]
+        tools:
+            icestorm:
+                nextpnr_options : [--hx8k, --package, "ct256", --freq, 16, --timing-allow-fail]
+                pnr: next
+        toplevel : darksocv
+
+    colorlight_i5:
+        default_tool : trellis
+        description: Colorlight i5 with ECP5-25k
+        filesets : [rtl, colorlighti5]
+        parameters: [__YOSYS__, LATTICE_ECP5_COLORLIGHTI5]
+        tools:
+            trellis:
+                nextpnr_options : [--ignore-loops --25k --package CABGA381 --speed 6 --freq 25 --timing-allow-fail --lpf-allow-unconstrained]
+        toplevel : darksocv
+
+    colorlight_i9:
+        default_tool : trellis
+        description: Colorlight i9 with ECP5-45k
+        filesets : [rtl, colorlighti9]
+        parameters: [__YOSYS__, LATTICE_ECP5_COLORLIGHTI9]
+        tools:
+            trellis:
+                nextpnr_options : [--ignore-loops --45k --package CABGA381 --speed 6 --freq 25 --timing-allow-fail --lpf-allow-unconstrained]
+        toplevel : darksocv
+
+    qmtech_artix7_a35:
+        default_tool: vivado
+        description: QMTech Artix7
+        filesets: [rtl, qmtech_artix7_a35]
+        tools:
+            vivado: { part: xc7a35tftg256-1 }
+        toplevel: ProtoSOC
+
+# provider:
+#   name    : github
+#   user    : darklife
+#   repo    : darkriscv
+#   version : v1.0.0
