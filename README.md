@@ -18,9 +18,9 @@ Opensource RISC-V implemented from scratch in one night!
 	- [Implementation Notes*](#implementation-notes)
 	- [Development Tools](#development-tools)
 	- [Development Boards](#development-boards)
+	- [FuseSoC] (#fusesoc-support)
 	- [Creating a RISCV from scratch](#creating-a-riscv-from-scratch)
 	- [Academic Papers and Applications](#academic-papers-and-applications)
-	- [FuseSoC] (#fusesoc)
 	- [Performance Comparisons](#performance-comparisons)
 	- [Acknowledgments](#acknowledgments)
 	- [References](#references)
@@ -1057,7 +1057,7 @@ makes possible the data bus change the area where the code is stored. With
 this feature, it will be possible in the future create loadable codes from
 the FLASH memory! :)
 
-## FuseSoC
+## FuseSoC support
 
 Last xmas (2022) our colleague Lucas Teske added support for FuseSoC in the darkriscv... I am not much aware how it works and how use it, but it is supposed to handle the build tools automatically! It is the same tool used by SERV and I used it to add some kilocore records in the past... in order to make it work in the darkriscv, please try:
 
