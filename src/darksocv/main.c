@@ -78,6 +78,7 @@ int main(void)
 #endif
 
     io.irq = IRQ_TIMR; // clear interrupts
+    utimers = 0;
 
     printf("\n");
 
