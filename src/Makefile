@@ -31,6 +31,9 @@
 APPLICATION = darksocv
 #APPLICATION = coremark
 
+# un-select SMALL for coremark!
+export SMALL = 1# uncomment for smaller firmware
+
 SHELL := /bin/bash
 
 ifndef HOST_CC
@@ -97,7 +100,7 @@ ODFLAGS = -D
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
 
-export SMALL = 1# uncomment for smaller firmware
+
 
 ifdef SMALL
     OBJS = boot.o

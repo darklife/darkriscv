@@ -98,17 +98,21 @@ module darkriscv
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
 
+    reg XRES = 1;
+
 `ifdef __THREADS__
     reg [`__THREADS__-1:0] XMODE = 0;     // thread ptr
 
     assign TPTR = XMODE;
 `endif
 
-    // pre-decode: IDATA is break apart as described in the RV32I specification
+    // decode: IDATA is break apart as described in the RV32I specification
+
+`ifdef __3STAGE__
 
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XRES=1, XCCC; //, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XCCC; //, XFCC, XCCC;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
@@ -152,11 +156,55 @@ module darkriscv
                                       { ALL0[31:12], IDATA[31:20] }; // i-type
     end
 
-    // decode: after XIDATA
-`ifdef __3STAGE__
     reg [1:0] FLUSH = -1;  // flush instruction pipeline
+
 `else
+
+    wire [31:0] XIDATA;
+
+    wire XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XCCC; //, XFCC, XCCC;
+
+    wire [31:0] XSIMM;
+    wire [31:0] XUIMM;
+
+    assign XIDATA = XRES ? 0 : IDATA;
+
+    assign XLUI   = XRES ? 0 : IDATA[6:0]==`LUI;
+    assign XAUIPC = XRES ? 0 : IDATA[6:0]==`AUIPC;
+    assign XJAL   = XRES ? 0 : IDATA[6:0]==`JAL;
+    assign XJALR  = XRES ? 0 : IDATA[6:0]==`JALR;
+
+    assign XBCC   = XRES ? 0 : IDATA[6:0]==`BCC;
+    assign XLCC   = XRES ? 0 : IDATA[6:0]==`LCC;
+    assign XSCC   = XRES ? 0 : IDATA[6:0]==`SCC;
+    assign XMCC   = XRES ? 0 : IDATA[6:0]==`MCC;
+
+    assign XRCC   = XRES ? 0 : IDATA[6:0]==`RCC;
+    assign XCUS   = XRES ? 0 : IDATA[6:0]==`CUS;
+    //assign XFCC   <= XRES ? 0 : IDATA[6:0]==`FCC;
+    assign XCCC   = XRES ? 0 : IDATA[6:0]==`CCC;
+
+    // signal extended immediate, according to the instruction type:
+
+    assign XSIMM  = XRES ? 0 : 
+                     IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                     IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                     IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                     IDATA[6:0]==`LUI||
+                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                          { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
+        // non-signal extended immediate, according to the instruction type:
+
+    assign XUIMM  = XRES ? 0: 
+                     IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
+                     IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
+                     IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
+                     IDATA[6:0]==`LUI||
+                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
+                                          { ALL0[31:12], IDATA[31:20] }; // i-type
+
     reg FLUSH = -1;  // flush instruction pipeline
+
 `endif
 
 `ifdef __THREADS__

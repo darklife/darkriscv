@@ -183,6 +183,7 @@
     `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
 `else
     `define MLEN 12 // MEM[12:0] -> 4KBytes LENGTH = 0x1000
+    //`define MLEN 15 // MEM[12:0] -> 16KBytes LENGTH = 0x8000 for coremark!
 `endif
 
 // read-modify-write cycle:
@@ -194,15 +195,6 @@
 // decrease of 5% in the performance (not the clock, but the instruction
 // pipeline eficiency) due to memory wait-states.
 //`define __RMW_CYCLE__
-
-// instruction wait-states:
-//
-// option to add wait-states in order to use the 2-stage pipeline AND a
-// single phase clock... decrease the IPC, but increases the clock from 50 to 80MHz!
-// maybe, in the future, can use associated to a large 64 or 128 bit burst based
-// bus in order to get a quick 2-stage pipeline w/ an efficient instruction bus.
-// do not forget to see the cache options below!
-//`define __WAITSTATES__
 
 // instruction and data caches:
 //
@@ -260,10 +252,8 @@
     `define BOARD_CK_MUL 2
     `ifdef __3STAGE__
         `define BOARD_CK_DIV 2 // 3-stage, 0-ws, 100MHz
-    `elsif __WAITSTATES__
-        `define BOARD_CK_DIV 2 // 2-stage, 1-ws, 100MHz
     `else
-        `define BOARD_CK_DIV 4 // 2-stage, 0-ws, 50MHz
+        `define BOARD_CK_DIV 3 // 2-stage, 0-ws, 66MHz
     `endif
 `endif
 

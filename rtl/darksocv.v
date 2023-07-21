@@ -343,24 +343,7 @@ module darksocv
 
     reg [31:0] ROMFF;
 
-`ifdef __WAITSTATES__
-
-    reg [1:0] IHITACK = 0;
-
-    wire IHIT = !(IHITACK!=1);
-
-    always@(posedge CLK) // stage #1.0
-    begin
-        IHITACK <= RES ? 1 : IHITACK ? IHITACK-1 : 1; // wait-states
-    end
-`else
-
     wire IHIT = 1;
-
-`endif
-
-
-`ifdef __3STAGE__
 
     reg [31:0] ROMFF2 = 0;
     reg        HLT2   = 0;
@@ -376,9 +359,6 @@ module darksocv
     end
 
     assign IDATA = HLT2 ? ROMFF2 : ROMFF;
-`else
-    assign IDATA = ROMFF;
-`endif
 
     always@(posedge CLK) // stage #0.5
     begin
@@ -524,19 +504,6 @@ module darksocv
     `endif
 
     reg [31:0] RAMFF;
-`ifdef __WAITSTATES__
-
-    reg [1:0] DACK = 0;
-
-    wire WHIT = 1;
-    wire DHIT = !((WR||RD) && DACK!=1);
-
-    always@(posedge CLK) // stage #1.0
-    begin
-        DACK <= RES ? 0 : DACK ? DACK-1 : (RD||WR) ? 1 : 0; // wait-states
-    end
-
-`elsif __3STAGE__
 
     // for single phase clock: 1 wait state in read op always required!
 
@@ -557,15 +524,6 @@ module darksocv
             `endif
                     ) ? 1 : 0; // wait-states
     end
-
-`else
-
-    // for dual phase clock: 0 wait state
-
-    wire WHIT = 1;
-    wire DHIT = 1;
-
-`endif
 
     always@(posedge CLK) // stage #1.5
     begin
@@ -761,13 +719,7 @@ module darksocv
 //    )
     core0
     (
-`ifdef __3STAGE__
         .CLK(CLK),
-`elsif  __WAITSTATES__
-        .CLK(CLK),
-`else
-        .CLK(!CLK),
-`endif
         .RES(RES),
         .HLT(HLT),
 `ifdef __THREADS__
