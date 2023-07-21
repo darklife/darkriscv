@@ -79,7 +79,6 @@ endif
 CCFLAGS = -Wall -fcommon -ffreestanding -O2
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-CCFLAGS += -DSMALL # enable this to make FW smaller!
 ASFLAGS = -march=$(ARCH)
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -static -gc-sections --entry=_start # -Ttext=0
 LDLIBS  = $(LIBS)
@@ -98,7 +97,7 @@ ODFLAGS = -D
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
 
-SMALL = 1
+export SMALL = 1# uncomment for smaller firmware
 
 ifdef SMALL
     OBJS = boot.o
@@ -109,6 +108,13 @@ else
     ASMS = boot_uart.s
 endif
     SRCS = 
+
+# uncomment for hardware mul
+#export MAC = 1
+
+ifdef MAC
+    CFLAGS += -DMAC=1
+endif
 
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS)
 

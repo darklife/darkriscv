@@ -271,11 +271,11 @@ int main(void)
                      argv[0]);
           }
 
-          if(_edata!=0xdeadbeef)
+          /*if(_edata!=0xdeadbeef)
           {
               printf("out of memory detected...\n");
               return -1;
-          }
+          }*/
        }
 #endif
     }

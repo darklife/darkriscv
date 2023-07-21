@@ -75,7 +75,7 @@ endif
 CCFLAGS = -Wall -fcommon -ffreestanding -O2
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-CCFLAGS += -DSMALL # enable this to make FW smaller!
+#CCFLAGS += -DSMALL # enable this to make FW smaller!
 ASFLAGS = -march=$(ARCH)
 ARFLAGS = -rcs
 LDFLAGS = -Map=$(PROJ).map -m elf32lriscv -static -gc-sections # --entry=_start # -Ttext=0 -T$(PROJ).ld
@@ -86,6 +86,10 @@ CPFLAGS = -P
 
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
+endif
+
+ifdef SMALL
+    CCFLAGS += -DSMALL
 endif
 
 #OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams

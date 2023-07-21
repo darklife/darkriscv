@@ -71,11 +71,19 @@ endif
 CCFLAGS = -Wall -fcommon -ffreestanding -O2
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I./include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-CCFLAGS += -DSMALL -ffunction-sections -fdata-sections # enable this to make the FW smaller!
+CCFLAGS += -ffunction-sections -fdata-sections # enable this to make the FW smaller!
 ASFLAGS = -march=$(ARCH)
 ARFLAGS = -rcs
 LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -gc-sections # -Ttext=0
 CPFLAGS = -P 
+
+ifdef SMALL
+    CCFLAGS += -DSMALL=1
+endif
+
+ifdef MAC
+    CCFLAGS += -DMAC=1
+endif
 
 #CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 

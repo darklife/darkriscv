@@ -228,3 +228,18 @@ void banner(void)
 }
 
 #endif
+
+// mac extension for darkriscv!
+
+int mac(int acc,short x,short y)
+{
+#ifdef __RISCV__
+    __asm__(".word 0x00c5850b"); // mac a0,a1,a2
+    // "template"
+    //acc += (x^y);
+#else
+    acc+=x*y;
+#endif
+    return acc;
+}
+

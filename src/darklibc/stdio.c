@@ -261,26 +261,28 @@ int xtoi(char *s1)
 
 // mul/div
 
-int mac(int acc,short x,short y)
-{
-#ifdef __RISCV__
-    __asm__(".word 0x00c5850b"); // mac a0,a1,a2
-    // "template"
-    //acc += (x^y);
-#else
-    acc+=x*y;
-#endif
-    return acc;
-}
-
 unsigned __umulsi3(unsigned x,unsigned y)
 {
     unsigned acc;
 
+#ifdef MAC
+
+    unsigned short xh,xl,yh,yl;
+
+    xh = x>>16;
+    yh = y>>16;
+    xl = x&0xffff;
+    yl = y&0xffff;
+
+    acc = mac(0,xl,yl) + 
+          (mac(0,xh,yl)<<16) + 
+          (mac(0,xl,yh)<<16);
+
+#else
     if(x<y) { unsigned z = x; x = y; y = z; }
     
     for(acc=0;y;x<<=1,y>>=1) if (y & 1) acc += x;
-
+#endif
     return acc;
 }
 
