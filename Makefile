@@ -39,13 +39,16 @@
 #
 # After configure each Makefile, you can just type 'make'
 
-default:
+default: src/darksocv.mem
 	make -C sim
 
 all:
 	make -C src all
 	make -C sim all
 	make -C boards all
+
+src/darksocv.mem:
+	make -C src all
 
 install:
 	make -C boards install

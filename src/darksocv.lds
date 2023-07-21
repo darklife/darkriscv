@@ -47,12 +47,36 @@
 
 MEMORY
 {
+    /* 
+        darkshell 
+    */
     IO  (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x14
-#if HARVARD
-    ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x2000
-    RAM (rw!x) : ORIGIN = 0x00002000, LENGTH = 0x2000
+    
+#if SMALL
+
+    #if HARVARD
+        ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x2000
+        RAM (rw!x) : ORIGIN = 0x00002000, LENGTH = 0x2000
+    #else
+        MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x1000
+    #endif
+
 #else
-    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x1000 /* must match w/ MEM size */
+
+    /* 
+        coremark 
+
+        Set MLEN in rtl/config.vh:
+             HARVARD:    14
+            !HARVARD:    15
+    */
+    
+    #if HARVARD
+        ROM (x!rw) : ORIGIN = 0x00000000, LENGTH = 0x4000
+        RAM (rw!x) : ORIGIN = 0x00004000, LENGTH = 0x4000
+    #else
+        MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x8000
+    #endif
 #endif
 }
 
@@ -60,15 +84,16 @@ SECTIONS
 {
     .text :
     {
-        *small.o(.text)
-        *start.o(.text) 
+        *boot*.o(.text)
 #if !HARVARD
-        *small.o(.data)
-        *start.o(.data)
-        *small.o(.rodata)
-        *start.o(.rodata)
+        *boot*.o(.data)
+        *boot*.o(.rodata)
 #endif
-        /* . = 768; */ /* enable this in order to use the uart boot! */
+
+        /* enable this in order to use the uart boot! */
+#if !SMALL
+        . = 768;
+#endif
         _text = .;
         *(.text*)
         _etext = .;
@@ -79,9 +104,9 @@ SECTIONS
 #endif
     .data :
     {
-#ifdef HARVARD
-        *start.o(.data)
-        *start.o(.rodata)        
+#if HARVARD
+        *boot*.o(.data)
+        *boot*.o(.rodata)        
 #endif
         _data = .;
         *(.rodata*)

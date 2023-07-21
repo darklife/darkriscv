@@ -30,7 +30,7 @@ SHELL := /bin/bash
 
 ifndef HOST_CC
     HOST_CC = gcc
-    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I../common -Os
+    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I../common -O2
 endif
 
 ifndef CROSS
@@ -68,7 +68,7 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -ffreestanding -Os
+CCFLAGS = -Wall -fcommon -ffreestanding -O2
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I./include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 CCFLAGS += -DSMALL -ffunction-sections -fdata-sections # enable this to make the FW smaller!
@@ -87,9 +87,9 @@ OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian bl
 ODFLAGS = -D
 
 PROJ = darklibc
-OBJS = stdio.o io.o small.o # start.o
+OBJS = stdio.o io.o #small.o # start.o
 ASMS = stdio.s io.s 
-SRCS = stdio.c io.c small.s # start.s
+SRCS = stdio.c io.c #small.s # start.s
 
 DEPS = $(SRCS) $(ASMS) $(OBJS)
 
@@ -98,10 +98,10 @@ TARGETS = $(PROJ).a
 .PHONY: all
 
 all: $(DEPS) $(TARGETS)
-	@echo sources ok.
+	@echo sources ok for $(TARGETS).
 
 clean:
-	-rm $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a}
+	-rm -f $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a}
 
 %.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@
@@ -111,3 +111,4 @@ clean:
 
 %.a: $(OBJS) Makefile
 	$(AR) $(ARFLAGS) $@ $(OBJS)
+	$(RL) $@

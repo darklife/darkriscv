@@ -274,7 +274,7 @@ int main(void)
           if(_edata!=0xdeadbeef)
           {
               printf("out of memory detected...\n");
-              return;
+              return -1;
           }
        }
 #endif
