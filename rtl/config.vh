@@ -196,14 +196,6 @@
 // pipeline eficiency) due to memory wait-states.
 //`define __RMW_CYCLE__
 
-// instruction and data caches:
-//
-// the option for instruction and data caches were developed for 2-stage
-// version and, of course, is part of the original effort to make the core
-// more efficient when the wait-states are enabled.
-//`define __ICACHE__ // not working, must debug it! :(
-//`define __DCACHE__ // not working, must debug it! :(
-
 // UART speed is set in bits per second, typically 115200 bps:
 //`define __UARTSPEED__ 115200
 
