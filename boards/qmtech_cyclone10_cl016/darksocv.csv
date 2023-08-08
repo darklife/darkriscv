@@ -1,0 +1,34 @@
+# Copyright (C) 2020  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and any partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details, at
+# https://fpgasoftware.intel.com/eula.
+
+# Quartus Prime Version 20.1.1 Build 720 11/11/2020 SJ Lite Edition
+# File: C:\Verilog\darkriscv\CURRENT\boards\qmtech_cyclone10_cl016\darksocv.csv
+# Generated on: Mon Aug 07 16:19:15 2023
+
+# Note: The column header names should not be changed if you wish to import this .csv file into the Quartus Prime software.
+
+To,Direction,Location,I/O Bank,VREF Group,Fitter Location,I/O Standard,Reserved,Current Strength,Slew Rate,Differential Pair,Strict Preservation
+DEBUG[3],Output,PIN_AA18,4,B4_N0,PIN_E4,,,,,,
+DEBUG[2],Output,PIN_AB19,4,B4_N0,PIN_K7,,,,,,
+DEBUG[1],Output,PIN_U20,5,B5_N1,PIN_G5,,,,,,
+DEBUG[0],Output,PIN_R19,5,B5_N0,PIN_J7,,,,,,
+LED[3],Output,PIN_AA19,4,B4_N0,PIN_B1,,,,,,
+LED[2],Output,PIN_W19,5,B5_N1,PIN_K8,,,,,,
+LED[1],Output,PIN_Y17,4,B4_N0,PIN_B2,,,,,,
+LED[0],Output,PIN_W17,4,B4_N0,PIN_L8,,,,,,
+UART_RXD,Input,PIN_AA22,5,B5_N1,PIN_D2,,,,,,
+UART_TXD,Output,PIN_AA21,5,B5_N1,PIN_H5,,,,,,
+XCLK,Input,PIN_G1,1,B1_N1,PIN_G2,,,,,,
+XRES,Input,PIN_P3,2,B2_N0,PIN_E3,,,,,,

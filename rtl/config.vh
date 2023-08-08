@@ -234,6 +234,8 @@
     `define SIMULATION 4
 `endif
 
+// the board definition is done on the tool, otherwise we assume simulation
+
 `ifdef AVNET_MICROBOARD_LX9
     `define BOARD_ID 1
     //`define BOARD_CK 100000000
@@ -376,6 +378,21 @@
     `define BOARD_CK_DIV 2
     // `define INVRES 0
 `endif
+
+`ifdef QMTECH_CYCLONE10_CL016
+    `define BOARD_ID 17
+    `define BOARD_CK 50000000
+	 `define INVRES 1
+	 `define MIFBRAM 1
+    `define __RMW_CYCLE__
+`endif
+
+
+// to port to a new board, use TESTMODE to test:
+// - the reset button is working
+// - the LED is blinking at 1Hz
+// - the UART is looped
+//`define TESTMODE
 
 `ifndef BOARD_ID
     `define BOARD_ID 0

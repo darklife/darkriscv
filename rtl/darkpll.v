@@ -44,7 +44,7 @@ module darkpll
 
     reg [7:0] IRES = -1;
 
-`ifdef __INVRES__
+`ifdef INVRES
     always@(posedge XCLK) IRES <= XRES==0 ? -1 : IRES[7] ? IRES-1 : 0; // reset low
 `else
     always@(posedge XCLK) IRES <= XRES==1 ? -1 : IRES[7] ? IRES-1 : 0; // reset high

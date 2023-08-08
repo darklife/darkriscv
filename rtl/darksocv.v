@@ -78,6 +78,7 @@ module darksocv
 
 `else
 
+
     reg [31:0] MEM [0:2**`MLEN/4-1]; // ro memory
 
     // memory initialization
@@ -94,6 +95,8 @@ module darksocv
 
     `ifdef XILINX_SIMULATOR
         $readmemh("darksocv.mem",MEM);
+	 `elsif MODEL_TECH
+		  $readmemh("../../../../src/darksocv.mem",MEM);
     `else
         $readmemh("../src/darksocv.mem",MEM);
     `endif
@@ -384,9 +387,12 @@ module darksocv
       .DATAI(DATAO),
       .DATAO(IOMUX[1]),
       //.IRQ(UART_IRQ),
+
+`ifndef TESTMODE
       .RXD(UART_RXD),
       .TXD(UART_TXD),
-`ifdef SIMULATION
+`endif		
+		`ifdef SIMULATION
       .FINISH_REQ(FINISH_REQ),
 `endif
       .DEBUG(UDEBUG)
@@ -436,8 +442,30 @@ module darksocv
         .DEBUG(KDEBUG)
     );
 
-    assign LED   = LEDFF[3:0];
+`ifdef TESTMODE
+	 
+    // tips to port darkriscv for a new target:
+	 // 
+	 // - 1st of all, test the blink code to confirms the reset
+	 //   polarity, i.e. the LEDs must blink at startup when
+	 //   the reset button *is not pressed*
+	 // - 2nd check the blink rate: the 31-bit counter that starts
+	 //   with BOARD_CK value and counts to zero, blinking w/
+	 //   50% of this period
 
+	 reg [31:0] BLINK = 0;
+	 
+	 always@(posedge CLK)
+	 begin
+        BLINK <= RES ? 0 : BLINK ? BLINK-1 : `BOARD_CK;
+	 end
+	 
+	 assign LED = (BLINK < (`BOARD_CK/2)) ? -1 : 0;
+	 assign UART_TXD = UART_RXD;
+`else
+    assign LED   = LEDFF[3:0];
+`endif
+	 
     assign DEBUG = { XTIMER, KDEBUG[2:0] }; // UDEBUG;
 
 `ifdef SIMULATION

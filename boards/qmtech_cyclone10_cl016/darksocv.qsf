@@ -1,0 +1,84 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 2020  Intel Corporation. All rights reserved.
+# Your use of Intel Corporation's design tools, logic functions 
+# and other software and tools, and any partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Intel Program License 
+# Subscription Agreement, the Intel Quartus Prime License Agreement,
+# the Intel FPGA IP License Agreement, or other applicable license
+# agreement, including, without limitation, that your use is for
+# the sole purpose of programming logic devices manufactured by
+# Intel and sold by Intel or its authorized distributors.  Please
+# refer to the applicable agreement for further details, at
+# https://fpgasoftware.intel.com/eula.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus Prime
+# Version 20.1.1 Build 720 11/11/2020 SJ Lite Edition
+# Date created = 15:26:43  August 07, 2023
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		darksocv_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus Prime software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Cyclone 10 LP"
+set_global_assignment -name DEVICE 10CL016YU484C8G
+set_global_assignment -name TOP_LEVEL_ENTITY darksocv
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 20.1.1
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "15:26:43  AUGUST 07, 2023"
+set_global_assignment -name LAST_QUARTUS_VERSION "20.1.1 Lite Edition"
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+set_global_assignment -name DEVICE_FILTER_PIN_COUNT 484
+set_global_assignment -name DEVICE_FILTER_SPEED_GRADE 8
+set_global_assignment -name ERROR_CHECK_FREQUENCY_DIVISOR 1
+set_global_assignment -name NOMINAL_CORE_SUPPLY_VOLTAGE 1.2V
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name VERILOG_MACRO "QMTECH_CYCLONE10_CL016=1"
+set_location_assignment PIN_AA22 -to UART_RXD
+set_location_assignment PIN_AA21 -to UART_TXD
+set_location_assignment PIN_P3 -to XRES
+set_location_assignment PIN_G1 -to XCLK
+set_location_assignment PIN_W17 -to LED[0]
+set_location_assignment PIN_U20 -to DEBUG[1]
+set_location_assignment PIN_Y17 -to LED[1]
+set_location_assignment PIN_W19 -to LED[2]
+set_location_assignment PIN_AA19 -to LED[3]
+set_location_assignment PIN_R19 -to DEBUG[0]
+set_location_assignment PIN_AB19 -to DEBUG[2]
+set_location_assignment PIN_AA18 -to DEBUG[3]
+set_global_assignment -name EDA_SIMULATION_TOOL "ModelSim-Altera (Verilog)"
+set_global_assignment -name EDA_OUTPUT_DATA_FORMAT "VERILOG HDL" -section_id eda_simulation
+set_global_assignment -name EDA_TIME_SCALE "1 ps" -section_id eda_simulation
+set_global_assignment -name EDA_GENERATE_FUNCTIONAL_NETLIST ON -section_id eda_simulation
+set_global_assignment -name MIF_FILE ../../src/darksocv.mif
+set_global_assignment -name SDC_FILE darksocv.sdc
+set_global_assignment -name VERILOG_FILE ../../rtl/darkuart.v
+set_global_assignment -name VERILOG_FILE ../../rtl/darksocv.v
+set_global_assignment -name VERILOG_FILE ../../rtl/darkriscv.v
+set_global_assignment -name VERILOG_FILE ../../rtl/darkpll.v
+set_global_assignment -name VERILOG_INCLUDE_FILE ../../rtl/config.vh
+set_global_assignment -name VERILOG_TEST_BENCH_FILE ../../sim/darksimv.v
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

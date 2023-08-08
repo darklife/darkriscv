@@ -43,22 +43,24 @@ endif
 
 ifndef CROSS
 
-    ARCH = rv32e
+    export ARCH = rv32e
     #ARCH = rv32i
     
-    ABI = ilp32e
+    export ABI = ilp32e
     #ABI = ilp32
     
     #TODO: better way to switch little/big-endian:
     #ENDIAN = _le # gcc for little-endian
     #ENDIAN = _be # gcc for big-endian
 
-    CROSS = riscv32-embedded$(ENDIAN)-elf
+    export CROSS = riscv32-unknown-elf
+    #CROSS = riscv32-embedded$(ENDIAN)-elf
     #CROSS = riscv-elf
     #CROSS = riscv32-unknown-elf
     #CROSS = riscv32-embedded-elf
     
-    CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+    export CCPATH = /opt/riscv/bin
+    #CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
     #HARVARD = 1
 endif
@@ -176,9 +178,12 @@ $(PROJ).ram.mem: $(PROJ).o
 $(PROJ).mem: $(PROJ).o
 	$(OC) $(OCFLAGS) $< $(PROJ).bin
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).bin > $@
+	# uncomment for big-endian
 	#xxd -p -c 4 -g 4 $< > $@
 	dd if=$(PROJ).bin of=$(PROJ)_uart.bin skip=768 bs=1
 	rm $(PROJ).bin
+	# uncomment for MIF file
+	#awk 'BEGIN { print "DEPTH = 1024;\nWIDTH = 32;\nADDRESS_RADIX = HEX;\nDATA_RADIX = HEX;\nCONTENT\nBEGIN" } { printf("%08x : %s\n",NR-1,$1); } END { print "END;" }' < $(PROJ).mem > $(PROJ).mif
 	wc -l $@
 	@echo mem ok.
 	
