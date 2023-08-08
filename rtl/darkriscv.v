@@ -466,7 +466,11 @@ module darkriscv
         REGS[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
 `endif
                        HLT ? REGS[DPTR] :        // halt
-                     !DPTR ? 0 :                // x0 = 0, always!
+`ifdef __RV32E__                       
+                     DPTR[3:0]==0 ? 0 :                // x0 = 0, always!
+`else
+                     DPTR[4:0]==0 ? 0 :
+`endif
                      AUIPC ? PCSIMM :
                       JAL||
                       JALR ? NXPC :
