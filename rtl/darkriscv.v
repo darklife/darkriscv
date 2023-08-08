@@ -496,7 +496,7 @@ module darkriscv
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
         XMODE <= XRES ? 0 : HLT ? XMODE :        // reset and halt
-                            JAL ? XMODE+1 : XMODE;
+                            /*JAL*/ JREQ ? XMODE+1 : XMODE;
 	             //XMODE==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
                  //XMODE==1/*&&!IREQ*/&&JREQ ? 0 : XMODE;  // wait pipeflush to return from irq
 

@@ -54,6 +54,14 @@
 */
 
 _start:
+   
+    /* check core id, boot only core 0 */
+
+    la a1,0x80000000
+    lbu a2,2(a1)
+
+_thread_lock:
+    bne a2,x0,_thread_lock
 
     addi a0,x0,'\n'
     call _uart_putchar
