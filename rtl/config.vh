@@ -96,7 +96,7 @@
 // the external logic must detect the RD/WR operation quick enough and assert HLT
 // in order to insert wait-states and perform the required multiplexing to fit
 // the DLEN operand size in the data bus width available.
-`define __FLEXBUZZ__
+//`define __FLEXBUZZ__
 
 // interrupt support
 //
@@ -113,17 +113,15 @@
 // much sense use it with the 2-stage pipeline).
 //`define __INTERRUPT__
 
-// initial PC and SP
+// initial PC
 //
-// it is possible program the initial PC and SP.  Typically, the PC is set
-// to address 0, representing the start of ROM memory and the SP is set to
-// the final of RAM memory.  In the linker, the start of ROM memory matches
-// with the .text area, which is defined in the boot.c code and the start of
-// RAM memory matches with the .data and other volatile data, in a way that
-// the stack can be positioned in the top of RAM and does not match with the
-// .data.
+// Typically, the PC is set [by HW] to address 0, representing the start of
+// ROM memory and the SP is set [by SW] to the final of RAM memory.  In the
+// linker, the start of ROM memory matches with the .text area, which is
+// defined in the boot.c code and the start of RAM memory matches with the
+// .data and other volatile data, in a way that the stack can be positioned
+// in the top of RAM and does not match with the .data.
 `define __RESETPC__ 32'd0
-`define __RESETSP__ 32'd0
 
 ////////////////////////////////////////////////////////////////////////////////
 // darksocv configuration:

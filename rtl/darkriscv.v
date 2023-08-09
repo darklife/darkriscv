@@ -210,30 +210,25 @@ module darkriscv
 `ifdef __THREADS__
     `ifdef __RV32E__
 
-        reg [`__THREADS__+3:0] RESMODE = -1;
+        reg [`__THREADS__-1:0] RESMODE = -1;
 
-        wire [`__THREADS__+3:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
+        wire [`__THREADS__+3:0] DPTR   = XRES ? { RESMODE, 4'd0 } : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
         wire [`__THREADS__+3:0] S1PTR  = { XMODE, XIDATA[18:15] };
         wire [`__THREADS__+3:0] S2PTR  = { XMODE, XIDATA[23:20] };
     `else
-        reg [`__THREADS__+4:0] RESMODE = -1;
+        reg [`__THREADS__-1:0] RESMODE = -1;
 
-        wire [`__THREADS__+4:0] DPTR   = XRES ? RESMODE : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
+        wire [`__THREADS__+4:0] DPTR   = XRES ? { RESMODE, 5'd0 } : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
         wire [`__THREADS__+4:0] S1PTR  = { XMODE, XIDATA[19:15] };
         wire [`__THREADS__+4:0] S2PTR  = { XMODE, XIDATA[24:20] };
     `endif
 `else
     `ifdef __RV32E__
-
-        reg [3:0] RESMODE = -1;
-
-        wire [3:0] DPTR   = XRES ? RESMODE : XIDATA[10: 7]; // set SP_RESET when RES==1
+        wire [3:0] DPTR   = XRES ? 0 : XIDATA[10: 7]; // set SP_RESET when RES==1
         wire [3:0] S1PTR  = XIDATA[18:15];
         wire [3:0] S2PTR  = XIDATA[23:20];
     `else
-        reg [4:0] RESMODE = -1;
-
-        wire [4:0] DPTR   = XRES ? RESMODE : XIDATA[11: 7]; // set SP_RESET when RES==1
+        wire [4:0] DPTR   = XRES ? 0 : XIDATA[11: 7]; // set SP_RESET when RES==1
         wire [4:0] S1PTR  = XIDATA[19:15];
         wire [4:0] S2PTR  = XIDATA[24:20];
     `endif
@@ -405,9 +400,12 @@ module darkriscv
 
     always@(posedge CLK)
     begin
+`ifdef __THREADS__
         RESMODE <= RES ? -1 : RESMODE ? RESMODE-1 : 0;
-
         XRES <= |RESMODE;
+`else
+        XRES <= RES;
+`endif
 
 `ifdef __3STAGE__
 	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt
@@ -457,22 +455,18 @@ module darkriscv
         end
 `endif
 `ifdef __RV32E__
-        REGS[DPTR] <=   XRES ? (RESMODE[3:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+        REGS[DPTR] <=   XRES||DPTR[3:0]==0 ? 0  :        // reset sp
 `else
-        REGS[DPTR] <=   XRES ? (RESMODE[4:0]==2 ? `__RESETSP__ : 0)  :        // reset sp
+        REGS[DPTR] <=   XRES||DPTR[4:0]==0 ? 0  :        // reset sp
 `endif
                        HLT ? REGS[DPTR] :        // halt
-`ifdef __RV32E__                       
-                     DPTR[3:0]==0 ? 0 :                // x0 = 0, always!
-`else
-                     DPTR[4:0]==0 ? 0 :
-`endif
+                       LCC ? LDATA :
                      AUIPC ? PCSIMM :
                       JAL||
                       JALR ? NXPC :
                        LUI ? SIMM :
-                       LCC ? LDATA :
                   MCC||RCC ? RMDATA:
+
 `ifdef __MAC16X16__
                        MAC ? REGS[DPTR]+KDATA :
 `endif
@@ -487,7 +481,7 @@ module darkriscv
 
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
 
-        NXPC2[XRES ? RESMODE[`__THREADS__-1:0] : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
+        NXPC2[XRES ? RESMODE : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
 	                                         NXPC2[XMODE]+4;                   // normal flow
 
