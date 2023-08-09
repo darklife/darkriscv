@@ -96,7 +96,7 @@
 // the external logic must detect the RD/WR operation quick enough and assert HLT
 // in order to insert wait-states and perform the required multiplexing to fit
 // the DLEN operand size in the data bus width available.
-//`define __FLEXBUZZ__
+`define __FLEXBUZZ__
 
 // interrupt support
 //
@@ -243,12 +243,13 @@
     //`define BOARD_CK 40000000
     // example of DCM logic:
     `define BOARD_CK_REF 100000000
-    `define BOARD_CK_MUL 2
+    `define BOARD_CK_MUL 6
     `ifdef __3STAGE__
-        `define BOARD_CK_DIV 2 // 3-stage, 0-ws, 100MHz
+        `define BOARD_CK_DIV 6 // 3-stage, 1-ws, 100MHz
     `else
-        `define BOARD_CK_DIV 3 // 2-stage, 0-ws, 66MHz
+        `define BOARD_CK_DIV 9 // 2-stage, 1-ws, 66MHz
     `endif
+    `define XILINX6CLK 1
 `endif
 
 `ifdef XILINX_AC701_A200
@@ -265,6 +266,7 @@
     `define BOARD_CK_MUL 4
     `define BOARD_CK_DIV 2
     `define INVRES 1
+    `define XILINX6CLK 1
 `endif
 
 `ifdef QMTECH_SPARTAN7_S15
@@ -317,6 +319,7 @@
     `define BOARD_CK_MUL 4
     `define BOARD_CK_DIV 2
     `define INVRES 1
+    `define XILINX6CLK 1
 `endif
 
 `ifdef DIGILENT_SPARTAN3_S200
@@ -360,6 +363,7 @@
     `define BOARD_CK_REF 32000000
     `define BOARD_CK_MUL 2
     `define BOARD_CK_DIV 2
+    `define XILINX6CLK 1
 `endif
 
 `ifdef QMTECH_KINTEX7_K325
@@ -377,6 +381,7 @@
     `define BOARD_CK_MUL 4
     `define BOARD_CK_DIV 2
     // `define INVRES 0
+    `define XILINX6CLK 1
 `endif
 
 `ifdef QMTECH_CYCLONE10_CL016

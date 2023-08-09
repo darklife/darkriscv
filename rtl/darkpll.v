@@ -69,7 +69,7 @@ module darkpll
     //
     // important remark: the xilinx-7 pll requires a ref*mul bandwidth between 0.6 and 1.6GHz!
 
-`ifdef __XILINX7CLK__
+`ifdef XILINX7CLK
 
     wire CLKFB;
 
@@ -134,7 +134,7 @@ module darkpll
         .CLKFBIN(CLKFB)      // 1-bit input: Feedback clock
     );
 
-`elif __XILINX6CLK__
+`elsif XILINX6CLK
 
     wire CLKFB;
 

@@ -360,16 +360,16 @@ module darkriscv
     wire [31:0] RMDATA = FCT3==7 ? U1REG&S2REGX :
                          FCT3==6 ? U1REG|S2REGX :
                          FCT3==4 ? U1REG^S2REGX :
-                         FCT3==3 ? U1REG<U2REGX?1:0 : // unsigned
-                         FCT3==2 ? S1REG<S2REGX?1:0 : // signed
-                         FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-U2REGX : U1REG+S2REGX) :
+                         FCT3==3 ? U1REG<U2REGX : // unsigned
+                         FCT3==2 ? S1REG<S2REGX : // signed
+                         FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-S2REGX : U1REG+S2REGX) :
                          FCT3==1 ? U1REG<<U2REGX[4:0] :
                          //FCT3==5 ?
                          !FCT7[5] ? U1REG>>U2REGX[4:0] :
 `ifdef MODEL_TECH
                                    -((-U1REG)>>U2REGX[4:0]); // workaround for modelsim
 `else
-                                   $signed(S1REG>>>U2REGX[4:0]);  // (FCT7[5] ? U1REG>>>U2REG[4:0] :
+                                   $signed(U1REG>>>U2REGX[4:0]);  // (FCT7[5] ? U1REG>>>U2REG[4:0] :
 `endif
 
 `ifdef __MAC16X16__
@@ -392,20 +392,16 @@ module darkriscv
 
     // J/B-group of instructions (OPCODE==7'b1100011)
 
-    wire BMUX       = BCC==1 && (
-                          FCT3==4 ? S1REG< S2REGX : // blt
-                          FCT3==5 ? S1REG>=S2REG : // bge
-                          FCT3==6 ? U1REG< U2REGX : // bltu
-                          FCT3==7 ? U1REG>=U2REG : // bgeu
-                          FCT3==0 ? !(U1REG^S2REGX) : //U1REG==U2REG : // beq
-                          /*FCT3==1 ? */ U1REG^S2REGX); //U1REG!=U2REG); // bne
-                                    //0);
+    wire BMUX       = FCT3==7 && U1REG>=U2REG  || // bgeu
+                      FCT3==6 && U1REG< U2REGX || // bltu
+                      FCT3==5 && S1REG>=S2REG  || // bge
+                      FCT3==4 && S1REG< S2REGX || // blt
+                      FCT3==1 && U1REG!=U2REGX || // bne
+                      FCT3==0 && U1REG==U2REGX; // beq
 
     wire [31:0] PCSIMM = PC+SIMM;
-    wire        JREQ = (JAL||JALR||BMUX);
+    wire        JREQ = JAL||JALR||(BCC && BMUX);
     wire [31:0] JVAL = JALR ? DADDR : PCSIMM; // SIMM + (JALR ? U1REG : PC);
-
-
 
     always@(posedge CLK)
     begin
@@ -443,9 +439,9 @@ module darkriscv
         if(CSRW)
         begin
             case(XIDATA[31:20])
-                12'h305: MTVEC <= S1REG;
-                12'h341: MEPC  <= S1REG;
-                12'h304: MIE   <= S1REG;
+                12'h305: MTVEC <= U1REG;
+                12'h341: MEPC  <= U1REG;
+                12'h304: MIE   <= U1REG;
             endcase
         end
         else
