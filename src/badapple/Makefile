@@ -26,15 +26,6 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-# Add your application here:
-
-#APPLICATION = darksocv
-#APPLICATION = coremark
-APPLICATION = badapple
-
-# un-select SMALL for coremark!
-#export SMALL = 1# uncomment for smaller firmware
-
 SHELL := /bin/bash
 
 ifndef HOST_CC
@@ -44,24 +35,22 @@ endif
 
 ifndef CROSS
 
-    export ARCH = rv32e
+    ARCH = rv32e
     #ARCH = rv32i
     
-    export ABI = ilp32e
+    ABI = ilp32e
     #ABI = ilp32
     
     #TODO: better way to switch little/big-endian:
     #ENDIAN = _le # gcc for little-endian
     #ENDIAN = _be # gcc for big-endian
 
-    #export CROSS = riscv32-unknown-elf
-    export CROSS = riscv32-embedded$(ENDIAN)-elf
+    CROSS = riscv32-embedded$(ENDIAN)-elf
     #CROSS = riscv-elf
     #CROSS = riscv32-unknown-elf
     #CROSS = riscv32-embedded-elf
     
-    #export CCPATH = /opt/riscv/bin
-    export CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+    CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
     #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
     #HARVARD = 1
 endif
@@ -71,80 +60,58 @@ ifndef BUILD
 endif
 
 ifndef DARKLIBC
-    DARKLIBC = darklibc
+    DARKLIBC = ../darklibc
 endif
 
-    CC  = $(CCPATH)/$(CROSS)-gcc
-    AS  = $(CCPATH)/$(CROSS)-as
+    CC = $(CCPATH)/$(CROSS)-gcc
+    AS = $(CCPATH)/$(CROSS)-as
+    LD = $(CCPATH)/$(CROSS)-ld
+    AR = $(CCPATH)/$(CROSS)-ar
     RL = $(CCPATH)/$(CROSS)-ranlib
-    LD  = $(CCPATH)/$(CROSS)-ld
-    OC  = $(CCPATH)/$(CROSS)-objcopy
-    OD  = $(CCPATH)/$(CROSS)-objdump
-    CPP = $(CCPATH)/$(CROSS)-cpp
+    OC = $(CCPATH)/$(CROSS)-objcopy
+    OD = $(CCPATH)/$(CROSS)-objdump
+   CPP = $(CCPATH)/$(CROSS)-cpp
 
 CCFLAGS = -Wall -fcommon -ffreestanding -O2
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+#CCFLAGS += -DSMALL # enable this to make FW smaller!
 ASFLAGS = -march=$(ARCH)
-LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -static -gc-sections --entry=_start # -Ttext=0
-LDLIBS  = $(LIBS)
+ARFLAGS = -rcs
+LDFLAGS = -Map=$(PROJ).map -m elf32lriscv -static -gc-sections # --entry=_start # -Ttext=0 -T$(PROJ).ld
+#LDLIBS  = $(DARKLIBC)/darklibc.a
 CPFLAGS = -P 
 
 #CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
-	export HARVARD
 endif
-
-OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
-ODFLAGS = -D
-
-PROJ = darksocv
-LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
-
-
 
 ifdef SMALL
-    OBJS = boot.o
-    ASMS = boot.s
-    CPFLAGS += -DSMALL=1
-else
-    OBJS = boot_uart.o
-    ASMS = boot_uart.s
-endif
-    SRCS = 
-
-# uncomment for hardware mul
-#export MAC = 1
-
-ifdef MAC
-    CFLAGS += -DMAC=1
+    CCFLAGS += -DSMALL
 endif
 
-DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS)
+#OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
+#ODFLAGS = -D
 
-ifdef HARVARD
-	TARGETS = $(PROJ).rom.mem $(PROJ).ram.mem
-else
-	TARGETS = $(PROJ).mem
-endif
+PROJ = badapple
+OBJS = main.o
+ASMS = main.s
+SRCS = main.c
+
+
+DEPS = $(SRCS) $(ASMS) $(OBJS) $(LIBS) # $(PROJ).ld $(PROJ).lds $(DARKLIBC)/darklibc.a
+
+TARGETS = $(PROJ).a
 
 .PHONY: all
 
 all: $(TARGETS) $(DEPS)
-	-echo build is ok for $(TARGETS)
-
-$(DARKLIBC)/$(DARKLIBC).a:
-	make -C $(DARKLIBC) all
-
-$(APPLICATION)/$(APPLICATION).a:
-	make -C $(APPLICATION) all
+	@echo sources ok for $(TARGETS).
 
 clean:
-	make -C $(DARKLIBC) clean
-	make -C $(APPLICATION) clean
-	-rm -f $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem} $(PROJ)_uart.bin
+	-rm -f $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a} $(PROJ)_uart.bin
 
 %.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@
@@ -152,41 +119,9 @@ clean:
 %.s: %.c Makefile
 	$(CC) $(CCFLAGS) -S $< -o $@
 
-$(PROJ).ld: $(PROJ).lds Makefile
-	$(CPP) $(CPFLAGS) $(PROJ).lds $(PROJ).ld
-	
-$(PROJ).o: $(OBJS) $(PROJ).ld $(LIBS)
-	$(RL) $(LDLIBS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
-	$(OD) $(ODFLAGS) $@ > $(PROJ).S
-
-$(PROJ).rom.mem: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .*text* 
-	hexdump -ve '1/4 "%08x\n"' $(PROJ).text > $@
-	#xxd -p -c 4 -g 4 $< > $@
-	rm $(PROJ).text
-	wc -l $@
-	@echo rom ok.
-
-$(PROJ).ram.mem: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $(PROJ).data --only-section .*data*
-	hexdump -ve '1/4 "%08x\n"' $(PROJ).data > $@
-	#xxd -p -c 4 -g 4 $< > $@
-	rm $(PROJ).data
-	wc -l $@
-	@echo ram ok.
-
-$(PROJ).mem: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $(PROJ).bin
-	hexdump -ve '1/4 "%08x\n"' $(PROJ).bin > $@
-	# uncomment for big-endian
-	#xxd -p -c 4 -g 4 $< > $@
-	dd if=$(PROJ).bin of=$(PROJ)_uart.bin skip=768 bs=1
-	rm $(PROJ).bin
-	# uncomment for MIF file
-	#awk 'BEGIN { print "DEPTH = 1024;\nWIDTH = 32;\nADDRESS_RADIX = HEX;\nDATA_RADIX = HEX;\nCONTENT\nBEGIN" } { printf("%08x : %s\n",NR-1,$1); } END { print "END;" }' < $(PROJ).mem > $(PROJ).mif
-	wc -l $@
-	@echo mem ok.
+$(PROJ).a: $(OBJS) Makefile
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+	$(RL) $@
 	
 $(PROJ).x86: $(SRCS)
 	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""
