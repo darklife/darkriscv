@@ -86,20 +86,23 @@ int main()
     // while((s=getchar())!=EOF) // from rle file
     unsigned char *p=rle;
     
+    printf("\0337\n"); // save current cursor
+    
     while((s=*p++))
     {
         count = s & 63;
         s = s>>6;
-        
+
+        if(s==1)
+        {   
+            //usleep(1000000/12);  
+            //printf("\033[H\033[2Jframe %d\n",f++);
+            printf("\0338frame %d\n",f++);
+        }
+        else
         while(count--)
         { 
-            if(s!=1) putchar(t[s]);
-            else
-            {   
-                //usleep(1000000/20);
-                printf("\033[25;0H");
-                printf("frame %d\n",f++);
-            }
+            putchar(t[s]);
         }
     }
     printf("finished w/ %d frames.\n",f);
