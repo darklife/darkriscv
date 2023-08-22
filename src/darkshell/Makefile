@@ -95,7 +95,7 @@ endif
 #OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
 #ODFLAGS = -D
 
-PROJ = darksocv
+PROJ = darkshell
 OBJS = main.o
 ASMS = main.s
 SRCS = main.c

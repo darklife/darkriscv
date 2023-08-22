@@ -28,12 +28,12 @@
 
 # Add your application here:
 
-#APPLICATION = darksocv
+APPLICATION = darkshell
 #APPLICATION = coremark
-APPLICATION = badapple
+#APPLICATION = badapple
 
 # un-select SMALL for coremark!
-#export SMALL = 1# uncomment for smaller firmware
+export SMALL = 1# uncomment for smaller firmware
 
 SHELL := /bin/bash
 

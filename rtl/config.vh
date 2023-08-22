@@ -47,7 +47,7 @@
 // stage in the pipeline, but keep a good performance most of time
 // (instruction per clock = 1).  of course, read operations require 1
 // wait-state, which means sometimes the read performance is reduced.
-`define __3STAGE__
+//`define __3STAGE__
 
 // RV32I vs RV32E:
 //
@@ -180,8 +180,8 @@
 `ifdef __HARVARD__
     `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
 `else
-    //`define MLEN 12 // MEM[12:0] -> 4KBytes LENGTH = 0x1000
-    `define MLEN 15 // MEM[12:0] -> 32KBytes LENGTH = 0x8000 for coremark!
+    `define MLEN 12 // MEM[12:0] -> 4KBytes LENGTH = 0x1000
+    //`define MLEN 15 // MEM[12:0] -> 32KBytes LENGTH = 0x8000 for coremark!
 `endif
 
 // read-modify-write cycle:
