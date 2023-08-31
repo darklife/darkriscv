@@ -41,11 +41,8 @@ int main(void)
     printf("core%d: ",              io.core_id);                 // core id
     printf("darkriscv@%dMHz w/ ",io.board_cm*2);              // board clock MHz
     printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
-    if(threads>1)                   printf("MT%d ",threads);     // MT  support
     if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
     printf("\n");
-
-    threads = 0; // prepare for the next restart
 
     printf("bram0: text@%d+%d data@%d+%d stack@%d\n",
         (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,

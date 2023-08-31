@@ -283,6 +283,12 @@ module darkriscv
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
 
+`ifdef SIMULATION
+    integer i;
+    
+    initial for(i=0;i!=16;i=i+1) REGS[i] = 0;
+`endif
+
     // source-1 and source-1 register selection
 
     wire          [31:0] U1REG = REGS[S1PTR];
@@ -505,18 +511,36 @@ module darkriscv
 
 `else
         NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
+        `ifdef __INTERRUPT__
+                     MRET ? MEPC :
+                    MIE&&MIP&&JREQ ? MTVEC : // pending interrupt + pipeline flush
+        `endif
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
 `endif
         PC   <= /*XRES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
 
+`ifndef __YOSYS__
+
         if(EBRK)
         begin
-`ifndef __YOSYS__
             $display("breakpoint at %x",PC);
             $stop();
-`endif
         end
+        
+        if(!FLUSH && IDATA===32'dx)
+        begin
+            $display("invalid IDATA at %x",PC);
+            $stop();  
+        end
+        
+        if(LCC && !HLT && DATAI===32'dx)
+        begin
+            $display("invalid DATAI@%x at %x",DADDR,PC);
+            $stop();
+        end
+`endif
+
     end
 
     // IO and memory interface

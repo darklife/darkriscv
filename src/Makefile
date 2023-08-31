@@ -90,7 +90,7 @@ LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -static -gc-sections --en
 LDLIBS  = $(LIBS)
 CPFLAGS = -P 
 
-#CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
+CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
@@ -102,18 +102,13 @@ ODFLAGS = -D
 
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
-
-
+OBJS = boot.o
+ASMS = boot.s
+SRCS = 
 
 ifdef SMALL
-    OBJS = boot.o
-    ASMS = boot.s
     CPFLAGS += -DSMALL=1
-else
-    OBJS = boot_uart.o
-    ASMS = boot_uart.s
 endif
-    SRCS = 
 
 # uncomment for hardware mul
 #export MAC = 1
@@ -181,7 +176,7 @@ $(PROJ).mem: $(PROJ).o
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).bin > $@
 	# uncomment for big-endian
 	#xxd -p -c 4 -g 4 $< > $@
-	dd if=$(PROJ).bin of=$(PROJ)_uart.bin skip=768 bs=1
+	dd if=$(PROJ).bin of=$(PROJ)_uart.bin skip=512 bs=1
 	rm $(PROJ).bin
 	# uncomment for MIF file
 	#awk 'BEGIN { print "DEPTH = 1024;\nWIDTH = 32;\nADDRESS_RADIX = HEX;\nDATA_RADIX = HEX;\nCONTENT\nBEGIN" } { printf("%08x : %s\n",NR-1,$1); } END { print "END;" }' < $(PROJ).mem > $(PROJ).mif

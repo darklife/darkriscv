@@ -84,16 +84,19 @@ SECTIONS
 {
     .text :
     {
+#if HARVARD
         *boot*.o(.text)
-#if !HARVARD
-        *boot*.o(.data)
+#else
+        *boot*.o(.text)
         *boot*.o(.rodata)
 #endif
 
         /* enable this in order to use the uart boot! */
-#if !SMALL
-        . = 768;
+
+#if !HARVARD
+        . = 512;
 #endif
+
         _text = .;
         *(.text*)
         _etext = .;
@@ -105,8 +108,7 @@ SECTIONS
     .data :
     {
 #if HARVARD
-        *boot*.o(.data)
-        *boot*.o(.rodata)        
+        *boot*.o(.rodata)
 #endif
         _data = .;
         *(.rodata*)

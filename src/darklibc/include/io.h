@@ -31,7 +31,6 @@
 #ifndef __IO__
 #define __IO__
 
-extern volatile int threads; // number of threads in the core
 extern volatile int utimers; // microsecond timer
 
 struct DARKIO {

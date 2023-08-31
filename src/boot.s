@@ -28,55 +28,111 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-	.option nopic
-	.text
+	.option pic
 	.section .text
 	.align	2
     .globl  _start
-	.globl  check4rv32i
-    .globl  set_mtvec
-    .globl  set_mepc
-    .globl  set_mie
-    .globl  get_mtvec
-    .globl  get_mepc
-    .globl  get_mie
-    .globl  get_mip
-    .globl  threads
 
 /*
-	start:
-
-        - RV banner
-        - set gp/sp
-        - set argc,argv,argp
-        - call main
-        - repeat
+    start:
+    - read and increent thread counter
+    - case not zero, jump to multi thread boot
+    - otherwise continue    
 */
 
 _start:
-   
+
     /* check core id, boot only core 0 */
 
-    la a1,0x80000000
+    la  a1,0x80000000
     lbu a2,2(a1)
 
 _thread_lock:
     bne a2,x0,_thread_lock
+    
+    /* check simulation, skip uart boot */
+
+    la  a1,0x80000000
+    lb  a0,0(a1)
+    beq a0,x0,_normal_boot
+
+/*
+    uart boot here:
+    
+    - check for uart 3x w/ 1s timeout
+    - case there is data, download it to main()
+    - otherwise, go to normal boot
+*/
+
+    li  a0,'u'
+    call _uart_putchar
+
+    la a3,main
+    li a4,5
+    li a5,8192000
+
+    _uart_boot_loop1:
+
+        _uart_boot_loop2:
+
+            addi a0,a5,0
+            call _uart_getchar
+
+            blt a0,x0,_uart_boot_exit
+
+            sb a0,0(a3)
+            addi a3,a3,1
+
+            j _uart_boot_loop2
+
+        _uart_boot_exit:
+
+        li a0,'.'
+        call _uart_putchar
+        addi a4,a4,-1
+        bgt a4,x0,_uart_boot_loop1
+
+    li  a0,'b'
+
+    call _uart_putchar
+
+/*
+    normal boot here:
+
+    - call main
+    - set stack
+    - set global pointer
+    - plot boot banner
+    - repeat forever
+*/
+
+_normal_boot:
+
+/*
+    RLE code start here:
+
+    register int c,s;
+    register char *p = rle_logo; // = a3
+   
+    while(*p)
+    {
+        c = *p++; // = a0
+        s = *p++; // = a4
+      
+        while(s--) putchar(c); // uses a0, a1, a2
+    }
+*/
 
     addi a0,x0,'\n'
     call _uart_putchar
 
-    /* RLL banner code begin */
+    lla a3,_rle_banner
+    lla a5,_rle_dict
 
-    la a3,_rle_banner
-    la a5,_rle_dict
+     lbu a4,0(a3)
    
     _rle_banner_loop1:
  
-        lbu a4,0(a3)
-
-        beq a4,x0,_rle_banner_end
-
         srli a0,a4,6
         add a0,a0,a5
         lbu a0,0(a0)
@@ -91,18 +147,17 @@ _thread_lock:
 
             bgt a4,x0,_rle_banner_loop2
 
-        j _rle_banner_loop1
+        lbu a4,0(a3)
+        bne a4,x0,_rle_banner_loop1        
 
-    _rle_banner_end:
+    lla a3,_str_banner
 
-        la a3,_str_banner
+    _str_banner_loop3:
 
-        _str_banner_loop3:
-
-            lbu a0,0(a3)
-            call _uart_putchar
-            addi a3,a3,1
-            bne a0,x0,_str_banner_loop3
+        lbu a0,0(a3)
+        call _uart_putchar
+        addi a3,a3,1
+        bne a0,x0,_str_banner_loop3
 
     /* RLL banner code end */
 
@@ -150,66 +205,42 @@ _uart_putchar:
 
         ret
 
-/*
-	rv32e/rv32i detection:
-	- set x15 0
-	- set x31 1
-	- sub x31-x15 and return the value
-	why this works?!
-	- the rv32i have separate x15 and x31, but the rv32e will make x15 = x31
-	- this "feature" probably works only in the darkriscv! :)
+/* 
+    uart_getchar:
+
+    - a0 = time out in loops
+    - a1 = soc.uart0.stat
+    - a2 = *soc.uart0.stat
+    - a0 = return *soc.uart0.fifo or -1
 */
 
-check4rv32i:
+_uart_getchar:
 
-        .word 	0x00000793 	/* addi    x15,x0,0   */
-        .word   0x00100f93	/* addi    x31,x0,1   */
-        .word   0x40ff8533	/* sub     a0,x31,x15 */
+    la  a1,0x80000000
 
-	ret
+    _uart_getchar_busy:
 
-/*
-    access to CSR registers (set/get)
-*/
+        beq     a0,x0,_uart_getchar_tout
+        addi    a0,a0,-1
 
-get_mtvec:
-    addi  a0,x0,0
-    csrr a0,mtvec
-    ret
-/*
-get_mepc:
-    addi a0,x0,0
-    csrr a0,mepc
+        lb      a2,4(a1)
+        andi    a2,a2,2
+        beq     a2,x0,_uart_getchar_busy
+
+    lbu a0,5(a1)
     ret
 
-get_mie:
-    addi a0,x0,0
-    csrr a0,mie
-    ret
+    _uart_getchar_tout:
 
-get_mip:
-    addi a0,x0,0
-    csrr a0,mip
-    ret
+        li a0,-1
+        ret
 
-set_mtvec:
-    csrw mtvec,a0
-    ret
-
-set_mepc:
-    csrw mepc,a0
-    ret
-
-set_mie:
-    csrw mie,a0
-    ret
-*/
 /*
     data segment here!
 */
 
-       .section .rodata
-       .align   2
+    .section .rodata
+    .align   1
 
 _rle_banner:
 
@@ -230,9 +261,3 @@ _rle_dict:
 
 _str_banner:
     .string "INSTRUCTION SETS WANT TO BE FREE\n\n"
-
-        .section .data
-        .align   2
-
-threads:
-    .word  1

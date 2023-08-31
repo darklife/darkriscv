@@ -85,7 +85,7 @@ ifdef MAC
     CCFLAGS += -DMAC=1
 endif
 
-#CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
+CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 
 ifdef HARVARD
 	CPFLAGS +=  -DHARVARD=1
@@ -95,9 +95,9 @@ OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian bl
 ODFLAGS = -D
 
 PROJ = darklibc
-OBJS = stdio.o io.o #small.o # start.o
+OBJS = stdio.o io.o util.o #small.o # start.o
 ASMS = stdio.s io.s 
-SRCS = stdio.c io.c #small.s # start.s
+SRCS = stdio.c io.c util.s #small.s # start.s
 
 DEPS = $(SRCS) $(ASMS) $(OBJS)
 

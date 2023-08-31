@@ -86,10 +86,13 @@ module darksocv
     integer i;
     initial
     begin
-/*        for(i=0;i!=2**`MLEN/4;i=i+1)
+`ifdef SIMULATION
+
+        for(i=0;i!=2**`MLEN/4;i=i+1)
         begin
             MEM[i] = 32'd0;
-        end*/
+        end
+`endif
 
         // workaround for vivado: no path in simulation and .mem extension
 
