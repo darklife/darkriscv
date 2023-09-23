@@ -164,6 +164,7 @@ module darkuart
                 begin
                     UART_XFIFO <= DATAI[15:8];
                     $write("%c",DATAI[15:8]);
+                    $fflush();
                     
                     if(IOREQ==1&&DATAI[15:8]==" ")
                     begin
