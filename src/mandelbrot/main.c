@@ -1,7 +1,9 @@
 /* 
- * Ported by Marcelo Samsoniuk, based on BASIC code from Satoshi Okue
- * https://twitter.com/okazunori68/status/1629832782280282113/photo/2
- *
+ * Ported to C language by Marcelo Samsoniuk
+ * based on BASIC code published by Satoshi Okue:
+ * https://twitter.com/S_Okue/status/1705175021000458592
+ * which appears to be based on:
+ * https://twitter.com/okazunori68/status/1629832782280282113
  */
 
 #include <stdio.h>
