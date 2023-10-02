@@ -47,7 +47,7 @@
 // stage in the pipeline, but keep a good performance most of time
 // (instruction per clock = 1).  of course, read operations require 1
 // wait-state, which means sometimes the read performance is reduced.
-//`define __3STAGE__
+`define __3STAGE__
 
 // RV32I vs RV32E:
 //
