@@ -118,7 +118,7 @@ ifdef MAC
     CFLAGS += -DMAC=1
 endif
 
-DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS)
+DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS) $(APPLICATION)/$(APPLICATION).a
 
 ifdef HARVARD
 	TARGETS = $(PROJ).rom.mem $(PROJ).ram.mem
