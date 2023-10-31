@@ -50,8 +50,9 @@ MEMORY
     /* 
         darkshell 
     */
+    /*
     IO  (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x14
-    
+    */    
 #if SMALL
 
     #if HARVARD
@@ -112,11 +113,12 @@ SECTIONS
 #endif
         _data = .;
         *(.rodata*)
-        *(.data)
+        *(.data*)
         _global = . + 0x800;
-        *(.sbss)    
-        *(.bss)
-        *(.sdata)
+        *(.sbss*)    
+        *(.bss*)
+        *(.sdata*)
+        *(.*)
 	    _edata = .;
 
 #if HARVARD
@@ -130,5 +132,8 @@ SECTIONS
    PROVIDE ( _stack = ORIGIN(MEM) + LENGTH(MEM) );
 #endif
 
-    .io : { */io.o(COMMON) } > IO
+/*
+    .io : { * /io.o(COMMON) } > IO
+*/
+
 }

@@ -32,7 +32,7 @@
 
 #ifdef __RISCV__
 
-volatile struct DARKIO io;
+volatile struct DARKIO *io = (volatile struct DARKIO *)0x80000000;
 
 #else
 
@@ -81,14 +81,14 @@ char *board_name(int id)
 __attribute__ ((interrupt ("machine")))
 void irq_handler(void)
 {
-    if(io.irq == IRQ_TIMR)
+    if(io->irq == IRQ_TIMR)
     {
         if(!utimers--)
         {
-            io.led++;
+            io->led++;
             utimers=999999;
         }
-        io.irq = IRQ_TIMR;
+        io->irq = IRQ_TIMR;
     }
 
     return;

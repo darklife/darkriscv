@@ -55,7 +55,7 @@ struct DARKIO {
     unsigned int timeus;    // 10
 };
 
-extern volatile struct DARKIO io;
+extern volatile struct DARKIO *io;
 
 extern char *board_name(int);
 

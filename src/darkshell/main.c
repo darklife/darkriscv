@@ -35,11 +35,11 @@ int main(void)
 {
     unsigned mtvec=0;
 
-    printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
+    printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
     printf("build: %s for %s\n",BUILD,ARCH);
 
-    printf("core%d: ",              io.core_id);                 // core id
-    printf("darkriscv@%dMHz w/ ",io.board_cm*2);              // board clock MHz
+    printf("core%d: ",              io->core_id);                 // core id
+    printf("darkriscv@%dMHz w/ ",io->board_cm*2);              // board clock MHz
     printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
     if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
     printf("\n");
@@ -54,8 +54,8 @@ int main(void)
 
     _edata = 0xdeadbeef;
 
-    printf("uart0: 115.2kbps (div=%d)\n",io.uart.baud);
-    printf("timr0: %dHz (div=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
+    printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
+    printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
 
 #ifndef SMALL
 
@@ -74,7 +74,7 @@ int main(void)
 
 #endif
 
-    io.irq = IRQ_TIMR; // clear interrupts
+    io->irq = IRQ_TIMR; // clear interrupts
     utimers = 0;
 
     printf("\n");
@@ -94,17 +94,17 @@ int main(void)
         {
             while(1)
             {
-                if(io.irq&IRQ_TIMR)
+                if(io->irq&IRQ_TIMR)
                 {
                     if(!utimers--)
                     {
-                        io.led++;
+                        io->led++;
                         utimers=999999;
                     }
-                    io.irq = IRQ_TIMR;
+                    io->irq = IRQ_TIMR;
                 }
 
-                if(io.uart.stat&2)
+                if(io->uart.stat&2)
                 {
                     break;
                 }
@@ -118,7 +118,7 @@ int main(void)
         if(!strcmp(buffer,"led"))
         {
             printf("led flip!\n");
-            io.led = ~io.led;
+            io->led = ~io->led;
         }
         else
         if(!strcmp(buffer,"reboot"))
@@ -208,23 +208,23 @@ int main(void)
           else
           if(!strcmp(argv[0],"led"))
           {
-              if(argv[1]) io.led = xtoi(argv[1]);
+              if(argv[1]) io->led = xtoi(argv[1]);
 
-              printf("led = %x\n",io.led);
+              printf("led = %x\n",io->led);
           }
           else
           if(!strcmp(argv[0],"timer"))
           {
-              if(argv[1]) io.timer = atoi(argv[1]);
+              if(argv[1]) io->timer = atoi(argv[1]);
 
-              printf("timer = %d\n",io.timer);
+              printf("timer = %d\n",io->timer);
           }
           else
           if(!strcmp(argv[0],"gpio"))
           {
-              if(argv[1]) io.gpio = xtoi(argv[1]);
+              if(argv[1]) io->gpio = xtoi(argv[1]);
 
-              printf("gpio = %x\n",io.gpio);
+              printf("gpio = %x\n",io->gpio);
           }
           else
           if(!strcmp(argv[0],"mul"))

@@ -38,20 +38,20 @@
 
 int getchar(void)
 {
-  while((io.uart.stat&2)==0); // uart empty, wait...
-  return io.uart.fifo;
+  while((io->uart.stat&2)==0); // uart empty, wait...
+  return io->uart.fifo;
 }
 
 int putchar(int c)
 {
   if(c=='\n')
   {
-    while(io.uart.stat&1); // uart busy, wait...
-    io.uart.fifo = '\r';  
+    while(io->uart.stat&1); // uart busy, wait...
+    io->uart.fifo = '\r';  
   }
   
-  while(io.uart.stat&1); // uart busy, wait...
-  return io.uart.fifo = c;
+  while(io->uart.stat&1); // uart busy, wait...
+  return io->uart.fifo = c;
 }
 
 #endif
@@ -360,7 +360,7 @@ void usleep(int delay)
     {
         while(delay--) 
         {
-            for(io.irq=IRQ_TIMR;!io.irq;); // without interrupts
+            for(io->irq=IRQ_TIMR;!io->irq;); // without interrupts
         }
     }
 }

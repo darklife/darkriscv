@@ -46,7 +46,7 @@ volatile ee_s32 seed5_volatile = 0;
 CORETIMETYPE
 barebones_clock()
 {
-    return io.timeus;
+    return io->timeus;
 // #error "You must implement a method to measure time in barebones_clock()! This function should return current time.\n"
 }
 /* Define : TIMER_RES_DIVIDER
@@ -133,21 +133,21 @@ void
 portable_init(core_portable *p, int *argc, char *argv[])
 {
     usleep(100);
-    io.led = 0xF;
+    io->led = 0xF;
 
-    ee_printf("board: %s (id=%d)\n",board_name(io.board_id),io.board_id);
+    ee_printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
     ee_printf("build: %s for %s\n",BUILD,ARCH);
 
-    ee_printf("core%d: ",              io.core_id);                 // core id
-    ee_printf("darkriscv@%dMHz with: ",io.board_cm*2);              // board clock MHz
+    ee_printf("core%d: ",              io->core_id);                 // core id
+    ee_printf("darkriscv@%dMHz with: ",io->board_cm*2);              // board clock MHz
     ee_printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
     ee_printf("\n");
-    ee_printf("uart0: 115200 bps (div=%d)\n",io.uart.baud);
-    ee_printf("timr0: frequency=%dHz (io.timer=%d)\n",(io.board_cm*2000000u)/(io.timer+1),io.timer);
+    ee_printf("uart0: 115200 bps (div=%d)\n",io->uart.baud);
+    ee_printf("timr0: frequency=%dHz (io->timer=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
     
     ee_printf("\n\n");
     
-    ee_printf("CoreMark start in %d us.\n",io.timeus);
+    ee_printf("CoreMark start in %d us.\n",io->timeus);
       
 // #error "Call board initialization routines in portable init (if needed), in particular initialize UART!\n"
     if (sizeof(ee_ptr_int) != sizeof(ee_u8 *))
@@ -168,8 +168,8 @@ portable_init(core_portable *p, int *argc, char *argv[])
 void
 portable_fini(core_portable *p)
 {
-    io.led = 0;
-    ee_printf("CoreMark finish in %d us.\n\n",io.timeus);
+    io->led = 0;
+    ee_printf("CoreMark finish in %d us.\n\n",io->timeus);
     p->portable_id = 0;
     
     // makes no sense return here!
@@ -177,6 +177,6 @@ portable_fini(core_portable *p)
     while(1)
     {
         usleep(500000);
-        io.led++;    
+        io->led++;    
     }
 }

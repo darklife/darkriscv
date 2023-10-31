@@ -364,13 +364,13 @@ module darkriscv
                          FCT3==3 ? U1REG<U2REGX : // unsigned
                          FCT3==2 ? S1REG<S2REGX : // signed
                          FCT3==0 ? (XRCC&&FCT7[5] ? U1REG-S2REGX : U1REG+S2REGX) :
-                         FCT3==1 ? U1REG<<U2REGX[4:0] :
+                         FCT3==1 ? S1REG<<U2REGX[4:0] :
                          //FCT3==5 ?
-                         !FCT7[5] ? U1REG>>U2REGX[4:0] :
+                         !FCT7[5] ? S1REG>>U2REGX[4:0] :
 `ifdef MODEL_TECH
-                                   -((-U1REG)>>U2REGX[4:0]); // workaround for modelsim
+                                   -((-S1REG)>>U2REGX[4:0]); // workaround for modelsim
 `else
-                                   $signed(U1REG>>>U2REGX[4:0]);  // (FCT7[5] ? U1REG>>>U2REG[4:0] :
+                                   $signed(S1REG)>>>U2REGX[4:0];  // (FCT7[5] ? U1REG>>>U2REG[4:0] :
 `endif
 
 `ifdef __MAC16X16__
