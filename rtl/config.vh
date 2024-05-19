@@ -390,6 +390,14 @@
     `define __RMW_CYCLE__
 `endif
 
+`ifdef PISSWORDS_CH34X_LX16
+    `define BOARD_ID 18
+    `define BOARD_CK_REF 50000000
+    `define BOARD_CK_MUL 4
+    `define BOARD_CK_DIV 2
+    `define INVRES 1
+    `define XILINX6CLK 1
+`endif
 
 // to port to a new board, use TESTMODE to test:
 // - the reset button is working
