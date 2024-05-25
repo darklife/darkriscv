@@ -135,13 +135,16 @@ module darksocv
 
     reg [31:0] ROMFF;
 
-    wire IHIT = 1;
+    wire IHIT = !ITACK;
+
+    reg [1:0] ITACK = 0;
 
     reg [31:0] ROMFF2 = 0;
     reg        HLT2   = 0;
 
     always@(posedge CLK) // stage #0.5
     begin
+        ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0;
         if(HLT^HLT2)
         begin
             ROMFF2 <= ROMFF;
@@ -201,18 +204,18 @@ module darksocv
 
     // for single phase clock: 1 wait state in read op always required!
 
-    reg [1:0] DACK = 0;
+    reg [1:0] DTACK = 0;
 
     wire WHIT = 1;
     wire DHIT = !((RD
             `ifdef __RMW_CYCLE__
                     ||WR		// worst code ever! but it is 3:12am...
             `endif
-                    ) && DACK!=1); // the WR operatio does not need ws. in this config.
+                    ) && DTACK!=1); // the WR operatio does not need ws. in this config.
 
     always@(posedge CLK) // stage #1.0
     begin
-        DACK <= RES ? 0 : DACK ? DACK-1 : (RD
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (RD
             `ifdef __RMW_CYCLE__
                     ||WR		// 2nd worst code ever!
             `endif
