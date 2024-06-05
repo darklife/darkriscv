@@ -31,21 +31,13 @@
 `timescale 1ns / 1ps
 `include "../rtl/config.vh"
 
-`define __FLEXBUZZ__ 1
-
 module darkcache
 (
     input           CLK,    // clock
     input           RES,    // reset
 
-`ifdef __FLEXBUZZ__
     input           RW,     // read/write
     input   [2:0]   DLEN,   // data length in bytes
-`else
-    input   [3:0]   BE,     // byte enable
-    input           RD,     // read
-    input           WR,     // write
-`endif
 
     input   [31:0]  ADDR,   // address
     input   [31:0]  DATA,   // data input  on RW=0
@@ -61,62 +53,34 @@ module darkcache
     reg  [31:0] CDATA [0:63];
     reg  [31:8] CTAG  [0:63];
     
-    reg  [63:0] CVALID0 = 0;
-    reg  [63:0] CVALID1 = 0;
-    reg  [63:0] CVALID2 = 0;
-    reg  [63:0] CVALID3 = 0;
-
-`ifdef __FLEXBUZZ__
-    wire [3:0] BE = DLEN==4 ?                 4'b1111 :
-                    DLEN==2 ? (ADDR[1]==1 ?   4'b1100 : 
-                                              4'b0011 ) :
-                    DLEN==1 ? (ADDR[1:0]==3 ? 4'b1000 :
-                               ADDR[1:0]==2 ? 4'b0100 : 
-                               ADDR[1:0]==1 ? 4'b0010 :
-                                              4'b0000 ) :
-                                              4'b0000;
-
-    wire WR = DLEN && RW==0; // write cycle
-    wire RD = DLEN && RW==1; // read  cycle
-`endif
+    reg  [63:0] CVALID = 0;
 
     wire [5:0]  CINDEX = ADDR[7:2];
 
-    assign HIT =    RD && 
-                    CVALID0[CINDEX]==BE[0] && 
-                    CVALID1[CINDEX]==BE[1] && 
-                    CVALID2[CINDEX]==BE[2] && 
-                    CVALID3[CINDEX]==BE[3] && 
-                    CTAG[CINDEX]==ADDR[31:8];
+    assign HIT = DLEN && RW && CVALID[CINDEX] && CTAG[CINDEX]==ADDR[31:8];
 
-    assign DTREQ = (WR||RD) && !HIT; // valid data, but not hit -> dtreq
+    assign DTREQ = DLEN && (!HIT||!RW); // valid data, but not hit -> dtreq
 
     always@(posedge CLK)
     begin
         if(RES)
         begin
-            CVALID0 <= 0;
-            CVALID1 <= 0;
-            CVALID2 <= 0;
-            CVALID3 <= 0;
+            CVALID <= 0;
             $display("cache flush");
         end
         else
-        if(DTREQ && DTACK)
-        begin
+        if(DTREQ&&DTACK)
+        begin        
             CDATA [CINDEX]  <= DATA;
             CTAG  [CINDEX]  <= ADDR[31:8];
-
-            CVALID0[CINDEX] <= BE[0];
-            CVALID1[CINDEX] <= BE[1];
-            CVALID2[CINDEX] <= BE[2];
-            CVALID3[CINDEX] <= BE[3];
+            CVALID[CINDEX]  <= 1;
         end
         
         if(!RES) $display("access %d: HIT=%d DTREQ=%d DTACK=%d DATA=%d DATO=%d",ADDR,HIT,DTREQ,DTACK,DATA,DATO); 
     end
 
     assign DATO  = CDATA[CINDEX];
+
     assign DEBUG = { |DLEN, HIT, DTREQ, DTACK };
 
 endmodule
@@ -153,8 +117,8 @@ module darkcache_sim;
     begin
         if(!RES)
         begin
-            DLEN <= 4;
-            ADDR <= ADDR+HIT;
+            DLEN <= 1; // 1 byte
+            ADDR <= ADDR==7 ? 0 : ADDR+HIT;
         end
         
         DTACK <= DTACK ? DTACK-1 : DTREQ ? 3 : 0;
