@@ -40,8 +40,8 @@ module darkcache
     input   [2:0]   DLEN,   // data length in bytes
 
     input   [31:0]  ADDR,   // address
-    input   [31:0]  DATA,   // data input  on RW=0
-    output  [31:0]  DATO,   // data output on RW=1
+    input   [31:0]  DATA,   // data input
+    output  [31:0]  DATO,   // data output
     
     output          HIT,    // cache hit
     output          DTREQ,  // cache miss, data transfer req
@@ -57,7 +57,9 @@ module darkcache
 
     wire [5:0]  CINDEX = ADDR[7:2];
 
-    assign HIT = DLEN && RW && CVALID[CINDEX] && CTAG[CINDEX]==ADDR[31:8];
+    assign HIT = DLEN && 
+                    ((RW==1 && CVALID[CINDEX] && CTAG[CINDEX]==ADDR[31:8])||
+                     (RW==0 && DTREQ && DTACK));
 
     assign DTREQ = DLEN && (!HIT||!RW); // valid data, but not hit -> dtreq
 
@@ -66,17 +68,18 @@ module darkcache
         if(RES)
         begin
             CVALID <= 0;
-            $display("cache flush");
+            //$display("cache flush");
         end
         else
         if(DTREQ&&DTACK)
-        begin        
+        begin
             CDATA [CINDEX]  <= DATA;
             CTAG  [CINDEX]  <= ADDR[31:8];
-            CVALID[CINDEX]  <= 1;
+            CVALID[CINDEX]  <= RW;
         end
         
-        if(!RES) $display("access %d: HIT=%d DTREQ=%d DTACK=%d DATA=%d DATO=%d",ADDR,HIT,DTREQ,DTACK,DATA,DATO); 
+        //if(!RES) $display("access %x: RW=%d HIT=%d DTREQ=%d DTACK=%d DATA=%d DATO=%d",
+        //                    ADDR,RW,HIT,DTREQ,DTACK,DATA,DATO); 
     end
 
     assign DATO  = CDATA[CINDEX];
@@ -85,6 +88,7 @@ module darkcache
 
 endmodule
 
+/*
 module darkcache_sim;
 
     // clock
@@ -130,3 +134,4 @@ module darkcache_sim;
     darkcache icache(CLK,RES?1'b1:1'b0,RW,DLEN,ADDR,DATA,DATO,HIT,DTREQ,DTREQ?DTACK==1:1'b0,DEBUG);
 
 endmodule
+*/
