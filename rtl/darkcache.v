@@ -31,6 +31,8 @@
 `timescale 1ns / 1ps
 `include "../rtl/config.vh"
 
+`define DEPTH 6
+
 module darkcache
 (
     input           CLK,    // clock
@@ -50,36 +52,52 @@ module darkcache
     output  [3:0]   DEBUG   // osciloscope
 );
 
-    reg  [31:0] CDATA [0:63];
-    reg  [31:8] CTAG  [0:63];
+    reg  [31:0] CDATA [0:2**`DEPTH-1];
+    reg  [31:8] CTAG  [0:2**`DEPTH-1];
     
-    reg  [63:0] CVALID = 0;
+    // reg  [2**`DEPTH-1:0] CVALID = 0;
+    reg  CVALID [0:2**`DEPTH-1];
+    
+    integer i;
+    
+    initial for(i=0;i!=2**`DEPTH;i=i+1) CVALID[i] = 0;
 
-    wire [5:0]  CINDEX = ADDR[7:2];
+    wire [`DEPTH-1:0]  CINDEX = ADDR[`DEPTH+1:2];
 
-    assign HIT = DLEN && 
-                    ((RW==1 && CVALID[CINDEX] && CTAG[CINDEX]==ADDR[31:8])||
-                     (RW==0 && DTREQ && DTACK));
+    assign HIT = RES ? 0 : 
+                 (DLEN && RW==1 && CVALID[CINDEX] && CTAG[CINDEX]==ADDR[31:`DEPTH+2])||
+                 (DLEN && RW==0 && DTREQ && DTACK);
 
-    assign DTREQ = DLEN && (!HIT||!RW); // valid data, but not hit -> dtreq
+    assign DTREQ = RES ? 0 : DLEN && (!HIT||!RW); // valid data, but not hit -> dtreq
+
+    // debug only
+
+    wire [7:0] DATX [0:3];
+    
+    assign DATX[0] = DATO[ 7: 0];
+    assign DATX[1] = DATO[15: 8];
+    assign DATX[2] = DATO[23:16];
+    assign DATX[3] = DATO[31:24];
 
     always@(posedge CLK)
     begin
         if(RES)
         begin
-            CVALID <= 0;
-            //$display("cache flush");
+            //CVALID <= 0;
+            $display("cache idle");
         end
         else
         if(DTREQ&&DTACK)
         begin
             CDATA [CINDEX]  <= DATA;
-            CTAG  [CINDEX]  <= ADDR[31:8];
+            CTAG  [CINDEX]  <= ADDR[31:`DEPTH+2];
             CVALID[CINDEX]  <= RW;
         end
         
-        //if(!RES) $display("access %x: RW=%d HIT=%d DTREQ=%d DTACK=%d DATA=%d DATO=%d",
-        //                    ADDR,RW,HIT,DTREQ,DTACK,DATA,DATO); 
+        if(!RES) $display("cache %s ADDR=%x RW=%d DTREQ=%d DTACK=%d DATA=%x DATO=%x BUS=%s",
+                                (HIT?"hit":"miss"),
+                                ADDR,RW,DTREQ,DTACK,DATA,DATX[ADDR[1:0]],
+                                (DTREQ?"busy":"idle")); 
     end
 
     assign DATO  = CDATA[CINDEX];
@@ -88,7 +106,7 @@ module darkcache
 
 endmodule
 
-/*
+
 module darkcache_sim;
 
     // clock
@@ -111,22 +129,30 @@ module darkcache_sim;
 
     reg  [2:0]      DLEN=0;
     reg             RW=1;
-    reg  [1:0]      DTACK=0;
+    reg  [3:0]      DTACK=0;
     reg  [31:0]     ADDR=0,DATA=0;
     wire [31:0]     DATO;
     
-    assign HLT = !HIT;
+    assign HLT = DLEN && !HIT;
     
     always@(posedge CLK)
     begin
-        if(!RES)
+        // core part
+    
+        if(!RES && !HLT)
         begin
             DLEN <= 1; // 1 byte
-            ADDR <= ADDR==7 ? 0 : ADDR+HIT;
+            if(DLEN)
+            begin
+                ADDR <= ADDR==10 ? 5 : ADDR+1;
+                if(ADDR==10) RW <= !RW;
+            end
         end
         
-        DTACK <= DTACK ? DTACK-1 : DTREQ ? 3 : 0;
-        if(DTACK==2) DATA  <= ~ADDR;
+        // slow memory part
+
+        DTACK <= DTACK ? DTACK-1 : DTREQ ? 1 : 0;
+        if(DTREQ) DATA  <= ADDR[3:0] + (ADDR[3:0]+1)*256 + (ADDR[3:0]+2)*65536 + (ADDR[3:0]+3)*16777216;
     end
 
     wire [3:0] DEBUG;
@@ -134,4 +160,4 @@ module darkcache_sim;
     darkcache icache(CLK,RES?1'b1:1'b0,RW,DLEN,ADDR,DATA,DATO,HIT,DTREQ,DTREQ?DTACK==1:1'b0,DEBUG);
 
 endmodule
-*/
+
