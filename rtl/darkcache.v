@@ -31,7 +31,7 @@
 `timescale 1ns / 1ps
 `include "../rtl/config.vh"
 
-`define DEPTH 6
+`define DEPTH 8
 
 module darkcache
 (
@@ -58,6 +58,8 @@ module darkcache
     // reg  [2**`DEPTH-1:0] CVALID = 0;
     reg  CVALID [0:2**`DEPTH-1];
     
+    reg  [31:0] CDATAFF;
+    
     integer i;
     
     initial for(i=0;i!=2**`DEPTH;i=i+1) CVALID[i] = 0;
@@ -81,12 +83,6 @@ module darkcache
 
     always@(posedge CLK)
     begin
-        if(RES)
-        begin
-            //CVALID <= 0;
-            $display("cache idle");
-        end
-        else
         if(DTREQ&&DTACK)
         begin
             CDATA [CINDEX]  <= DATA;
@@ -98,9 +94,11 @@ module darkcache
                                 (HIT?"hit":"miss"),
                                 ADDR,RW,DTREQ,DTACK,DATA,DATX[ADDR[1:0]],
                                 (DTREQ?"busy":"idle")); 
+
+        CDATAFF <= CDATA[CINDEX];
     end
 
-    assign DATO  = CDATA[CINDEX];
+    assign DATO  = CDATAFF;
 
     assign DEBUG = { |DLEN, HIT, DTREQ, DTACK };
 
