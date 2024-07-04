@@ -104,7 +104,7 @@ module darksocv
 `endif
 
 `ifdef __INTERRUPT__
-        .INT    (IRQ),
+        .IRQ    (IRQ),
 `endif
 
         .IDATA  (IDATA),

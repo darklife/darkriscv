@@ -105,7 +105,7 @@
 // The interrupt support cannot be used with threading (because makes no
 // much sense?)... also, it requires the 3 stage pipeline (again, makes no
 // much sense use it with the 2-stage pipeline).
-//`define __INTERRUPT__
+`define __INTERRUPT__
 
 // initial PC
 //
@@ -174,8 +174,7 @@
 `ifdef __HARVARD__
     `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
 `else
-    `define MLEN 12 // MEM[12:0] -> 4KBytes LENGTH = 0x1000
-    //`define MLEN 15 // MEM[12:0] -> 32KBytes LENGTH = 0x8000 for coremark!
+    `define MLEN 15 // MEM[12:0] -> 32KBytes LENGTH = 0x8000 for coremark!
 `endif
 
 // read-modify-write cycle:

@@ -34,7 +34,7 @@ APPLICATION = darkshell
 #APPLICATION = mandelbrot
 
 # un-select SMALL for coremark!
-export SMALL = 1# uncomment for smaller firmware
+#export SMALL = 1# uncomment for smaller firmware
 
 SHELL := /bin/bash
 
