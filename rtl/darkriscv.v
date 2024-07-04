@@ -69,7 +69,7 @@ module darkriscv
 `endif
 
 `ifdef __INTERRUPT__
-    input             INT,   // interrupt request
+    input             IRQ,   // interrupt request
 `endif
 
     input      [31:0] IDATA, // instruction data bus
@@ -305,7 +305,8 @@ module darkriscv
     reg [31:0] MEPC  = 0;
     reg [31:0] MTVEC = 0;
     reg        MIE   = 0;
-    reg        MIP   = 0;
+    
+    wire       MIP   = IRQ;
 
     wire [31:0] CDATA = XIDATA[31:20]==12'h344 ? MIP  : // machine interrupt pending
                         XIDATA[31:20]==12'h304 ? MIE   : // machine interrupt enable
@@ -395,14 +396,12 @@ module darkriscv
         begin
             MTVEC <= 0;
             MEPC  <= 0;
-            MIP   <= 0;
             MIE   <= 0;
         end
         else
         if(MIP&&MIE&&JREQ)
         begin
             MEPC <= JVAL;
-            MIP  <= 1;
             MIE  <= 0;
         end
         else
@@ -417,14 +416,9 @@ module darkriscv
         else
         if(MRET)
         begin
-            MIP <= 0;
             MIE <= 1;
         end
-        else
-        if(INT==1&&MIE==1)
-        begin
-            MIP <= 1;
-        end
+
 `endif
 `ifdef __RV32E__
         REGS[DPTR] <=   XRES||DPTR[3:0]==0 ? 0  :        // reset sp
@@ -533,7 +527,7 @@ module darkriscv
 
     assign IDLE = |FLUSH;
 `ifdef __INTERRUPT__
-    assign DEBUG = { INT, MIP, MIE, MRET };
+    assign DEBUG = { IRQ, MIP, MIE, MRET };
 `else
     assign DEBUG = { XRES, IDLE, SCC, LCC };
 `endif

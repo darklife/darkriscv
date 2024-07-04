@@ -43,9 +43,121 @@ module darksocv
     output [3:0] DEBUG      // osciloscope
 );
 
+    // clock and reset
+
     wire CLK,RES;
     
     darkpll darkpll0(.XCLK(XCLK),.XRES(XRES),.CLK(CLK),.RES(RES));
+
+`ifdef __TESTMODE__
+	 
+    // tips to port darkriscv for a new target:
+	 // 
+	 // - 1st of all, test the blink code to confirms the reset
+	 //   polarity, i.e. the LEDs must blink at startup when
+	 //   the reset button *is not pressed*
+	 // - 2nd check the blink rate: the 31-bit counter that starts
+	 //   with BOARD_CK value and counts to zero, blinking w/
+	 //   50% of this period
+
+	 reg [31:0] BLINK = 0;
+	 
+	 always@(posedge CLK)
+	 begin
+        BLINK <= RES ? 0 : BLINK ? BLINK-1 : `BOARD_CK;
+	 end
+	 
+	 assign LED      = (BLINK < (`BOARD_CK/2)) ? -1 : 0;
+	 assign UART_TXD = UART_RXD;
+`endif
+
+    // darkriscv bus interface
+
+    wire        HLT;
+    wire        IRQ;
+    wire [31:0] IADDR;
+    wire [31:0] IDATA;
+    wire [31:0] DADDR;
+    wire [31:0] DATAO;
+    wire [31:0] DATAI;
+    wire [ 2:0] DLEN;
+    wire        DRW;
+
+    // darkriscv
+
+    wire [3:0]  KDEBUG;
+    wire        IDLE;
+
+`ifdef __THREADS__
+    wire [`__THREADS__-1:0] TPTR;
+`endif
+
+    darkriscv
+    core0
+    (
+        .CLK    (CLK),
+        .RES    (RES),
+        .HLT    (HLT),
+
+`ifdef __THREADS__
+        .TPTR   (TPTR),
+`endif
+
+`ifdef __INTERRUPT__
+        .INT    (IRQ),
+`endif
+
+        .IDATA  (IDATA),
+        .IADDR  (IADDR),
+        .DADDR  (DADDR),
+
+        .DATAI  (DATAI),
+        .DATAO  (DATAO),
+        .DLEN   (DLEN),
+        .DRW    (DRW),
+
+        .IDLE   (IDLE),
+        .DEBUG  (KDEBUG)
+    );
+
+    // address map
+    
+    wire CS0 = DLEN && DADDR[31]==0;
+    wire CS1 = DLEN && DADDR[31]==1;
+
+    // legacy bus interface-X
+
+    wire [31:0] XATAO;
+    wire [31:0] XATAI;
+    wire        XWR,XRD;
+    wire [3:0]  XBE;
+
+    assign DATAI = DLEN[0] ? ( DADDR[1:0]==3 ? XATAI[31:24] :
+                               DADDR[1:0]==2 ? XATAI[23:16] :
+                               DADDR[1:0]==1 ? XATAI[15: 8] :
+                                               XATAI[ 7: 0] ):
+                   DLEN[1] ? ( DADDR[1]==1   ? XATAI[31:16] :
+                                               XATAI[15: 0] ):
+                                               XATAI;
+
+    assign XATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAO[ 7: 0], 24'hx } :
+                               DADDR[1:0]==2 ? {  8'hx, DATAO[ 7: 0], 16'hx } :
+                               DADDR[1:0]==1 ? { 16'hx, DATAO[ 7: 0],  8'hx } :
+                                               { 24'hx, DATAO[ 7: 0]        } ):
+                   DLEN[1] ? ( DADDR[1]==1   ? { DATAO[15: 0], 16'hx } :
+                                               { 16'hx, DATAO[15: 0] } ):
+                                                 DATAO;
+
+    assign XRD = DLEN&&DRW==1;
+    assign XWR = DLEN&&DRW==0;
+
+    assign XBE =    DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
+                                DADDR[1:0]==2 ? 4'b0100 :
+                                DADDR[1:0]==1 ? 4'b0010 :
+                                                4'b0001 ) :
+                    DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
+                                                4'b0011 ) :
+                                                4'b1111;  // 32-bit
 
     // ro/rw memories
 
@@ -78,7 +190,6 @@ module darksocv
 
 `else
 
-
     reg [31:0] MEM [0:2**`MLEN/4-1]; // ro memory
 
     // memory initialization
@@ -86,15 +197,14 @@ module darksocv
     integer i;
     initial
     begin
-`ifdef SIMULATION
-
+    `ifdef SIMULATION
         for(i=0;i!=2**`MLEN/4;i=i+1)
         begin
             MEM[i] = 32'd0;
         end
-`endif
+    `endif
 
-        // workaround for vivado: no path in simulation and .mem extension
+     // workaround for vivado: no path in simulation and .mem extension
 
     `ifdef XILINX_SIMULATOR
         $readmemh("darksocv.mem",MEM);
@@ -107,56 +217,26 @@ module darksocv
 
 `endif
 
-    // darkriscv bus interface -- intel-like
+    // instruction memory
 
-    wire [31:0] IADDR;
-    wire [31:0] DADDR;
-    wire [31:0] IDATA;
-    wire [31:0] DATAO;
-    wire [31:0] DATAI;
-    wire        WR,RD;
-    wire [3:0]  BE;
-
-    // darkriscv bus interface -- motorola-like
-
-    wire [31:0] XATAO;
-    wire [31:0] XATAI;
-    wire [ 2:0] DLEN;
-    wire        DRW;
-
-    wire [31:0] IOMUX [0:4];
-
-    reg  [15:0] GPIOFF = 0;
-    reg  [15:0] LEDFF  = 0;
-
-    wire HLT;
-
-    // instruction bus
-
-    reg [31:0] ROMFF;
-
-    wire IHIT = !ITACK;
-
-    reg [1:0] ITACK = 0;
-
+    reg [1:0]  ITACK  = 0;
+    reg [31:0] ROMFF  = 0;
     reg [31:0] ROMFF2 = 0;
     reg        HLT2   = 0;
 
-    always@(posedge CLK) // stage #0.5
+    wire IHIT = !ITACK;
+
+    always@(posedge CLK)
     begin
         ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0;
+        
         if(HLT^HLT2)
         begin
             ROMFF2 <= ROMFF;
         end
 
         HLT2 <= HLT;
-    end
 
-    assign IDATA = HLT2 ? ROMFF2 : ROMFF;
-
-    always@(posedge CLK) // stage #0.5
-    begin
 `ifdef __HARVARD__
         ROMFF <= ROM[IADDR[`MLEN-1:2]];
 `else
@@ -164,82 +244,41 @@ module darksocv
 `endif
     end
 
-    // data bus
+    assign IDATA = HLT2 ? ROMFF2 : ROMFF;
 
-    assign XATAI = DLEN[0] ? ( DADDR[1:0]==3 ? DATAI[31:24] :
-                               DADDR[1:0]==2 ? DATAI[23:16] :
-                               DADDR[1:0]==1 ? DATAI[15: 8] :
-                                               DATAI[ 7: 0] ):
-                   DLEN[1] ? ( DADDR[1]==1   ? DATAI[31:16] :
-                                               DATAI[15: 0] ):
-                                               DATAI;
+    // data memory
 
-    assign DATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        XATAO[ 7: 0], 24'hx } :
-                               DADDR[1:0]==2 ? {  8'hx, XATAO[ 7: 0], 16'hx } :
-                               DADDR[1:0]==1 ? { 16'hx, XATAO[ 7: 0],  8'hx } :
-                                               { 24'hx, XATAO[ 7: 0]        } ):
-                   DLEN[1] ? ( DADDR[1]==1   ? { XATAO[15: 0], 16'hx } :
-                                               { 16'hx, XATAO[15: 0] } ):
-                                                 XATAO;
-
-    assign RD = DLEN&&DRW==1;
-    assign WR = DLEN&&DRW==0;
-
-    assign BE =    DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
-                               DADDR[1:0]==2 ? 4'b0100 :
-                               DADDR[1:0]==1 ? 4'b0010 :
-                                               4'b0001 ) :
-                   DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
-                                               4'b0011 ) :
-                                               4'b1111;  // 32-bit
-
-
-    reg [31:0] RAMFF;
-
-    // for single phase clock: 1 wait state in read op always required!
-
-    reg [1:0] DTACK = 0;
+    reg [1:0] DTACK  = 0;
+    reg [31:0] RAMFF = 0; 
 
     wire WHIT = 1;
-    wire DHIT = !((RD
+    wire DHIT = !((XRD
             `ifdef __RMW_CYCLE__
-                    ||WR		// worst code ever! but it is 3:12am...
+                    ||XWR		// worst code ever! but it is 3:12am...
             `endif
-                    ) && DTACK!=1); // the WR operatio does not need ws. in this config.
+                    ) && DTACK!=1); // the XWR operatio does not need ws. in this config.
 
     always@(posedge CLK) // stage #1.0
     begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (RD
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD
             `ifdef __RMW_CYCLE__
-                    ||WR		// 2nd worst code ever!
+                    ||XWR		// 2nd worst code ever!
             `endif
                     ) ? 1 : 0; // wait-states
-    end
 
-    always@(posedge CLK) // stage #1.5
-    begin
 `ifdef __HARVARD__
         RAMFF <= RAM[DADDR[`MLEN-1:2]];
 `else
         RAMFF <= MEM[DADDR[`MLEN-1:2]];
 `endif
-    end
 
-    //assign DATAI = DADDR[31] ? IOMUX  : RAM[DADDR[`MLEN-1:2]];
-
-    reg [31:0] IOMUXFF = 0;
-    reg [31:0] XADDR   = 0;
-
-    //individual byte/word/long selection, thanks to HYF!
-
-    always@(posedge CLK)
-    begin
+        //individual byte/word/long selection, thanks to HYF!
 
 `ifdef __RMW_CYCLE__
 
         // read-modify-write operation w/ 1 wait-state:
 
-        if(!HLT&&WR&&DADDR[31]==0/*&&DADDR[`MLEN-1]==1*/)
+        if(!HLT && XWR && CS0)
         begin
     `ifdef __HARVARD__
             RAM[DADDR[`MLEN-1:2]] <=
@@ -247,61 +286,57 @@ module darksocv
             MEM[DADDR[`MLEN-1:2]] <=
     `endif
                                 {
-                                    BE[3] ? DATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
-                                    BE[2] ? DATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
-                                    BE[1] ? DATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
-                                    BE[0] ? DATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
+                                    XBE[3] ? XATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
+                                    XBE[2] ? XATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
+                                    XBE[1] ? XATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
+                                    XBE[0] ? XATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
                                 };
         end
 
 `else
-        // write-only operation w/ 0 wait-states:
+
+    // write-only operation w/ 0 wait-states:
+
     `ifdef __HARVARD__
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[3]) RAM[DADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[2]) RAM[DADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[1]) RAM[DADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[0]) RAM[DADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(!HLT && XWR && CS0 && XBE[3]) RAM[DADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
+        if(!HLT && XWR && CS0 && XBE[2]) RAM[DADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
+        if(!HLT && XWR && CS0 && XBE[1]) RAM[DADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
+        if(!HLT && XWR && CS0 && XBE[0]) RAM[DADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
     `else
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[3]) MEM[DADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= DATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[2]) MEM[DADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= DATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[1]) MEM[DADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= DATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT&&WR&&DADDR[31]==0&&/*DADDR[`MLEN-1]==1&&*/BE[0]) MEM[DADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= DATAO[0 * 8 + 7: 0 * 8];
+        if(!HLT && XWR && CS0 && XBE[3]) MEM[DADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
+        if(!HLT && XWR && CS0 && XBE[2]) MEM[DADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
+        if(!HLT && XWR && CS0 && XBE[1]) MEM[DADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
+        if(!HLT && XWR && CS0 && XBE[0]) MEM[DADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
     `endif
 `endif
-
-        XADDR <= DADDR; // 1 clock delayed
-        IOMUXFF <= IOMUX[DADDR[4:2]==3'b100 ? 3'b100 : DADDR[3:2]]; // read w/ 2 wait-states
     end
-
-    //assign DATAI = DADDR[31] ? IOMUX[DADDR[3:2]]  : RAMFF;
-    //assign DATAI = DADDR[31] ? IOMUXFF : RAMFF;
-    assign DATAI = XADDR[31] ? IOMUX[XADDR[4:2]==3'b100 ? 3'b100 : XADDR[3:2]] : RAMFF;
 
     // io for debug
 
-    reg [7:0] IREQ = 0;
-    reg [7:0] IACK = 0;
+    reg [15:0] GPIOFF = 0;
+    reg [15:0] LEDFF  = 0;
+
+    reg  [7:0] IREQ = 0;
+    reg  [7:0] IACK = 0;
 
     reg [31:0] TIMERFF = 0;
     reg [31:0] TIMEUS = 0;
 
+    reg [31:0] IOMUXFF = 0;
+    reg [31:0] XADDR   = 0;
+
     wire [7:0] BOARD_IRQ;
 
-    wire   [7:0] BOARD_ID = `BOARD_ID;              // board id
-    wire   [7:0] BOARD_CM = (`BOARD_CK/2000000);    // board clock (MHz)
+    wire [7:0] BOARD_ID = `BOARD_ID;              // board id
+    wire [7:0] BOARD_CM = (`BOARD_CK/2000000);    // board clock (MHz)
 
 `ifdef __THREADS__
-    wire [`__THREADS__-1:0] TPTR;
     wire   [7:0] CORE_ID = TPTR;                    // core id
 `else
     wire   [7:0] CORE_ID = 0;                       // core id
 `endif
 
-    assign IOMUX[0] = { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
-    //assign IOMUX[1] = from UART!
-    assign IOMUX[2] = { GPIOFF, LEDFF };
-    assign IOMUX[3] = TIMERFF;
-    assign IOMUX[4] = TIMEUS;
+    wire [31:0] UDATA; // uart data
 
     reg [31:0] TIMER = 0;
 
@@ -309,41 +344,33 @@ module darksocv
 
     always@(posedge CLK)
     begin
-        if(WR&&DADDR[31]&&DADDR[3:0]==4'b1000)
-        begin
-            LEDFF <= DATAO[15:0];
-        end
-
-        if(WR&&DADDR[31]&&DADDR[3:0]==4'b1010)
-        begin
-            GPIOFF <= DATAO[31:16];
-        end
-
         if(RES)
-            TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
-        else
-        if(WR&&DADDR[31]&&DADDR[3:0]==4'b1100)
         begin
-            TIMERFF <= DATAO[31:0];
-        end
-
-        if(RES)
             IACK <= 0;
-        else
-        if(WR&&DADDR[31]&&DADDR[3:0]==4'b0011)
-        begin
-            //$display("clear io.irq = %x (ireq=%x, iack=%x)",DATAO[32:24],IREQ,IACK);
-
-            IACK[7] <= DATAO[7+24] ? IREQ[7] : IACK[7];
-            IACK[6] <= DATAO[6+24] ? IREQ[6] : IACK[6];
-            IACK[5] <= DATAO[5+24] ? IREQ[5] : IACK[5];
-            IACK[4] <= DATAO[4+24] ? IREQ[4] : IACK[4];
-            IACK[3] <= DATAO[3+24] ? IREQ[3] : IACK[3];
-            IACK[2] <= DATAO[2+24] ? IREQ[2] : IACK[2];
-            IACK[1] <= DATAO[1+24] ? IREQ[1] : IACK[1];
-            IACK[0] <= DATAO[0+24] ? IREQ[0] : IACK[0];
+            TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
         end
+        else
+        if(!HLT && CS1 && XWR)
+        begin
+            case(DADDR[4:0])
+                5'b00011:   begin
+                                //$display("clear io.irq = %x (ireq=%x, iack=%x)",XATAO[32:24],IREQ,IACK);
 
+                                IACK[7] <= XATAO[7+24] ? IREQ[7] : IACK[7];
+                                IACK[6] <= XATAO[6+24] ? IREQ[6] : IACK[6];
+                                IACK[5] <= XATAO[5+24] ? IREQ[5] : IACK[5];
+                                IACK[4] <= XATAO[4+24] ? IREQ[4] : IACK[4];
+                                IACK[3] <= XATAO[3+24] ? IREQ[3] : IACK[3];
+                                IACK[2] <= XATAO[2+24] ? IREQ[2] : IACK[2];
+                                IACK[1] <= XATAO[1+24] ? IREQ[1] : IACK[1];
+                                IACK[0] <= XATAO[0+24] ? IREQ[0] : IACK[0];
+                            end
+                5'b01000:   LEDFF   <= XATAO[15:0];
+                5'b01010:   GPIOFF  <= XATAO[31:16];
+                5'b01100:   TIMERFF <= XATAO[31:0];
+            endcase
+        end
+        
         if(RES)
             IREQ <= 0;
         else
@@ -361,11 +388,30 @@ module darksocv
             XTIMER  <= XTIMER+(TIMER==0);
             TIMEUS <= (TIMER == TIMERFF) ? TIMEUS + 1'b1 : TIMEUS;
         end
+
+        if(CS1 && XRD)
+        begin
+            casex(DADDR[4:0])
+                5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
+                5'b001xx:   IOMUXFF <= UDATA; // from uart
+                5'b0100x:   IOMUXFF <= LEDFF;
+                5'b0101x:   IOMUXFF <= GPIOFF;
+                5'b011xx:   IOMUXFF <= TIMERFF;
+                5'b100xx:   IOMUXFF <= TIMEUS;
+            endcase
+        end
     end
 
+    assign XATAI = CS1 ? IOMUXFF : RAMFF;
+
     assign BOARD_IRQ = IREQ^IACK;
+    assign IRQ = |BOARD_IRQ;
 
     assign HLT = !IHIT||!DHIT||!WHIT;
+    
+`ifndef __TESTMODE__
+    assign LED = LEDFF[3:0];
+`endif
 
     // darkuart
 
@@ -374,88 +420,26 @@ module darksocv
     wire FINISH_REQ;
 
     darkuart
-//    #(
-//      .BAUD((`BOARD_CK/115200))
-//    )
     uart0
     (
       .CLK(CLK),
       .RES(RES),
-      .RD(!HLT&&RD&&DADDR[31]&&DADDR[3:2]==1),
-      .WR(!HLT&&WR&&DADDR[31]&&DADDR[3:2]==1),
-      .BE(BE),
-      .DATAI(DATAO),
-      .DATAO(IOMUX[1]),
-      //.IRQ(UART_IRQ),
+      .RD(!HLT && XRD && CS1 && DADDR[4:2]==1),
+      .WR(!HLT && XWR && CS1 && DADDR[4:2]==1),
+      .BE(XBE),
+      .DATAI(XATAO),
+      .DATAO(UDATA),
+      .IRQ(UART_IRQ),
 
-`ifndef TESTMODE
+`ifndef __TESTMODE__
       .RXD(UART_RXD),
       .TXD(UART_TXD),
 `endif		
-		`ifdef SIMULATION
+`ifdef SIMULATION
       .FINISH_REQ(FINISH_REQ),
 `endif
       .DEBUG(UDEBUG)
     );
-
-    // darkriscv
-
-    wire [3:0] KDEBUG;
-
-    wire IDLE;
-
-    darkriscv
-//    #(
-//        .RESET_PC(32'h00000000),
-//        .RESET_SP(32'h00002000)
-//    )
-    core0
-    (
-        .CLK(CLK),
-        .RES(RES),
-        .HLT(HLT),
-`ifdef __THREADS__
-        .TPTR(TPTR),
-`endif
-`ifdef __INTERRUPT__
-        .INT(|BOARD_IRQ),
-`endif
-        .IDATA(IDATA),
-        .IADDR(IADDR),
-        .DADDR(DADDR),
-
-        .DATAI(XATAI),
-        .DATAO(XATAO),
-        .DLEN(DLEN),
-        .DRW(DRW),
-
-        .IDLE(IDLE),
-        .DEBUG(KDEBUG)
-    );
-
-`ifdef TESTMODE
-	 
-    // tips to port darkriscv for a new target:
-	 // 
-	 // - 1st of all, test the blink code to confirms the reset
-	 //   polarity, i.e. the LEDs must blink at startup when
-	 //   the reset button *is not pressed*
-	 // - 2nd check the blink rate: the 31-bit counter that starts
-	 //   with BOARD_CK value and counts to zero, blinking w/
-	 //   50% of this period
-
-	 reg [31:0] BLINK = 0;
-	 
-	 always@(posedge CLK)
-	 begin
-        BLINK <= RES ? 0 : BLINK ? BLINK-1 : `BOARD_CK;
-	 end
-	 
-	 assign LED = (BLINK < (`BOARD_CK/2)) ? -1 : 0;
-	 assign UART_TXD = UART_RXD;
-`else
-    assign LED   = LEDFF[3:0];
-`endif
 	 
     assign DEBUG = { XTIMER, KDEBUG[2:0] }; // UDEBUG;
 
@@ -480,8 +464,8 @@ module darksocv
 
                 if(HLT)
                 begin
-                         if(WR)	store = store+1;
-                    else if(RD)	load  = load +1;
+                         if(XWR)	store = store+1;
+                    else if(XRD)	load  = load +1;
                     else 		halt  = halt +1;
                 end
                 else

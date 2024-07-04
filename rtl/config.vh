@@ -30,6 +30,12 @@
 
 //`timescale 1ns / 1ps
 
+// to port to a new board, use TESTMODE to test:
+// - the reset button is working
+// - the LED is blinking at 1Hz
+// - the UART is looped
+//`define __TESTMODE__
+
 ////////////////////////////////////////////////////////////////////////////////
 // darkriscv configuration
 ////////////////////////////////////////////////////////////////////////////////
@@ -386,12 +392,6 @@
     `define INVRES 1
     `define XILINX6CLK 1
 `endif
-
-// to port to a new board, use TESTMODE to test:
-// - the reset button is working
-// - the LED is blinking at 1Hz
-// - the UART is looped
-//`define TESTMODE
 
 `ifndef BOARD_ID
     `define BOARD_ID 0
