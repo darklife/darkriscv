@@ -107,7 +107,7 @@ module darksocv
 
 `endif
 
-    // darkriscv bus interface
+    // darkriscv bus interface -- intel-like
 
     wire [31:0] IADDR;
     wire [31:0] DADDR;
@@ -117,12 +117,12 @@ module darksocv
     wire        WR,RD;
     wire [3:0]  BE;
 
-`ifdef __FLEXBUZZ__
+    // darkriscv bus interface -- motorola-like
+
     wire [31:0] XATAO;
     wire [31:0] XATAI;
     wire [ 2:0] DLEN;
-    wire        RW;
-`endif
+    wire        DRW;
 
     wire [31:0] IOMUX [0:4];
 
@@ -166,11 +166,6 @@ module darksocv
 
     // data bus
 
-`ifdef __FLEXBUZZ__
-
-    // must work just exactly as the default interface, since we have no
-    // flexbuzz devices available yet (i.e., all devices are 32-bit now)
-
     assign XATAI = DLEN[0] ? ( DADDR[1:0]==3 ? DATAI[31:24] :
                                DADDR[1:0]==2 ? DATAI[23:16] :
                                DADDR[1:0]==1 ? DATAI[15: 8] :
@@ -187,8 +182,8 @@ module darksocv
                                                { 16'hx, XATAO[15: 0] } ):
                                                  XATAO;
 
-    assign RD = DLEN&&RW==1;
-    assign WR = DLEN&&RW==0;
+    assign RD = DLEN&&DRW==1;
+    assign WR = DLEN&&DRW==0;
 
     assign BE =    DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
                                DADDR[1:0]==2 ? 4'b0100 :
@@ -198,7 +193,6 @@ module darksocv
                                                4'b0011 ) :
                                                4'b1111;  // 32-bit
 
-`endif
 
     reg [31:0] RAMFF;
 
@@ -430,21 +424,12 @@ module darksocv
         .IADDR(IADDR),
         .DADDR(DADDR),
 
-`ifdef __FLEXBUZZ__
         .DATAI(XATAI),
         .DATAO(XATAO),
         .DLEN(DLEN),
-        .RW(RW),
-`else
-        .DATAI(DATAI),
-        .DATAO(DATAO),
-        .BE(BE),
-        .WR(WR),
-        .RD(RD),
-`endif
+        .DRW(DRW),
 
         .IDLE(IDLE),
-
         .DEBUG(KDEBUG)
     );
 

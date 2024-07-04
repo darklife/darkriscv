@@ -86,18 +86,6 @@
 // code), it is possible peak 100MMAC/s @100MHz.
 //`define __MAC16X16__
 
-// flexbuzz interface (experimental):
-//
-// A new data bus interface similar to a well known c*ldfire bus interface, in
-// a way that part of the bus routing is moved to the core, in a way that
-// is possible support different bus widths (8, 16 or 32 bit) and endians more
-// easily (the new interface is natively big-endian, but the endian can be adjusted
-// in the bus interface dinamically). Similarly to the standard 32-bit interface,
-// the external logic must detect the RD/WR operation quick enough and assert HLT
-// in order to insert wait-states and perform the required multiplexing to fit
-// the DLEN operand size in the data bus width available.
-//`define __FLEXBUZZ__
-
 // interrupt support
 //
 // The interrupt support in the core uses the machine registers mtvec and
