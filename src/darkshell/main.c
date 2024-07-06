@@ -57,6 +57,22 @@ int main(void)
     printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
 
+#ifdef SDRAM
+
+    printf("sdrm0: preparing SDRAM memory...\n");
+
+    char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;
+
+    memcpy(d,s,32768);
+    
+    printf("sdrm0: checking SDRAM memory...\n");
+    
+    if(!(ptr=memcmp(d,s,32768))) printf("sdrm0: test failed at %x\n",ptr);
+    
+    printf("sdrm0: test done.\n");
+
+#endif
+
 #ifndef SMALL
 
     set_mtvec(irq_handler);

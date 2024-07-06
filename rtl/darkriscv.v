@@ -494,7 +494,9 @@ module darkriscv
             $stop();  
         end
         
-        if(LCC && !HLT && DATAI===32'dx)
+        if(LCC && !HLT && ((DLEN==4 && DATAI[31:0]===32'dx)||
+                           (DLEN==2 && DATAI[15:0]===16'dx)||
+                           (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
         begin
             $display("invalid DATAI@%x at %x",DADDR,PC);
             $stop();

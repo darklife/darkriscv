@@ -218,6 +218,15 @@ char *memcpy(char *dptr,char *sptr,int len)
     return ret;
 }
 
+char *memcmp(char *dptr, char *sptr,int len)
+{
+    while(len--)
+        if(*dptr++ != *sptr++) 
+            return --dptr;
+
+    return 0;
+}
+
 char *memset(char *dptr, int c, int len)
 {
     char *ret = dptr;

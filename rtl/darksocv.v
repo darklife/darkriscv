@@ -61,8 +61,33 @@ module darksocv
     // clock and reset
 
     wire CLK,RES;
+
+`ifdef BOARD_CK
     
-    darkpll darkpll0(.XCLK(XCLK),.XRES(XRES),.CLK(CLK),.RES(RES));
+    darkpll darkpll0
+    (
+        .XCLK(XCLK),
+        .XRES(XRES),
+        .CLK(CLK),
+        .RES(RES)
+    );
+
+`else
+
+    // internal/external reset logic
+
+    reg [7:0] IRES = -1;
+
+    `ifdef INVRES
+        always@(posedge XCLK) IRES <= XRES==0 ? -1 : IRES[7] ? IRES-1 : 0; // reset low
+    `else
+        always@(posedge XCLK) IRES <= XRES==1 ? -1 : IRES[7] ? IRES-1 : 0; // reset high
+    `endif
+
+    assign CLK = XCLK;
+    assign RES = IRES[7];
+
+`endif
 
 `ifdef __TESTMODE__
 	 
@@ -169,12 +194,12 @@ module darksocv
                                                XATAI[15: 0] ):
                                                XATAI;
 
-    assign XATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAO[ 7: 0], 24'hx } :
-                               DADDR[1:0]==2 ? {  8'hx, DATAO[ 7: 0], 16'hx } :
-                               DADDR[1:0]==1 ? { 16'hx, DATAO[ 7: 0],  8'hx } :
-                                               { 24'hx, DATAO[ 7: 0]        } ):
-                   DLEN[1] ? ( DADDR[1]==1   ? { DATAO[15: 0], 16'hx } :
-                                               { 16'hx, DATAO[15: 0] } ):
+    assign XATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAO[ 7: 0], 24'd0 } :
+                               DADDR[1:0]==2 ? {  8'd0, DATAO[ 7: 0], 16'd0 } :
+                               DADDR[1:0]==1 ? { 16'd0, DATAO[ 7: 0],  8'd0 } :
+                                               { 24'd0, DATAO[ 7: 0]        } ):
+                   DLEN[1] ? ( DADDR[1]==1   ? { DATAO[15: 0], 16'd0 } :
+                                               { 16'd0, DATAO[15: 0] } ):
                                                  DATAO;
 
     assign XRD = DLEN&&DRW==1;
@@ -233,6 +258,7 @@ module darksocv
     initial
     begin
     `ifdef SIMULATION
+        $display("clearing MEM w/ %d words...",2**`MLEN/4);
         for(i=0;i!=2**`MLEN/4;i=i+1)
         begin
             MEM[i] = 32'd0;

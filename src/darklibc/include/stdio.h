@@ -47,6 +47,7 @@ int strlen(char *s1);
 void putx(unsigned);
 void putd(int);
 char *memcpy(char *dptr,char *sptr,int len);
+char *memcmp(char *dptr,char *sptr,int len);
 char *memset(char *dptr, int c, int len);
 char *strtok(char *str,char *dptr);
 int atoi(char *);
