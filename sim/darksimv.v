@@ -67,10 +67,24 @@ module darksimv;
     wire TX;
     wire RX = 1;
 
+    // sdram sim model!
+
+    wire        S_NWE,S_CLK;
+    reg [15:0]  S_DBFF = 0;  
+    wire [15:0] S_DB = S_NWE ? S_DBFF : 16'hzzzz;
+
+    always@(posedge S_CLK)
+    begin
+        if(S_NWE==0) S_DBFF <= S_DB;
+    end
+
     darksocv soc0
     (
         .XCLK(CLK),
         .XRES(|RES),
+        .S_CLK(S_CLK),
+        .S_NWE(S_NWE),
+        .S_DB (S_DB),
         .UART_RXD(RX),
         .UART_TXD(TX)
     );

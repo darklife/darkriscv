@@ -44,7 +44,7 @@ _start:
 
     /* check core id, boot only core 0 */
 
-    la  a1,0x80000000
+    la  a1,0x40000000
     lbu a2,2(a1)
 
 _thread_lock:
@@ -52,7 +52,7 @@ _thread_lock:
     
     /* check simulation, skip uart boot */
 
-    la  a1,0x80000000
+    la  a1,0x40000000
     lb  a0,0(a1)
     beq a0,x0,_normal_boot
 
@@ -184,7 +184,7 @@ _normal_boot:
 
 _uart_putchar:
 
-    la a1,0x80000000
+    la a1,0x40000000
 
     _uart_putchar_busy:
 
@@ -216,7 +216,7 @@ _uart_putchar:
 
 _uart_getchar:
 
-    la  a1,0x80000000
+    la  a1,0x40000000
 
     _uart_getchar_busy:
 

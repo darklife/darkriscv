@@ -39,6 +39,21 @@ module darksocv
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
 
+`ifdef __SDRAM__
+
+    output          S_CLK,
+    output          S_CKE,
+    output          S_NCS,
+    output          S_NWE,
+    output          S_NRAS,
+    output          S_NCAS,
+    output [1:0]    S_DQM,
+    output [1:0]    S_BA,
+    output [12:0]   S_A,
+    inout  [15:0]   S_DB,
+
+`endif
+
     output [3:0] LED,       // on-board leds
     output [3:0] DEBUG      // osciloscope
 );
@@ -75,13 +90,19 @@ module darksocv
 
     wire        HLT;
     wire        IRQ;
+    
     wire [31:0] IADDR;
     wire [31:0] IDATA;
+    wire        IDACK;
+    
     wire [31:0] DADDR;
     wire [31:0] DATAO;
     wire [31:0] DATAI;
     wire [ 2:0] DLEN;
     wire        DRW;
+    wire        DDACK;
+    
+    assign HLT = IDACK||DDACK;
 
     // darkriscv
 
@@ -122,16 +143,24 @@ module darksocv
 
     // address map
     
-    wire CS0 = DLEN && DADDR[31]==0;
-    wire CS1 = DLEN && DADDR[31]==1;
+    wire CS0 = DLEN && DADDR[31:30]==0;
+    wire CS1 = DLEN && DADDR[31:30]==1;
+`ifdef __SDRAM__
+    wire CS2 = DLEN && DADDR[31:30]==2;
+`endif
+    wire CS3 = 0;
 
     // legacy bus interface-X
 
+    wire [31:0] XADDR;
     wire [31:0] XATAO;
     wire [31:0] XATAI;
-    wire        XWR,XRD;
+    wire        XWR,XRD,XDACK;
     wire [3:0]  XBE;
 
+    wire [31:0] XATAIMUX [0:3];
+    wire        XDACKMUX [0:3];
+    
     assign DATAI = DLEN[0] ? ( DADDR[1:0]==3 ? XATAI[31:24] :
                                DADDR[1:0]==2 ? XATAI[23:16] :
                                DADDR[1:0]==1 ? XATAI[15: 8] :
@@ -158,6 +187,12 @@ module darksocv
                     DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
                                                 4'b0011 ) :
                                                 4'b1111;  // 32-bit
+
+    assign XADDR = DADDR;
+    assign XATAI = XATAIMUX[DADDR[31:30]];
+    assign XDACK = XDACKMUX[DADDR[31:30]];
+
+    assign DDACK = DLEN ? !XDACKMUX[DADDR[31:30]] : 0;
 
     // ro/rw memories
 
@@ -245,13 +280,13 @@ module darksocv
     end
 
     assign IDATA = HLT2 ? ROMFF2 : ROMFF;
+    assign IDACK = !IHIT;
 
     // data memory
 
     reg [1:0] DTACK  = 0;
     reg [31:0] RAMFF = 0; 
 
-    wire WHIT = 1;
     wire DHIT = !((XRD
             `ifdef __RMW_CYCLE__
                     ||XWR		// worst code ever! but it is 3:12am...
@@ -267,9 +302,9 @@ module darksocv
                     ) ? 1 : 0; // wait-states
 
 `ifdef __HARVARD__
-        RAMFF <= RAM[DADDR[`MLEN-1:2]];
+        RAMFF <= RAM[XADDR[`MLEN-1:2]];
 `else
-        RAMFF <= MEM[DADDR[`MLEN-1:2]];
+        RAMFF <= MEM[XADDR[`MLEN-1:2]];
 `endif
 
         //individual byte/word/long selection, thanks to HYF!
@@ -281,9 +316,9 @@ module darksocv
         if(!HLT && XWR && CS0)
         begin
     `ifdef __HARVARD__
-            RAM[DADDR[`MLEN-1:2]] <=
+            RAM[XADDR[`MLEN-1:2]] <=
     `else
-            MEM[DADDR[`MLEN-1:2]] <=
+            MEM[XADDR[`MLEN-1:2]] <=
     `endif
                                 {
                                     XBE[3] ? XATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
@@ -298,18 +333,21 @@ module darksocv
     // write-only operation w/ 0 wait-states:
 
     `ifdef __HARVARD__
-        if(!HLT && XWR && CS0 && XBE[3]) RAM[DADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && CS0 && XBE[2]) RAM[DADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && CS0 && XBE[1]) RAM[DADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && CS0 && XBE[0]) RAM[DADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
+        if(!HLT && XWR && CS0 && XBE[3]) RAM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
+        if(!HLT && XWR && CS0 && XBE[2]) RAM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
+        if(!HLT && XWR && CS0 && XBE[1]) RAM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
+        if(!HLT && XWR && CS0 && XBE[0]) RAM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
     `else
-        if(!HLT && XWR && CS0 && XBE[3]) MEM[DADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && CS0 && XBE[2]) MEM[DADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && CS0 && XBE[1]) MEM[DADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && CS0 && XBE[0]) MEM[DADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
+        if(!HLT && XWR && CS0 && XBE[3]) MEM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
+        if(!HLT && XWR && CS0 && XBE[2]) MEM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
+        if(!HLT && XWR && CS0 && XBE[1]) MEM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
+        if(!HLT && XWR && CS0 && XBE[0]) MEM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
     `endif
 `endif
     end
+
+    assign XATAIMUX[0] = RAMFF;
+    assign XDACKMUX[0] = DHIT;
 
     // io for debug
 
@@ -323,7 +361,6 @@ module darksocv
     reg [31:0] TIMEUS = 0;
 
     reg [31:0] IOMUXFF = 0;
-    reg [31:0] XADDR   = 0;
 
     wire [7:0] BOARD_IRQ;
 
@@ -352,7 +389,7 @@ module darksocv
         else
         if(!HLT && CS1 && XWR)
         begin
-            case(DADDR[4:0])
+            case(XADDR[4:0])
                 5'b00011:   begin
                                 //$display("clear io.irq = %x (ireq=%x, iack=%x)",XATAO[32:24],IREQ,IACK);
 
@@ -391,7 +428,7 @@ module darksocv
 
         if(CS1 && XRD)
         begin
-            casex(DADDR[4:0])
+            casex(XADDR[4:0])
                 5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
                 5'b001xx:   IOMUXFF <= UDATA; // from uart
                 5'b0100x:   IOMUXFF <= LEDFF;
@@ -402,12 +439,12 @@ module darksocv
         end
     end
 
-    assign XATAI = CS1 ? IOMUXFF : RAMFF;
+    assign XATAIMUX[1] = IOMUXFF;
+    assign XDACKMUX[1] = DHIT;
 
     assign BOARD_IRQ = IREQ^IACK;
+    
     assign IRQ = |BOARD_IRQ;
-
-    assign HLT = !IHIT||!DHIT||!WHIT;
     
 `ifndef __TESTMODE__
     assign LED = LEDFF[3:0];
@@ -424,8 +461,8 @@ module darksocv
     (
       .CLK(CLK),
       .RES(RES),
-      .RD(!HLT && XRD && CS1 && DADDR[4:2]==1),
-      .WR(!HLT && XWR && CS1 && DADDR[4:2]==1),
+      .RD(!HLT && XRD && CS1 && XADDR[4:2]==1),
+      .WR(!HLT && XWR && CS1 && XADDR[4:2]==1),
       .BE(XBE),
       .DATAI(XATAO),
       .DATAO(UDATA),
@@ -440,6 +477,42 @@ module darksocv
 `endif
       .DEBUG(UDEBUG)
     );
+
+    // sdram
+    
+`ifdef __SDRAM__
+
+    // sdram interface, thanks to my good friend Hirosh Dabui!
+
+    mt48lc16m16a2_ctrl 
+    #(
+        .SDRAM_CLK_FREQ(`BOARD_CK/1000000)
+    ) 
+    sdram0 
+    (
+        .clk        (CLK),
+        .resetn     (!RES),
+        
+        .addr       (XADDR[24:0]),
+        .din        (XATAO),
+        .dout       (XATAIMUX[2]),
+        .wmask      (XWR ? XBE : 4'b0000),
+        .valid      (CS2),
+        .ready      (XDACKMUX[2]),
+
+        .sdram_clk  (S_CLK),
+        .sdram_cke  (S_CKE),
+        .sdram_dqm  (S_DQM),
+        .sdram_addr (S_A),
+        .sdram_ba   (S_BA),
+        .sdram_csn  (S_NCS),
+        .sdram_wen  (S_NWE),
+        .sdram_rasn (S_NRAS),
+        .sdram_casn (S_NCAS),
+        .sdram_dq   (S_DB) 
+    );
+
+`endif
 	 
     assign DEBUG = { XTIMER, KDEBUG[2:0] }; // UDEBUG;
 

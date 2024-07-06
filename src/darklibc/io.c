@@ -32,7 +32,7 @@
 
 #ifdef __RISCV__
 
-volatile struct DARKIO *io = (volatile struct DARKIO *)0x80000000;
+volatile struct DARKIO *io = (volatile struct DARKIO *)0x40000000;
 
 #else
 

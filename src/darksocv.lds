@@ -51,7 +51,7 @@ MEMORY
         darkshell 
     */
     /*
-    IO  (rw!x) : ORIGIN = 0x80000000, LENGTH = 0x14
+    IO  (rw!x) : ORIGIN = 0x40000000, LENGTH = 0x14
     */    
 #if SMALL
 

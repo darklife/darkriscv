@@ -30,7 +30,13 @@ ifndef ICARUS
     ICARUS = iverilog -Wall
 endif
 
-RTLS = darksimv.v ../rtl/darksocv.v ../rtl/darkuart.v ../rtl/darkriscv.v ../rtl/darkpll.v
+RTLS =  darksimv.v                      \
+        ../rtl/darksocv.v               \
+        ../rtl/darkuart.v               \
+        ../rtl/darkriscv.v              \
+        ../rtl/darkpll.v                \
+        ../rtl/lib/mt48lc16m16a2_ctrl.v
+        
 INCS = ../rtl/config.vh
 XSIM = darksocv
 VCDS = darksocv.vcd

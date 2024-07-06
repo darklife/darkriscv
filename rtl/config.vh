@@ -390,11 +390,13 @@
     `define BOARD_CK_DIV 2
     `define INVRES 1
     `define XILINX6CLK 1
+    `define __SDRAM__ 1
 `endif
 
 `ifndef BOARD_ID
     `define BOARD_ID 0
     `define BOARD_CK 100000000
+    `define __SDRAM__ 1
 `endif
 
 `ifdef BOARD_CK_REF

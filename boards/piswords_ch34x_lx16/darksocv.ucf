@@ -26,10 +26,10 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-# Piswords RS485 LX9
+# Piswords ch34x LX16
 
 NET XCLK            LOC = T8 | PERIOD = 50MHz HIGH 50%;
-NET XRES            LOC = L3  | PULLUP;
+NET XRES            LOC = L3 | PULLUP;
 
 NET UART_RXD        LOC = C11;
 NET UART_TXD        LOC = D12;
@@ -43,3 +43,52 @@ NET DEBUG[3]        LOC = R2; # J2-30
 NET DEBUG[2]        LOC = M4; # J2-32
 NET DEBUG[1]        LOC = N6; # J2-34
 NET DEBUG[0]        LOC = N4; # J2-36
+
+# SDRAM HY57V2562GTR
+
+PIN "CLK_BUFG.O"    CLOCK_DEDICATED_ROUTE = FALSE;
+
+NET S_CLK           LOC = H4 | PERIOD = 100MHz HIGH 50%;
+NET S_CKE           LOC = H2;
+
+NET S_NCAS          LOC = F2;
+NET S_NRAS          LOC = F1;
+NET S_NWE           LOC = E1;
+NET S_NCS           LOC = G1;
+
+NET S_DQM[0]        LOC = E2;
+NET S_DQM[1]        LOC = H1;
+
+NET S_DB[0]         LOC = A3;
+NET S_DB[1]         LOC = B3;
+NET S_DB[2]         LOC = A2;
+NET S_DB[3]         LOC = B2;
+NET S_DB[4]         LOC = B1;
+NET S_DB[5]         LOC = C2;
+NET S_DB[6]         LOC = C1;
+NET S_DB[7]         LOC = D1;
+NET S_DB[8]         LOC = H5;
+NET S_DB[9]         LOC = G5;
+NET S_DB[10]        LOC = H3;
+NET S_DB[11]        LOC = F6;
+NET S_DB[12]        LOC = G3;
+NET S_DB[13]        LOC = F5;
+NET S_DB[14]        LOC = F3;
+NET S_DB[15]        LOC = F4;
+
+NET S_A[0]          LOC = J3;
+NET S_A[1]          LOC = J4;
+NET S_A[2]          LOC = K3;
+NET S_A[3]          LOC = K5;
+NET S_A[4]          LOC = P1;
+NET S_A[5]          LOC = N1;
+NET S_A[6]          LOC = M2;
+NET S_A[7]          LOC = M1;
+NET S_A[8]          LOC = L1;
+NET S_A[9]          LOC = K2;
+NET S_A[10]         LOC = K6;
+NET S_A[11]         LOC = K1;
+NET S_A[12]         LOC = J1;
+
+NET S_BA[0]         LOC = G6;
+NET S_BA[1]         LOC = J6;
