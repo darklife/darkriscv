@@ -80,7 +80,7 @@
 //    probably in a jal loop.
 // The number of threads must be 2**n (i.e. THREADS = 3 means 8 threads)
 //`define __THREADS__ 3
-//
+
 // mac instruction:
 //
 // The mac instruction is similar to other register to register
@@ -385,11 +385,15 @@
 
 `ifdef PISSWORDS_CH34X_LX16
     `define BOARD_ID 18
-    `define BOARD_CK_REF 50000000
-    `define BOARD_CK_MUL 4
-    `define BOARD_CK_DIV 2
-    `define INVRES 1
-    `define XILINX6CLK 1
+    `ifdef __3STAGE__
+        `define BOARD_CK_REF 50000000
+        `define BOARD_CK_MUL 4
+        `define BOARD_CK_DIV 2
+        `define XILINX6CLK 1
+    `else
+        `define BOARD_CK 50000000
+    `endif
+    `define INVRES 1    
     `define __SDRAM__ 1
 `endif
 
@@ -421,10 +425,16 @@
     `else
         `define RLEN 32*(2**`__THREADS__)
     `endif
+    
+    `define __CSR__ 
 `else
     `ifdef __RV32E__
         `define RLEN 16
     `else
         `define RLEN 32
     `endif
+`endif
+
+`ifdef __INTERRUPT__
+    `define __CSR__
 `endif

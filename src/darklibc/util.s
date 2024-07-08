@@ -54,6 +54,11 @@ check4rv32i:
     access to CSR registers (set/get)
 */
 
+get_mhartid:
+    addi  a0,x0,0
+    csrr  a0,mhartid
+    ret
+
 get_mtvec:
     addi  a0,x0,0
     csrr a0,mtvec

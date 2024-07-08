@@ -44,11 +44,15 @@ _start:
 
     /* check core id, boot only core 0 */
 
-    la  a1,0x40000000
-    lbu a2,2(a1)
+    addi a0,x0,0
+    csrr a0,mhartid
+    beq  a0,x0,_uart_boot
 
 _thread_lock:
-    bne a2,x0,_thread_lock
+
+    j _thread_lock
+
+_uart_boot:
     
     /* check simulation, skip uart boot */
 

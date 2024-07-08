@@ -132,22 +132,18 @@ module darksocv
     // darkriscv
 
     wire [3:0]  KDEBUG;
-    wire        IDLE;
-
-`ifdef __THREADS__
-    wire [`__THREADS__-1:0] TPTR;
-`endif
+    
+    wire        ESIMREQ,ESIMACK;
 
     darkriscv
+    #(
+        .CPTR(0)
+    )
     core0
     (
         .CLK    (CLK),
         .RES    (RES),
         .HLT    (HLT),
-
-`ifdef __THREADS__
-        .TPTR   (TPTR),
-`endif
 
 `ifdef __INTERRUPT__
         .IRQ    (IRQ),
@@ -162,7 +158,11 @@ module darksocv
         .DLEN   (DLEN),
         .DRW    (DRW),
 
-        .IDLE   (IDLE),
+`ifdef SIMULATION
+        .ESIMREQ(ESIMREQ),
+        .ESIMACK(ESIMACK),
+`endif
+
         .DEBUG  (KDEBUG)
     );
 
@@ -393,11 +393,7 @@ module darksocv
     wire [7:0] BOARD_ID = `BOARD_ID;              // board id
     wire [7:0] BOARD_CM = (`BOARD_CK/2000000);    // board clock (MHz)
 
-`ifdef __THREADS__
-    wire   [7:0] CORE_ID = TPTR;                    // core id
-`else
-    wire   [7:0] CORE_ID = 0;                       // core id
-`endif
+    wire [7:0] CORE_ID = 0;                       // core id, unused
 
     wire [31:0] UDATA; // uart data
 
@@ -480,8 +476,6 @@ module darksocv
 
     wire [3:0] UDEBUG;
 
-    wire FINISH_REQ;
-
     darkuart
     uart0
     (
@@ -499,7 +493,8 @@ module darksocv
       .TXD(UART_TXD),
 `endif		
 `ifdef SIMULATION
-      .FINISH_REQ(FINISH_REQ),
+      .ESIMREQ(ESIMREQ),
+      .ESIMACK(ESIMACK),
 `endif
       .DEBUG(UDEBUG)
     );
@@ -541,80 +536,5 @@ module darksocv
 `endif
 	 
     assign DEBUG = { XTIMER, KDEBUG[2:0] }; // UDEBUG;
-
-`ifdef SIMULATION
-
-    `ifdef __PERFMETER__
-
-        integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
-
-    `ifdef __THREADS__
-        integer thread[0:(2**`__THREADS__)-1],curtptr=0,cnttptr=0;
-        integer j;
-
-        initial for(j=0;j!=(2**`__THREADS__);j=j+1) thread[j] = 0;
-    `endif
-
-        always@(posedge CLK)
-        begin
-            if(!RES)
-            begin
-                clocks = clocks+1;
-
-                if(HLT)
-                begin
-                         if(XWR)	store = store+1;
-                    else if(XRD)	load  = load +1;
-                    else 		halt  = halt +1;
-                end
-                else
-                if(IDLE)
-                begin
-                    flush=flush+1;
-                end
-                else
-                begin
-
-        `ifdef __THREADS__
-                    for(j=0;j!=(2**`__THREADS__);j=j+1)
-                            thread[j] = thread[j]+(j==TPTR?1:0);
-
-                    if(TPTR!=curtptr)
-                    begin
-                        curtptr = TPTR;
-                        cnttptr = cnttptr+1;
-                    end
-        `endif
-                    running = running +1;
-                end
-
-                if(FINISH_REQ)
-                begin
-                    $display("****************************************************************************");
-                    $display("DarkRISCV Pipeline Report (%0d clocks):",clocks);
-
-                    $display("core0: %0d%% run, %0d%% wait (%0d%% i-bus, %0d%% d-bus/rd, %0d%% d-bus/wr), %0d%% idle",
-                        100.0*running/clocks,
-                        100.0*(load+store+halt)/clocks,
-                        100.0*halt/clocks,
-                        100.0*load/clocks,
-                        100.0*store/clocks,
-                        100.0*flush/clocks);
-
-         `ifdef __THREADS__
-                    for(j=0;j!=(2**`__THREADS__);j=j+1) $display("  thread%0d: %0d%% running",j,100.0*thread[j]/clocks);
-
-                    $display("%0d thread switches, %0d clocks/threads",cnttptr,clocks/cnttptr);
-         `endif
-                    $display("****************************************************************************");
-                    $finish();
-                end
-            end
-        end
-    `else
-        always@(posedge CLK) if(FINISH_REQ) $finish();
-    `endif
-
-`endif
 
 endmodule

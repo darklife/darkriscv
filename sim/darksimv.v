@@ -67,6 +67,8 @@ module darksimv;
     wire TX;
     wire RX = 1;
 
+`ifdef __SDRAM__
+
     // sdram sim model!
 
     wire        S_NWE,S_CLK;
@@ -78,13 +80,17 @@ module darksimv;
         if(S_NWE==0) S_DBFF <= S_DB;
     end
 
+`endif
+
     darksocv soc0
     (
         .XCLK(CLK),
         .XRES(|RES),
+`ifdef __SDRAM__        
         .S_CLK(S_CLK),
         .S_NWE(S_NWE),
         .S_DB (S_DB),
+`endif        
         .UART_RXD(RX),
         .UART_TXD(TX)
     );

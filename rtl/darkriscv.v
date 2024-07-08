@@ -55,18 +55,13 @@
 `include "../rtl/config.vh"
 
 module darkriscv
-//#(
-//    parameter [31:0] RESET_PC = 0,
-//    parameter [31:0] RESET_SP = 4096
-//)
+#(
+    parameter CPTR = 0
+)
 (
     input             CLK,   // clock
     input             RES,   // reset
     input             HLT,   // halt
-
-`ifdef __THREADS__
-    output [`__THREADS__-1:0] TPTR,  // thread pointer
-`endif
 
 `ifdef __INTERRUPT__
     input             IRQ,   // interrupt request
@@ -81,8 +76,11 @@ module darkriscv
 
     output     [ 2:0] DLEN, // data length
     output            DRW,   // data read/write
-
-    output            IDLE,   // idle output
+    
+`ifdef SIMULATION
+    input             ESIMREQ,  // end simulation req
+    output            ESIMACK,  // end simulation ack
+`endif
 
     output [3:0]  DEBUG       // old-school osciloscope based debug! :)
 );
@@ -95,9 +93,7 @@ module darkriscv
     reg XRES = 1;
 
 `ifdef __THREADS__
-    reg [`__THREADS__-1:0] XMODE = 0;     // thread ptr
-
-    assign TPTR = XMODE;
+    reg [`__THREADS__-1:0] TPTR = 0;     // thread ptr
 `endif
 
     // decode: IDATA is break apart as described in the RV32I specification
@@ -206,15 +202,15 @@ module darkriscv
 
         reg [`__THREADS__-1:0] RESMODE = -1;
 
-        wire [`__THREADS__+3:0] DPTR   = XRES ? { RESMODE, 4'd0 } : { XMODE, XIDATA[10: 7] }; // set SP_RESET when RES==1
-        wire [`__THREADS__+3:0] S1PTR  = { XMODE, XIDATA[18:15] };
-        wire [`__THREADS__+3:0] S2PTR  = { XMODE, XIDATA[23:20] };
+        wire [`__THREADS__+3:0] DPTR   = XRES ? { RESMODE, 4'd0 } : { TPTR, XIDATA[10: 7] }; // set SP_RESET when RES==1
+        wire [`__THREADS__+3:0] S1PTR  = { TPTR, XIDATA[18:15] };
+        wire [`__THREADS__+3:0] S2PTR  = { TPTR, XIDATA[23:20] };
     `else
         reg [`__THREADS__-1:0] RESMODE = -1;
 
-        wire [`__THREADS__+4:0] DPTR   = XRES ? { RESMODE, 5'd0 } : { XMODE, XIDATA[11: 7] }; // set SP_RESET when RES==1
-        wire [`__THREADS__+4:0] S1PTR  = { XMODE, XIDATA[19:15] };
-        wire [`__THREADS__+4:0] S2PTR  = { XMODE, XIDATA[24:20] };
+        wire [`__THREADS__+4:0] DPTR   = XRES ? { RESMODE, 5'd0 } : { TPTR, XIDATA[11: 7] }; // set SP_RESET when RES==1
+        wire [`__THREADS__+4:0] S1PTR  = { TPTR, XIDATA[19:15] };
+        wire [`__THREADS__+4:0] S2PTR  = { TPTR, XIDATA[24:20] };
     `endif
 `else
     `ifdef __RV32E__
@@ -256,23 +252,13 @@ module darkriscv
     `ifdef __3STAGE__
         reg [31:0] NXPC2 [0:(2**`__THREADS__)-1];       // 32-bit program counter t+2
     `endif
-
-    `ifdef __RV32E__
-        reg [31:0] REGS [0:16*(2**`__THREADS__)-1];	// general-purpose 16x32-bit registers (s1)
-    `else
-        reg [31:0] REGS [0:32*(2**`__THREADS__)-1];	// general-purpose 32x32-bit registers (s1)
-    `endif
 `else
     `ifdef __3STAGE__
         reg [31:0] NXPC2;       // 32-bit program counter t+2
     `endif
-
-    `ifdef __RV32E__
-        reg [31:0] REGS [0:15];	// general-purpose 16x32-bit registers (s1)
-    `else
-        reg [31:0] REGS [0:31];	// general-purpose 32x32-bit registers (s1)
-    `endif
 `endif
+
+    reg [31:0] REGS [0:`RLEN-1];	// general-purpose 32x32-bit registers (s1)
 
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0
@@ -280,7 +266,7 @@ module darkriscv
 `ifdef SIMULATION
     integer i;
     
-    initial for(i=0;i!=16;i=i+1) REGS[i] = 0;
+    initial for(i=0;i!=`RLEN-1;i=i+1) REGS[i] = 0;
 `endif
 
     // source-1 and source-1 register selection
@@ -300,24 +286,38 @@ module darkriscv
 
     // C-group: CSRRW
 
-`ifdef __INTERRUPT__
+`ifdef __CSR__
+
+    `ifdef __INTERRUPT__
 
     reg [31:0] MEPC  = 0;
     reg [31:0] MTVEC = 0;
     reg        MIE   = 0;
     
-    wire       MIP   = IRQ;
+    reg        MIP   = 0;
 
-    wire [31:0] CDATA = XIDATA[31:20]==12'h344 ? MIP  : // machine interrupt pending
+    wire MRET = CCC && FCT3==0 && S2PTR==2;
+    `endif
+
+
+    wire [31:0] CDATA = 
+    `ifdef __THREADS__    
+                        XIDATA[31:20]==12'hf14 ? { CPTR, TPTR } : // core/thread number
+    `else
+                        XIDATA[31:20]==12'hf14 ? CPTR  : // core number
+    `endif    
+    `ifdef __INTERRUPT__
+                        XIDATA[31:20]==12'h344 ? MIP   : // machine interrupt pending
                         XIDATA[31:20]==12'h304 ? MIE   : // machine interrupt enable
                         XIDATA[31:20]==12'h341 ? MEPC  : // machine exception PC
                         XIDATA[31:20]==12'h305 ? MTVEC : // machine vector table
+    `endif
                                                  0;	 // unknown
 
-    wire MRET = CCC && FCT3==0 && S2PTR==2;
     wire CSRW = CCC && FCT3==1;
     wire CSRR = CCC && FCT3==2;
 `endif
+
     wire EBRK = CCC && FCT3==0 && S2PTR==1;
 
     // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
@@ -391,7 +391,10 @@ module darkriscv
         FLUSH <= XRES ? 1 : HLT ? FLUSH :        // reset and halt
                        JREQ;  // flush the pipeline!
 `endif
+
 `ifdef __INTERRUPT__
+        MIP <= IRQ;
+
         if(XRES)
         begin
             MTVEC <= 0;
@@ -420,10 +423,11 @@ module darkriscv
         end
 
 `endif
+
 `ifdef __RV32E__
-        REGS[DPTR] <=   XRES||DPTR[3:0]==0 ? 0  :        // reset sp
+        REGS[DPTR] <=   XRES||DPTR[3:0]==0 ? 0  :        // reset x0
 `else
-        REGS[DPTR] <=   XRES||DPTR[4:0]==0 ? 0  :        // reset sp
+        REGS[DPTR] <=   XRES||DPTR[4:0]==0 ? 0  :        // reset x0
 `endif
                        HLT ? REGS[DPTR] :        // halt
                        LCC ? LDATA :
@@ -436,7 +440,7 @@ module darkriscv
 `ifdef __MAC16X16__
                        MAC ? REGS[DPTR]+KDATA :
 `endif
-`ifdef __INTERRUPT__
+`ifdef __CSR__
                        CSRR ? CDATA :
 `endif
                              REGS[DPTR];
@@ -445,16 +449,16 @@ module darkriscv
 
     `ifdef __THREADS__
 
-        NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[XMODE];
+        NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[TPTR];
 
-        NXPC2[XRES ? RESMODE : XMODE] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[XMODE] :   // reset and halt
+        NXPC2[XRES ? RESMODE : TPTR] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[TPTR] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
-	                                         NXPC2[XMODE]+4;                   // normal flow
+	                                         NXPC2[TPTR]+4;                   // normal flow
 
-        XMODE <= XRES ? 0 : HLT ? XMODE :        // reset and halt
-                            /*JAL*/ JREQ ? XMODE+1 : XMODE;
-	             //XMODE==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
-                 //XMODE==1/*&&!IREQ*/&&JREQ ? 0 : XMODE;  // wait pipeflush to return from irq
+        TPTR <= XRES ? 0 : HLT ? TPTR :        // reset and halt
+                            JAL /*JREQ*/ ? TPTR+1 : TPTR;
+	             //TPTR==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
+                 //TPTR==1/*&&!IREQ*/&&JREQ ? 0 : TPTR;  // wait pipeflush to return from irq
 
     `else
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
@@ -519,19 +523,94 @@ module darkriscv
 
 `ifdef __3STAGE__
     `ifdef __THREADS__
-        assign IADDR = NXPC2[XMODE];
+        assign IADDR = NXPC2[TPTR];
     `else
         assign IADDR = NXPC2;
     `endif
 `else
     assign IADDR = NXPC;
 `endif
-
-    assign IDLE = |FLUSH;
+    
 `ifdef __INTERRUPT__
     assign DEBUG = { IRQ, MIP, MIE, MRET };
 `else
-    assign DEBUG = { XRES, IDLE, SCC, LCC };
+    assign DEBUG = { XRES, |FLUSH, SCC, LCC };
+`endif
+
+`ifdef SIMULATION
+
+    `ifdef __PERFMETER__
+
+        integer clocks=0, running=0, load=0, store=0, flush=0, halt=0;
+
+    `ifdef __THREADS__
+        integer thread[0:(2**`__THREADS__)-1],curtptr=0,cnttptr=0;
+        integer j;
+
+        initial for(j=0;j!=(2**`__THREADS__);j=j+1) thread[j] = 0;
+    `endif
+
+        always@(posedge CLK)
+        begin
+            if(!RES)
+            begin
+                clocks = clocks+1;
+
+                if(HLT)
+                begin
+                         if(SCC)	store = store+1;
+                    else if(LCC)	load  = load +1;
+                    else 		halt  = halt +1;
+                end
+                else
+                if(|FLUSH)
+                begin
+                    flush=flush+1;
+                end
+                else
+                begin
+
+        `ifdef __THREADS__
+                    for(j=0;j!=(2**`__THREADS__);j=j+1)
+                            thread[j] = thread[j]+(j==TPTR?1:0);
+
+                    if(TPTR!=curtptr)
+                    begin
+                        curtptr = TPTR;
+                        cnttptr = cnttptr+1;
+                    end
+        `endif
+                    running = running +1;
+                end
+
+                if(ESIMREQ)
+                begin
+                    $display("****************************************************************************");
+                    $display("DarkRISCV Pipeline Report (%0d clocks):",clocks);
+
+                    $display("core%0d: %0d%% run, %0d%% wait (%0d%% i-bus, %0d%% d-bus/rd, %0d%% d-bus/wr), %0d%% idle",
+                        CPTR,
+                        100.0*running/clocks,
+                        100.0*(load+store+halt)/clocks,
+                        100.0*halt/clocks,
+                        100.0*load/clocks,
+                        100.0*store/clocks,
+                        100.0*flush/clocks);
+
+         `ifdef __THREADS__
+                    for(j=0;j!=(2**`__THREADS__);j=j+1) $display("  thread%0d: %0d%% running",j,100.0*thread[j]/clocks);
+
+                    $display("%0d thread switches, %0d clocks/threads",cnttptr,clocks/cnttptr);
+         `endif
+                    $display("****************************************************************************");
+                    $finish();
+                end
+            end
+        end
+    `else
+        always@(posedge CLK) if(ESIMREQ) ESIMACK <= 1;
+    `endif
+
 `endif
 
 endmodule

@@ -90,7 +90,8 @@ module darkuart
     output          TXD,            // UART xmit line
 
 `ifdef SIMULATION
-    output reg	    FINISH_REQ = 0,
+    output reg	    ESIMREQ = 0,
+    input           ESIMACK,
 `endif
     
     output [3:0]    DEBUG           // osc debug
@@ -186,7 +187,7 @@ module darkuart
                 
     `ifndef __INTERACTIVE__
                     $display(" the __INTERACTIVE__ option is disabled, ending simulation...");
-                    FINISH_REQ <= 1;
+                    ESIMREQ <= 1;
     `endif                    
                     if(IOACK==0) IOREQ <= 1;
                 end
@@ -308,6 +309,8 @@ module darkuart
         begin
             IOACK <= 1;
         end
+        
+        if(ESIMACK) $finish();
 `endif        
     end
 

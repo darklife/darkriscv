@@ -67,7 +67,7 @@ int main(void)
     
     printf("sdrm0: checking SDRAM memory...\n");
     
-    if(!(ptr=memcmp(d,s,32768))) printf("sdrm0: test failed at %x\n",ptr);
+    if((ptr=memcmp(d,s,32768))) printf("sdrm0: test failed at %x\n",ptr);
     
     printf("sdrm0: test done.\n");
 
