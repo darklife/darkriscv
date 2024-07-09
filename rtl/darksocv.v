@@ -231,12 +231,15 @@ module darksocv
     integer i;
     initial
     begin
+    `ifdef SIMULATION
+        $display("bram: split ROM/RAM BRAM w/ 2x%0dx32-bit...",2**`MLEN/4);
         for(i=0;i!=2**`MLEN/4;i=i+1)
         begin
             ROM[i] = 32'd0;
             RAM[i] = 32'd0;
         end
-
+    `endif
+    
         // workaround for vivado: no path in simulation and .mem extension
 
     `ifdef XILINX_SIMULATOR
@@ -258,7 +261,7 @@ module darksocv
     initial
     begin
     `ifdef SIMULATION
-        $display("clearing MEM w/ %d words...",2**`MLEN/4);
+        $display("bram: unified BRAM w/ %dx32-bit...",2**`MLEN/4);
         for(i=0;i!=2**`MLEN/4;i=i+1)
         begin
             MEM[i] = 32'd0;

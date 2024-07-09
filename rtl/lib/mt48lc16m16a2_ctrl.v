@@ -25,6 +25,7 @@
 // Bank Switching 4 (BA0, BA1)
 // Column Addressing 512 (A0-A8)
 // ===============================
+
 module mt48lc16m16a2_ctrl #(
     parameter SDRAM_CLK_FREQ = 64,
     parameter TRP_NS = 20,
@@ -67,13 +68,13 @@ module mt48lc16m16a2_ctrl #(
   parameter TCH = $rtoi((TCH_NS * ONE_MICROSECOND / 1000) + 1);
 
   initial begin
-    $display("Clk frequence: %d MHz", SDRAM_CLK_FREQ);
-    $display("WAIT_100US: %d cycles", WAIT_100US);
-    $display("TRP: %d cycles", TRP);
-    $display("TRC: %d cycles", TRC);
-    $display("TRCD: %d cycles", TRCD);
-    $display("TCH: %d cycles", TCH);
-    $display("CAS_LATENCY: %d cycles", CAS_LATENCY);
+    $display("sdram:         CLK: %0d MHz", SDRAM_CLK_FREQ);
+    $display("sdram:  WAIT_100US: %0d cycles", WAIT_100US);
+    $display("sdram:         TRP: %0d cycles", TRP);
+    $display("sdram:         TRC: %0d cycles", TRC);
+    $display("sdram:        TRCD: %0d cycles", TRCD);
+    $display("sdram:         TCH: %0d cycles", TCH);
+    $display("sdram: CAS_LATENCY: %0d cycles", CAS_LATENCY);
   end
 
   localparam BURST_LENGTH = 3'b001;  // 000=1, 001=2, 010=4, 011=8
