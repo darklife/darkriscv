@@ -61,17 +61,17 @@ int main(void)
 
 #ifdef SDRAM
 
-    printf("sdrm0: preparing SDRAM memory...\n");
+    printf("sdrm0: preparing SDRAM memory 1KB...\n");
 
     char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;
 
-    memcpy(d,s,32768);
+    memcpy(d,s,1024);
     
-    printf("sdrm0: checking SDRAM memory...\n");
+    printf("sdrm0: checking SDRAM memory 1KB...\n");
     
-    if((ptr=memcmp(d,s,32768))) printf("sdrm0: test failed at %x\n",ptr);
+    if((ptr=memcmp(d,s,1024))) printf("sdrm0: test failed at %x\n",ptr);
     
-    printf("sdrm0: test done.\n");
+    printf("sdrm0: test done, 1KB ok.\n");
 
 #endif
 
@@ -98,6 +98,8 @@ int main(void)
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
+
+    EBREAK;
 
     // main loop
 

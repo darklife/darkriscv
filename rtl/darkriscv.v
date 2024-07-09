@@ -384,7 +384,10 @@ module darkriscv
 	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt
 	                       FLUSH ? FLUSH-1 :
     `ifdef __INTERRUPT__
-                            MRET ? 2 :
+        `ifdef __EBREAK__
+                            EBRK ? 2 : // ebreak jmps to interrupt, i.e. mepc = PC; PC = mtvec
+        `endif
+                            MRET ? 2 : // mret returns from interrupt, i.e. PC = mepc
     `endif
 	                       JREQ ? 2 : 0;  // flush the pipeline!
 `else
@@ -402,6 +405,14 @@ module darkriscv
             MIE   <= 0;
         end
         else
+`ifdef __EBREAK__
+        if(EBRK)
+        begin
+            MEPC <= NXPC;
+            MIE  <= 0;
+        end
+        else
+`endif
         if(MIP&&MIE&&JREQ)
         begin
             MEPC <= JVAL;
@@ -465,6 +476,9 @@ module darkriscv
 
 	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
         `ifdef __INTERRUPT__
+            `ifdef __EBREAK__
+                     EBRK ? MTVEC : // ebreak causes an interrupt
+            `endif
                      MRET ? MEPC :
                     MIE&&MIP&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
@@ -476,6 +490,10 @@ module darkriscv
 `else
         NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
         `ifdef __INTERRUPT__
+            `ifdef __EBREAK__
+                     EBRK ? MTVEC : // ebreak causes an interrupt
+            `endif
+
                      MRET ? MEPC :
                     MIE&&MIP&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
@@ -486,12 +504,13 @@ module darkriscv
 
 `ifndef __YOSYS__
 
+`ifndef __EBREAK__
         if(EBRK)
         begin
             $display("breakpoint at %x",PC);
             $stop();
         end
-        
+`endif        
         if(!FLUSH && IDATA===32'dx)
         begin
             $display("invalid IDATA at %x",PC);

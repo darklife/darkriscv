@@ -296,7 +296,7 @@ module darksocv
 
     // sdram interface, thanks to my good friend Hirosh Dabui!
 
-    wire READY;
+    wire READY,T_CLK;
 
     mt48lc16m16a2_ctrl 
     #(
@@ -314,7 +314,7 @@ module darksocv
         .valid      (XCS[2]),
         .ready      (READY),
 
-        .sdram_clk  (S_CLK),
+        .sdram_clk  (T_CLK),
         .sdram_cke  (S_CKE),
         .sdram_dqm  (S_DQM),
         .sdram_addr (S_A),
@@ -325,6 +325,13 @@ module darksocv
         .sdram_casn (S_NCAS),
         .sdram_dq   (S_DB) 
     );
+
+    reg [1:0] TS_CLK = 2'b00;
+
+    always@(posedge CLK) TS_CLK[0] <= RES ? 0: !TS_CLK[0];
+    always@(negedge CLK) TS_CLK[1] <= RES ? 0: !TS_CLK[1];
+
+    assign S_CLK = ^TS_CLK;
 
     assign XDACKMUX[2] = !READY;
 

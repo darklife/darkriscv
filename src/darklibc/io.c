@@ -91,6 +91,8 @@ void irq_handler(void)
         }
         io->irq = IRQ_TIMR;
     }
+    else
+        printf("probably an ebreak at %x\n",get_mepc()-4);
 
     return;
 }

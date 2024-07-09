@@ -263,7 +263,7 @@ module mt48lc16m16a2_ctrl #(
           state_nxt       = WAIT_STATE;
         end else begin
           /* autorefresh */
-          command_nxt = CMD_REF;
+          command_nxt = CMD_DSEL; // CMD_REF;
           saddr_nxt = 0;
           ba_nxt = 0;
           wait_states_nxt = 3;  //TRC;

@@ -107,6 +107,14 @@
 // much sense use it with the 2-stage pipeline).
 `define __INTERRUPT__
 
+// ebreak support
+// 
+// ebreak enable live debug w/ gdb, with break points, single-step, etc...
+// it basically consists in a single instruction that replace the normal
+// instruction, so an exception will be triggered, which is like an interrupt,
+// but with no real interrupt source.
+`define __EBREAK__
+
 // initial PC
 //
 // Typically, the PC is set [by HW] to address 0, representing the start of
