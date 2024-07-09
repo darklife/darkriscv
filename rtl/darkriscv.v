@@ -408,7 +408,7 @@ module darkriscv
 `ifdef __EBREAK__
         if(EBRK)
         begin
-            MEPC <= NXPC;
+            MEPC <= PC; // ebreak saves the current PC!
             MIE  <= 0;
         end
         else

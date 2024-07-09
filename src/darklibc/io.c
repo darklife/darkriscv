@@ -92,8 +92,10 @@ void irq_handler(void)
         io->irq = IRQ_TIMR;
     }
     else
-        printf("probably an ebreak at %x\n",get_mepc()-4);
-
+    {
+        printf("breakpoint at %x, skipped\n",get_mepc());
+        set_mepc(get_mepc()+4);
+    }
     return;
 }
 
