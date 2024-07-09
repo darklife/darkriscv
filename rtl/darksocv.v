@@ -111,52 +111,46 @@ module darksocv
 	 assign UART_TXD = UART_RXD;
 `endif
 
-    // darkriscv bus interface
+    // darkbridge interface
 
-    wire        HLT;
-    wire        IRQ;
-    
-    wire [31:0] IADDR;
-    wire [31:0] IDATA;
-    wire        IDACK;
-    
-    wire [31:0] DADDR;
-    wire [31:0] DATAO;
-    wire [31:0] DATAI;
-    wire [ 2:0] DLEN;
-    wire        DRW;
-    wire        DDACK;
-    
-    assign HLT = IDACK||DDACK;
+    wire        XIRQ;
+    wire [31:0] XADDR;
+    wire [31:0] XATAO;
+    wire        XWR,
+                XRD;
+    wire [3:0]  XBE;
+    wire [3:0]  XCS;
 
+    wire [31:0] XATAIMUX [0:3];
+    wire        XDACKMUX [0:3];
+    
+    assign XDACKMUX[0] = 0; // unused
+    assign XDACKMUX[3] = 0; // unused    
+    
     // darkriscv
 
     wire [3:0]  KDEBUG;
     
     wire        ESIMREQ,ESIMACK;
 
-    darkriscv
-    #(
-        .CPTR(0)
-    )
-    core0
+    darkbridge
+    bridge0
     (
         .CLK    (CLK),
         .RES    (RES),
-        .HLT    (HLT),
 
 `ifdef __INTERRUPT__
-        .IRQ    (IRQ),
+        .XIRQ    (XIRQ),
 `endif
 
-        .IDATA  (IDATA),
-        .IADDR  (IADDR),
-        .DADDR  (DADDR),
-
-        .DATAI  (DATAI),
-        .DATAO  (DATAO),
-        .DLEN   (DLEN),
-        .DRW    (DRW),
+        .XADDR  (XADDR),
+        .XATAI  (XATAIMUX[XADDR[31:30]]),
+        .XATAO  (XATAO),
+        .XRD    (XRD),
+        .XWR    (XWR),
+        .XBE    (XBE),
+        .XCS    (XCS),
+        .XDACK  (XDACKMUX[XADDR[31:30]]),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
@@ -166,219 +160,7 @@ module darksocv
         .DEBUG  (KDEBUG)
     );
 
-    // address map
-    
-    wire CS0 = DLEN && DADDR[31:30]==0;
-    wire CS1 = DLEN && DADDR[31:30]==1;
-`ifdef __SDRAM__
-    wire CS2 = DLEN && DADDR[31:30]==2;
-`endif
-    wire CS3 = 0;
-
-    // legacy bus interface-X
-
-    wire [31:0] XADDR;
-    wire [31:0] XATAO;
-    wire [31:0] XATAI;
-    wire        XWR,XRD,XDACK;
-    wire [3:0]  XBE;
-
-    wire [31:0] XATAIMUX [0:3];
-    wire        XDACKMUX [0:3];
-    
-    assign DATAI = DLEN[0] ? ( DADDR[1:0]==3 ? XATAI[31:24] :
-                               DADDR[1:0]==2 ? XATAI[23:16] :
-                               DADDR[1:0]==1 ? XATAI[15: 8] :
-                                               XATAI[ 7: 0] ):
-                   DLEN[1] ? ( DADDR[1]==1   ? XATAI[31:16] :
-                                               XATAI[15: 0] ):
-                                               XATAI;
-
-    assign XATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAO[ 7: 0], 24'd0 } :
-                               DADDR[1:0]==2 ? {  8'd0, DATAO[ 7: 0], 16'd0 } :
-                               DADDR[1:0]==1 ? { 16'd0, DATAO[ 7: 0],  8'd0 } :
-                                               { 24'd0, DATAO[ 7: 0]        } ):
-                   DLEN[1] ? ( DADDR[1]==1   ? { DATAO[15: 0], 16'd0 } :
-                                               { 16'd0, DATAO[15: 0] } ):
-                                                 DATAO;
-
-    assign XRD = DLEN&&DRW==1;
-    assign XWR = DLEN&&DRW==0;
-
-    assign XBE =    DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
-                                DADDR[1:0]==2 ? 4'b0100 :
-                                DADDR[1:0]==1 ? 4'b0010 :
-                                                4'b0001 ) :
-                    DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
-                                                4'b0011 ) :
-                                                4'b1111;  // 32-bit
-
-    assign XADDR = DADDR;
-    assign XATAI = XATAIMUX[DADDR[31:30]];
-    assign XDACK = XDACKMUX[DADDR[31:30]];
-
-    assign DDACK = DLEN ? !XDACKMUX[DADDR[31:30]] : 0;
-
-    // ro/rw memories
-
-`ifdef __HARVARD__
-
-    reg [31:0] ROM [0:2**`MLEN/4-1]; // ro memory
-    reg [31:0] RAM [0:2**`MLEN/4-1]; // rw memory
-
-    // memory initialization
-
-    integer i;
-    initial
-    begin
-    `ifdef SIMULATION
-        $display("bram: split ROM/RAM BRAM w/ 2x%0dx32-bit...",2**`MLEN/4);
-        for(i=0;i!=2**`MLEN/4;i=i+1)
-        begin
-            ROM[i] = 32'd0;
-            RAM[i] = 32'd0;
-        end
-    `endif
-    
-        // workaround for vivado: no path in simulation and .mem extension
-
-    `ifdef XILINX_SIMULATOR
-        $readmemh("darksocv.rom.mem",ROM);
-        $readmemh("darksocv.ram.mem",RAM);
-    `else
-        $readmemh("../src/darksocv.rom.mem",ROM);
-        $readmemh("../src/darksocv.ram.mem",RAM);
-    `endif
-    end
-
-`else
-
-    reg [31:0] MEM [0:2**`MLEN/4-1]; // ro memory
-
-    // memory initialization
-
-    integer i;
-    initial
-    begin
-    `ifdef SIMULATION
-        $display("bram: unified BRAM w/ %dx32-bit...",2**`MLEN/4);
-        for(i=0;i!=2**`MLEN/4;i=i+1)
-        begin
-            MEM[i] = 32'd0;
-        end
-    `endif
-
-     // workaround for vivado: no path in simulation and .mem extension
-
-    `ifdef XILINX_SIMULATOR
-        $readmemh("darksocv.mem",MEM);
-	 `elsif MODEL_TECH
-		  $readmemh("../../../../src/darksocv.mem",MEM);
-    `else
-        $readmemh("../src/darksocv.mem",MEM,0);
-    `endif
-    end
-
-`endif
-
-    // instruction memory
-
-    reg [1:0]  ITACK  = 0;
-    reg [31:0] ROMFF  = 0;
-    reg [31:0] ROMFF2 = 0;
-    reg        HLT2   = 0;
-
-    wire IHIT = !ITACK;
-
-    always@(posedge CLK)
-    begin
-        ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0;
-        
-        if(HLT^HLT2)
-        begin
-            ROMFF2 <= ROMFF;
-        end
-
-        HLT2 <= HLT;
-
-`ifdef __HARVARD__
-        ROMFF <= ROM[IADDR[`MLEN-1:2]];
-`else
-        ROMFF <= MEM[IADDR[`MLEN-1:2]];
-`endif
-    end
-
-    assign IDATA = HLT2 ? ROMFF2 : ROMFF;
-    assign IDACK = !IHIT;
-
-    // data memory
-
-    reg [1:0] DTACK  = 0;
-    reg [31:0] RAMFF = 0; 
-
-    wire DHIT = !((XRD
-            `ifdef __RMW_CYCLE__
-                    ||XWR		// worst code ever! but it is 3:12am...
-            `endif
-                    ) && DTACK!=1); // the XWR operatio does not need ws. in this config.
-
-    always@(posedge CLK) // stage #1.0
-    begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD
-            `ifdef __RMW_CYCLE__
-                    ||XWR		// 2nd worst code ever!
-            `endif
-                    ) ? 1 : 0; // wait-states
-
-`ifdef __HARVARD__
-        RAMFF <= RAM[XADDR[`MLEN-1:2]];
-`else
-        RAMFF <= MEM[XADDR[`MLEN-1:2]];
-`endif
-
-        //individual byte/word/long selection, thanks to HYF!
-
-`ifdef __RMW_CYCLE__
-
-        // read-modify-write operation w/ 1 wait-state:
-
-        if(!HLT && XWR && CS0)
-        begin
-    `ifdef __HARVARD__
-            RAM[XADDR[`MLEN-1:2]] <=
-    `else
-            MEM[XADDR[`MLEN-1:2]] <=
-    `endif
-                                {
-                                    XBE[3] ? XATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
-                                    XBE[2] ? XATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
-                                    XBE[1] ? XATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
-                                    XBE[0] ? XATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
-                                };
-        end
-
-`else
-
-    // write-only operation w/ 0 wait-states:
-
-    `ifdef __HARVARD__
-        if(!HLT && XWR && CS0 && XBE[3]) RAM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && CS0 && XBE[2]) RAM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && CS0 && XBE[1]) RAM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && CS0 && XBE[0]) RAM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
-    `else
-        if(!HLT && XWR && CS0 && XBE[3]) MEM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && CS0 && XBE[2]) MEM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && CS0 && XBE[1]) MEM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && CS0 && XBE[0]) MEM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
-    `endif
-`endif
-    end
-
-    assign XATAIMUX[0] = RAMFF;
-    assign XDACKMUX[0] = DHIT;
-
-    // io for debug
+    // io block
 
     reg [15:0] GPIOFF = 0;
     reg [15:0] LEDFF  = 0;
@@ -404,15 +186,21 @@ module darksocv
 
     reg XTIMER = 0;
 
+    reg [1:0] DTACK  = 0;
+
+    wire DHIT = !((XRD) && DTACK!=1); // the XWR operatio does not need ws. in this config.
+
     always@(posedge CLK)
     begin
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD) ? 1 : 0; // wait-states
+
         if(RES)
         begin
             IACK <= 0;
             TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
         end
         else
-        if(!HLT && CS1 && XWR)
+        if(XCS[1] && XWR)
         begin
             case(XADDR[4:0])
                 5'b00011:   begin
@@ -451,7 +239,7 @@ module darksocv
             TIMEUS <= (TIMER == TIMERFF) ? TIMEUS + 1'b1 : TIMEUS;
         end
 
-        if(CS1 && XRD)
+        if(XCS[1] && XRD)
         begin
             casex(XADDR[4:0])
                 5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
@@ -465,11 +253,11 @@ module darksocv
     end
 
     assign XATAIMUX[1] = IOMUXFF;
-    assign XDACKMUX[1] = DHIT;
+    assign XDACKMUX[1] = !DHIT;
 
     assign BOARD_IRQ = IREQ^IACK;
     
-    assign IRQ = |BOARD_IRQ;
+    assign XIRQ = |BOARD_IRQ;
     
 `ifndef __TESTMODE__
     assign LED = LEDFF[3:0];
@@ -484,12 +272,12 @@ module darksocv
     (
       .CLK(CLK),
       .RES(RES),
-      .RD(!HLT && XRD && CS1 && XADDR[4:2]==1),
-      .WR(!HLT && XWR && CS1 && XADDR[4:2]==1),
+      .RD(XRD && XCS[1] && XADDR[4:2]==1),
+      .WR(XWR && XCS[1] && XADDR[4:2]==1),
       .BE(XBE),
       .DATAI(XATAO),
       .DATAO(UDATA),
-      .IRQ(UART_IRQ),
+      //.IRQ(UART_IRQ),
 
 `ifndef __TESTMODE__
       .RXD(UART_RXD),
@@ -508,6 +296,8 @@ module darksocv
 
     // sdram interface, thanks to my good friend Hirosh Dabui!
 
+    wire READY;
+
     mt48lc16m16a2_ctrl 
     #(
         .SDRAM_CLK_FREQ(`BOARD_CK/1000000)
@@ -521,8 +311,8 @@ module darksocv
         .din        (XATAO),
         .dout       (XATAIMUX[2]),
         .wmask      (XWR ? XBE : 4'b0000),
-        .valid      (CS2),
-        .ready      (XDACKMUX[2]),
+        .valid      (XCS[2]),
+        .ready      (READY),
 
         .sdram_clk  (S_CLK),
         .sdram_cke  (S_CKE),
@@ -536,8 +326,10 @@ module darksocv
         .sdram_dq   (S_DB) 
     );
 
+    assign XDACKMUX[2] = !READY;
+
 `endif
 	 
-    assign DEBUG = { XTIMER, KDEBUG[2:0] }; // UDEBUG;
+    assign DEBUG = KDEBUG;
 
 endmodule

@@ -32,6 +32,7 @@ endif
 
 RTLS =  darksimv.v                      \
         ../rtl/darksocv.v               \
+        ../rtl/darkbridge.v             \
         ../rtl/darkuart.v               \
         ../rtl/darkriscv.v              \
         ../rtl/darkpll.v                \

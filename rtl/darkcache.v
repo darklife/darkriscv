@@ -53,7 +53,7 @@ module darkcache
 );
 
     reg  [31:0] CDATA [0:2**`DEPTH-1];
-    reg  [31:8] CTAG  [0:2**`DEPTH-1];
+    reg  [31:`DEPTH+2] CTAG  [0:2**`DEPTH-1];
     
     // reg  [2**`DEPTH-1:0] CVALID = 0;
     reg  CVALID [0:2**`DEPTH-1];
