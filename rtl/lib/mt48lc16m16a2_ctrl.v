@@ -94,8 +94,8 @@ module mt48lc16m16a2_ctrl #(
   localparam CMD_BST = 4'b0110;  // burst stop
   localparam CMD_PRE = 4'b0010;  // precharge selected bank, A10=H both banks
   localparam CMD_REF = 4'b0001;  // auto refresh (cke=H), selfrefresh assign cke=L
-  localparam CMD_NOP = 4'b0111;
-  localparam CMD_DSEL = 4'b1xxx;
+  localparam CMD_NOP = 4'b0111;  // no-operation
+  localparam CMD_DSEL = 4'b1111; // low-power
 
   reg [3:0] command;
   reg [3:0] command_nxt;

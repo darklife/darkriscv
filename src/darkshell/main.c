@@ -33,7 +33,7 @@
 
 int main(void)
 {
-    unsigned mtvec=0;
+    void *mtvec=0;
 
     printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
     printf("build: %s for %s\n",BUILD,ARCH);
@@ -95,11 +95,11 @@ int main(void)
     io->irq = IRQ_TIMR; // clear interrupts
     utimers = 0;
 
+    EBREAK;
+    
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
-
-    EBREAK;
 
     // main loop
 

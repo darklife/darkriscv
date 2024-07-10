@@ -29,6 +29,7 @@
  */
 
 #include <io.h>
+#include <stdio.h>
 
 #ifdef __RISCV__
 
@@ -82,19 +83,27 @@ char *board_name(int id)
 __attribute__ ((interrupt ("machine")))
 void irq_handler(void)
 {
-    if(io->irq == IRQ_TIMR)
+    switch(get_mcause())
     {
-        if(!utimers--)
-        {
-            io->led++;
-            utimers=999999;
-        }
-        io->irq = IRQ_TIMR;
-    }
-    else
-    {
-        printf("breakpoint at %x, skipped\n",get_mepc());
-        set_mepc(get_mepc()+4);
+        case 0x00000003:
+            printf("irqm0: ebreak @%x, skipped\n",get_mepc());
+            set_mepc(get_mepc()+4);
+            break;
+
+        case 0x8000000b:
+            if(io->irq == IRQ_TIMR)
+            {
+                if(!utimers--)
+                {
+                    io->led++;
+                    utimers=999999;
+                }
+                io->irq = IRQ_TIMR;
+            }
+            break;
+        default:
+            printf("irqm0: unknown irq, ignored...\n");
+            break;
     }
     return;
 }

@@ -290,11 +290,11 @@ module darkriscv
 
     `ifdef __INTERRUPT__
 
-    reg [31:0] MEPC  = 0;
-    reg [31:0] MTVEC = 0;
-    reg        MIE   = 0;
-    
-    reg        MIP   = 0;
+    reg [31:0] MCAUSE   = 0;
+    reg [31:0] MEPC     = 0;
+    reg [31:0] MTVEC    = 0;
+    reg        MIE      = 0;
+    reg        MIP      = 0;
 
     wire MRET = CCC && FCT3==0 && S2PTR==2;
     `endif
@@ -310,6 +310,7 @@ module darkriscv
                         XIDATA[31:20]==12'h344 ? MIP   : // machine interrupt pending
                         XIDATA[31:20]==12'h304 ? MIE   : // machine interrupt enable
                         XIDATA[31:20]==12'h341 ? MEPC  : // machine exception PC
+                        XIDATA[31:20]==12'h342 ? MCAUSE: // machine expection cause
                         XIDATA[31:20]==12'h305 ? MTVEC : // machine vector table
     `endif
                                                  0;	 // unknown
@@ -400,23 +401,26 @@ module darkriscv
 
         if(XRES)
         begin
-            MTVEC <= 0;
-            MEPC  <= 0;
-            MIE   <= 0;
+            MTVEC  <= 0;
+            MEPC   <= 0;
+            MIE    <= 0;
+            MCAUSE <= 0;
         end
         else
 `ifdef __EBREAK__
         if(EBRK)
         begin
-            MEPC <= PC; // ebreak saves the current PC!
-            MIE  <= 0;
+            MEPC   <= PC; // ebreak saves the current PC!
+            MIE    <= 0;  // no interrupts when handling ebreak!
+            MCAUSE <= 32'h00000003; // ebreak
         end
         else
 `endif
         if(MIP&&MIE&&JREQ)
         begin
-            MEPC <= JVAL;
-            MIE  <= 0;
+            MEPC   <= JVAL;
+            MIE    <= 0;
+            MCAUSE <= 32'h8000000b; // ext interrupt
         end
         else
         if(CSRW)

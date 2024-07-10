@@ -41,6 +41,8 @@
     .globl  get_mepc
     .globl  get_mie
     .globl  get_mip
+    .globl  get_mcause
+    .globl  get_mhartid
 
 check4rv32i:
 
@@ -53,6 +55,11 @@ check4rv32i:
 /*
     access to CSR registers (set/get)
 */
+
+get_mcause:
+    addi  a0,x0,0
+    csrr  a0,mcause
+    ret
 
 get_mhartid:
     addi  a0,x0,0

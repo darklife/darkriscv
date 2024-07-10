@@ -135,22 +135,28 @@ module darkbridge
 
     assign XADDR = DADDR;
 
-    // soc to darkriscv
+    // soc to darkriscv, always 1 clk late
 
     wire [31:0] XATAI0;
     wire        XDACK0;
 
-    wire [31:0] XXATAI = XCS[0] ? XATAI0 : XATAI;
-
-    assign DATAI = DLEN[0] ? ( DADDR[1:0]==3 ? XXATAI[31:24] :
-                               DADDR[1:0]==2 ? XXATAI[23:16] :
-                               DADDR[1:0]==1 ? XXATAI[15: 8] :
-                                               XXATAI[ 7: 0] ):
-                   DLEN[1] ? ( DADDR[1]==1   ? XXATAI[31:16] :
-                                               XXATAI[15: 0] ):
-                                               XXATAI;
+    reg [1:0] DADDR2 = 0;
+    reg       XCS0FF  = 0;
     
-    assign DDACK = XCS[0] ? DLEN && XDACK0 : DLEN && XDACK;
+    always@(posedge CLK) DADDR2 <= DADDR[1:0];
+    always@(posedge CLK) XCS0FF <= XCS[0];
+
+    wire [31:0] XXATAI = XCS0FF ? XATAI0 : XATAI;
+
+    assign DATAI = DLEN[0] ? ( DADDR2[1:0]==3 ? XXATAI[31:24] :
+                               DADDR2[1:0]==2 ? XXATAI[23:16] :
+                               DADDR2[1:0]==1 ? XXATAI[15: 8] :
+                                                XXATAI[ 7: 0] ):
+                   DLEN[1] ? ( DADDR2[1]==1   ? XXATAI[31:16] :
+                                                XXATAI[15: 0] ):
+                                                XXATAI;
+    
+    assign DDACK = XCS0FF ? DLEN && XDACK0 : DLEN && XDACK;
 
     // ro/rw memories
 

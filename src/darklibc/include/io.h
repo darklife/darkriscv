@@ -69,12 +69,18 @@ extern unsigned char kmem[8192];
 #define IRQ_UART 0x02
 
 int  check4rv32i(void);
-void set_mtvec(void (*f)(void));
-void set_mepc(void (*f)(void));
+
+void set_mtvec(void *f);
+void set_mepc(void *);
 void set_mie(int);
-int  get_mtvec(void);
-int  get_mepc(void);
+
+void *get_mtvec(void);
+void *get_mepc(void);
+
 int  get_mie(void);
+int  get_mcause(void);
+int  get_mhartid(void);
+
 void banner(void);
 
 __attribute__ ((interrupt ("machine"))) void irq_handler(void);
