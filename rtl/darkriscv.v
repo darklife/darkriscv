@@ -290,11 +290,13 @@ module darkriscv
 
     `ifdef __INTERRUPT__
 
+    reg [31:0] MSTATUS  = 0;
+    reg [31:0] MSCRATCH = 0;
     reg [31:0] MCAUSE   = 0;
     reg [31:0] MEPC     = 0;
     reg [31:0] MTVEC    = 0;
-    reg        MIE      = 0;
-    reg        MIP      = 0;
+    reg [31:0] MIE      = 0;
+    reg [31:0] MIP      = 0;
 
     wire MRET = CCC && FCT3==0 && S2PTR==2;
     `endif
@@ -307,11 +309,13 @@ module darkriscv
                         XIDATA[31:20]==12'hf14 ? CPTR  : // core number
     `endif    
     `ifdef __INTERRUPT__
-                        XIDATA[31:20]==12'h344 ? MIP   : // machine interrupt pending
-                        XIDATA[31:20]==12'h304 ? MIE   : // machine interrupt enable
-                        XIDATA[31:20]==12'h341 ? MEPC  : // machine exception PC
-                        XIDATA[31:20]==12'h342 ? MCAUSE: // machine expection cause
-                        XIDATA[31:20]==12'h305 ? MTVEC : // machine vector table
+                        XIDATA[31:20]==12'h344 ? MIP      : // machine interrupt pending
+                        XIDATA[31:20]==12'h304 ? MIE      : // machine interrupt enable
+                        XIDATA[31:20]==12'h341 ? MEPC     : // machine exception PC
+                        XIDATA[31:20]==12'h342 ? MCAUSE   : // machine expection cause
+                        XIDATA[31:20]==12'h305 ? MTVEC    : // machine vector table
+                        XIDATA[31:20]==12'h300 ? MSTATUS  : // machine status
+                        XIDATA[31:20]==12'h340 ? MSCRATCH : // machine status
     `endif
                                                  0;	 // unknown
 
@@ -397,44 +401,50 @@ module darkriscv
 `endif
 
 `ifdef __INTERRUPT__
-        MIP <= IRQ;
+        MIP[11] <= IRQ;
 
         if(XRES)
         begin
-            MTVEC  <= 0;
-            MEPC   <= 0;
-            MIE    <= 0;
-            MCAUSE <= 0;
+            MTVEC    <= 0;
+            MEPC     <= 0;
+            MIE      <= 0;
+            MCAUSE   <= 0;
+            MSTATUS  <= 0;
+            MSCRATCH <= 0;
         end
         else
 `ifdef __EBREAK__
-        if(EBRK)
+        if(EBRK) // ebreak cannot be blocked!
         begin
-            MEPC   <= PC; // ebreak saves the current PC!
-            MIE    <= 0;  // no interrupts when handling ebreak!
-            MCAUSE <= 32'h00000003; // ebreak
+            MEPC   <= PC;               // ebreak saves the current PC!
+            MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
+            MSTATUS[7] <= MSTATUS[3];   // copy old MIE bit
+            MCAUSE <= 32'h00000003;     // ebreak
         end
         else
 `endif
-        if(MIP&&MIE&&JREQ)
+        if(MSTATUS[3]&&MIP[11]&&MIE[11]&&JREQ)
         begin
-            MEPC   <= JVAL;
-            MIE    <= 0;
-            MCAUSE <= 32'h8000000b; // ext interrupt
+            MEPC   <= JVAL;             // interrupt saves the next PC!
+            MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
+            MSTATUS[7] <= MSTATUS[3];   // copy old MIE bit
+            MCAUSE <= 32'h8000000b;     // ext interrupt
         end
         else
         if(CSRW)
         begin
             case(XIDATA[31:20])
-                12'h305: MTVEC <= U1REG;
-                12'h341: MEPC  <= U1REG;
-                12'h304: MIE   <= U1REG;
+                12'h300: MSTATUS  <= U1REG;
+                12'h340: MSCRATCH <= U1REG;
+                12'h305: MTVEC    <= U1REG;
+                12'h341: MEPC     <= U1REG;
+                12'h304: MIE      <= U1REG;
             endcase
         end
         else
         if(MRET)
         begin
-            MIE <= 1;
+            MSTATUS[3] <= MSTATUS[7]; // return last MIE bit
         end
 
 `endif
@@ -484,7 +494,7 @@ module darkriscv
                      EBRK ? MTVEC : // ebreak causes an interrupt
             `endif
                      MRET ? MEPC :
-                    MIE&&MIP&&JREQ ? MTVEC : // pending interrupt + pipeline flush
+                    MSTATUS[3]&&MIP[11]&&MIE[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
@@ -499,7 +509,7 @@ module darkriscv
             `endif
 
                      MRET ? MEPC :
-                    MIE&&MIP&&JREQ ? MTVEC : // pending interrupt + pipeline flush
+                    MSTATUS[3]&&MIP[11]&&MIE[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
