@@ -115,6 +115,13 @@
 // but with no real interrupt source.
 `define __EBREAK__
 
+// CSR support
+// 
+// enable this to use CSR registers...  INTERRUPT and EBREAK use this in
+// order to read some special exception registers.  Also, THREADS use this in
+// order to identify the core number.  
+`define __CSR__
+
 // initial PC
 //
 // Typically, the PC is set [by HW] to address 0, representing the start of
@@ -153,37 +160,17 @@
 // makes no effect in other simulators, but it appears as a warning.
 //`define __REGDUMP__
 
-// full harvard architecture:
-//
-// When defined, enforses that the instruction and data buses are connected
-// to fully separate memory banks.  Although the darkriscv always use
-// harvard architecture in the core, with separate instruction and data
-// buses, the logic levels outside the core can use different architectures
-// and concepts, including von neumann, wich a single bus shared by
-// instruction and data access, as well a mix between harvard and von
-// neumann, which is possible in the case of dual-port blockrams, where is
-// possible connect two separate buses in a single memory bank.  the main
-// advantage of a single memory bank is that the .text and .data areas can
-// be better allocated, but in this case is not possible protect the .text
-// area as in the case of separate memory banks.
-// WARNING: this setup must match with the src/darksocv.ld.src file!
-//`define __HARVARD__
-
 // memory size:
 //
 // The current test firmware requires 8KB of memory, but it depends of the
 // memory layout: whenthe I-bus and D-bus are both attached in the same BRAM,
-// it is possible assume that 8MB is enough, but when the I-bus and D-bus are
+// it is possible assume that 8kB is enough, but when the I-bus and D-bus are
 // attached to separate memories, the I-BRAM requires around 5KB and the
 // D-BRAM requires about 1.5KB. A safe solution is just simply and set the
 // size as the same.
 // The size is defined as 2**MLEN, i.e. the address bits used in the memory.
 // WARNING: this setup must match with the src/darksocv.ld.src file!
-`ifdef __HARVARD__
-    `define MLEN 13 // MEM[12:0] ->  8KBytes LENGTH = 0x2000
-`else
-    `define MLEN 15 // MEM[12:0] -> 32KBytes LENGTH = 0x8000 for coremark!
-`endif
+`define MLEN 15 // MEM[14:0] -> 32KBytes LENGTH = 0x8000 for coremark!
 
 // read-modify-write cycle:
 //
@@ -444,5 +431,9 @@
 `endif
 
 `ifdef __INTERRUPT__
+    `define __CSR__
+`endif
+
+`ifdef __EBREAK__
     `define __CSR__
 `endif

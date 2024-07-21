@@ -160,38 +160,6 @@ module darkbridge
 
     // ro/rw memories
 
-`ifdef __HARVARD__
-
-    reg [31:0] ROM [0:2**`MLEN/4-1]; // ro memory
-    reg [31:0] RAM [0:2**`MLEN/4-1]; // rw memory
-
-    // memory initialization
-
-    integer i;
-    initial
-    begin
-    `ifdef SIMULATION
-        $display("bram: split ROM/RAM BRAM w/ 2x%0dx32-bit...",2**`MLEN/4);
-        for(i=0;i!=2**`MLEN/4;i=i+1)
-        begin
-            ROM[i] = 32'd0;
-            RAM[i] = 32'd0;
-        end
-    `endif
-    
-        // workaround for vivado: no path in simulation and .mem extension
-
-    `ifdef XILINX_SIMULATOR
-        $readmemh("darksocv.rom.mem",ROM);
-        $readmemh("darksocv.ram.mem",RAM);
-    `else
-        $readmemh("../src/darksocv.rom.mem",ROM);
-        $readmemh("../src/darksocv.ram.mem",RAM);
-    `endif
-    end
-
-`else
-
     reg [31:0] MEM [0:2**`MLEN/4-1]; // ro memory
 
     // memory initialization
@@ -218,8 +186,6 @@ module darkbridge
     `endif
     end
 
-`endif
-
     // instruction memory
 
     reg [1:0]  ITACK  = 0;
@@ -240,11 +206,7 @@ module darkbridge
 
         HLT2 <= HLT;
 
-`ifdef __HARVARD__
-        ROMFF <= ROM[IADDR[`MLEN-1:2]];
-`else
         ROMFF <= MEM[IADDR[`MLEN-1:2]];
-`endif
         // if(!RES && !HLT) $display("bram: addr=%x inst=%x\n",IADDR,ROMFF);
     end
 
@@ -270,11 +232,7 @@ module darkbridge
             `endif
                     ) ? 1 : 0; // wait-states
 
-`ifdef __HARVARD__
-        RAMFF <= RAM[XADDR[`MLEN-1:2]];
-`else
         RAMFF <= MEM[XADDR[`MLEN-1:2]];
-`endif
 
         //individual byte/word/long selection, thanks to HYF!
 
@@ -284,11 +242,7 @@ module darkbridge
 
         if(!HLT && XWR && XCS[0])
         begin
-    `ifdef __HARVARD__
-            RAM[XADDR[`MLEN-1:2]] <=
-    `else
             MEM[XADDR[`MLEN-1:2]] <=
-    `endif
                                 {
                                     XBE[3] ? XATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
                                     XBE[2] ? XATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
@@ -301,17 +255,10 @@ module darkbridge
 
     // write-only operation w/ 0 wait-states:
 
-    `ifdef __HARVARD__
-        if(!HLT && XWR && XCS[0] && XBE[3]) RAM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && XCS[0] && XBE[2]) RAM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && XCS[0] && XBE[1]) RAM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && XCS[0] && XBE[0]) RAM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
-    `else
         if(!HLT && XWR && XCS[0] && XBE[3]) MEM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
         if(!HLT && XWR && XCS[0] && XBE[2]) MEM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
         if(!HLT && XWR && XCS[0] && XBE[1]) MEM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
         if(!HLT && XWR && XCS[0] && XBE[0]) MEM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
-    `endif
 `endif
     end
 

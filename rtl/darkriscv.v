@@ -401,7 +401,7 @@ module darkriscv
 `endif
 
 `ifdef __INTERRUPT__
-        MIP[11] <= IRQ;
+        MIP[11] <= IRQ&&MSTATUS[3]&&MIE[11];
 
         if(XRES)
         begin
@@ -423,7 +423,7 @@ module darkriscv
         end
         else
 `endif
-        if(MSTATUS[3]&&MIP[11]&&MIE[11]&&JREQ)
+        if(MIP[11]&&JREQ)
         begin
             MEPC   <= JVAL;             // interrupt saves the next PC!
             MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
@@ -494,7 +494,7 @@ module darkriscv
                      EBRK ? MTVEC : // ebreak causes an interrupt
             `endif
                      MRET ? MEPC :
-                    MSTATUS[3]&&MIP[11]&&MIE[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
+                    MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
 	                 JREQ ? JVAL :                    // jmp/bra
 	                        NXPC2+4;                   // normal flow
@@ -509,7 +509,7 @@ module darkriscv
             `endif
 
                      MRET ? MEPC :
-                    MSTATUS[3]&&MIP[11]&&MIE[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
+                    MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
               JREQ ? JVAL :                   // jmp/bra
                      NXPC+4;                   // normal flow
