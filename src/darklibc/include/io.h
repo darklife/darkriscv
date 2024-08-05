@@ -73,6 +73,7 @@ int  check4rv32i(void);
 void set_mtvec(void *f);
 void set_mepc(void *);
 void set_mie(int);
+void set_mstatus(int);
 
 void *get_mtvec(void);
 void *get_mepc(void);
@@ -80,6 +81,7 @@ void *get_mepc(void);
 int  get_mie(void);
 int  get_mcause(void);
 int  get_mhartid(void);
+int  get_mstatus(void);
 
 void banner(void);
 

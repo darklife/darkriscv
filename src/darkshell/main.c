@@ -57,7 +57,7 @@ int main(void)
     printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
 
-#define SDRAM
+//#define SDRAM
 
 #ifdef SDRAM
 
@@ -84,7 +84,10 @@ int main(void)
     if(mtvec)
     {
         printf("mtvec: handler@%d, enabling interrupts...\n",mtvec);
-        set_mie(1);
+
+        set_mie((1<<11)|get_mie());
+        set_mstatus((1<<3)|get_mstatus());
+
         printf("mtvec: interrupts enabled!\n");
     }
     else
@@ -95,7 +98,7 @@ int main(void)
     io->irq = IRQ_TIMR; // clear interrupts
     utimers = 0;
 
-    EBREAK;
+    // EBREAK;
     
     printf("\n");
 

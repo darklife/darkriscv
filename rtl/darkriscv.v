@@ -41,7 +41,7 @@
 `define SCC     7'b01000_11      // sxx   rs1,rs2,imm[11:0]
 `define MCC     7'b00100_11      // xxxi  rd,rs1,imm[11:0]
 `define RCC     7'b01100_11      // xxx   rd,rs1,rs2
-`define CCC     7'b11100_11      // exx, csrxx, mret
+`define SYS     7'b11100_11      // exx, csrxx, mret
 
 // proprietary extension (custom-0)
 `define CUS     7'b00010_11      // cus   rd,rs1,rs2,fc3,fct5
@@ -102,7 +102,7 @@ module darkriscv
 
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XCCC; //, XFCC, XCCC;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XSYS; //, XFCC, XSYS;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
@@ -124,7 +124,7 @@ module darkriscv
         XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
         XCUS   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`CUS;
         //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
-        XCCC   <= XRES ? 0 : HLT ? XCCC   : IDATA[6:0]==`CCC;
+        XSYS   <= XRES ? 0 : HLT ? XSYS   : IDATA[6:0]==`SYS;
 
         // signal extended immediate, according to the instruction type:
 
@@ -152,7 +152,7 @@ module darkriscv
 
     wire [31:0] XIDATA;
 
-    wire XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XCCC; //, XFCC, XCCC;
+    wire XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XSYS; //, XFCC, XSYS;
 
     wire [31:0] XSIMM;
     wire [31:0] XUIMM;
@@ -172,7 +172,7 @@ module darkriscv
     assign XRCC   = XRES ? 0 : IDATA[6:0]==`RCC;
     assign XCUS   = XRES ? 0 : IDATA[6:0]==`CUS;
     //assign XFCC   <= XRES ? 0 : IDATA[6:0]==`FCC;
-    assign XCCC   = XRES ? 0 : IDATA[6:0]==`CCC;
+    assign XSYS   = XRES ? 0 : IDATA[6:0]==`SYS;
 
     // signal extended immediate, according to the instruction type:
 
@@ -246,7 +246,7 @@ module darkriscv
     wire    RCC = FLUSH ? 0 : XRCC; // OPCODE==7'b0110011; //FCT3
     wire    CUS = FLUSH ? 0 : XCUS; // OPCODE==7'b0110011; //FCT3
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
-    wire    CCC = FLUSH ? 0 : XCCC; // OPCODE==7'b1110011; //FCT3
+    wire    SYS = FLUSH ? 0 : XSYS; // OPCODE==7'b1110011; //FCT3
 
 `ifdef __THREADS__
     `ifdef __3STAGE__
@@ -298,7 +298,7 @@ module darkriscv
     reg [31:0] MIE      = 0;
     reg [31:0] MIP      = 0;
 
-    wire MRET = CCC && FCT3==0 && S2PTR==2;
+    wire MRET = SYS && FCT3==0 && S2PTR==2;
     `endif
 
 
@@ -318,12 +318,14 @@ module darkriscv
                         XIDATA[31:20]==12'h340 ? MSCRATCH : // machine status
     `endif
                                                  0;	 // unknown
-
-    wire CSRW = CCC && FCT3==1;
-    wire CSRR = CCC && FCT3==2;
+  
+    wire CSRX  = SYS && FCT3[1:0];
+    
+    wire [31:0] CRMASK = FCT3[2] ? 1<<XIDATA[S1PTR] : U1REG;
+   
 `endif
 
-    wire EBRK = CCC && FCT3==0 && S2PTR==1;
+    wire EBRK = SYS && FCT3==0 && S2PTR==1;
 
     // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
 
@@ -423,23 +425,23 @@ module darkriscv
         end
         else
 `endif
+        if(CSRX)
+        begin
+            case(XIDATA[31:20])
+                12'h300: MSTATUS  <= FCT3[1:0]==3 ? (MSTATUS  & ~CRMASK) : FCT3[1:0]==2 ? (MSTATUS  | CRMASK) : CRMASK;
+                12'h340: MSCRATCH <= FCT3[1:0]==3 ? (MSCRATCH & ~CRMASK) : FCT3[1:0]==2 ? (MSCRATCH | CRMASK) : CRMASK;
+                12'h305: MTVEC    <= FCT3[1:0]==3 ? (MTVEC    & ~CRMASK) : FCT3[1:0]==2 ? (MTVEC    | CRMASK) : CRMASK;
+                12'h341: MEPC     <= FCT3[1:0]==3 ? (MEPC     & ~CRMASK) : FCT3[1:0]==2 ? (MEPC     | CRMASK) : CRMASK;
+                12'h304: MIE      <= FCT3[1:0]==3 ? (MIE      & ~CRMASK) : FCT3[1:0]==2 ? (MIE      | CRMASK) : CRMASK;
+            endcase
+        end
+        else
         if(MIP[11]&&JREQ)
         begin
             MEPC   <= JVAL;             // interrupt saves the next PC!
             MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
             MSTATUS[7] <= MSTATUS[3];   // copy old MIE bit
             MCAUSE <= 32'h8000000b;     // ext interrupt
-        end
-        else
-        if(CSRW)
-        begin
-            case(XIDATA[31:20])
-                12'h300: MSTATUS  <= U1REG;
-                12'h340: MSCRATCH <= U1REG;
-                12'h305: MTVEC    <= U1REG;
-                12'h341: MEPC     <= U1REG;
-                12'h304: MIE      <= U1REG;
-            endcase
         end
         else
         if(MRET)
@@ -466,7 +468,7 @@ module darkriscv
                        MAC ? REGS[DPTR]+KDATA :
 `endif
 `ifdef __CSR__
-                       CSRR ? CDATA :
+                       CSRX ? CDATA :
 `endif
                              REGS[DPTR];
 

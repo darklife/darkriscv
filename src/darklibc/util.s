@@ -34,9 +34,13 @@
     .align  2
 
     .globl  check4rv32i
+
+    .globl  set_mstatus
     .globl  set_mtvec
     .globl  set_mepc
     .globl  set_mie
+
+    .globl  get_mstatus
     .globl  get_mtvec
     .globl  get_mepc
     .globl  get_mie
@@ -54,7 +58,14 @@ check4rv32i:
 
 /*
     access to CSR registers (set/get)
+    always clear a0 before! because it will return zero case the csr
+    instruction is not implemented...
 */
+
+get_mstatus:
+    addi a0,x0,0
+    csrr a0,mstatus
+    ret
 
 get_mcause:
     addi  a0,x0,0
@@ -84,6 +95,10 @@ get_mie:
 get_mip:
     addi a0,x0,0
     csrr a0,mip
+    ret
+
+set_mstatus:
+    csrw mstatus,a0
     ret
 
 set_mtvec:
