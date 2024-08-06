@@ -318,10 +318,12 @@ module darkriscv
                         XIDATA[31:20]==12'h340 ? MSCRATCH : // machine status
     `endif
                                                  0;	 // unknown
+
+    wire [31:0] WDATA = FCT3[1:0]==3 ? (CDATA & ~CRMASK) : FCT3[1:0]==2 ? (CDATA | CRMASK) : CRMASK;
   
     wire CSRX  = SYS && FCT3[1:0];
     
-    wire [31:0] CRMASK = FCT3[2] ? 1<<XIDATA[S1PTR] : U1REG;
+    wire [31:0] CRMASK = FCT3[2] ? S1PTR : U1REG;
    
 `endif
 
@@ -428,11 +430,11 @@ module darkriscv
         if(CSRX)
         begin
             case(XIDATA[31:20])
-                12'h300: MSTATUS  <= FCT3[1:0]==3 ? (MSTATUS  & ~CRMASK) : FCT3[1:0]==2 ? (MSTATUS  | CRMASK) : CRMASK;
-                12'h340: MSCRATCH <= FCT3[1:0]==3 ? (MSCRATCH & ~CRMASK) : FCT3[1:0]==2 ? (MSCRATCH | CRMASK) : CRMASK;
-                12'h305: MTVEC    <= FCT3[1:0]==3 ? (MTVEC    & ~CRMASK) : FCT3[1:0]==2 ? (MTVEC    | CRMASK) : CRMASK;
-                12'h341: MEPC     <= FCT3[1:0]==3 ? (MEPC     & ~CRMASK) : FCT3[1:0]==2 ? (MEPC     | CRMASK) : CRMASK;
-                12'h304: MIE      <= FCT3[1:0]==3 ? (MIE      & ~CRMASK) : FCT3[1:0]==2 ? (MIE      | CRMASK) : CRMASK;
+                12'h300: MSTATUS  <= WDATA;
+                12'h340: MSCRATCH <= WDATA;
+                12'h305: MTVEC    <= WDATA;
+                12'h341: MEPC     <= WDATA;
+                12'h304: MIE      <= WDATA;
             endcase
         end
         else

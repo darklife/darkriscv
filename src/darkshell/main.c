@@ -31,6 +31,8 @@
 #include <io.h>
 #include <stdio.h>
 
+unsigned csr_test(unsigned,unsigned,unsigned);
+
 int main(void)
 {
     void *mtvec=0;
@@ -76,6 +78,8 @@ int main(void)
 #endif
 
 #ifndef SMALL
+
+    printf("mtvec: csr_test=%x\n",csr_test(0xFFFF0000,0xFFFF,0x00FFFF00));
 
     set_mtvec(irq_handler);
 
