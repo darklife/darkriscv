@@ -298,7 +298,7 @@ module darkriscv
     reg [31:0] MIE      = 0;
     reg [31:0] MIP      = 0;
 
-    wire MRET = SYS && FCT3==0 && S2PTR==2;
+    wire MRET = SYS && FCT3==0 && XIDATA[24:20]==2;
     `endif
 
 
@@ -323,11 +323,11 @@ module darkriscv
   
     wire CSRX  = SYS && FCT3[1:0];
     
-    wire [31:0] CRMASK = FCT3[2] ? S1PTR : U1REG;
+    wire [31:0] CRMASK = FCT3[2] ? XIDATA[19:15] : U1REG;
    
 `endif
 
-    wire EBRK = SYS && FCT3==0 && S2PTR==1;
+    wire EBRK = SYS && FCT3==0 && XIDATA[24:20]==1;
 
     // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
 
