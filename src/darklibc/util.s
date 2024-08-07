@@ -37,12 +37,16 @@
 
     .globl  set_mstatus
     .globl  set_mtvec
+    .globl  set_stvec
     .globl  set_mepc
+    .globl  set_sepc
     .globl  set_mie
 
     .globl  get_mstatus
     .globl  get_mtvec
+    .globl  get_stvec
     .globl  get_mepc
+    .globl  get_sepc
     .globl  get_mie
     .globl  get_mip
     .globl  get_mcause
@@ -87,6 +91,16 @@ get_mepc:
     csrr a0,mepc
     ret
 
+get_stvec:
+    addi  a0,x0,0
+    csrr a0,stvec
+    ret
+
+get_sepc:
+    addi a0,x0,0
+    csrr a0,sepc
+    ret
+
 get_mie:
     addi a0,x0,0
     csrr a0,mie
@@ -107,6 +121,14 @@ set_mtvec:
 
 set_mepc:
     csrw mepc,a0
+    ret
+
+set_stvec:
+    csrw stvec,a0
+    ret
+
+set_sepc:
+    csrw sepc,a0
     ret
 
 set_mie:

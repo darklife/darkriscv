@@ -83,29 +83,26 @@ char *board_name(int id)
 __attribute__ ((interrupt ("machine")))
 void irq_handler(void)
 {
-    switch(get_mcause())
+    EBREAK;
+    if(io->irq == IRQ_TIMR)
     {
-        case 0x00000003:
-            printf("irqm0: ebreak @%x, skipped\n",get_mepc());
-            set_mepc(get_mepc()+4);
-            break;
-
-        case 0x8000000b:
-            if(io->irq == IRQ_TIMR)
-            {
-                if(!utimers--)
-                {
-                    io->led++;
-                    utimers=999999;
-                }
-                io->irq = IRQ_TIMR;
-            }
-            break;
-        default:
-            printf("irqm0: unknown irq, ignored...\n");
-            break;
+        if(!utimers--)
+        {
+            io->led++;
+            utimers=999999;
+        }
+        io->irq = IRQ_TIMR;
     }
-    return;
+}
+
+__attribute__ ((interrupt ("supervisor")))
+void dbg_handler(void)
+{
+    static debug = 1;
+    
+    if(debug) printf("dbug0: ebreak @%x, skipped\n",get_sepc());
+    debug=0;
+    set_sepc(get_sepc()+4);
 }
 
 #endif

@@ -70,13 +70,17 @@ extern unsigned char kmem[8192];
 
 int  check4rv32i(void);
 
+void set_stvec(void *f);
 void set_mtvec(void *f);
+void set_sepc(void *);
 void set_mepc(void *);
 void set_mie(int);
 void set_mstatus(int);
 
 void *get_mtvec(void);
+void *get_stvec(void);
 void *get_mepc(void);
+void *get_sepc(void);
 
 int  get_mie(void);
 int  get_mcause(void);
@@ -85,7 +89,8 @@ int  get_mstatus(void);
 
 void banner(void);
 
-__attribute__ ((interrupt ("machine"))) void irq_handler(void);
+__attribute__ ((interrupt ("machine")))    void irq_handler(void);
+__attribute__ ((interrupt ("supervisor"))) void dbg_handler(void);
 
 extern unsigned _text;
 extern unsigned _data;

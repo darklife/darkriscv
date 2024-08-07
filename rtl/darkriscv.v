@@ -288,21 +288,34 @@ module darkriscv
 
 `ifdef __CSR__
 
+    wire CSRX  = SYS && FCT3[1:0];
+
     `ifdef __INTERRUPT__
+        reg [31:0] MSTATUS  = 0;
+        reg [31:0] MSCRATCH = 0;
+        reg [31:0] MCAUSE   = 0;
+        reg [31:0] MEPC     = 0;
+        reg [31:0] MTVEC    = 0;
+        reg [31:0] MIE      = 0;
+        reg [31:0] MIP      = 0;
 
-    reg [31:0] MSTATUS  = 0;
-    reg [31:0] MSCRATCH = 0;
-    reg [31:0] MCAUSE   = 0;
-    reg [31:0] MEPC     = 0;
-    reg [31:0] MTVEC    = 0;
-    reg [31:0] MIE      = 0;
-    reg [31:0] MIP      = 0;
-
-    wire MRET = SYS && FCT3==0 && XIDATA[24:20]==2;
+        wire MRET = SYS && FCT3==0 && XIDATA[31:20]==12'b001100000010;
     `endif
 
+    `ifdef __EBREAK__
+        reg [31:0] SSTATUS  = 0;
+        reg [31:0] SSCRATCH = 0;
+        reg [31:0] SCAUSE   = 0;
+        reg [31:0] SEPC     = 0;
+        reg [31:0] STVEC    = 0;
+        reg [31:0] SIE      = 0;
+        reg [31:0] SIP      = 0;
 
-    wire [31:0] CDATA = 
+        wire EBRK = SYS && FCT3==0 && XIDATA[31:20]==12'b000000000001;
+        wire SRET = SYS && FCT3==0 && XIDATA[31:20]==12'b000100000010;
+    `endif
+
+    wire [31:0] CRDATA = 
     `ifdef __THREADS__    
                         XIDATA[31:20]==12'hf14 ? { CPTR, TPTR } : // core/thread number
     `else
@@ -317,17 +330,22 @@ module darkriscv
                         XIDATA[31:20]==12'h300 ? MSTATUS  : // machine status
                         XIDATA[31:20]==12'h340 ? MSCRATCH : // machine status
     `endif
+    `ifdef __EBREAK__
+                        XIDATA[31:20]==12'h144 ? SIP      : // machine interrupt pending
+                        XIDATA[31:20]==12'h104 ? SIE      : // machine interrupt enable
+                        XIDATA[31:20]==12'h141 ? SEPC     : // machine exception PC
+                        XIDATA[31:20]==12'h142 ? SCAUSE   : // machine expection cause
+                        XIDATA[31:20]==12'h105 ? STVEC    : // machine vector table
+                        XIDATA[31:20]==12'h100 ? SSTATUS  : // machine status
+                        XIDATA[31:20]==12'h140 ? SSCRATCH : // machine status
+    `endif
                                                  0;	 // unknown
 
-    wire [31:0] WDATA = FCT3[1:0]==3 ? (CDATA & ~CRMASK) : FCT3[1:0]==2 ? (CDATA | CRMASK) : CRMASK;
-  
-    wire CSRX  = SYS && FCT3[1:0];
-    
+    wire [31:0] WRDATA = FCT3[1:0]==3 ? (CRDATA & ~CRMASK) : FCT3[1:0]==2 ? (CRDATA | CRMASK) : CRMASK;
     wire [31:0] CRMASK = FCT3[2] ? XIDATA[19:15] : U1REG;
    
 `endif
 
-    wire EBRK = SYS && FCT3==0 && XIDATA[24:20]==1;
 
     // RM-group of instructions (OPCODEs==7'b0010011/7'b0110011), merged! src=immediate(M)/register(R)
 
@@ -392,12 +410,14 @@ module darkriscv
 `ifdef __3STAGE__
 	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt
 	                       FLUSH ? FLUSH-1 :
+    `ifdef __EBREAK__
+                            EBRK ? 2 : // ebreak jmps to system level, i.e. sepc = PC; PC = stvec
+                            SRET ? 2 : // sret returns from system level, i.e. PC = sepc
+    `endif
     `ifdef __INTERRUPT__
-        `ifdef __EBREAK__
-                            EBRK ? 2 : // ebreak jmps to interrupt, i.e. mepc = PC; PC = mtvec
-        `endif
                             MRET ? 2 : // mret returns from interrupt, i.e. PC = mepc
     `endif
+
 	                       JREQ ? 2 : 0;  // flush the pipeline!
 `else
         FLUSH <= XRES ? 1 : HLT ? FLUSH :        // reset and halt
@@ -405,8 +425,13 @@ module darkriscv
 `endif
 
 `ifdef __INTERRUPT__
-        MIP[11] <= IRQ&&MSTATUS[3]&&MIE[11];
 
+    `ifdef __EBREAK__
+        MIP[11] <= IRQ&&MSTATUS[3]&&MIE[11]&&!SIP[1];
+    `else
+        MIP[11] <= IRQ&&MSTATUS[3]&&MIE[11];
+    `endif
+    
         if(XRES)
         begin
             MTVEC    <= 0;
@@ -417,40 +442,76 @@ module darkriscv
             MSCRATCH <= 0;
         end
         else
-`ifdef __EBREAK__
-        if(EBRK) // ebreak cannot be blocked!
+        if(!HLT||!FLUSH)
         begin
-            MEPC   <= PC;               // ebreak saves the current PC!
-            MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
-            MSTATUS[7] <= MSTATUS[3];   // copy old MIE bit
-            MCAUSE <= 32'h00000003;     // ebreak
+            if(CSRX)
+            begin
+                case(XIDATA[31:20])
+                    12'h300: MSTATUS  <= WRDATA;
+                    12'h340: MSCRATCH <= WRDATA;
+                    12'h305: MTVEC    <= WRDATA;
+                    12'h341: MEPC     <= WRDATA;
+                    12'h304: MIE      <= WRDATA;
+                endcase
+            end
+            else
+            if(MIP[11] && JREQ)
+            begin
+                MEPC   <= JVAL;             // interrupt saves the next PC!
+                MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
+                MSTATUS[7] <= MSTATUS[3];   // copy old MIE bit
+                MCAUSE <= 32'h8000000b;     // ext interrupt
+            end
+            else
+            if(MRET)
+            begin
+                MSTATUS[3] <= MSTATUS[7]; // return last MIE bit
+            end
         end
-        else
 `endif
-        if(CSRX)
-        begin
-            case(XIDATA[31:20])
-                12'h300: MSTATUS  <= WDATA;
-                12'h340: MSCRATCH <= WDATA;
-                12'h305: MTVEC    <= WDATA;
-                12'h341: MEPC     <= WDATA;
-                12'h304: MIE      <= WDATA;
-            endcase
-        end
-        else
-        if(MIP[11]&&JREQ)
-        begin
-            MEPC   <= JVAL;             // interrupt saves the next PC!
-            MSTATUS[3] <= 0;            // no interrupts when handling ebreak!
-            MSTATUS[7] <= MSTATUS[3];   // copy old MIE bit
-            MCAUSE <= 32'h8000000b;     // ext interrupt
-        end
-        else
-        if(MRET)
-        begin
-            MSTATUS[3] <= MSTATUS[7]; // return last MIE bit
-        end
 
+`ifdef __EBREAK__
+   
+        if(XRES)
+        begin
+            STVEC    <= 0;
+            SEPC     <= 0;
+            SIE      <= 0;
+            SIP      <= 0;
+            SCAUSE   <= 0;
+            SSTATUS  <= 0;
+            SSCRATCH <= 0;
+        end
+        else
+        if(!HLT||!FLUSH)
+        begin
+            if(EBRK) // ebreak cannot be blocked!
+            begin
+                SEPC   <= PC;               // ebreak saves the current PC!
+                SSTATUS[1] <= 0;            // no interrupts when handling ebreak!
+                SSTATUS[5] <= SSTATUS[1];   // copy old MIE bit
+                SCAUSE <= 32'h00000003;     // ebreak
+                SIP[1] <= 1;                // set when ebreak!
+            end
+            else
+            if(CSRX)
+            begin
+                case(XIDATA[31:20])
+                    12'h100: SSTATUS  <= WRDATA;
+                    12'h140: SSCRATCH <= WRDATA;
+                    12'h105: STVEC    <= WRDATA;
+                    12'h141: SEPC     <= WRDATA;
+                    12'h104: SIE      <= WRDATA;
+                endcase
+            end
+            else
+            if(SRET)
+            begin
+                SSTATUS[3] <= SSTATUS[7]; // return last MIE bit
+                SIP[1] <= 0;              //return from ebreak
+            end
+        end
+        
 `endif
 
 `ifdef __RV32E__
@@ -470,7 +531,7 @@ module darkriscv
                        MAC ? REGS[DPTR]+KDATA :
 `endif
 `ifdef __CSR__
-                       CSRX ? CDATA :
+                       CSRX ? CRDATA :
 `endif
                              REGS[DPTR];
 
@@ -493,11 +554,13 @@ module darkriscv
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
 
 	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
+        `ifdef __EBREAK__
+                     SRET ? SEPC :  // return from system call
+                     EBRK ? STVEC : // ebreak causes an system call                     
+        `endif
+
         `ifdef __INTERRUPT__
-            `ifdef __EBREAK__
-                     EBRK ? MTVEC : // ebreak causes an interrupt
-            `endif
-                     MRET ? MEPC :
+                     MRET ? MEPC :  // return from interrupt
                     MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
 	                 JREQ ? JVAL :                    // jmp/bra
@@ -507,11 +570,12 @@ module darkriscv
 
 `else
         NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
-        `ifdef __INTERRUPT__
-            `ifdef __EBREAK__
+        
+        `ifdef __EBREAK__
+                     MRET ? MEPC :
                      EBRK ? MTVEC : // ebreak causes an interrupt
-            `endif
-
+        `endif
+        `ifdef __INTERRUPT__
                      MRET ? MEPC :
                     MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
@@ -523,7 +587,7 @@ module darkriscv
 `ifndef __YOSYS__
 
 `ifndef __EBREAK__
-        if(EBRK)
+        if(!HLT&&!FLUSH&&EBRK)
         begin
             $display("breakpoint at %x",PC);
             $stop();
@@ -535,9 +599,9 @@ module darkriscv
             $stop();  
         end
         
-        if(LCC && !HLT && ((DLEN==4 && DATAI[31:0]===32'dx)||
-                           (DLEN==2 && DATAI[15:0]===16'dx)||
-                           (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
+        if(LCC&&!HLT&&!FLUSH&&( (DLEN==4 && DATAI[31:0]===32'dx)||
+                                (DLEN==2 && DATAI[15:0]===16'dx)||
+                                (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
         begin
             $display("invalid DATAI@%x at %x",DADDR,PC);
             $stop();

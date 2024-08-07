@@ -36,6 +36,7 @@ unsigned csr_test(unsigned,unsigned,unsigned);
 int main(void)
 {
     void *mtvec=0;
+    void *stvec=0;
 
     printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
     printf("build: %s for %s\n",BUILD,ARCH);
@@ -78,6 +79,15 @@ int main(void)
 #endif
 
 #ifndef SMALL
+
+    set_stvec(dbg_handler);
+    
+    stvec = get_stvec();
+    
+    if(stvec)
+        printf("stvec: handler@%d, debug enabled...\n",stvec);
+    else
+        printf("stvec: not found (not debug)\n");
 
     printf("mtvec: csr_test=%x\n",csr_test(0xFFFF0000,0xFFFF,0x00FFFF00));
 
