@@ -80,6 +80,11 @@ int main(void)
 
 #ifndef SMALL
 
+    int csr = csr_test(0xFFFF0000,0xFFFF,0x00FFFF00);
+    
+    if(csr) printf("csrxx: csr_test=%x\n",csr);
+    else    printf("csrxx: not found.\n");
+
     set_stvec(dbg_handler);
     
     stvec = get_stvec();
@@ -87,9 +92,7 @@ int main(void)
     if(stvec)
         printf("stvec: handler@%d, debug enabled...\n",stvec);
     else
-        printf("stvec: not found (not debug)\n");
-
-    printf("mtvec: csr_test=%x\n",csr_test(0xFFFF0000,0xFFFF,0x00FFFF00));
+        printf("stvec: not found\n");
 
     set_mtvec(irq_handler);
 
@@ -105,7 +108,7 @@ int main(void)
         printf("mtvec: interrupts enabled!\n");
     }
     else
-        printf("mtvec: not found (polling only)\n");
+        printf("mtvec: not found (polling)\n");
 
 #endif
 
@@ -131,7 +134,7 @@ int main(void)
         {
             while(1)
             {
-                if(io->irq&IRQ_TIMR)
+                if(io->irq==IRQ_TIMR)
                 {
                     if(!utimers--)
                     {

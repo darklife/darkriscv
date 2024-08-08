@@ -90,7 +90,7 @@
 // can be used to accelerate the mul/div operations, the mac operation is
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
-`define __MAC16X16__
+//`define __MAC16X16__
 
 // interrupt support
 //
@@ -105,7 +105,7 @@
 // The interrupt support cannot be used with threading (because makes no
 // much sense?)... also, it requires the 3 stage pipeline (again, makes no
 // much sense use it with the 2-stage pipeline).
-`define __INTERRUPT__
+//`define __INTERRUPT__
 
 // ebreak support
 // 
@@ -113,14 +113,14 @@
 // it basically consists in a single instruction that replace the normal
 // instruction, so an exception will be triggered, which is like an interrupt,
 // but with no real interrupt source.
-`define __EBREAK__
+//`define __EBREAK__
 
 // CSR support
 // 
 // enable this to use CSR registers...  INTERRUPT and EBREAK use this in
 // order to read some special exception registers.  Also, THREADS use this in
 // order to identify the core number.  
-`define __CSR__
+//`define __CSR__
 
 // initial PC
 //
@@ -180,7 +180,7 @@
 // separate 16-bit and 8-bit words. Typically, the RMW cycle results in a
 // decrease of 5% in the performance (not the clock, but the instruction
 // pipeline eficiency) due to memory wait-states.
-`define __RMW_CYCLE__
+//`define __RMW_CYCLE__
 
 // UART speed is set in bits per second, typically 115200 bps:
 //`define __UARTSPEED__ 115200

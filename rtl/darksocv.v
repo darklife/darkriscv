@@ -170,9 +170,9 @@ module darksocv
         .DEBUG  (KDEBUG)
     );
 
-    // boot memory
+    // bram memory
 
-    darkram boot0
+    darkram bram0
     (
         .CLK    (CLK),
         .RES    (RES),
