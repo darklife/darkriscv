@@ -36,6 +36,7 @@ RTLS =  darksimv.v                      \
         ../rtl/darkuart.v               \
         ../rtl/darkriscv.v              \
         ../rtl/darkpll.v                \
+        ../rtl/darkram.v                \
         ../rtl/lib/mt48lc16m16a2_ctrl.v
         
 INCS = ../rtl/config.vh
