@@ -123,11 +123,8 @@ module darksocv
 
     wire [31:0] XATAIMUX [0:3];
     wire        XDACKMUX [0:3];
-    
-    assign XDACKMUX[0] = 0; // unused
+
     assign XDACKMUX[3] = 0; // unused
-    
-    assign XATAIMUX[0] = 0; // unused    
     assign XATAIMUX[3] = 0; // unused
     
     // darkriscv
@@ -135,6 +132,11 @@ module darksocv
     wire [3:0]  KDEBUG;
     
     wire        ESIMREQ,ESIMACK;
+
+    wire        HLT;   
+    wire [31:0] IADDR;
+    wire [31:0] IDATA;
+    wire        IDACK;
 
     darkbridge
     bridge0
@@ -155,6 +157,11 @@ module darksocv
         .XCS    (XCS),
         .XDACK  (XDACKMUX[XADDR[31:30]]),
 
+        .HLT    (HLT),
+        .IADDR  (IADDR),
+        .IDATA  (IDATA),
+        .IDACK  (IDACK),
+
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
         .ESIMACK(ESIMACK),
@@ -163,134 +170,61 @@ module darksocv
         .DEBUG  (KDEBUG)
     );
 
+    // boot memory
+
+    darkram boot0
+    (
+        .CLK    (CLK),
+        .RES    (RES),
+        .HLT    (HLT),
+        
+        .IADDR  (IADDR),
+        .IDATA  (IDATA),
+        .IDACK  (IDACK),
+        
+        .XCS    (XCS[0]),
+        .XRD    (XRD),
+        .XWR    (XWR),
+        .XBE    (XBE),
+        .XADDR  (XADDR),
+        .XATAI  (XATAO),
+        .XATAO  (XATAIMUX[0]),
+        .XDACK  (XDACKMUX[0])
+    );
+
     // io block
 
-    reg [15:0] GPIOFF = 0;
-    reg [15:0] LEDFF  = 0;
+    wire [3:0] IODEBUG;
 
-    reg  [7:0] IREQ = 0;
-    reg  [7:0] IACK = 0;
-
-    reg [31:0] TIMERFF = 0;
-    reg [31:0] TIMEUS = 0;
-
-    reg [31:0] IOMUXFF = 0;
-
-    wire [7:0] BOARD_IRQ;
-
-    wire [7:0] BOARD_ID = `BOARD_ID;              // board id
-    wire [7:0] BOARD_CM = (`BOARD_CK/2000000);    // board clock (MHz)
-
-    wire [7:0] CORE_ID = 0;                       // core id, unused
-
-    wire [31:0] UDATA; // uart data
-
-    reg [31:0] TIMER = 0;
-
-    reg XTIMER = 0;
-
-    reg [1:0] DTACK  = 0;
-
-    wire DHIT = !(XCS[1] && (XRD) && DTACK!=1); // the XWR operatio does not need ws. in this config.
-
-    always@(posedge CLK)
-    begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD) ? 1 : 0; // wait-states
-
-        if(RES)
-        begin
-            IACK <= 0;
-            TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
-        end
-        else
-        if(XCS[1] && XWR)
-        begin
-            case(XADDR[4:0])
-                5'b00011:   begin
-                                //$display("clear io.irq = %x (ireq=%x, iack=%x)",XATAO[32:24],IREQ,IACK);
-
-                                IACK[7] <= XATAO[7+24] ? IREQ[7] : IACK[7];
-                                IACK[6] <= XATAO[6+24] ? IREQ[6] : IACK[6];
-                                IACK[5] <= XATAO[5+24] ? IREQ[5] : IACK[5];
-                                IACK[4] <= XATAO[4+24] ? IREQ[4] : IACK[4];
-                                IACK[3] <= XATAO[3+24] ? IREQ[3] : IACK[3];
-                                IACK[2] <= XATAO[2+24] ? IREQ[2] : IACK[2];
-                                IACK[1] <= XATAO[1+24] ? IREQ[1] : IACK[1];
-                                IACK[0] <= XATAO[0+24] ? IREQ[0] : IACK[0];
-                            end
-                5'b01000:   LEDFF   <= XATAO[15:0];
-                5'b01010:   GPIOFF  <= XATAO[31:16];
-                5'b01100:   TIMERFF <= XATAO[31:0];
-            endcase
-        end
-        
-        if(RES)
-            IREQ <= 0;
-        else
-        if(TIMERFF)
-        begin
-            TIMER <= TIMER ? TIMER-1 : TIMERFF;
-
-            if(TIMER==0 && IREQ==IACK)
-            begin
-                IREQ[7] <= !IACK[7];
-
-                //$display("timr0 set");
-            end
-
-            XTIMER  <= XTIMER+(TIMER==0);
-            TIMEUS <= (TIMER == TIMERFF) ? TIMEUS + 1'b1 : TIMEUS;
-        end
-
-        if(XCS[1] && XRD)
-        begin
-            casex(XADDR[4:0])
-                5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
-                5'b001xx:   IOMUXFF <= UDATA; // from uart
-                5'b0100x:   IOMUXFF <= LEDFF;
-                5'b0101x:   IOMUXFF <= GPIOFF;
-                5'b011xx:   IOMUXFF <= TIMERFF;
-                5'b100xx:   IOMUXFF <= TIMEUS;
-            endcase
-        end
-    end
-
-    assign XATAIMUX[1] = IOMUXFF;
-    assign XDACKMUX[1] = !DHIT;
-
-    assign BOARD_IRQ = IREQ^IACK;
-    
-    assign XIRQ = |BOARD_IRQ;
-    
-`ifndef __TESTMODE__
-    assign LED = LEDFF[3:0];
-`endif
-
-    // darkuart
-
-    wire [3:0] UDEBUG;
-
-    darkuart
-    uart0
+    darkio io0
     (
-      .CLK(CLK),
-      .RES(RES),
-      .RD(XRD && XCS[1] && XADDR[4:2]==1),
-      .WR(XWR && XCS[1] && XADDR[4:2]==1),
-      .BE(XBE),
-      .DATAI(XATAO),
-      .DATAO(UDATA),
-      //.IRQ(UART_IRQ),
+        .CLK    (CLK),
+        .RES    (RES),
 
-`ifndef __TESTMODE__
-      .RXD(UART_RXD),
-      .TXD(UART_TXD),
-`endif		
-`ifdef SIMULATION
-      .ESIMREQ(ESIMREQ),
-      .ESIMACK(ESIMACK),
+`ifdef __INTERRUPT__
+        .XIRQ    (XIRQ),
 `endif
-      .DEBUG(UDEBUG)
+       
+        .XCS    (XCS[1]),
+        .XRD    (XRD),
+        .XWR    (XWR),
+        .XBE    (XBE),
+        .XADDR  (XADDR),
+        .XATAI  (XATAO),
+        .XATAO  (XATAIMUX[1]),
+        .XDACK  (XDACKMUX[1]),        
+        
+        .RXD    (UART_RXD),
+        .TXD    (UART_TXD),
+
+        .LED    (LED),
+
+`ifdef SIMULATION
+        .ESIMREQ(ESIMREQ),
+        .ESIMACK(ESIMACK),
+`endif
+
+        .DEBUG  (IODEBUG)
     );
 
     // sdram

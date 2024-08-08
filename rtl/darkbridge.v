@@ -46,12 +46,10 @@ module darkbridge
     input         XDACK,
     input         XIRQ,
 
-/*
     output        HLT,
     output [31:0] IADDR,
     input  [31:0] IDATA,
     input         IDACK,
-*/
 
 `ifdef SIMULATION
     input       ESIMREQ,
@@ -61,13 +59,12 @@ module darkbridge
 );
 
     // darkriscv bus interface
-
-    wire        HLT;
-    
+/*
+    wire        HLT;   
     wire [31:0] IADDR;
     wire [31:0] IDATA;
     wire        IDACK;
-    
+*/    
     wire [31:0] DADDR;
     wire [31:0] DATAO;
     wire [31:0] DATAI;
@@ -81,9 +78,7 @@ module darkbridge
     assign XCS[1] = DLEN && DADDR[31:30]==1;
     assign XCS[2] = DLEN && DADDR[31:30]==2;
     assign XCS[3] = DLEN && DADDR[31:30]==3;
-    
-    assign HLT = XCS[0] ? XDACK0 : XCS[3:1] ? XDACK : IDACK;
-
+   
     // darkriscv
 
     wire [3:0]  KDEBUG;
@@ -144,16 +139,11 @@ module darkbridge
 
     // soc to darkriscv, always 1 clk late
 
-    wire [31:0] XATAI0;
-    wire        XDACK0;
-
     reg [1:0] DADDR2 = 0;
-    reg       XCS0FF  = 0;
     
     always@(posedge CLK) DADDR2 <= DADDR[1:0];
-    always@(posedge CLK) XCS0FF <= XCS[0];
 
-    wire [31:0] XXATAI = XCS0FF ? XATAI0 : XATAI;
+    wire [31:0] XXATAI = XATAI;
 
     assign DATAI = DLEN[0] ? ( DADDR2[1:0]==3 ? XXATAI[31:24] :
                                DADDR2[1:0]==2 ? XXATAI[23:16] :
@@ -163,28 +153,10 @@ module darkbridge
                                                 XXATAI[15: 0] ):
                                                 XXATAI;
     
-    assign DDACK = XCS0FF ? DLEN && XDACK0 : DLEN && XDACK;
+    assign DDACK = DLEN && XDACK;
 
-    darkram boot0
-    (
-        .CLK    (CLK),
-        .RES    (RES),
-        .HLT    (HLT),
-        
-        .IADDR  (IADDR),
-        .IDATA  (IDATA),
-        .IDACK  (IDACK),
-        
-        .XCS    (XCS[0]),
-        .XRD    (XRD),
-        .XWR    (XWR),
-        .XBE    (XBE),
-        .XADDR  (XADDR),
-        .XATAI  (XATAO),
-        .XATAO  (XATAI0),
-        .XDACK  (XDACK0)
-    );
+    assign HLT = XCS ? XDACK : IDACK;
 	 
-    assign DEBUG = { KDEBUG[3:0] };
+    assign DEBUG = { |DLEN, HLT, XDACK, IDACK };
 
 endmodule

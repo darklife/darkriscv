@@ -266,7 +266,7 @@ module darkriscv
 `ifdef SIMULATION
     integer i;
     
-    initial for(i=0;i!=`RLEN-1;i=i+1) REGS[i] = 0;
+    initial for(i=0;i!=`RLEN;i=i+1) REGS[i] = 0;
 `endif
 
     // source-1 and source-1 register selection
