@@ -113,7 +113,7 @@ module darkram
     reg [1:0] DTACK  = 0;
     reg [31:0] RAMFF = 0; 
 
-    wire DHIT = !((XRD
+    wire DHIT = !(XCS && (XRD
             `ifdef __RMW_CYCLE__
                     ||XWR		// worst code ever! but it is 3:12am...
             `endif
@@ -121,7 +121,7 @@ module darkram
 
     always@(posedge CLK) // stage #1.0
     begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : XCS && (XRD
             `ifdef __RMW_CYCLE__
                     ||XWR		// 2nd worst code ever!
             `endif

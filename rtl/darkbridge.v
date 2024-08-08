@@ -165,7 +165,7 @@ module darkbridge
     
     assign DDACK = XCS0FF ? DLEN && XDACK0 : DLEN && XDACK;
 
-    darkram dr0
+    darkram boot0
     (
         .CLK    (CLK),
         .RES    (RES),

@@ -125,7 +125,10 @@ module darksocv
     wire        XDACKMUX [0:3];
     
     assign XDACKMUX[0] = 0; // unused
-    assign XDACKMUX[3] = 0; // unused    
+    assign XDACKMUX[3] = 0; // unused
+    
+    assign XATAIMUX[0] = 0; // unused    
+    assign XATAIMUX[3] = 0; // unused
     
     // darkriscv
 
@@ -188,7 +191,7 @@ module darksocv
 
     reg [1:0] DTACK  = 0;
 
-    wire DHIT = !((XRD) && DTACK!=1); // the XWR operatio does not need ws. in this config.
+    wire DHIT = !(XCS[1] && (XRD) && DTACK!=1); // the XWR operatio does not need ws. in this config.
 
     always@(posedge CLK)
     begin
@@ -334,6 +337,11 @@ module darksocv
     assign S_CLK = ^TS_CLK;
 
     assign XDACKMUX[2] = !READY;
+
+`else
+
+    assign XATAIMUX[2] = 0;
+    assign XDACKMUX[2] = 0;
 
 `endif
 	 

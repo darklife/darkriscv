@@ -586,8 +586,8 @@ module darkriscv
 
 `ifndef __YOSYS__
 
-`ifndef __EBREAK__
-        if(!HLT&&!FLUSH&&EBRK)
+`ifdef __EBREAK__
+        if(0 && !HLT&&!FLUSH&&EBRK)
         begin
             $display("breakpoint at %x",PC);
             $stop();
