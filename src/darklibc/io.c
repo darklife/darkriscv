@@ -98,7 +98,7 @@ void irq_handler(void)
 __attribute__ ((interrupt ("supervisor")))
 void dbg_handler(void)
 {
-    static debug = 1;
+    static int debug = 1;
     
     if(debug) printf("dbug0: ebreak @%x, skipped\n",get_sepc());
     debug=0;

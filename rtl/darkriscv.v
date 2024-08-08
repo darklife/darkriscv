@@ -79,7 +79,7 @@ module darkriscv
     
 `ifdef SIMULATION
     input             ESIMREQ,  // end simulation req
-    output            ESIMACK,  // end simulation ack
+    output reg        ESIMACK = 0,  // end simulation ack
 `endif
 
     output [3:0]  DEBUG       // old-school osciloscope based debug! :)

@@ -46,6 +46,13 @@ module darkbridge
     input         XDACK,
     input         XIRQ,
 
+/*
+    output        HLT,
+    output [31:0] IADDR,
+    input  [31:0] IDATA,
+    input         IDACK,
+*/
+
 `ifdef SIMULATION
     input       ESIMREQ,
     output      ESIMACK,
@@ -158,112 +165,25 @@ module darkbridge
     
     assign DDACK = XCS0FF ? DLEN && XDACK0 : DLEN && XDACK;
 
-    // ro/rw memories
-
-    reg [31:0] MEM [0:2**`MLEN/4-1]; // ro memory
-
-    // memory initialization
-
-    integer i;
-    initial
-    begin
-    `ifdef SIMULATION
-        $display("bram: unified BRAM w/ %dx32-bit...",2**`MLEN/4);
-        for(i=0;i!=2**`MLEN/4;i=i+1)
-        begin
-            MEM[i] = 32'd0;
-        end
-    `endif
-
-     // workaround for vivado: no path in simulation and .mem extension
-
-    `ifdef XILINX_SIMULATOR
-        $readmemh("darksocv.mem",MEM);
-	`elsif MODEL_TECH
-	    $readmemh("../../../../src/darksocv.mem",MEM);
-    `else
-        $readmemh("../src/darksocv.mem",MEM,0);
-    `endif
-    end
-
-    // instruction memory
-
-    reg [1:0]  ITACK  = 0;
-    reg [31:0] ROMFF  = 0;
-    reg [31:0] ROMFF2 = 0;
-    reg        HLT2   = 0;
-
-    wire IHIT = !ITACK;
-
-    always@(posedge CLK)
-    begin
-        ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0;
+    darkram dr0
+    (
+        .CLK    (CLK),
+        .RES    (RES),
+        .HLT    (HLT),
         
-        if(HLT^HLT2)
-        begin
-            ROMFF2 <= ROMFF;
-        end
-
-        HLT2 <= HLT;
-
-        ROMFF <= MEM[IADDR[`MLEN-1:2]];
-        // if(!RES && !HLT) $display("bram: addr=%x inst=%x\n",IADDR,ROMFF);
-    end
-
-    assign IDATA = HLT2 ? ROMFF2 : ROMFF;
-    assign IDACK = !IHIT;
-
-    // data memory
-
-    reg [1:0] DTACK  = 0;
-    reg [31:0] RAMFF = 0; 
-
-    wire DHIT = !((XRD
-            `ifdef __RMW_CYCLE__
-                    ||XWR		// worst code ever! but it is 3:12am...
-            `endif
-                    ) && DTACK!=1); // the XWR operatio does not need ws. in this config.
-
-    always@(posedge CLK) // stage #1.0
-    begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD
-            `ifdef __RMW_CYCLE__
-                    ||XWR		// 2nd worst code ever!
-            `endif
-                    ) ? 1 : 0; // wait-states
-
-        RAMFF <= MEM[XADDR[`MLEN-1:2]];
-
-        //individual byte/word/long selection, thanks to HYF!
-
-`ifdef __RMW_CYCLE__
-
-        // read-modify-write operation w/ 1 wait-state:
-
-        if(!HLT && XWR && XCS[0])
-        begin
-            MEM[XADDR[`MLEN-1:2]] <=
-                                {
-                                    XBE[3] ? XATAO[3 * 8 + 7: 3 * 8] : RAMFF[3 * 8 + 7: 3 * 8],
-                                    XBE[2] ? XATAO[2 * 8 + 7: 2 * 8] : RAMFF[2 * 8 + 7: 2 * 8],
-                                    XBE[1] ? XATAO[1 * 8 + 7: 1 * 8] : RAMFF[1 * 8 + 7: 1 * 8],
-                                    XBE[0] ? XATAO[0 * 8 + 7: 0 * 8] : RAMFF[0 * 8 + 7: 0 * 8]
-                                };
-        end
-
-`else
-
-    // write-only operation w/ 0 wait-states:
-
-        if(!HLT && XWR && XCS[0] && XBE[3]) MEM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAO[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && XCS[0] && XBE[2]) MEM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAO[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && XCS[0] && XBE[1]) MEM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAO[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && XCS[0] && XBE[0]) MEM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAO[0 * 8 + 7: 0 * 8];
-`endif
-    end
-
-    assign XATAI0 = RAMFF;
-    assign XDACK0 = !DHIT;
+        .IADDR  (IADDR),
+        .IDATA  (IDATA),
+        .IDACK  (IDACK),
+        
+        .XCS    (XCS[0]),
+        .XRD    (XRD),
+        .XWR    (XWR),
+        .XBE    (XBE),
+        .XADDR  (XADDR),
+        .XATAI  (XATAO),
+        .XATAO  (XATAI0),
+        .XDACK  (XDACK0)
+    );
 	 
     assign DEBUG = { KDEBUG[3:0] };
 
