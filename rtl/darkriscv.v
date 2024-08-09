@@ -75,7 +75,10 @@ module darkriscv
     output     [31:0] DADDR, // addr bus
 
     output     [ 2:0] DLEN, // data length
-    output            DRW,   // data read/write
+    output            DRW,  // data read/write
+    output            DRD,  // data read
+    output            DWR,  // data write
+    output            DAS,  // address strobe
     
 `ifdef SIMULATION
     input             ESIMREQ,  // end simulation req
@@ -630,6 +633,10 @@ module darkriscv
     assign DLEN[0] = (SCC||LCC)&&FCT3[1:0]==0; // byte
     assign DLEN[1] = (SCC||LCC)&&FCT3[1:0]==1; // word
     assign DLEN[2] = (SCC||LCC)&&FCT3[1:0]==2; // long
+
+    assign DWR     = SCC;
+    assign DRD     = LCC;
+    assign DAS     = SCC||LCC;
 
 `ifdef __3STAGE__
     `ifdef __THREADS__

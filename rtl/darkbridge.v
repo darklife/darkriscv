@@ -38,8 +38,8 @@ module darkbridge
 
     output        XWR,
     output        XRD,
+    output        XAS,
     output [3:0]  XBE,
-    output [3:0]  XCS,   
     output [31:0] XADDR,
     output [31:0] XATAO,
     input  [31:0] XATAI,
@@ -69,15 +69,12 @@ module darkbridge
     wire [31:0] DATAO;
     wire [31:0] DATAI;
     wire [ 2:0] DLEN;
-    wire        DRW;
+    wire        DRW,
+                DWR,
+                DRD,
+                DAS;
     wire        DDACK;
 
-    // address map
-    
-    assign XCS[0] = DLEN && DADDR[31:30]==0;
-    assign XCS[1] = DLEN && DADDR[31:30]==1;
-    assign XCS[2] = DLEN && DADDR[31:30]==2;
-    assign XCS[3] = DLEN && DADDR[31:30]==3;
    
     // darkriscv
 
@@ -105,6 +102,9 @@ module darkbridge
         .DATAO  (DATAO),
         .DLEN   (DLEN),
         .DRW    (DRW),
+        .DWR    (DWR),
+        .DRD    (DRD),
+        .DAS    (DAS),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
@@ -124,8 +124,9 @@ module darkbridge
                                                { 16'd0, DATAO[15: 0] } ):
                                                  DATAO;
 
-    assign XRD = DLEN&&DRW==1;
-    assign XWR = DLEN&&DRW==0;
+    assign XAS = DAS;
+    assign XRD = DRD;
+    assign XWR = DWR;
 
     assign XBE =    DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
                                 DADDR[1:0]==2 ? 4'b0100 :
@@ -137,26 +138,18 @@ module darkbridge
 
     assign XADDR = DADDR;
 
-    // soc to darkriscv, always 1 clk late
-
-    reg [1:0] DADDR2 = 0;
+    assign DATAI = DLEN[0] ? ( DADDR[1:0]==3 ? XATAI[31:24] :
+                               DADDR[1:0]==2 ? XATAI[23:16] :
+                               DADDR[1:0]==1 ? XATAI[15: 8] :
+                                               XATAI[ 7: 0] ):
+                   DLEN[1] ? ( DADDR[1]==1   ? XATAI[31:16] :
+                                               XATAI[15: 0] ):
+                                               XATAI;
     
-    always@(posedge CLK) DADDR2 <= DADDR[1:0];
+    assign DDACK = XAS && XDACK;
 
-    wire [31:0] XXATAI = XATAI;
-
-    assign DATAI = DLEN[0] ? ( DADDR2[1:0]==3 ? XXATAI[31:24] :
-                               DADDR2[1:0]==2 ? XXATAI[23:16] :
-                               DADDR2[1:0]==1 ? XXATAI[15: 8] :
-                                                XXATAI[ 7: 0] ):
-                   DLEN[1] ? ( DADDR2[1]==1   ? XXATAI[31:16] :
-                                                XXATAI[15: 0] ):
-                                                XXATAI;
-    
-    assign DDACK = DLEN && XDACK;
-
-    assign HLT = XCS ? XDACK : IDACK;
+    assign HLT = XAS ? XDACK : IDACK;
 	 
-    assign DEBUG = { |DLEN, HLT, XDACK, IDACK };
+    assign DEBUG = { XAS, HLT, XDACK, IDACK };
 
 endmodule

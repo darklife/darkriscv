@@ -117,9 +117,15 @@ module darksocv
     wire [31:0] XADDR;
     wire [31:0] XATAO;
     wire        XWR,
-                XRD;
+                XRD,
+                XAS;
     wire [3:0]  XBE;
     wire [3:0]  XCS;
+    
+    assign XCS[0] = XAS && XADDR[31:30]==0;
+    assign XCS[1] = XAS && XADDR[31:30]==1;
+    assign XCS[2] = XAS && XADDR[31:30]==2;
+    assign XCS[3] = XAS && XADDR[31:30]==3;
 
     wire [31:0] XATAIMUX [0:3];
     wire        XDACKMUX [0:3];
@@ -153,8 +159,8 @@ module darksocv
         .XATAO  (XATAO),
         .XRD    (XRD),
         .XWR    (XWR),
+        .XAS    (XAS),
         .XBE    (XBE),
-        .XCS    (XCS),
         .XDACK  (XDACKMUX[XADDR[31:30]]),
 
         .HLT    (HLT),
