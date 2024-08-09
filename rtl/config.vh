@@ -122,6 +122,12 @@
 // order to identify the core number.  
 //`define __CSR__
 
+// instruction TRACE
+//
+// prints the PC and the respective instruction, skipping halt and flush, which 
+// enables track the instruction execution sequence.
+//`define __TRACE__
+
 // initial PC
 //
 // Typically, the PC is set [by HW] to address 0, representing the start of

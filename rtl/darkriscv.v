@@ -586,13 +586,14 @@ module darkriscv
 
 `ifndef __YOSYS__
 
-`ifdef __EBREAK__
+    `ifdef __EBREAK__
         if(0 && !HLT&&!FLUSH&&EBRK)
         begin
             $display("breakpoint at %x",PC);
             $stop();
         end
-`endif        
+    `endif        
+    
         if(!FLUSH && IDATA===32'dx)
         begin
             $display("invalid IDATA at %x",PC);
@@ -606,6 +607,14 @@ module darkriscv
             $display("invalid DATAI@%x at %x",DADDR,PC);
             $stop();
         end
+        
+    `ifdef __TRACE__
+        if(!FLUSH&&!HLT)
+        begin
+            $display("%x: %x",PC,XIDATA);
+        end
+    `endif
+    
 `endif
 
     end
