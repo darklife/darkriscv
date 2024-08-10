@@ -206,6 +206,7 @@ module darksocv
     (
         .CLK    (CLK),
         .RES    (RES),
+        .HLT    (HLT),
 
 `ifdef __INTERRUPT__
         .XIRQ    (XIRQ),
@@ -276,7 +277,7 @@ module darksocv
 
     assign S_CLK = ^TS_CLK;
 
-    assign XDACKMUX[2] = !READY;
+    assign XDACKMUX[2] = READY;
 
 `else
 
