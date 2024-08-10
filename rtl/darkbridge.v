@@ -146,9 +146,9 @@ module darkbridge
                                                XATAI[15: 0] ):
                                                XATAI;
     
-    assign DDACK = XAS && XDACK;
+    assign DDACK = XDACK;
 
-    assign HLT = XAS ? XDACK : IDACK;
+    assign HLT = !IDACK || (DAS && !XDACK);
 	 
     assign DEBUG = { XAS, HLT, XDACK, IDACK };
 

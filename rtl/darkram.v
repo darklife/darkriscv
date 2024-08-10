@@ -88,11 +88,9 @@ module darkram
     reg [31:0] ROMFF2 = 0;
     reg        HLT2   = 0;
 
-    wire IHIT = !ITACK;
-
     always@(posedge CLK)
     begin
-        ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0;
+        ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0; // i-bus wait-state
         
         if(HLT^HLT2)
         begin
@@ -106,18 +104,12 @@ module darkram
     end
 
     assign IDATA = HLT2 ? ROMFF2 : ROMFF;
-    assign IDACK = !IHIT;
+    assign IDACK = 1; // ITACK==1;
 
     // data memory
 
     reg [1:0] DTACK  = 0;
     reg [31:0] RAMFF = 0; 
-
-    wire DHIT = !(XCS && (XRD
-            `ifdef __RMW_CYCLE__
-                    ||XWR		// worst code ever! but it is 3:12am...
-            `endif
-                    ) && DTACK!=1); // the XWR operatio does not need ws. in this config.
 
     always@(posedge CLK) // stage #1.0
     begin
@@ -158,7 +150,11 @@ module darkram
     end
 
     assign XATAO = RAMFF;
-    assign XDACK = !DHIT;
+`ifndef __RMW_CYCLE__
+    assign XDACK = DTACK==1||(XWR&&XCS);
+`else
+    assign XDACK = DTACK==1;
+`endif
 	 
     assign DEBUG = { XCS,XRD,XWR,XDACK };
 

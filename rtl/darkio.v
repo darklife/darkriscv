@@ -35,6 +35,7 @@ module darkio
 (
     input         CLK,      // clock
     input         RES,      // reset
+    input         HLT,      // halt
 
     input         XCS,
     input         XWR,
@@ -86,11 +87,9 @@ module darkio
 
     reg [1:0] DTACK  = 0;
 
-    wire DHIT = !(XCS && (XRD) && DTACK!=1); // the XWR operatio does not need ws. in this config.
-
     always@(posedge CLK)
     begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XRD) ? 1 : 0; // wait-states
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XCS && XRD) ? 1 : 0; // wait-states
 
         if(RES)
         begin
@@ -151,7 +150,7 @@ module darkio
     end
 
     assign XATAO = IOMUXFF;
-    assign XDACK = !DHIT;
+    assign XDACK = DTACK==1||(XCS&&XWR);
 
     assign BOARD_IRQ = IREQ^IACK;
     
@@ -170,8 +169,8 @@ module darkio
     (
       .CLK(CLK),
       .RES(RES),
-      .RD(XRD && XCS && XADDR[4:2]==1),
-      .WR(XWR && XCS && XADDR[4:2]==1),
+      .RD(!HLT && XRD && XCS && XADDR[4:2]==1),
+      .WR(!HLT && XWR && XCS && XADDR[4:2]==1),
       .BE(XBE),
       .DATAI(XATAI),
       .DATAO(UDATA),
