@@ -612,10 +612,33 @@ module darkriscv
         end
         
     `ifdef __TRACE__
-        if(!FLUSH&&!HLT)
+        if(!XRES)
         begin
-            $display("%x: %x",PC,XIDATA);
-        end
+            if(FLUSH)
+                $display("%x:%x       flushed",PC,XIDATA);
+            else
+            if(HLT)
+            begin
+                $display("%x:%x       %s halted       %x:%x",PC,XIDATA,LCC?"lx":"sx",DADDR,LCC?LDATA:DATAO);
+            end
+            else
+            begin
+                case(XIDATA[6:0])
+                    `LUI:     $display("%x:%x lui   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
+                    `AUIPC:   $display("%x:%x auipc %%x%0x,PC[%0x]",            PC,XIDATA,DPTR,$signed(SIMM));
+                    `JAL:     $display("%x:%x jal   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
+                    `JALR:    $display("%x:%x jalr  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
+                    `BCC:     $display("%x:%x bcc   %%x%0x,%%x%0x,PC[%0d]",     PC,XIDATA,S1PTR,S2PTR,$signed(SIMM));
+                    `LCC:     $display("%x:%x lx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,LDATA);
+                    `SCC:     $display("%x:%x sx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,DATAO);
+                    `MCC:     $display("%x:%x alui  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
+                    `RCC:     $display("%x:%x alu   %%x%0x,%%x%0x,%%x%0x",      PC,XIDATA,DPTR,S1PTR,S2PTR);
+                    `SYS:     $display("%x:%x sys   (no decode)",               PC,XIDATA);
+                    `CUS:     $display("%x:%x cus   (no decode)",               PC,XIDATA);
+                    default:  $display("%x:%x ???   (no decode)",               PC,XIDATA);
+                endcase
+            end
+        end        
     `endif
     
 `endif
@@ -669,7 +692,7 @@ module darkriscv
 
         always@(posedge CLK)
         begin
-            if(!RES)
+            if(!XRES)
             begin
                 clocks = clocks+1;
 
@@ -703,9 +726,10 @@ module darkriscv
                 if(ESIMREQ)
                 begin
                     $display("****************************************************************************");
-                    $display("DarkRISCV Pipeline Report (%0d clocks):",clocks);
+                    $display("DarkRISCV Pipeline Report (%0d clocks, %0d instr, CPI = %.2f):",
+                        clocks,running,1.0*clocks/running);
 
-                    $display("core%0d: %0d%% run, %0d%% wait (%0d%% i-bus, %0d%% d-bus/rd, %0d%% d-bus/wr), %0d%% idle",
+                    $display("core%0d: %0d%% run, %0d%% wait (%0d%% i-bus, %0d%% d-bus/rd, %0d%% d-bus/wr), %0d%% flush",
                         CPTR,
                         100.0*running/clocks,
                         100.0*(load+store+halt)/clocks,

@@ -124,9 +124,22 @@
 
 // instruction TRACE
 //
-// prints the PC and the respective instruction, skipping halt and flush, which 
-// enables track the instruction execution sequence.
+// prints the PC, the respective instruction and some useful information,
+// skipping halt and flush, in order to track the instruction execution
+// sequence.  traces are very useful to debug, since is possible dump the
+// traces from a working core in order to debug a non-working core.  when
+// trace is enabled, the UART print is blocked, also, the trace does not
+// dump data when the core is in reset.
 //`define __TRACE__
+
+// performance measurement:
+//
+// The performance measurement can be done in the simulation level by
+// eabling the __PERFMETER__ define, in order to check how the clock cycles
+// are used in the core. The report is displayed when the FINISH_REQ signal
+// is actived by the UART.
+// the performance counters does not count when the core is in reset.
+`define __PERFMETER__
 
 // initial PC
 //
@@ -149,14 +162,6 @@
 // which will make your simulator crazy! unfortunately, it works only with
 // iverilog... at least, Xilinx ISIM does not liket the $fgetc()
 //`define __INTERACTIVE__
-
-// performance measurement:
-//
-// The performance measurement can be done in the simulation level by
-// eabling the __PERFMETER__ define, in order to check how the clock cycles
-// are used in the core. The report is displayed when the FINISH_REQ signal
-// is actived by the UART.
-`define __PERFMETER__
 
 // icarus register debug:
 //
