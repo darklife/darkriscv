@@ -37,7 +37,7 @@ module darkio
     input         RES,      // reset
     input         HLT,      // halt
 
-    input         XCS,
+    input         XDREQ,
     input         XWR,
     input         XRD,
     input  [3:0]  XBE,
@@ -51,8 +51,8 @@ module darkio
     output        TXD,  // UART transmit line
 
 `ifdef SIMULATION
-    input       ESIMREQ,
-    output      ESIMACK,
+    output        ESIMREQ,
+    input         ESIMACK,
 `endif
 
     output [3:0]  LED,       // on-board leds
@@ -89,7 +89,7 @@ module darkio
 
     always@(posedge CLK)
     begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XCS && XRD) ? 1 : 0; // wait-states
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XDREQ && XRD) ? 1 : 0; // wait-states
 
         if(RES)
         begin
@@ -97,7 +97,7 @@ module darkio
             TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
         end
         else
-        if(XCS && XWR)
+        if(XDREQ && XWR)
         begin
             case(XADDR[4:0])
                 5'b00011:   begin
@@ -136,7 +136,7 @@ module darkio
             TIMEUS <= (TIMER == TIMERFF) ? TIMEUS + 1'b1 : TIMEUS;
         end
 
-        if(XCS && XRD)
+        if(XDREQ && XRD)
         begin
             casex(XADDR[4:0])
                 5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
@@ -150,7 +150,7 @@ module darkio
     end
 
     assign XATAO = IOMUXFF;
-    assign XDACK = DTACK==1||(XCS&&XWR);
+    assign XDACK = DTACK==1||(XDREQ&&XWR);
 
     assign BOARD_IRQ = IREQ^IACK;
     
@@ -169,8 +169,8 @@ module darkio
     (
       .CLK(CLK),
       .RES(RES),
-      .RD(!HLT && XRD && XCS && XADDR[4:2]==1),
-      .WR(!HLT && XWR && XCS && XADDR[4:2]==1),
+      .RD(!HLT && XRD && XDREQ && XADDR[4:2]==1),
+      .WR(!HLT && XWR && XDREQ && XADDR[4:2]==1),
       .BE(XBE),
       .DATAI(XATAI),
       .DATAO(UDATA),
@@ -187,6 +187,6 @@ module darkio
       .DEBUG(UDEBUG)
     );
 
-    assign DEBUG = { XCS,XRD,XWR,XDACK };
+    assign DEBUG = { XDREQ,XRD,XWR,XDACK };
 
 endmodule

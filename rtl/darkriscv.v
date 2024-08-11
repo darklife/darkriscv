@@ -614,14 +614,19 @@ module darkriscv
     `ifdef __TRACE__
         if(!XRES)
         begin
+        `ifdef __TRACEFULL__
             if(FLUSH)
                 $display("%x:%x       flushed",PC,XIDATA);
             else
             if(HLT)
             begin
-                $display("%x:%x       %s halted       %x:%x",PC,XIDATA,LCC?"lx":"sx",DADDR,LCC?LDATA:DATAO);
+                //$display("%x:%x       %s halted       %x:%x",PC,XIDATA,LCC?"lx":"sx",DADDR,LCC?LDATA:DATAO);
+                $display("%x:%x       halted",PC,XIDATA);
             end
             else
+        `else
+            if(!FLUSH && !HLT)
+        `endif
             begin
                 case(XIDATA[6:0])
                     `LUI:     $display("%x:%x lui   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));

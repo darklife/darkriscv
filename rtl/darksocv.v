@@ -114,18 +114,18 @@ module darksocv
     // darkbridge interface
 
     wire        XIRQ;
+    wire        XDREQ;
     wire [31:0] XADDR;
     wire [31:0] XATAO;
     wire        XWR,
-                XRD,
-                XAS;
+                XRD;                
     wire [3:0]  XBE;
-    wire [3:0]  XCS;
+    wire [3:0]  XDREQMUX;
     
-    assign XCS[0] = XAS && XADDR[31:30]==0;
-    assign XCS[1] = XAS && XADDR[31:30]==1;
-    assign XCS[2] = XAS && XADDR[31:30]==2;
-    assign XCS[3] = XAS && XADDR[31:30]==3;
+    assign XDREQMUX[0] = XDREQ && XADDR[31:30]==0;
+    assign XDREQMUX[1] = XDREQ && XADDR[31:30]==1;
+    assign XDREQMUX[2] = XDREQ && XADDR[31:30]==2;
+    assign XDREQMUX[3] = XDREQ && XADDR[31:30]==3;
 
     wire [31:0] XATAIMUX [0:3];
     wire        XDACKMUX [0:3];
@@ -139,7 +139,9 @@ module darksocv
     
     wire        ESIMREQ,ESIMACK;
 
-    wire        HLT;   
+    wire        HLT;  
+
+    wire        IDREQ;
     wire [31:0] IADDR;
     wire [31:0] IDATA;
     wire        IDACK;
@@ -149,24 +151,25 @@ module darksocv
     (
         .CLK    (CLK),
         .RES    (RES),
+        .HLT    (HLT),
 
 `ifdef __INTERRUPT__
         .XIRQ    (XIRQ),
 `endif
 
+        .XDREQ    (XDREQ),
         .XADDR  (XADDR),
         .XATAI  (XATAIMUX[XADDR[31:30]]),
         .XATAO  (XATAO),
         .XRD    (XRD),
-        .XWR    (XWR),
-        .XAS    (XAS),
+        .XWR    (XWR),        
         .XBE    (XBE),
         .XDACK  (XDACKMUX[XADDR[31:30]]),
-
-        .HLT    (HLT),
-        .IADDR  (IADDR),
-        .IDATA  (IDATA),
-        .IDACK  (IDACK),
+        
+        .YDREQ  (IDREQ),
+        .YADDR  (IADDR),
+        .YDATA  (IDATA),
+        .YDACK  (IDACK),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
@@ -184,11 +187,12 @@ module darksocv
         .RES    (RES),
         .HLT    (HLT),
         
+        .IDREQ  (IDREQ),
         .IADDR  (IADDR),
         .IDATA  (IDATA),
         .IDACK  (IDACK),
         
-        .XCS    (XCS[0]),
+        .XDREQ  (XDREQMUX[0]),
         .XRD    (XRD),
         .XWR    (XWR),
         .XBE    (XBE),
@@ -212,7 +216,7 @@ module darksocv
         .XIRQ    (XIRQ),
 `endif
        
-        .XCS    (XCS[1]),
+        .XDREQ  (XDREQMUX[1]),
         .XRD    (XRD),
         .XWR    (XWR),
         .XBE    (XBE),
@@ -255,7 +259,7 @@ module darksocv
         .din        (XATAO),
         .dout       (XATAIMUX[2]),
         .wmask      (XWR ? XBE : 4'b0000),
-        .valid      (XCS[2]),
+        .valid      (XDREQMUX[2]),
         .ready      (READY),
 
         .sdram_clk  (T_CLK),

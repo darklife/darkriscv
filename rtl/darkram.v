@@ -37,11 +37,12 @@ module darkram
     input           RES,    // reset
     input           HLT,    // halt
     
+    input           IDREQ,
     input  [31:0]   IADDR,
     output [31:0]   IDATA,
     output          IDACK,
 
-    input           XCS,
+    input           XDREQ,
     input           XRD,
     input           XWR,
     input  [3:0]    XBE,
@@ -63,7 +64,14 @@ module darkram
     initial
     begin
     `ifdef SIMULATION
-        $display("bram: unified BRAM w/ %dx32-bit...",2**`MLEN/4);
+        $display("dpram: unified BRAM w/ %0dx32-bit",2**`MLEN/4);
+        `ifdef __WAITSTATE__
+            $display("dpram: waitstates=%0d enabled (default=1)",`__WAITSTATE__);
+        `endif
+        `ifdef __RMW_CYCLE__
+            $display("dpram: RMW cycle enabled.",);
+        `endif
+            
         for(i=0;i!=2**`MLEN/4;i=i+1)
         begin
             MEM[i] = 32'd0;
@@ -83,15 +91,38 @@ module darkram
 
     // instruction memory
 
-    reg [1:0]  ITACK  = 0;
+`ifdef __ICACHE__
+
+    reg [3:0]  ITACK  = 0;
+    reg [31:0] ROMFF  = 0;
+
+    always@(posedge CLK)
+    begin
+    `ifdef __WAITSTATE__        
+        ITACK <= RES ? 0 : ITACK ? ITACK-1 : IDREQ ? `__WAITSTATE__ : 0;
+    `else
+        ITACK <= RES ? 0 : ITACK ? ITACK-1 : IDREQ ? 1 : 0;
+    `endif    
+    
+        ROMFF <= MEM[IADDR[`MLEN-1:2]];
+    end
+
+    assign IDATA = ROMFF;
+    assign IDACK = ITACK==1;
+
+`else
+
+    reg [3:0]  ITACK  = 0;
     reg [31:0] ROMFF  = 0;
     reg [31:0] ROMFF2 = 0;
     reg        HLT2   = 0;
 
     always@(posedge CLK)
     begin
-        ITACK <= RES ? 0 : ITACK ? ITACK-1 : 0; // i-bus wait-state
-        
+    `ifdef __WAITSTATE__
+        ITACK <= RES ? 0 : ITACK ? ITACK-1 : IDREQ ? `__WAITSTATE__ : 0; // i-bus wait-state
+    `endif
+    
         if(HLT^HLT2)
         begin
             ROMFF2 <= ROMFF;
@@ -104,20 +135,35 @@ module darkram
     end
 
     assign IDATA = HLT2 ? ROMFF2 : ROMFF;
-    assign IDACK = 1; // ITACK==1;
+    
+    `ifdef __WAITSTATE__
+        assign IDACK = ITACK==1;
+    `else
+        assign IDACK = IDREQ;
+    `endif
+
+`endif
 
     // data memory
 
-    reg [1:0] DTACK  = 0;
+    reg [3:0] DTACK  = 0;
     reg [31:0] RAMFF = 0; 
 
     always@(posedge CLK) // stage #1.0
     begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : XCS && (XRD
-            `ifdef __RMW_CYCLE__
-                    ||XWR		// 2nd worst code ever!
-            `endif
-                    ) ? 1 : 0; // wait-states
+    `ifdef __RMW_CYCLE__    
+        `ifdef __WAITSTATE__
+            DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQ && (XRD||XWR) ? `__WAITSTATE__ : 0;
+        `else
+            DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQ && (XRD||XWR) ? 1 : 0;
+        `endif
+    `else
+        `ifdef __WAITSTATE__
+            DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQ && XRD ? `__WAITSTATE__ : 0;
+        `else
+            DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQ && XRD ? 1 : 0;
+        `endif
+    `endif
 
         RAMFF <= MEM[XADDR[`MLEN-1:2]];
 
@@ -127,7 +173,7 @@ module darkram
 
         // read-modify-write operation w/ 1 wait-state:
 
-        if(!HLT && XWR && XCS)
+        if(XWR && XDREQ)
         begin
             MEM[XADDR[`MLEN-1:2]] <=
                                 {
@@ -139,23 +185,26 @@ module darkram
         end
 
 `else
-
-    // write-only operation w/ 0 wait-states:
-
-        if(!HLT && XWR && XCS && XBE[3]) MEM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAI[3 * 8 + 7: 3 * 8];
-        if(!HLT && XWR && XCS && XBE[2]) MEM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAI[2 * 8 + 7: 2 * 8];
-        if(!HLT && XWR && XCS && XBE[1]) MEM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAI[1 * 8 + 7: 1 * 8];
-        if(!HLT && XWR && XCS && XBE[0]) MEM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAI[0 * 8 + 7: 0 * 8];
+        // write-only operation w/ 0 wait-states:
+        
+        if(XWR && XDREQ)
+        begin
+            if(XBE[3]) MEM[XADDR[`MLEN-1:2]][3 * 8 + 7: 3 * 8] <= XATAI[3 * 8 + 7: 3 * 8];
+            if(XBE[2]) MEM[XADDR[`MLEN-1:2]][2 * 8 + 7: 2 * 8] <= XATAI[2 * 8 + 7: 2 * 8];
+            if(XBE[1]) MEM[XADDR[`MLEN-1:2]][1 * 8 + 7: 1 * 8] <= XATAI[1 * 8 + 7: 1 * 8];
+            if(XBE[0]) MEM[XADDR[`MLEN-1:2]][0 * 8 + 7: 0 * 8] <= XATAI[0 * 8 + 7: 0 * 8];
+        end
 `endif
     end
 
     assign XATAO = RAMFF;
-`ifndef __RMW_CYCLE__
-    assign XDACK = DTACK==1||(XWR&&XCS);
-`else
+    
+`ifdef __RMW_CYCLE__    
     assign XDACK = DTACK==1;
+`else
+    assign XDACK = DTACK==1 ||(XDREQ&&XWR);
 `endif
 	 
-    assign DEBUG = { XCS,XRD,XWR,XDACK };
+    assign DEBUG = { XDREQ,XRD,XWR,XDACK };
 
 endmodule

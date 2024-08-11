@@ -131,6 +131,7 @@
 // trace is enabled, the UART print is blocked, also, the trace does not
 // dump data when the core is in reset.
 //`define __TRACE__
+//`define __TRACEFULL__
 
 // performance measurement:
 //
@@ -154,6 +155,15 @@
 ////////////////////////////////////////////////////////////////////////////////
 // darksocv configuration:
 ////////////////////////////////////////////////////////////////////////////////
+
+// cache depth
+// 
+// when enabled, the caches will try map and store the read operations, in a 
+// way that future read operations in the same address will be faster!
+// the cache depth N means that the each cache will be 32-bit x 2^N
+`define __CDEPTH__ 6
+`define __DCACHE__
+`define __ICACHE__
 
 // interactive simulation:
 //
@@ -191,7 +201,13 @@
 // separate 16-bit and 8-bit words. Typically, the RMW cycle results in a
 // decrease of 5% in the performance (not the clock, but the instruction
 // pipeline eficiency) due to memory wait-states.
-//`define __RMW_CYCLE__
+`define __RMW_CYCLE__
+
+// bram wait states
+// 
+// to simulate high latency memories, is possible set the number of wait-states
+// for bram here! case not configured, wait-states defaults to 1.
+`define __WAITSTATE__ 3
 
 // UART speed is set in bits per second, typically 115200 bps:
 //`define __UARTSPEED__ 115200
@@ -242,9 +258,9 @@
     `define BOARD_CK_REF 100000000
     `define BOARD_CK_MUL 6
     `ifdef __3STAGE__
-        `define BOARD_CK_DIV 6 // 3-stage, 1-ws, 100MHz
+        `define BOARD_CK_DIV 9 // 3-stage, 1-ws, 9=66MHz 6=100MHz
     `else
-        `define BOARD_CK_DIV 9 // 2-stage, 1-ws, 66MHz
+        `define BOARD_CK_DIV 9 // 2-stage, 1-ws, 9=66MHz 6=100MHz
     `endif
     `define XILINX6CLK 1
 `endif
