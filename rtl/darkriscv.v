@@ -616,12 +616,12 @@ module darkriscv
         begin
         `ifdef __TRACEFULL__
             if(FLUSH)
-                $display("%x:%x       flushed",PC,XIDATA);
+                $display("trace: %x:%x       flushed",PC,XIDATA);
             else
             if(HLT)
             begin
                 //$display("%x:%x       %s halted       %x:%x",PC,XIDATA,LCC?"lx":"sx",DADDR,LCC?LDATA:DATAO);
-                $display("%x:%x       halted",PC,XIDATA);
+                $display("trace: %x:%x       halted",PC,XIDATA);
             end
             else
         `else
@@ -629,18 +629,18 @@ module darkriscv
         `endif
             begin
                 case(XIDATA[6:0])
-                    `LUI:     $display("%x:%x lui   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
-                    `AUIPC:   $display("%x:%x auipc %%x%0x,PC[%0x]",            PC,XIDATA,DPTR,$signed(SIMM));
-                    `JAL:     $display("%x:%x jal   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
-                    `JALR:    $display("%x:%x jalr  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
-                    `BCC:     $display("%x:%x bcc   %%x%0x,%%x%0x,PC[%0d]",     PC,XIDATA,S1PTR,S2PTR,$signed(SIMM));
-                    `LCC:     $display("%x:%x lx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,LDATA);
-                    `SCC:     $display("%x:%x sx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,DATAO);
-                    `MCC:     $display("%x:%x alui  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
-                    `RCC:     $display("%x:%x alu   %%x%0x,%%x%0x,%%x%0x",      PC,XIDATA,DPTR,S1PTR,S2PTR);
-                    `SYS:     $display("%x:%x sys   (no decode)",               PC,XIDATA);
-                    `CUS:     $display("%x:%x cus   (no decode)",               PC,XIDATA);
-                    default:  $display("%x:%x ???   (no decode)",               PC,XIDATA);
+                    `LUI:     $display("trace: %x:%x lui   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
+                    `AUIPC:   $display("trace: %x:%x auipc %%x%0x,PC[%0x]",            PC,XIDATA,DPTR,$signed(SIMM));
+                    `JAL:     $display("trace: %x:%x jal   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
+                    `JALR:    $display("trace: %x:%x jalr  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
+                    `BCC:     $display("trace: %x:%x bcc   %%x%0x,%%x%0x,PC[%0d]",     PC,XIDATA,S1PTR,S2PTR,$signed(SIMM));
+                    `LCC:     $display("trace: %x:%x lx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,LDATA);
+                    `SCC:     $display("trace: %x:%x sx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,DATAO);
+                    `MCC:     $display("trace: %x:%x alui  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
+                    `RCC:     $display("trace: %x:%x alu   %%x%0x,%%x%0x,%%x%0x",      PC,XIDATA,DPTR,S1PTR,S2PTR);
+                    `SYS:     $display("trace: %x:%x sys   (no decode)",               PC,XIDATA);
+                    `CUS:     $display("trace: %x:%x cus   (no decode)",               PC,XIDATA);
+                    default:  $display("trace: %x:%x ???   (no decode)",               PC,XIDATA);
                 endcase
             end
         end        

@@ -44,6 +44,7 @@ RTLS =  darksimv.v                      \
 INCS = ../rtl/config.vh
 XSIM = darksocv
 VCDS = darksocv.vcd
+TRCE = darksocv.txt
 
 .PRECIOUS: $(VCDS)	# Do not delete the trace file if simulation is aborted
 .PHONY: $(VCDS)		# Always run the simulation
@@ -60,11 +61,17 @@ all: $(VCDS)
 	@echo simulation ok.
 
 clean:
-	-rm $(VCDS) $(XSIM)
+	-rm $(VCDS) $(XSIM) $(TRCE)
 
 $(VCDS): $(XSIM)
-	./$(XSIM)
-
+	@echo finish |                                          \
+	./$(XSIM) |                                             \
+	    awk '{  if($$0~/trace:/) {                          \
+	        print > "$(TRCE)";                              \
+	        if($$0~/40000005:/) {                           \
+	            split($$NF,A,":");                          \
+	            printf("%c",("0x"A[2])+0); } }              \
+	        else print }'
 
 $(XSIM): $(DEPS)
 	$(ICARUS) -I ../rtl -o $(XSIM) $(RTLS)
