@@ -69,10 +69,12 @@ module darkcache
 
     // cache
 
-    wire [31:0] CDATO;   
-
 `ifdef __CDEPTH__
 
+  `ifdef __LUTCACHE__
+    
+    wire [31:0] CDATO; 
+    
     reg  [31:`__CDEPTH__+2] CTAG   [0:2**`__CDEPTH__-1];    
     reg  [31:0]             CDATA  [0:2**`__CDEPTH__-1];
     reg                     CVAL   [0:2**`__CDEPTH__-1];
@@ -135,18 +137,124 @@ module darkcache
     end
 
     assign CDATO  = HIT ? CDATA[CINDEX] : XATAI;        
+    assign DATAP  = DATAOFF;   
+    
+  `else
+
+    wire [31:0] CDATO;   
+/*
+    reg  [31:`__CDEPTH__+2] CTAG   [0:2**`__CDEPTH__-1];    
+    reg  [31:0]             CDATA  [0:2**`__CDEPTH__-1];
+    reg                     CVAL   [0:2**`__CDEPTH__-1];
+*/
+    (* ram_style = "block" *) reg  [31:0]             COMBO  [0:2*2**`__CDEPTH__-1];
+    
+    integer i;
+    
+    initial
+    begin
+        $display("cache%0d: %0dx32-bits (%0d bytes)",
+            ID,
+            (2**`__CDEPTH__),
+            4*(2**`__CDEPTH__));
+            
+        for(i=0;i!=2*2**`__CDEPTH__;i=i+1) 
+        begin            
+        /*
+            CDATA [i] = 0;
+            CTAG  [i] = 0;
+            CVAL  [i] = 0;
+        */
+            COMBO [i] = 0;
+        end
+    end
+
+    wire [`__CDEPTH__-1:0]  CINDEX = DADDR[`__CDEPTH__+1:2];
+
+    wire [`__CDEPTH__:0]  CINDEX1 = { 1'b0, CINDEX };
+    wire [`__CDEPTH__:0]  CINDEX2 = { 1'b1, CINDEX };
+
+
+    wire HIT = RES ? 0 : (DRD && CVALFF && CTAGFF==DADDR[31:`__CDEPTH__+2]);
+    wire CLR = RES ? 0 : (DWR && CVALFF && CTAGFF==DADDR[31:`__CDEPTH__+2]);
+
+    wire DTREQ = RES||HIT ? 0 : (DADDR[31:30]==0||DADDR[31:30]==2) && DRD;
+
+    reg [31:0] DATAOFF = 0;
+
+    reg [31:0] COMBOFF1 = 0;
+    reg [31:0] COMBOFF2 = 0;
+
+    wire  [31:0]             CDATAFF = COMBOFF1[31:0];
+    wire  [31:`__CDEPTH__+2] CTAGFF  = COMBOFF2[31:`__CDEPTH__+2];
+    wire  [`__CDEPTH__+1:1]  FILLER  = COMBOFF2[`__CDEPTH__+1:1];
+    wire                     CVALFF  = COMBOFF2[0];
+
+    reg HIT2 = 0;
+
+    
+
+    always@(posedge CLK)
+    begin
+        HIT2 <= HIT;
+        
+        if((DTREQ && XDACK)||CLR)    COMBO [CINDEX1]  <= (DTREQ && XDACK) ? /*{ DADDR[31:`__CDEPTH__+2], ~FILLER, 1'b1 }*/ DADDR|1'b1 : 0;
+        if((DTREQ && XDACK)||CLR)    COMBO [CINDEX2]  <= (DTREQ && XDACK) ? XATAI :  0;
+
+        
+        COMBOFF1 <= COMBO[CINDEX1];
+        COMBOFF2 <= COMBO[CINDEX2];
+    /*
+        CTAGFF  <= CTAG [CINDEX];
+        CDATAFF <= CDATA[CINDEX];
+        CVALFF  <= CVAL [CINDEX];
+    
+        if((DTREQ && XDACK)||CLR)
+        begin
+            //$display("cache%0d: miss_on_rd %x:%x\n",ID,DADDR,XATAI);
+            
+            CDATA [CINDEX]  <= XATAI;
+            CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
+            CVAL  [CINDEX]  <= 1;                
+        end
+        
+        else
+        if(CLR)
+        begin
+            if(DLEN==4)
+            begin
+                //$display("cache%0d: miss_on_wr %x:%x\n",ID,DADDR,DATAI);
+                CDATA [CINDEX]  <= DATAI;
+                CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
+                CVAL  [CINDEX]  <= 1;   
+            end
+            else
+            begin
+                //$display("cache%0d: flush_on_wr %x:%x\n",ID,DADDR,DATAI);
+                COMBO  [CINDEX]  <= 0;
+            end
+        end
+*/
+        // if(HIT) $display("cache%0d: hit_on_rd %x:%x\n",ID,DADDR,DATAI);
+
+        if(!HLT) DATAOFF <= CDATO;
+    end
+
+    assign CDATO  = HIT ? CDATAFF : XATAI;        
     assign DATAP  = DATAOFF;
+    
+  `endif
 
 `else
 
-    assign CDATO = XATAI;
-    assign HIT   = 0;
+    wire [31:0] CDATO = XATAI;
+    wire        HIT   = 0;
 
 `endif
 
     // convert darkriscv bus to xbus
 
-    assign XDREQ   = HIT ? 0 : DAS;
+    assign XDREQ = HIT ? 0 : DAS;
     assign XRD   = HIT ? 0 : DRD;
     assign XWR   = HIT ? 0 : DWR;
 
@@ -176,7 +284,11 @@ module darkcache
                                                CDATO[15: 0] ):
                                                CDATO;
 
+`ifdef __LUTCACHE__
     assign DDACK = HIT ? 1 : XDACK;
+`else
+    assign DDACK = HIT2 ? 1 : XDACK;
+`endif
 
     assign DEBUG = { DAS, HIT, XDREQ, XDACK };
 
