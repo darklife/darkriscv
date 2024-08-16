@@ -130,8 +130,8 @@
 // traces from a working core in order to debug a non-working core.  when
 // trace is enabled, the UART print is blocked, also, the trace does not
 // dump data when the core is in reset.
-`define __TRACE__
-`define __TRACEFULL__
+//`define __TRACE__
+//`define __TRACEFULL__
 
 // performance measurement:
 //
