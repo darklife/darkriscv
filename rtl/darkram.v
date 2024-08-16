@@ -114,27 +114,18 @@ module darkram
 
     reg [3:0]  ITACK  = 0;
     reg [31:0] ROMFF  = 0;
-    reg [31:0] ROMFF2 = 0;
-    reg        HLT2   = 0;
 
     always@(posedge CLK)
     begin
     `ifdef __WAITSTATE__
         ITACK <= RES ? 0 : ITACK ? ITACK-1 : IDREQ ? `__WAITSTATE__ : 0; // i-bus wait-state
     `endif
-    
-        if(HLT^HLT2)
-        begin
-            ROMFF2 <= ROMFF;
-        end
-
-        HLT2 <= HLT;
 
         ROMFF <= MEM[IADDR[`MLEN-1:2]];
         // if(!RES && !HLT) $display("bram: addr=%x inst=%x\n",IADDR,ROMFF);
     end
 
-    assign IDATA = HLT2 ? ROMFF2 : ROMFF;
+    assign IDATA = ROMFF;
     
     `ifdef __WAITSTATE__
         assign IDACK = ITACK==1;

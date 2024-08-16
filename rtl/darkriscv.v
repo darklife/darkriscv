@@ -99,6 +99,20 @@ module darkriscv
     reg [`__THREADS__-1:0] TPTR = 0;     // thread ptr
 `endif
 
+    // pipeline flow control on HLT!
+
+    reg        HLT2   = 0;
+    reg [31:0] IDATA2 = 0;
+
+    always@(posedge CLK)
+    begin
+        HLT2 <= HLT;
+        
+        if(HLT2^HLT) IDATA2 <= IDATA;    
+    end
+
+    wire[31:0] IDATAX = HLT2 ? IDATA2 : IDATA;
+
     // decode: IDATA is break apart as described in the RV32I specification
 
 `ifdef __3STAGE__
@@ -112,41 +126,41 @@ module darkriscv
 
     always@(posedge CLK)
     begin
-        XIDATA <= XRES ? 0 : HLT ? XIDATA : IDATA;
+        XIDATA <= XRES ? 0 : HLT ? XIDATA : IDATAX;
 
-        XLUI   <= XRES ? 0 : HLT ? XLUI   : IDATA[6:0]==`LUI;
-        XAUIPC <= XRES ? 0 : HLT ? XAUIPC : IDATA[6:0]==`AUIPC;
-        XJAL   <= XRES ? 0 : HLT ? XJAL   : IDATA[6:0]==`JAL;
-        XJALR  <= XRES ? 0 : HLT ? XJALR  : IDATA[6:0]==`JALR;
+        XLUI   <= XRES ? 0 : HLT ? XLUI   : IDATAX[6:0]==`LUI;
+        XAUIPC <= XRES ? 0 : HLT ? XAUIPC : IDATAX[6:0]==`AUIPC;
+        XJAL   <= XRES ? 0 : HLT ? XJAL   : IDATAX[6:0]==`JAL;
+        XJALR  <= XRES ? 0 : HLT ? XJALR  : IDATAX[6:0]==`JALR;
 
-        XBCC   <= XRES ? 0 : HLT ? XBCC   : IDATA[6:0]==`BCC;
-        XLCC   <= XRES ? 0 : HLT ? XLCC   : IDATA[6:0]==`LCC;
-        XSCC   <= XRES ? 0 : HLT ? XSCC   : IDATA[6:0]==`SCC;
-        XMCC   <= XRES ? 0 : HLT ? XMCC   : IDATA[6:0]==`MCC;
+        XBCC   <= XRES ? 0 : HLT ? XBCC   : IDATAX[6:0]==`BCC;
+        XLCC   <= XRES ? 0 : HLT ? XLCC   : IDATAX[6:0]==`LCC;
+        XSCC   <= XRES ? 0 : HLT ? XSCC   : IDATAX[6:0]==`SCC;
+        XMCC   <= XRES ? 0 : HLT ? XMCC   : IDATAX[6:0]==`MCC;
 
-        XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`RCC;
-        XCUS   <= XRES ? 0 : HLT ? XRCC   : IDATA[6:0]==`CUS;
-        //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATA[6:0]==`FCC;
-        XSYS   <= XRES ? 0 : HLT ? XSYS   : IDATA[6:0]==`SYS;
+        XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATAX[6:0]==`RCC;
+        XCUS   <= XRES ? 0 : HLT ? XRCC   : IDATAX[6:0]==`CUS;
+        //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATAX[6:0]==`FCC;
+        XSYS   <= XRES ? 0 : HLT ? XSYS   : IDATAX[6:0]==`SYS;
 
         // signal extended immediate, according to the instruction type:
 
         XSIMM  <= XRES ? 0 : HLT ? XSIMM :
-                 IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                 IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                 IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                 IDATA[6:0]==`LUI||
-                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                      { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
+                 IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
+                 IDATAX[6:0]==`BCC ? { IDATAX[31] ? ALL1[31:13]:ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
+                 IDATAX[6:0]==`JAL ? { IDATAX[31] ? ALL1[31:21]:ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
+                 IDATAX[6:0]==`LUI||
+                 IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
+                                      { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
         // non-signal extended immediate, according to the instruction type:
 
         XUIMM  <= XRES ? 0: HLT ? XUIMM :
-                 IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                 IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                 IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                 IDATA[6:0]==`LUI||
-                 IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                      { ALL0[31:12], IDATA[31:20] }; // i-type
+                 IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
+                 IDATAX[6:0]==`BCC ? { ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
+                 IDATAX[6:0]==`JAL ? { ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
+                 IDATAX[6:0]==`LUI||
+                 IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
+                                      { ALL0[31:12], IDATAX[31:20] }; // i-type
     end
 
     reg [1:0] FLUSH = -1;  // flush instruction pipeline
@@ -160,41 +174,41 @@ module darkriscv
     wire [31:0] XSIMM;
     wire [31:0] XUIMM;
 
-    assign XIDATA = XRES ? 0 : IDATA;
+    assign XIDATA = XRES ? 0 : IDATAX;
 
-    assign XLUI   = XRES ? 0 : IDATA[6:0]==`LUI;
-    assign XAUIPC = XRES ? 0 : IDATA[6:0]==`AUIPC;
-    assign XJAL   = XRES ? 0 : IDATA[6:0]==`JAL;
-    assign XJALR  = XRES ? 0 : IDATA[6:0]==`JALR;
+    assign XLUI   = XRES ? 0 : IDATAX[6:0]==`LUI;
+    assign XAUIPC = XRES ? 0 : IDATAX[6:0]==`AUIPC;
+    assign XJAL   = XRES ? 0 : IDATAX[6:0]==`JAL;
+    assign XJALR  = XRES ? 0 : IDATAX[6:0]==`JALR;
 
-    assign XBCC   = XRES ? 0 : IDATA[6:0]==`BCC;
-    assign XLCC   = XRES ? 0 : IDATA[6:0]==`LCC;
-    assign XSCC   = XRES ? 0 : IDATA[6:0]==`SCC;
-    assign XMCC   = XRES ? 0 : IDATA[6:0]==`MCC;
+    assign XBCC   = XRES ? 0 : IDATAX[6:0]==`BCC;
+    assign XLCC   = XRES ? 0 : IDATAX[6:0]==`LCC;
+    assign XSCC   = XRES ? 0 : IDATAX[6:0]==`SCC;
+    assign XMCC   = XRES ? 0 : IDATAX[6:0]==`MCC;
 
-    assign XRCC   = XRES ? 0 : IDATA[6:0]==`RCC;
-    assign XCUS   = XRES ? 0 : IDATA[6:0]==`CUS;
-    //assign XFCC   <= XRES ? 0 : IDATA[6:0]==`FCC;
-    assign XSYS   = XRES ? 0 : IDATA[6:0]==`SYS;
+    assign XRCC   = XRES ? 0 : IDATAX[6:0]==`RCC;
+    assign XCUS   = XRES ? 0 : IDATAX[6:0]==`CUS;
+    //assign XFCC   <= XRES ? 0 : IDATAX[6:0]==`FCC;
+    assign XSYS   = XRES ? 0 : IDATAX[6:0]==`SYS;
 
     // signal extended immediate, according to the instruction type:
 
     assign XSIMM  = XRES ? 0 : 
-                     IDATA[6:0]==`SCC ? { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                     IDATA[6:0]==`BCC ? { IDATA[31] ? ALL1[31:13]:ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                     IDATA[6:0]==`JAL ? { IDATA[31] ? ALL1[31:21]:ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                     IDATA[6:0]==`LUI||
-                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                          { IDATA[31] ? ALL1[31:12]:ALL0[31:12], IDATA[31:20] }; // i-type
+                     IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
+                     IDATAX[6:0]==`BCC ? { IDATAX[31] ? ALL1[31:13]:ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
+                     IDATAX[6:0]==`JAL ? { IDATAX[31] ? ALL1[31:21]:ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
+                     IDATAX[6:0]==`LUI||
+                     IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
+                                          { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
         // non-signal extended immediate, according to the instruction type:
 
     assign XUIMM  = XRES ? 0: 
-                     IDATA[6:0]==`SCC ? { ALL0[31:12], IDATA[31:25],IDATA[11:7] } : // s-type
-                     IDATA[6:0]==`BCC ? { ALL0[31:13], IDATA[31],IDATA[7],IDATA[30:25],IDATA[11:8],ALL0[0] } : // b-type
-                     IDATA[6:0]==`JAL ? { ALL0[31:21], IDATA[31], IDATA[19:12], IDATA[20], IDATA[30:21], ALL0[0] } : // j-type
-                     IDATA[6:0]==`LUI||
-                     IDATA[6:0]==`AUIPC ? { IDATA[31:12], ALL0[11:0] } : // u-type
-                                          { ALL0[31:12], IDATA[31:20] }; // i-type
+                     IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
+                     IDATAX[6:0]==`BCC ? { ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
+                     IDATAX[6:0]==`JAL ? { ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
+                     IDATAX[6:0]==`LUI||
+                     IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
+                                          { ALL0[31:12], IDATAX[31:20] }; // i-type
 
     reg FLUSH = -1;  // flush instruction pipeline
 

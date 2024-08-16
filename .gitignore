@@ -11,3 +11,4 @@ boards/*/darksocv.ip_user_files
 boards/*/darksocv.sim
 fusesoc.conf
 build
+iseconfig

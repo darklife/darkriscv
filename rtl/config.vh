@@ -53,14 +53,14 @@
 // stage in the pipeline, but keep a good performance most of time
 // (instruction per clock = 1).  of course, read operations require 1
 // wait-state, which means sometimes the read performance is reduced.
-//`define __3STAGE__
+`define __3STAGE__
 
 // RV32I vs RV32E:
 //
 // The difference between the RV32I and RV32E regarding the logic space is
 // minimal in typical applications with modern 5 or 6 input LUT based FPGAs,
 // but the RV32E is better with old 4 input LUT based FPGAs.
-//`define __RV32E__
+`define __RV32E__
 
 // muti-threading support:
 //
@@ -161,9 +161,9 @@
 // when enabled, the caches will try map and store the read operations, in a 
 // way that future read operations in the same address will be faster!
 // the cache depth N means that the each cache will be 32-bit x 2^N
-//`define __CDEPTH__ 6
-//`define __DCACHE__
-//`define __ICACHE__
+`define __CDEPTH__ 6
+`define __DCACHE__
+`define __ICACHE__
 
 // interactive simulation:
 //
@@ -440,7 +440,6 @@
 // register number depends of CPU type RV32[EI] and number of threads
 
 `ifdef __THREADS__
-    `undef __INTERRUPT__
 
     `ifdef __RV32E__
         `define RLEN 16*(2**`__THREADS__)

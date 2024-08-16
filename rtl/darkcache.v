@@ -32,6 +32,9 @@
 `include "../rtl/config.vh"
 
 module darkcache
+#(
+    parameter ID = 0
+)
 (
     input           CLK,    // clock
     input           RES,    // reset
@@ -78,7 +81,8 @@ module darkcache
     
     initial
     begin
-        $display("cache: %0dx32-bits (%0d bytes)",
+        $display("cache%0d: %0dx32-bits (%0d bytes)",
+            ID,
             (2**`__CDEPTH__),
             4*(2**`__CDEPTH__));
             
@@ -95,7 +99,7 @@ module darkcache
     wire HIT = RES ? 0 : (DRD && CVAL[CINDEX] && CTAG[CINDEX]==DADDR[31:`__CDEPTH__+2]);
     wire CLR = RES ? 0 : (DWR && CVAL[CINDEX] && CTAG[CINDEX]==DADDR[31:`__CDEPTH__+2]);
 
-    wire DTREQ = RES||HIT ? 0 : DADDR[31:30]==0 && DRD;
+    wire DTREQ = RES||HIT ? 0 : (DADDR[31:30]==0||DADDR[31:30]==2) && DRD;
 
     reg [31:0] DATAOFF = 0;
 
@@ -103,6 +107,7 @@ module darkcache
     begin
         if(DTREQ && XDACK)
         begin
+            //$display("cache%0d: miss_on_rd %x:%x\n",ID,DADDR,XATAI);
             CDATA [CINDEX]  <= XATAI;
             CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
             CVAL  [CINDEX]  <= 1;
@@ -110,9 +115,22 @@ module darkcache
         else
         if(CLR)
         begin
-            CVAL  [CINDEX]  <= 0;        
+            if(DLEN==4)
+            begin
+                //$display("cache%0d: miss_on_wr %x:%x\n",ID,DADDR,DATAI);
+                CDATA [CINDEX]  <= DATAI;
+                CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
+                CVAL  [CINDEX]  <= 1;   
+            end
+            else
+            begin
+                //$display("cache%0d: flush_on_wr %x:%x\n",ID,DADDR,DATAI);
+                CVAL  [CINDEX]  <= 0;
+            end
         end
-                                
+
+        // if(HIT) $display("cache%0d: hit_on_rd %x:%x\n",ID,DADDR,DATAI);
+
         if(!HLT) DATAOFF <= CDATO;
     end
 

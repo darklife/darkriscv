@@ -285,8 +285,15 @@ module darksocv
 
 `else
 
-    assign XATAIMUX[2] = 0;
-    assign XDACKMUX[2] = 0;
+    reg [3:0] DTACK = 0;
+
+    always@(posedge CLK)
+    begin
+        DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQMUX[2] ? 13 : 0;
+    end
+
+    assign XATAIMUX[2] = 32'hdeadbeef;
+    assign XDACKMUX[2] = DTACK==1;
 
 `endif
 	 

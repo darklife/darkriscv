@@ -125,7 +125,7 @@ module darkbridge
 
     // instruction cache
     
-    darkcache l1_inst
+    darkcache #(.ID(0)) l1_inst
     (
         .CLK    (CLK),
         .RES    (RES),
@@ -164,7 +164,7 @@ module darkbridge
 
     // data cache
     
-    darkcache l1_data
+    darkcache #(.ID(1)) l1_data    
     (
         .CLK    (CLK),
         .RES    (RES),
