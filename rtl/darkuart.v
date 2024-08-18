@@ -166,8 +166,8 @@ module darkuart
                     UART_XFIFO <= DATAI[15:8];
                 `ifndef __TRACE__
                     $write("%c",DATAI[15:8]);
-                `endif
                     $fflush();
+                `endif
                     
                     if(IOREQ==1&&DATAI[15:8]==" ")
                     begin

@@ -129,9 +129,6 @@ module darksocv
 
     wire [31:0] XATAIMUX [0:3];
     wire        XDACKMUX [0:3];
-
-    assign XDACKMUX[3] = 0; // unused
-    assign XATAIMUX[3] = 0; // unused
     
     // darkriscv
 
@@ -146,6 +143,12 @@ module darksocv
     wire [31:0] IDATA;
     wire        IDACK;
 
+`ifndef __HARVARD__
+
+    assign IDREQ = 0;
+
+`endif
+
     darkbridge
     bridge0
     (
@@ -157,19 +160,21 @@ module darksocv
         .XIRQ    (XIRQ),
 `endif
 
-        .XDREQ    (XDREQ),
-        .XADDR  (XADDR),
-        .XATAI  (XATAIMUX[XADDR[31:30]]),
-        .XATAO  (XATAO),
-        .XRD    (XRD),
-        .XWR    (XWR),        
-        .XBE    (XBE),
-        .XDACK  (XDACKMUX[XADDR[31:30]]),
-        
+        .XXDREQ  (XDREQ),
+        .XXADDR  (XADDR),
+        .XXATAI  (XATAIMUX[XADDR[31:30]]),
+        .XXATAO  (XATAO),
+        .XXRD    (XRD),
+        .XXWR    (XWR),        
+        .XXBE    (XBE),
+        .XXDACK  (XDACKMUX[XADDR[31:30]]),
+
+`ifdef __HARVARD__
         .YDREQ  (IDREQ),
         .YADDR  (IADDR),
         .YDATA  (IDATA),
         .YDACK  (IDACK),
+`endif
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
@@ -179,7 +184,7 @@ module darksocv
         .DEBUG  (KDEBUG)
     );
 
-    // bram memory
+    // bram memory w/ CS==0
 
     darkram bram0
     (
@@ -202,7 +207,7 @@ module darksocv
         .XDACK  (XDACKMUX[0])
     );
 
-    // io block
+    // io block w/ CS==1
 
     wire [3:0] IODEBUG;
 
@@ -238,7 +243,7 @@ module darksocv
         .DEBUG  (IODEBUG)
     );
 
-    // sdram
+    // sdram w/ CS==2
     
 `ifdef __SDRAM__
 
@@ -285,17 +290,31 @@ module darksocv
 
 `else
 
-    reg [3:0] DTACK = 0;
+    reg [3:0] DTACK2 = 0;
 
     always@(posedge CLK)
     begin
-        DTACK <= RES ? 0 : DTACK ? DTACK-1 : XDREQMUX[2] ? 13 : 0;
+        DTACK2 <= RES ? 0 : DTACK2 ? DTACK2-1 : XDREQMUX[2] ? 13 : 0;
+        if(XDREQMUX[2]) $display("sdram: unmapped addr=%x",XADDR);
     end
 
     assign XATAIMUX[2] = 32'hdeadbeef;
-    assign XDACKMUX[2] = DTACK==1;
+    assign XDACKMUX[2] = DTACK2==1;
 
 `endif
+
+    // unmapped area w/ CS==3
+
+    reg [3:0] DTACK3 = 0;
+
+    always@(posedge CLK)
+    begin
+        DTACK3 <= RES ? 0 : DTACK3 ? DTACK3-1 : XDREQMUX[3] ? 1 : 0;
+        if(XDREQMUX[3]) $display("sdram: unmapped addr=%x",XADDR);
+    end
+
+    assign XATAIMUX[3] = 32'hdeadbeef;
+    assign XDACKMUX[3] = DTACK3==1;
 	 
     assign DEBUG = KDEBUG;
 

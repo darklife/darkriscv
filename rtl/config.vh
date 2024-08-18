@@ -157,10 +157,21 @@
 // darksocv configuration:
 ////////////////////////////////////////////////////////////////////////////////
 
+// harvard architecture
+// 
+// darkriscv core is *always* harvard, but it possible multiplex the instr. 
+// and data buses over the time on the SoC level, in a way that it mimics a 
+// classic von neumann architecture, which is useful for single-port memory, 
+// such as SDRAMs, PSRAM, etc. when multiplexed, the instruction fetch turns
+// to be very slow, so caches are essential with this scenario!
+`define __HARVARD__
+
 // cache depth
 // 
 // when enabled, the caches will try map and store the read operations, in a 
-// way that future read operations in the same address will be faster!
+// way that future read operations in the same address will be faster! it is
+// specially applicable to non-harvard SoC configuration, since that the
+// harvard SoC configuration is faster than the cache!
 // the cache depth N means that the each cache will be 32-bit x 2^N
 //`define __LUTCACHE__
 //`define __CDEPTH__ 6

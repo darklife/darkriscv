@@ -43,21 +43,21 @@ module darkbridge
 
     // x-bus
 
-    output        XDREQ,
-    output        XWR,
-    output        XRD,
-    output [3:0]  XBE,
-    output [31:0] XADDR,
-    output [31:0] XATAO,
-    input  [31:0] XATAI,
-    input         XDACK,
+    output        XXDREQ,
+    output        XXWR,
+    output        XXRD,
+    output [3:0]  XXBE,
+    output [31:0] XXADDR,
+    output [31:0] XXATAO,
+    input  [31:0] XXATAI,
+    input         XXDACK,
 
-    // y-bus
-
+`ifdef __HARVARD__
     output        YDREQ,
     output [31:0] YADDR,
     input  [31:0] YDATA,
     input         YDACK,
+`endif
 
 `ifdef SIMULATION
     input       ESIMREQ,
@@ -76,7 +76,8 @@ module darkbridge
     wire [31:0] DATAO;
     wire [31:0] DATAI;
     wire [ 2:0] DLEN;
-    wire        DRW,
+    wire        HLT2,
+                DRW,
                 DWR,
                 DRD,
                 DAS;
@@ -95,7 +96,7 @@ module darkbridge
     (
         .CLK    (CLK),
         .RES    (RES),
-        .HLT    (HLT),
+        .HLT    (HLT2),
 
 `ifdef __INTERRUPT__
         .IRQ    (XIRQ),
@@ -121,10 +122,15 @@ module darkbridge
         .DEBUG  (KDEBUG)
     );
 
-`ifdef __ICACHE__
-
     // instruction cache
-    
+
+    wire         YDREQ;
+    wire  [31:0] YADDR;
+    wire  [31:0] YDATA;
+    wire         YDACK;
+
+`ifdef __ICACHE__
+  
     darkcache #(.ID(0)) l1_inst
     (
         .CLK    (CLK),
@@ -159,10 +165,24 @@ module darkbridge
 
 `endif
 
+    // data cache
+
+    wire        XDREQ;
+    wire        XWR;
+    wire        XRD;
+    wire [3:0]  XBE;
+    wire [31:0] XADDR;
+    wire [31:0] XATAO;
+    
+`ifdef __HARVARD__
+    wire [31:0] XATAI;
+    wire        XDACK;
+`else    
+    reg [31:0] XATAI = 0;   
+    reg        XDACK = 0;
+`endif
 
 `ifdef __DCACHE__
-
-    // data cache
     
     darkcache #(.ID(1)) l1_data    
     (
@@ -179,7 +199,7 @@ module darkbridge
         .DATAO  (DATAI),
         .DDACK  (DDACK),
 
-        .XDREQ    (XDREQ),
+        .XDREQ  (XDREQ),
         .XRD    (XRD),
         .XWR    (XWR),
         .XBE    (XBE),
@@ -191,7 +211,7 @@ module darkbridge
 
 `else
 
-    assign XDREQ   = DAS;
+    assign XDREQ = DAS;
     assign XRD   = DRD;
     assign XWR   = DWR;
 
@@ -221,11 +241,64 @@ module darkbridge
                                                XATAI[15: 0] ):
                                                XATAI;
 
-    assign DDACK = XDACK;
+    assign DDACK = XXDACK;
 
 `endif
 
-    assign HLT = !IDACK || (DAS && !DDACK);
+`ifdef __HARVARD__
+
+    assign XXDREQ = XDREQ;
+    assign XXWR   = XWR;
+    assign XXRD   = XRD;
+    assign XXBE   = XBE;
+    assign XXADDR = XADDR;
+    assign XXATAO = XATAO;
+
+    assign XATAI  = XXATAI;
+    assign XDACK  = XXDACK;
+
+    assign HLT2 = (!RES && !IDACK) || (DAS && !DDACK);
+    
+    assign HLT  = HLT2; 
+
+`else 
+
+    reg [1:0] XSTATE = 0;
+    
+    always@(posedge CLK)
+    begin
+        XSTATE <=   RES                          ? 0 : 
+                    XSTATE==0 && XDREQ           ? 2 : // idle to data
+                    XSTATE==0 && YDREQ           ? 1 : // idle to instr
+                    XSTATE==2 && XXDACK && YDREQ ? 1 : // data to instr
+                    XSTATE==2 && XXDACK          ? 0 : // data to idle                   
+                    XSTATE==1 && XXDACK          ? 0 : // instr to idle
+                                                   XSTATE; // no change        
+                                                   
+            XATAI <= (XSTATE==2 && XXDACK) ? XXATAI : XATAI;
+/*            
+            XDACK <= XSTATE==1 && XXDACK ? 0 : (XSTATE==2 && XXDACK) ? XXDACK : XDACK;
+*/
+            XDACK <= XDREQ && (XSTATE==2 && XXDACK) ? XXDACK : 
+                     YDREQ && (XSTATE==1 && XXDACK) ? 0      : XDACK;
+
+    end
+
+    assign XXDREQ = XSTATE==2 ? XDREQ : XSTATE==1 ? YDREQ : 1'b0;
+    assign XXWR   = XSTATE==2 ? XWR   : XSTATE==1 ? 1'b0  : 1'b0;
+    assign XXRD   = XSTATE==2 ? XRD   : XSTATE==1 ? 1'b1  : 1'b0;
+    assign XXBE   = XSTATE==2 ? XBE   : XSTATE==1 ? 4'd15 : 4'd0;
+    assign XXADDR = XSTATE==2 ? XADDR : XSTATE==1 ? YADDR : 32'd0;
+    assign XXATAO = XSTATE==2 ? XATAO : XSTATE==1 ? 32'd0 : 32'd0;
+
+    assign YDATA  = XXATAI;
+    assign YDACK  = XSTATE==1 && XXDACK;
+
+    assign HLT2 = (!RES && !IDACK) || (DAS && !DDACK);
+    
+    assign HLT  = 0; 
+
+`endif
     
     assign DEBUG = { XDREQ, HLT, XDACK, IDACK };
 
