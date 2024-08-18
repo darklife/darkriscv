@@ -122,7 +122,7 @@
 // order to identify the core number.  
 //`define __CSR__
 
-// instruction TRACE
+// instruction trace:
 //
 // prints the PC, the respective instruction and some useful information,
 // skipping halt and flush, in order to track the instruction execution
@@ -130,6 +130,7 @@
 // traces from a working core in order to debug a non-working core.  when
 // trace is enabled, the UART print is blocked, also, the trace does not
 // dump data when the core is in reset.
+// the trace file is stored on "sim/darksocv.txt"
 //`define __TRACE__
 //`define __TRACEFULL__
 

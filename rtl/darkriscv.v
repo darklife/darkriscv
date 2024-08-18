@@ -111,7 +111,7 @@ module darkriscv
         if(HLT2^HLT) IDATA2 <= IDATA;    
     end
 
-    wire[31:0] IDATAX = HLT2 ? IDATA2 : IDATA;
+    wire[31:0] IDATAX = XRES ? 0 : HLT2 ? IDATA2 : IDATA;
 
     // decode: IDATA is break apart as described in the RV32I specification
 
@@ -126,26 +126,26 @@ module darkriscv
 
     always@(posedge CLK)
     begin
-        XIDATA <= XRES ? 0 : HLT ? XIDATA : IDATAX;
+        XIDATA <= HLT ? XIDATA : IDATAX;
 
-        XLUI   <= XRES ? 0 : HLT ? XLUI   : IDATAX[6:0]==`LUI;
-        XAUIPC <= XRES ? 0 : HLT ? XAUIPC : IDATAX[6:0]==`AUIPC;
-        XJAL   <= XRES ? 0 : HLT ? XJAL   : IDATAX[6:0]==`JAL;
-        XJALR  <= XRES ? 0 : HLT ? XJALR  : IDATAX[6:0]==`JALR;
+        XLUI   <= HLT ? XLUI   : IDATAX[6:0]==`LUI;
+        XAUIPC <= HLT ? XAUIPC : IDATAX[6:0]==`AUIPC;
+        XJAL   <= HLT ? XJAL   : IDATAX[6:0]==`JAL;
+        XJALR  <= HLT ? XJALR  : IDATAX[6:0]==`JALR;
 
-        XBCC   <= XRES ? 0 : HLT ? XBCC   : IDATAX[6:0]==`BCC;
-        XLCC   <= XRES ? 0 : HLT ? XLCC   : IDATAX[6:0]==`LCC;
-        XSCC   <= XRES ? 0 : HLT ? XSCC   : IDATAX[6:0]==`SCC;
-        XMCC   <= XRES ? 0 : HLT ? XMCC   : IDATAX[6:0]==`MCC;
+        XBCC   <= HLT ? XBCC   : IDATAX[6:0]==`BCC;
+        XLCC   <= HLT ? XLCC   : IDATAX[6:0]==`LCC;
+        XSCC   <= HLT ? XSCC   : IDATAX[6:0]==`SCC;
+        XMCC   <= HLT ? XMCC   : IDATAX[6:0]==`MCC;
 
-        XRCC   <= XRES ? 0 : HLT ? XRCC   : IDATAX[6:0]==`RCC;
-        XCUS   <= XRES ? 0 : HLT ? XRCC   : IDATAX[6:0]==`CUS;
-        //XFCC   <= XRES ? 0 : HLT ? XFCC   : IDATAX[6:0]==`FCC;
-        XSYS   <= XRES ? 0 : HLT ? XSYS   : IDATAX[6:0]==`SYS;
+        XRCC   <= HLT ? XRCC   : IDATAX[6:0]==`RCC;
+        XCUS   <= HLT ? XRCC   : IDATAX[6:0]==`CUS;
+        //XFCC   <= HLT ? XFCC   : IDATAX[6:0]==`FCC;
+        XSYS   <= HLT ? XSYS   : IDATAX[6:0]==`SYS;
 
         // signal extended immediate, according to the instruction type:
 
-        XSIMM  <= XRES ? 0 : HLT ? XSIMM :
+        XSIMM  <= HLT ? XSIMM :
                  IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
                  IDATAX[6:0]==`BCC ? { IDATAX[31] ? ALL1[31:13]:ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
                  IDATAX[6:0]==`JAL ? { IDATAX[31] ? ALL1[31:21]:ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
@@ -154,7 +154,7 @@ module darkriscv
                                       { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
         // non-signal extended immediate, according to the instruction type:
 
-        XUIMM  <= XRES ? 0: HLT ? XUIMM :
+        XUIMM  <= HLT ? XUIMM :
                  IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
                  IDATAX[6:0]==`BCC ? { ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
                  IDATAX[6:0]==`JAL ? { ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
@@ -174,26 +174,26 @@ module darkriscv
     wire [31:0] XSIMM;
     wire [31:0] XUIMM;
 
-    assign XIDATA = XRES ? 0 : IDATAX;
+    assign XIDATA = IDATAX;
 
-    assign XLUI   = XRES ? 0 : IDATAX[6:0]==`LUI;
-    assign XAUIPC = XRES ? 0 : IDATAX[6:0]==`AUIPC;
-    assign XJAL   = XRES ? 0 : IDATAX[6:0]==`JAL;
-    assign XJALR  = XRES ? 0 : IDATAX[6:0]==`JALR;
+    assign XLUI   = IDATAX[6:0]==`LUI;
+    assign XAUIPC = IDATAX[6:0]==`AUIPC;
+    assign XJAL   = IDATAX[6:0]==`JAL;
+    assign XJALR  = IDATAX[6:0]==`JALR;
 
-    assign XBCC   = XRES ? 0 : IDATAX[6:0]==`BCC;
-    assign XLCC   = XRES ? 0 : IDATAX[6:0]==`LCC;
-    assign XSCC   = XRES ? 0 : IDATAX[6:0]==`SCC;
-    assign XMCC   = XRES ? 0 : IDATAX[6:0]==`MCC;
+    assign XBCC   = IDATAX[6:0]==`BCC;
+    assign XLCC   = IDATAX[6:0]==`LCC;
+    assign XSCC   = IDATAX[6:0]==`SCC;
+    assign XMCC   = IDATAX[6:0]==`MCC;
 
-    assign XRCC   = XRES ? 0 : IDATAX[6:0]==`RCC;
-    assign XCUS   = XRES ? 0 : IDATAX[6:0]==`CUS;
-    //assign XFCC   <= XRES ? 0 : IDATAX[6:0]==`FCC;
-    assign XSYS   = XRES ? 0 : IDATAX[6:0]==`SYS;
+    assign XRCC   = IDATAX[6:0]==`RCC;
+    assign XCUS   = IDATAX[6:0]==`CUS;
+    //assign XFCC   <= IDATAX[6:0]==`FCC;
+    assign XSYS   = IDATAX[6:0]==`SYS;
 
     // signal extended immediate, according to the instruction type:
 
-    assign XSIMM  = XRES ? 0 : 
+    assign XSIMM  = 
                      IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
                      IDATAX[6:0]==`BCC ? { IDATAX[31] ? ALL1[31:13]:ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
                      IDATAX[6:0]==`JAL ? { IDATAX[31] ? ALL1[31:21]:ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
@@ -202,7 +202,7 @@ module darkriscv
                                           { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
         // non-signal extended immediate, according to the instruction type:
 
-    assign XUIMM  = XRES ? 0: 
+    assign XUIMM  = 
                      IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
                      IDATAX[6:0]==`BCC ? { ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
                      IDATAX[6:0]==`JAL ? { ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
@@ -231,11 +231,11 @@ module darkriscv
     `endif
 `else
     `ifdef __RV32E__
-        wire [3:0] DPTR   = XRES ? 0 : XIDATA[10: 7]; // set SP_RESET when RES==1
+        wire [3:0] DPTR   = XIDATA[10: 7]; // set SP_RESET when RES==1
         wire [3:0] S1PTR  = XIDATA[18:15];
         wire [3:0] S2PTR  = XIDATA[23:20];
     `else
-        wire [4:0] DPTR   = XRES ? 0 : XIDATA[11: 7]; // set SP_RESET when RES==1
+        wire [4:0] DPTR   = XIDATA[11: 7]; // set SP_RESET when RES==1
         wire [4:0] S1PTR  = XIDATA[19:15];
         wire [4:0] S2PTR  = XIDATA[24:20];
     `endif
@@ -600,68 +600,6 @@ module darkriscv
                      NXPC+4;                   // normal flow
 `endif
         PC   <= /*XRES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
-
-`ifndef __YOSYS__
-
-    `ifdef __EBREAK__
-        if(0 && !HLT&&!FLUSH&&EBRK)
-        begin
-            $display("breakpoint at %x",PC);
-            $stop();
-        end
-    `endif        
-    
-        if(!FLUSH && IDATA===32'dx)
-        begin
-            $display("invalid IDATA at %x",PC);
-            $stop();  
-        end
-        
-        if(LCC&&!HLT&&!FLUSH&&( (DLEN==4 && DATAI[31:0]===32'dx)||
-                                (DLEN==2 && DATAI[15:0]===16'dx)||
-                                (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
-        begin
-            $display("invalid DATAI@%x at %x",DADDR,PC);
-            $stop();
-        end
-        
-    `ifdef __TRACE__
-        if(!XRES)
-        begin
-        `ifdef __TRACEFULL__
-            if(FLUSH)
-                $display("trace: %x:%x       flushed",PC,XIDATA);
-            else
-            if(HLT)
-            begin
-                //$display("%x:%x       %s halted       %x:%x",PC,XIDATA,LCC?"lx":"sx",DADDR,LCC?LDATA:DATAO);
-                $display("trace: %x:%x       halted",PC,XIDATA);
-            end
-            else
-        `else
-            if(!FLUSH && !HLT)
-        `endif
-            begin
-                case(XIDATA[6:0])
-                    `LUI:     $display("trace: %x:%x lui   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
-                    `AUIPC:   $display("trace: %x:%x auipc %%x%0x,PC[%0x]",            PC,XIDATA,DPTR,$signed(SIMM));
-                    `JAL:     $display("trace: %x:%x jal   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
-                    `JALR:    $display("trace: %x:%x jalr  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
-                    `BCC:     $display("trace: %x:%x bcc   %%x%0x,%%x%0x,PC[%0d]",     PC,XIDATA,S1PTR,S2PTR,$signed(SIMM));
-                    `LCC:     $display("trace: %x:%x lx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,LDATA);
-                    `SCC:     $display("trace: %x:%x sx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,DATAO);
-                    `MCC:     $display("trace: %x:%x alui  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
-                    `RCC:     $display("trace: %x:%x alu   %%x%0x,%%x%0x,%%x%0x",      PC,XIDATA,DPTR,S1PTR,S2PTR);
-                    `SYS:     $display("trace: %x:%x sys   (no decode)",               PC,XIDATA);
-                    `CUS:     $display("trace: %x:%x cus   (no decode)",               PC,XIDATA);
-                    default:  $display("trace: %x:%x ???   (no decode)",               PC,XIDATA);
-                endcase
-            end
-        end        
-    `endif
-    
-`endif
-
     end
 
     // IO and memory interface
@@ -766,10 +704,70 @@ module darkriscv
                     $finish();
                 end
             end
+
+        `ifdef __EBREAK__
+            if(0 && !HLT&&!FLUSH&&EBRK)
+            begin
+                $display("breakpoint at %x",PC);
+                $stop();
+            end
+        `endif        
+        
+            if(!FLUSH && IDATA===32'dx)
+            begin
+                $display("invalid IDATA at %x",PC);
+                $stop();  
+            end
+            
+            if(LCC&&!HLT&&!FLUSH&&( (DLEN==4 && DATAI[31:0]===32'dx)||
+                                    (DLEN==2 && DATAI[15:0]===16'dx)||
+                                    (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
+            begin
+                $display("invalid DATAI@%x at %x",DADDR,PC);
+                $stop();
+            end
+            
+        `ifdef __TRACE__
+            if(!XRES)
+            begin
+            `ifdef __TRACEFULL__
+                if(FLUSH)
+                    $display("trace: %x:%x       flushed",PC,XIDATA);
+                else
+                if(HLT)
+                begin
+                    //$display("%x:%x       %s halted       %x:%x",PC,XIDATA,LCC?"lx":"sx",DADDR,LCC?LDATA:DATAO);
+                    $display("trace: %x:%x       halted",PC,XIDATA);
+                end
+                else
+            `else
+                if(!FLUSH && !HLT)
+            `endif
+                begin
+                    case(XIDATA[6:0])
+                        `LUI:     $display("trace: %x:%x lui   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
+                        `AUIPC:   $display("trace: %x:%x auipc %%x%0x,PC[%0x]",            PC,XIDATA,DPTR,$signed(SIMM));
+                        `JAL:     $display("trace: %x:%x jal   %%x%0x,%0x",                PC,XIDATA,DPTR,$signed(SIMM));
+                        `JALR:    $display("trace: %x:%x jalr  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
+                        `BCC:     $display("trace: %x:%x bcc   %%x%0x,%%x%0x,PC[%0d]",     PC,XIDATA,S1PTR,S2PTR,$signed(SIMM));
+                        `LCC:     $display("trace: %x:%x lx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,LDATA);
+                        `SCC:     $display("trace: %x:%x sx    %%x%0x,%%x%0x[%0d]\t%x:%x",  PC,XIDATA,DPTR,S1PTR,$signed(SIMM),DADDR,DATAO);
+                        `MCC:     $display("trace: %x:%x alui  %%x%0x,%%x%0x,%0d",         PC,XIDATA,DPTR,S1PTR,$signed(SIMM));
+                        `RCC:     $display("trace: %x:%x alu   %%x%0x,%%x%0x,%%x%0x",      PC,XIDATA,DPTR,S1PTR,S2PTR);
+                        `SYS:     $display("trace: %x:%x sys   (no decode)",               PC,XIDATA);
+                        `CUS:     $display("trace: %x:%x cus   (no decode)",               PC,XIDATA);
+                        default:  $display("trace: %x:%x ???   (no decode)",               PC,XIDATA);
+                    endcase
+                end
+            end        
+        `endif
+        
         end
+
     `else
         always@(posedge CLK) if(ESIMREQ) ESIMACK <= 1;
     `endif
+
 
 `endif
 
