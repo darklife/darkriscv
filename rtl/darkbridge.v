@@ -76,7 +76,7 @@ module darkbridge
     wire [31:0] DATAO;
     wire [31:0] DATAI;
     wire [ 2:0] DLEN;
-    wire        HLT2,
+    wire        IHLT,
                 DRW,
                 DWR,
                 DRD,
@@ -96,7 +96,7 @@ module darkbridge
     (
         .CLK    (CLK),
         .RES    (RES),
-        .HLT    (HLT2),
+        .HLT    (IHLT),
 
 `ifdef __INTERRUPT__
         .IRQ    (XIRQ),
@@ -173,13 +173,12 @@ module darkbridge
     wire [3:0]  XBE;
     wire [31:0] XADDR;
     wire [31:0] XATAO;
-    
-`ifdef __HARVARD__
-    wire [31:0] XATAI;
     wire        XDACK;
-`else    
-    reg [31:0] XATAI = 0;   
-    reg        XDACK = 0;
+    wire [31:0] XATAI;
+    
+`ifndef __HARVARD__
+    reg [31:0] XATAI2 = 0;   
+    reg        XDACK2 = 0;
 `endif
 
 `ifdef __DCACHE__
@@ -257,9 +256,9 @@ module darkbridge
     assign XATAI  = XXATAI;
     assign XDACK  = XXDACK;
 
-    assign HLT2 = (!RES && !IDACK) || (DAS && !DDACK);
+    assign IHLT = (!RES && !IDACK) || (DAS && !DDACK);
     
-    assign HLT  = HLT2; 
+    assign HLT  = IHLT; 
 
 `else 
 
@@ -275,12 +274,10 @@ module darkbridge
                     XSTATE==1 && XXDACK          ? 0 : // instr to idle
                                                    XSTATE; // no change        
                                                    
-            XATAI <= (XSTATE==2 && XXDACK) ? XXATAI : XATAI;
-/*            
-            XDACK <= XSTATE==1 && XXDACK ? 0 : (XSTATE==2 && XXDACK) ? XXDACK : XDACK;
-*/
-            XDACK <= XDREQ && (XSTATE==2 && XXDACK) ? XXDACK : 
-                     YDREQ && (XSTATE==1 && XXDACK) ? 0      : XDACK;
+            XATAI2 <= (XSTATE==2 && XXDACK) ? XXATAI : XATAI2;
+
+            XDACK2 <= XDREQ && (XSTATE==2 && XXDACK) ? XXDACK : 
+                      YDREQ && (XSTATE==1 && XXDACK) ? 0      : XDACK2;
 
     end
 
@@ -294,9 +291,12 @@ module darkbridge
     assign YDATA  = XXATAI;
     assign YDACK  = XSTATE==1 && XXDACK;
 
-    assign HLT2 = (!RES && !IDACK) || (DAS && !DDACK);
+    assign XATAI = XSTATE==1 ? XATAI2 : XXATAI;
+    assign XDACK = XSTATE==1 ? XDACK2 : XXDACK;
+
+    assign IHLT = (!RES && !IDACK) || (DAS && !DDACK);
     
-    assign HLT  = 0; 
+    assign HLT  = 0;
 
 `endif
     
