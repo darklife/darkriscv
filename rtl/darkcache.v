@@ -139,6 +139,8 @@ module darkcache
     assign CDATO  = HIT ? CDATA[CINDEX] : XATAI;        
     assign DATAP  = DATAOFF;   
     
+    assign DDACK = HIT ? 1 : XDACK;
+    
   `else
 
     wire [31:0] CDATO;   
@@ -242,6 +244,8 @@ module darkcache
 
     assign CDATO  = HIT ? CDATAFF : XATAI;        
     assign DATAP  = DATAOFF;
+
+    assign DDACK = HIT2 ? 1 : XDACK;
     
   `endif
 
@@ -249,6 +253,8 @@ module darkcache
 
     wire [31:0] CDATO = XATAI;
     wire        HIT   = 0;
+
+    assign DDACK = XDACK;
 
 `endif
 
@@ -283,12 +289,6 @@ module darkcache
                    DLEN[1] ? ( DADDR[1]==1   ? CDATO[31:16] :
                                                CDATO[15: 0] ):
                                                CDATO;
-
-`ifdef __LUTCACHE__
-    assign DDACK = HIT ? 1 : XDACK;
-`else
-    assign DDACK = HIT2 ? 1 : XDACK;
-`endif
 
     assign DEBUG = { DAS, HIT, XDREQ, XDACK };
 
