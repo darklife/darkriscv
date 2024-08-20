@@ -35,35 +35,36 @@ Although the code is small and crude when compared with other RISC-V
 implementations, the *DarkRISCV* has lots of impressive features:
 
 - implements most of the RISC-V RV32E instruction set
-- implements most of the RISC-V RV32I instruction set (missing csr*, e* and fence*)
+- implements most of the RISC-V RV32I instruction set
+- optional CSRs for interrupts and debug
 - works up to 250MHz in a ultrascale ku040 (400MHz w/ overclock!)
 - up to 100MHz in a cheap spartan-6, fits in small spartan-3E such as XC3S100E!
-- can sustain 1 clock per instruction most of time (typically 71% of time)
+- can sustain 1 clock per instruction most of time (typically 70% of time)
 - flexible harvard architecture (easy to integrate a cache controller, bus bridges, etc)
 - works fine in a real xilinx (spartan-3, spartan-6, spartan-7, artix-7, kintex-7 and kintex ultrascale)
 - works fine with some real altera and lattice FPGAs
-- works fine with gcc 9.0.0 for RISC-V (no patches required!)
+- works fine with gcc 9.0.0 and above for RISC-V (no patches required!)
 - uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
 - optional RV32E support (works better with LUT4 FPGAs)
 - optional 16x16-bit MAC instruction (for digital signal processing) 
 - optional coarse-grained multi-threading (MT)
 - no interlock between pipeline stages!
+- optional interrupt handled on machine level
+- optional breakpoints handled on supervisor level
+- optional instruction and data caches
+- optional harvard to von neumann bridge
+- optional SDRAM controller (from kianRiscV project)
+- optional support for big-endian
 - BSD license: can be used anywhere with no restrictions!
 
 Some extra features are planned for the future or under development:
 
-- interrupt controller (under tests)
-- cache controller (under tests)
-- gpio and timer (under tests)
-- sdram controller w/ data scrambler
-- branch predictor (under tests)
 - ethernet controller (GbE)
 - multi-processing (SMP)
 - network on chip (NoC)
 - rv64i support (not so easy as it appears...)
 - dynamic bus sizing and big-endian support
 - user/supervisor modes
-- debug support
 - misaligned memory access
 - bridge for 8/16/32-bit buses 
 
@@ -82,19 +83,19 @@ clock per instruction most of time, except by a taken branch, where one
 clock is lost in the pipeline flush.  Of course, in order to perform read
 operations in blockrams in a single clock, a single-phase clock with
 combinational memory OR a two-phase clock with blockram memory is required,
-in a way that no wait states are required in thatcases.
+in a way that no wait states are required in that cases.
 
-As result, the code is very compact, with around three hundred lines of
+As result, the code was very compact, with around three hundred lines of
 obfuscated but beautiful Verilog code.  After lots of exciting sleepless
 nights of work and the help of lots of colleagues, the *DarkRISCV* reached a
 very good quality result, in a way that the code compiled by the standard
 GCC for RV32I worked fine.
 
 After two years of development, a three stage pipeline working
-with a single clock phase is also available, resulting in a better
+with a single clock phase was also available, resulting in a better
 distribution between the decode and execute stages.  In this case the
 instruction is fetch in the first clock from a blockram, decoded in the
-second clock and executed in the third clock.  
+second clock and executed in the third clock.
 
 As long the load instruction cannot load the data from a blockram in a
 single clock, the external logic inserts one extra clock in IO operations. 
@@ -102,12 +103,19 @@ Also, there are two extra clocks in order to flush the pipeline in the case
 of taken branches.  The impact of the pipeline flush depends of the compiler
 optimizations, but according to the lastest measurements, the 3-stage
 pipeline version can reach a instruction per clock (IPC) of 0.7, smaller
-than the measured IPC of 0.85 in the case of the 2-stage pipeline version.
+than the measured IPC of 0.8 in the case of the 2-stage pipeline version.
 
 Anyway, with the 3-stage pipeline and some other expensive optimizations,
 the *DarkRISCV* can reach up to 100MHz in a low-cost Spartan-6, which results in
 more performance when compared with the 2-stage pipeline version (typically
 50MHz).
+
+In order to celebrate six of the project, some effort was done in order to
+organize the SoC in a better way, breaking it in separate modules and 
+introducing new bus concepts in order to support large systems.  As result 
+DarkRISCV continue to support very well the small and high performance DSP-like 
+Harvard architecture systems, as well large and computer-like von Neumann 
+architecture systems.
 
 ## Project Background
 
@@ -124,7 +132,7 @@ performance of 20MIPS.  As long the 680x0 instruction is too complex, this
 result is really not bad at all and, at this moment, probably the best
 opensource option to replace the 68000.
 
-Anyway, it does not match with the my requirements regarding space and
+Anyway, it does not match my requirements regarding space and
 performance.  As part of the investigation, I tested other cores, but I
 found no much options as good as the TG68 and I even started design a
 risclized-68000 core, in order to try find a solution.  
@@ -182,7 +190,7 @@ git clone https://github.com/darklife/darkriscv.git
 Pre Setup Guide for MacOS:
 
 The document encompasses all the dependencies and steps to install those
-dependencies to successfully utilize the Darriscv ecosystem on MacOS.
+dependencies to successfully utilize the Darkriscv ecosystem on MacOS.
 
 Essentially, the ecosystem cannot be utilized in MacOS because of on of the
 dependencies Xilinx ISE 14.7 Design suit, which currently do not support
@@ -258,7 +266,7 @@ a.  Sudo apt-get install libncurses5:i386
 Once all pre-requisites are installed, go to root directory and run the
 below code:
 
-cd darkrisc 
+cd darkriscv
 make (use sudo if required)
 
 
@@ -620,14 +628,9 @@ hit ratio of 91%.  The data cache performance, although is not so good (with
 a hit ratio of only 68%), will be a requirement in order to access external
 memory and reduce the impact of slow SDRAMs and FLASHes.
 
-Unfortunately, the instruction and data caches are not working anymore for
-the 2-stage pipeline version and only the instruction cache is working in
-the 3-stage pipeline.  The problem is probably regarding the HLT signal
-and/or a problem regarding the write byte enable in the cache memory.
-
-Both the use of the cache and a 2-phase clock does not perform well.  By
-this way, a 3-stage pipeline version is provided, in order to use a single
-clock phase with blockrams.
+Both the use of the cache and a 2-phase clock does not perform well, on the
+point of view of combinational timing.  By this way, a 3-stage pipeline version 
+is provided, in order to use a single clock phase with blockrams.
 
 The concept in this case is separate the pre-fetch and decode, in a way that
 the pre-fetch can be done entirely in the blockram side for the instruction
@@ -738,15 +741,12 @@ the 3-stage pipeline, which match with the pipeline flush itself. At 100MHz,
 the maximum empirical number of context switches per second is around 2.94
 million.
 
-NOTE: the interrupt controller is currently working only with the -Os
-flag in the gcc!
-
 About the new MAC instruction, it is implemented in a very preliminary way
-with the OPCDE 7'b1111111 (this works, but it is a very bad decision!).  I
-am checking about the possibility to use the p.mac instruction, but at this
-time the instruction is hand encoded in the mac() function available in the
-stdio.c (i.e.  the darkriscv libc).  The details about include new
-instructions and make it work with GCC can be found in the reference [5].
+with the opcode 7'b0001011 (custom-0 opcode).  I am checking about the possibility 
+to use the p.mac instruction, but at this time the instruction is hand encoded 
+in the mac() function available in the stdio.c (i.e.  the darkriscv libc).  
+The details about include new instructions and make it work with GCC can be 
+found in the reference [5].
 
 The preliminary tests pointed, as expected, that the performance decreases
 to 90MHz and although it was possible run at 100MHz with a non-zero timing
@@ -860,7 +860,24 @@ states and only 1 extra clock in the taken branches, but runs with less
 performance (56MHz).
 
 Well, my conclusion after some years of research is that the branch
-prediction solve lots of problems regarding the performance.
+prediction solve lots of problems regarding the performance, but introduce
+lots of other problems, so the best solution may not implement it but try
+hand optimizations when possible, such as unroll loops.
+
+Another possible enhancement tested was the DBNZ instruction, well known 
+on Z80 and 68000, basically a loop instruction which decrements a counter
+test for zero and branch, repeating a loop until the counter is not zero...
+
+In the case of RISC-V, a DBNZ intruction impact is very small, basically
+replacing a SUBI+BNE, but with no effect on the real problem, which is
+the pipeline flush on branches. So, it was tested in the DarkRISCV a 
+special variant of DBNZD w/ delayed branch, in a way was possible run 2
+extra instructions after the DBNZ on 3-stage pipeline version (the 
+DBNZ was not included in the 2-stage pipeline version).
+
+Although the code w/ DBNZD was 3-clocks faster than SUBI+BNE, hand 
+optimized schemes, such as code unroll, may reach similar results and
+the DBNZD was not included in DarkRISCV.
 
 ## Development Tools
 
@@ -991,6 +1008,8 @@ As far as i remember it was compiled in a Slackware Linux or something like,
 anyway, it worked fine in the Windows 10 w/ WSL and in other linux-like
 environments.
 
+As update, more modern GCC 12+ was tested w/ DarkRISCV without any problem!
+
 ## Development Boards
 
 Currently, the following boards are supported:
@@ -1047,7 +1066,7 @@ Useful memory areas:
 - 7680: the end of RAM (stack)
 
 As long the *DarkRISCV* uses separate instruction and data buses, it is not
-possible dump the ROM area.  However, this limitation is not present when
+possible dump the ROM area.  However, this limitation is not present even when
 the option __HARVARD__ is activated, as long the core is constructed in a
 way that the ROM bus is conected to one bus from a dual-ported memory and
 the RAM bus is connected to a different bus from the same dual-ported
@@ -1070,18 +1089,37 @@ At this moment, not all boards are really supported yet. Supported boards are:
 - Lattice iCE40 Devkit
 - QMtech Artix 7 (Vivado)
 
+## Yosys support
+
+Our colleague Hirosh Dabui (from KianRiscV project) added support for 
+Lattice FPGAs via Yosys, in a way that is possible use makefiles to build 
+and program the FPGA directly from Linux!
+
 ## Creating a RISCV from scratch
 
 I found that some people are very reticent about the possibility of 
 designing a RISC-V processor in one night. Of course, it is not so easy 
 as it appears and, in fact, it require a lot of experience, planning and 
-luck. Also, the fact that the processor correctly run some few instructions 
+lucky. Also, the fact that the processor correctly run some few instructions 
 and put some garbage in the serial port does not really means that the 
 design is perfect, instead you will need lots and lots of debug time 
 in order to fix all hidden problems.
 
-Just in case, I found a set of online videos from my friend (Lucas Teske)
-that shows the design of a RISC-V processor from scratch (playlist with 9 videos):
+As reference, I released some time ago the code from the 16-bit "microrisc" 
+core that I designed before DarkRISCV:
+
+- https://github.com/darklife/udarkrisc
+
+Although far more simple, it is very close to some original DarkRISCV 
+concepts and was the case for other cores from the same era, targeting small 
+Xilinx Spartan-3 FPGAs. Oh, since there are lots of "micro"-something,
+I renamed it as micro-DarkRISC -- not RISCV -- so it is now part of Dark
+family! :)
+
+There are also other good projects that can be used as reference: 
+
+I found a set of online videos from my friend (Lucas Teske) that shows the 
+design of a RISC-V processor from scratch (playlist with 9 videos):
 
 - https://www.youtube.com/playlist?list=PLEP_M2UAh9q52a-w3ZUEChEoG_ROeMa88
 
@@ -1123,6 +1161,10 @@ etc), but create a clean, reliable and compreensive RISC-V core.
 You can check the code in the following repository:
 
 - https://github.com/racerxdl/riskow
+
+Another good reference is the KivanRiscV from my friend Hirosh:
+
+- https://github.com/splinedrive/kianRiscV
 
 ## Academic Papers and Applications
 
@@ -1187,6 +1229,7 @@ the internet and contributed in any way to make it better:
 - timdudu from github (fix in the LDATA and found a bug in the BCC instruction)
 - hyf6661669 from github (lots of contributions, including the fixes regarding the AUIPC and S{B,W,L} instructions, ModelSIM simulation, the memory byte select used by store/load instructions and much more!)
 - zmeiresearch from github (support for Lattice XP2 Brevia board)
+- Hirosh Dubai (motivation and lots of talks about RISCV!)
 - All other colleagues from github that contributed with fixes, corrections and suggestions.
 
 Finally, thanks to all people who directly and indirectly contributed to
