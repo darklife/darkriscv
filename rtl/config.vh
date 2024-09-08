@@ -105,7 +105,7 @@
 // The interrupt support cannot be used with threading (because makes no
 // much sense?)... also, it requires the 3 stage pipeline (again, makes no
 // much sense use it with the 2-stage pipeline).
-//`define __INTERRUPT__
+`define __INTERRUPT__
 
 // ebreak support
 // 
@@ -113,14 +113,14 @@
 // it basically consists in a single instruction that replace the normal
 // instruction, so an exception will be triggered, which is like an interrupt,
 // but with no real interrupt source.
-//`define __EBREAK__
+`define __EBREAK__
 
 // CSR support
 // 
 // enable this to use CSR registers...  INTERRUPT and EBREAK use this in
 // order to read some special exception registers.  Also, THREADS use this in
 // order to identify the core number.  
-//`define __CSR__
+`define __CSR__
 
 // instruction trace:
 //
@@ -422,7 +422,7 @@
     `define BOARD_ID 18
     `ifdef __3STAGE__
         `define BOARD_CK_REF 50000000
-        `define BOARD_CK_MUL 4
+        `define BOARD_CK_MUL 2
         `define BOARD_CK_DIV 2
         `define XILINX6CLK 1
     `else

@@ -249,7 +249,7 @@ module darksocv
 
     // sdram interface, thanks to my good friend Hirosh Dabui!
 
-    wire READY,T_CLK;
+    wire READY;
 
     mt48lc16m16a2_ctrl 
     #(
@@ -267,7 +267,7 @@ module darksocv
         .valid      (XDREQMUX[2]),
         .ready      (READY),
 
-        .sdram_clk  (T_CLK),
+        .sdram_clk  (S_CLK),
         .sdram_cke  (S_CKE),
         .sdram_dqm  (S_DQM),
         .sdram_addr (S_A),
@@ -279,23 +279,21 @@ module darksocv
         .sdram_dq   (S_DB) 
     );
 
-    reg [1:0] TS_CLK = 2'b00;
-
-    always@(posedge CLK) TS_CLK[0] <= RES ? 0: !TS_CLK[0];
-    always@(negedge CLK) TS_CLK[1] <= RES ? 0: !TS_CLK[1];
-
-    assign S_CLK = ^TS_CLK;
-
     assign XDACKMUX[2] = READY;
 
 `else
 
     reg [3:0] DTACK2 = 0;
+    reg       PRINT2 = 1;
 
     always@(posedge CLK)
     begin
         DTACK2 <= RES ? 0 : DTACK2 ? DTACK2-1 : XDREQMUX[2] ? 13 : 0;
-        if(XDREQMUX[2]) $display("sdram: unmapped addr=%x",XADDR);
+        if(XDREQMUX[2] && PRINT2) 
+        begin
+            $display("sdram: unmapped addr=%x",XADDR);
+            PRINT2 <= 0;
+        end
     end
 
     assign XATAIMUX[2] = 32'hdeadbeef;
@@ -306,11 +304,16 @@ module darksocv
     // unmapped area w/ CS==3
 
     reg [3:0] DTACK3 = 0;
+    reg PRINT3 = 1;
 
     always@(posedge CLK)
     begin
         DTACK3 <= RES ? 0 : DTACK3 ? DTACK3-1 : XDREQMUX[3] ? 1 : 0;
-        if(XDREQMUX[3]) $display("sdram: unmapped addr=%x",XADDR);
+        if(XDREQMUX[3] && PRINT3) 
+        begin
+            $display("sdram: unmapped addr=%x",XADDR);
+            PRINT3 <= 0;
+        end
     end
 
     assign XATAIMUX[3] = 32'hdeadbeef;

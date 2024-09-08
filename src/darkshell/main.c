@@ -35,6 +35,44 @@ unsigned csr_test(unsigned,unsigned,unsigned);
 
 int main(void)
 {
+#ifndef SMALL
+
+    static int sdram_init = 1;
+
+    if(sdram_init)
+    {
+        unsigned *sdram = (unsigned *)0x80000000;
+
+        sdram_init = 0;
+
+        if(*sdram!=0xdeadbeef)
+        {    
+            void (*reboot)(void) = (void (*)(void)) 0x80000000;
+            
+            char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;        
+
+            printf("sdrm0: preparing SDRAM memory 32KB...\n");
+
+            memcpy(d,s,32768);
+    
+            printf("sdrm0: checking SDRAM memory...\n");
+    
+            ptr=memcmp(d,s,1024);
+        
+            if(ptr)
+            { 
+                printf("sdrm0: test failed at %x:%x (expected %x)\n",d,*d,*s);
+            }
+            else
+            {
+                printf("sdrm0: SDRAM done, rebooting...\n");
+                reboot();
+            }
+        }
+    }
+
+#endif
+
     void *mtvec=0;
     void *stvec=0;
 
@@ -47,7 +85,7 @@ int main(void)
     if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
     printf("\n");
 
-    printf("bram0: text@%d+%d data@%d+%d stack@%d\n",
+    printf("bram0: text@%x+%d data@%x+%d stack@%x\n",
         (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
         (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
         (unsigned)&_stack);
@@ -59,24 +97,6 @@ int main(void)
 
     printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
-
-//#define SDRAM
-
-#ifdef SDRAM
-
-    printf("sdrm0: preparing SDRAM memory 1KB...\n");
-
-    char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;
-
-    memcpy(d,s,1024);
-    
-    printf("sdrm0: checking SDRAM memory 1KB...\n");
-    
-    if((ptr=memcmp(d,s,1024))) printf("sdrm0: test failed at %x\n",ptr);
-    
-    printf("sdrm0: test done, 1KB ok.\n");
-
-#endif
 
 #ifndef SMALL
 
@@ -90,7 +110,7 @@ int main(void)
     stvec = get_stvec();
     
     if(stvec)
-        printf("stvec: handler@%d, debug enabled...\n",stvec);
+        printf("stvec: handler@%x, debug enabled...\n",stvec);
     else
         printf("stvec: not found\n");
 
@@ -100,7 +120,7 @@ int main(void)
 
     if(mtvec)
     {
-        printf("mtvec: handler@%d, enabling interrupts...\n",mtvec);
+        printf("mtvec: handler@%x, enabling interrupts...\n",mtvec);
 
         set_mie((1<<11)|get_mie());
         set_mstatus((1<<3)|get_mstatus());
