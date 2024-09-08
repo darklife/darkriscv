@@ -94,7 +94,7 @@ module darkio
         if(RES)
         begin
             IACK <= 0;
-            TIMERFF <= (`BOARD_CK/1000000)-1; // timer set to 1MHz by default
+            TIMERFF <= (`BOARD_CK/1000)-1; // timer set to 1kHz by default
         end
         else
         if(XDREQ && XWR)

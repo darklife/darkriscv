@@ -83,13 +83,12 @@ char *board_name(int id)
 __attribute__ ((interrupt ("machine")))
 void irq_handler(void)
 {
-    EBREAK;
     if(io->irq == IRQ_TIMR)
     {
         if(!utimers--)
         {
             io->led++;
-            utimers=999999;
+            utimers=99;
         }
         io->irq = IRQ_TIMR;
     }

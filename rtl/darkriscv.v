@@ -459,7 +459,7 @@ module darkriscv
             MSCRATCH <= 0;
         end
         else
-        if(!HLT||!FLUSH)
+        if(!HLT && !FLUSH)
         begin
             if(CSRX)
             begin
