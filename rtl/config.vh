@@ -435,7 +435,7 @@
 `ifndef BOARD_ID
     `define BOARD_ID 0
     `define BOARD_CK 100000000
-    //`define __SDRAM__ 1
+    `define __SDRAM__ 1
 `endif
 
 `ifdef BOARD_CK_REF

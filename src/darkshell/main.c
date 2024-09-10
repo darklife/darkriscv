@@ -51,17 +51,17 @@ int main(void)
             
             char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;        
 
-            printf("sdrm0: preparing SDRAM memory 32KB...\n");
+            printf("sdrm0: preparing SDRAM memory 8KB...\n");
 
-            memcpy(d,s,32768);
+            memcpy(d,s,8192);
     
             printf("sdrm0: checking SDRAM memory...\n");
     
-            ptr=memcmp(d,s,1024);
+            ptr=memcmp(d,s,8192);
         
             if(ptr)
             { 
-                printf("sdrm0: test failed at %x:%x (expected %x)\n",d,*d,*s);
+                printf("sdrm0: test failed at %x:%x\n",ptr,*(unsigned *)ptr);
             }
             else
             {

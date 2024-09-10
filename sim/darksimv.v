@@ -72,12 +72,14 @@ module darksimv;
     // sdram sim model!
 
     wire        S_NWE,S_CLK;
-    reg [15:0]  S_DBFF = 0;  
+    wire  [1:0] S_DQM;
+    reg  [15:0] S_DBFF = 0;  
     wire [15:0] S_DB = S_NWE ? S_DBFF : 16'hzzzz;
 
-    always@(posedge S_CLK)
+    always@(negedge S_CLK)
     begin
-        if(S_NWE==0) S_DBFF <= S_DB;
+        if(S_NWE==0 && S_DQM[1]==0) S_DBFF[15:8] <= S_DB[15:8];
+        if(S_NWE==0 && S_DQM[0]==0) S_DBFF[ 7:0] <= S_DB[ 7:0];
     end
 
 `endif
@@ -89,6 +91,7 @@ module darksimv;
 `ifdef __SDRAM__        
         .S_CLK(S_CLK),
         .S_NWE(S_NWE),
+        .S_DQM(S_DQM),
         .S_DB (S_DB),
 `endif        
         .UART_RXD(RX),

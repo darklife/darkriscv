@@ -159,9 +159,12 @@ _normal_boot:
     _str_banner_loop3:
 
         lbu a0,0(a3)
+        beq a0,x0,_str_banner_loop4
         call _uart_putchar
         addi a3,a3,1
-        bne a0,x0,_str_banner_loop3
+        j _str_banner_loop3
+
+    _str_banner_loop4:
 
     /* RLL banner code end */
 
