@@ -174,7 +174,7 @@
 // harvard SoC configuration is faster than the cache!
 // the cache depth N means that the each cache will be 32-bit x 2^N
 `define __LUTCACHE__
-`define __CDEPTH__ 8
+`define __CDEPTH__ 6
 `define __ICACHE__
 `define __DCACHE__
 
@@ -229,8 +229,8 @@
 //
 // Optional RX/TX queue for communication oriented applications. The concept
 // foreseen 256 bytes for TX and RX, in a way that frames up to 128 bytes can
-// be easily exchanged via UART.
-//`define __UARTQUEUE__
+// be easily exchanged via UART. the queue size is defined as 2**N:
+//`define __UARTQUEUE__ 8 // not working well, need check...
 
 ////////////////////////////////////////////////////////////////////////////////
 // board definition:
