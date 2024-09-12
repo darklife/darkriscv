@@ -174,7 +174,7 @@
 // harvard SoC configuration is faster than the cache!
 // the cache depth N means that the each cache will be 32-bit x 2^N
 `define __LUTCACHE__
-`define __CDEPTH__ 6
+`define __CDEPTH__ 8
 `define __ICACHE__
 `define __DCACHE__
 
@@ -204,7 +204,7 @@
 // size as the same.
 // The size is defined as 2**MLEN, i.e. the address bits used in the memory.
 // WARNING: this setup must match with the src/darksocv.ld.src file!
-`define MLEN 15 // MEM[14:0] -> 32KBytes LENGTH = 0x8000 for coremark!
+`define MLEN 13 // MEM[14:0] -> 32KBytes LENGTH = 0x8000 for coremark!
 
 // read-modify-write cycle:
 //
@@ -419,7 +419,7 @@
 `endif
 
 `ifdef PISSWORDS_CH34X_LX16
-    `define BOARD_ID 18
+    `define BOARD_ID 0 // 18
     `ifdef __3STAGE__
         `define BOARD_CK_REF 50000000
         `define BOARD_CK_MUL 2

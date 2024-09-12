@@ -35,6 +35,10 @@ unsigned csr_test(unsigned,unsigned,unsigned);
 
 int main(void)
 {
+    unsigned t=0,t0=0;
+
+    printf("debug: main@%x stack@%x\n",(unsigned)main,(unsigned)&t);
+
 #ifndef SMALL
 
     static int sdram_init = 1;
@@ -51,13 +55,13 @@ int main(void)
             
             char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;        
 
-            printf("sdrm0: preparing SDRAM memory 8KB...\n");
+            printf("sdrm0: preparing SDRAM memory %d bytes...\n",(unsigned)&_edata);
 
-            memcpy(d,s,8192);
+            memcpy(d,s,(unsigned)&_edata);
     
-            printf("sdrm0: checking SDRAM memory...\n");
+            printf("sdrm0: checking SDRAM memory %d bytes...\n",(unsigned)&_edata);
     
-            ptr=memcmp(d,s,8192);
+            ptr=memcmp(d,s,(unsigned)&_edata);
         
             if(ptr)
             { 
@@ -136,7 +140,7 @@ int main(void)
     utimers = 0;
 
     // EBREAK;
-    
+
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n");
@@ -147,8 +151,11 @@ int main(void)
     {
         char  buffer[32];
 
-        printf("> ");
         memset(buffer,0,sizeof(buffer));
+
+        t = io->timeus;
+        
+        printf("%d> ",t-t0);
 
         if(mtvec==0)
         {
@@ -172,6 +179,8 @@ int main(void)
         }
 
         gets(buffer,sizeof(buffer));
+
+        t0 = io->timeus;
 
 #ifdef SMALL
 
@@ -211,6 +220,12 @@ int main(void)
               set_mie(0);
               printf("mtvec: interrupts disabled!\n");
               printf("rebooting...\n");
+
+              if(argv[1])
+              {
+                  void (*reboot)(void) = (void (*)(void)) xtoi(argv[1]);
+                  reboot();
+              }
 
               return 0;
           }

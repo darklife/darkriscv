@@ -90,7 +90,7 @@ module darkram
     end
 
     // instruction memory
-
+`ifdef __HARVARD__
 `ifdef __ICACHE__
 
     reg [3:0]  ITACK  = 0;
@@ -133,6 +133,7 @@ module darkram
         assign IDACK = IDREQ;
     `endif
 
+`endif
 `endif
 
     // data memory

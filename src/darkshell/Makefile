@@ -72,7 +72,7 @@ endif
     OD = $(CCPATH)/$(CROSS)-objdump
    CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -ffreestanding -O2
+CCFLAGS = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 #CCFLAGS += -DSMALL # enable this to make FW smaller!

@@ -39,7 +39,7 @@ MEMORY
 
 #else
 
-    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x8000
+    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x2000
 
 #endif
 }
