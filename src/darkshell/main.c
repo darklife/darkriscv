@@ -51,8 +51,6 @@ int main(void)
 
         if(*sdram!=0xdeadbeef)
         {    
-            void (*reboot)(void) = (void (*)(void)) 0x80000000;
-            
             char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;        
 
             printf("sdrm0: preparing SDRAM memory %d bytes...\n",(unsigned)&_edata);
@@ -69,7 +67,9 @@ int main(void)
             }
             else
             {
+                void (*reboot)(void) = (void (*)(void)) 0x80000000;
                 printf("sdrm0: SDRAM done, rebooting...\n");
+                set_sp(0x80002000);
                 reboot();
             }
         }
@@ -224,6 +224,7 @@ int main(void)
               if(argv[1])
               {
                   void (*reboot)(void) = (void (*)(void)) xtoi(argv[1]);
+                  set_sp(xtoi(argv[1])+0x2000);
                   reboot();
               }
 

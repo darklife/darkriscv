@@ -41,6 +41,7 @@
     .globl  set_mepc
     .globl  set_sepc
     .globl  set_mie
+    .globl  set_sp
 
     .globl  get_mstatus
     .globl  get_mtvec
@@ -133,6 +134,10 @@ set_sepc:
 
 set_mie:
     csrw mie,a0
+    ret
+
+set_sp:
+    addi sp,a0,0
     ret
 
 /* csr instruction test */
