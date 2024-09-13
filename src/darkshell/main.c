@@ -141,7 +141,7 @@ int main(void)
 
     printf("\n");
 
-    printf("Welcome to DarkRISCV!\n");
+    printf("Welcome to DarkRISCV!\n\n");
 
     // main loop
 
@@ -211,6 +211,11 @@ int main(void)
           if(!strcmp(argv[0],"clear"))
           {
               printf("\33[H\33[2J");
+          }
+          else
+          if(!strcmp(argv[0],"stop"))
+          {
+              EBREAK;
           }
           else
           if(!strcmp(argv[0],"reboot"))

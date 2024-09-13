@@ -130,7 +130,7 @@ module darkuart
     reg [2:0]   UART_RXDFF = -1;
 
 `ifdef __UARTQUEUE__
-    wire [7:0]  UART_STATE = { 6'd0, UART_RREQ!=UART_RACK, UART_XREQ==(UART_XACK^9'h100) };
+    wire [7:0]  UART_STATE = { 6'd0, UART_RREQ!=UART_RACK, UART_XREQ==(UART_XACK^(1<<`__UARTQUEUE__)) };
 
     integer i;
     
@@ -152,20 +152,25 @@ module darkuart
     reg [1:0] IOREQ = 0;
     reg [1:0] IOACK = 0;
 
+    reg [7:0] LASTCHAR=0;
+
     always@(posedge CLK)
     begin
         if(WR)
         begin
             if(BE[1])
             begin
-
+                LASTCHAR <= DATAI[15:8];
+                
 `ifdef SIMULATION
                 // print the UART output to console! :)
                 if(DATAI[15:8]!=13) // remove the '\r'
                 begin
                 `ifndef __TRACE__
                     $write("%c",DATAI[15:8]);
-                    $fflush();
+                    `ifndef __INTERACTIVE__
+                        $fflush();
+                    `endif
                 `endif
                     
                     if(IOREQ==1&&DATAI[15:8]==" ")
@@ -308,9 +313,9 @@ module darkuart
         if(IOACK==3)
         begin
         `ifdef __UARTQUEUE__        
-            IOACK <= UART_RREQ^UART_RACK ? 3 : (UART_RFIFO[UART_RREQ[`__UARTQUEUE__-1:0]]=="\n" ? 0 : 1);
+            IOACK <= UART_RREQ^UART_RACK ? 3 : (UART_RFIFO[UART_RREQ[`__UARTQUEUE__-1:0]]==10 ? 0 : 1);
         `else
-            IOACK <= UART_RREQ^UART_RACK ? 3 : (UART_RFIFO=="\n" ? 0 : 1);
+            IOACK <= UART_RREQ^UART_RACK ? 3 : (UART_RFIFO==10 ? 0 : 1);
         `endif
         end
         else

@@ -65,13 +65,15 @@ clean:
 
 $(VCDS): $(XSIM)
 	@echo finish |                                          \
-	./$(XSIM) |                                             \
+	awk '/^`define __TRACE__/{ exit(-1) }' ../rtl/config.vh \
+	&& ./$(XSIM)                                            \
+	|| ./$(XSIM) |                                          \
 	    awk '{  if($$0~/trace:/) {                          \
 	        print > "$(TRCE)";                              \
 	        if($$0~/40000005:/) {                           \
 	            split($$NF,A,":");                          \
 	            printf("%c",("0x"A[2])+0); } }              \
-	        else print }'
+	        else print }'                                   
 
 $(XSIM): $(DEPS)
 	$(ICARUS) -I ../rtl -o $(XSIM) $(RTLS)
