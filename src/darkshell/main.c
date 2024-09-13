@@ -68,7 +68,7 @@ int main(void)
             else
             {
                 printf("sdrm0: SDRAM done, rebooting...\n");
-                reboot(0x80000000,0x80002000);
+                reboot(0x80000200,0x80002000);
             }
         }
     }
