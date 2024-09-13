@@ -57,7 +57,7 @@ barebones_clock()
    does not occur. If there are issues with the return value overflowing,
    increase this value.
         */
-#define CLOCKS_PER_SEC             1000000
+#define CLOCKS_PER_SEC             1000
 #define GETMYTIME(_t)              (*_t = barebones_clock())
 #define MYTIMEDIFF(fin, ini)       ((fin) - (ini))
 #define TIMER_RES_DIVIDER          1
@@ -132,7 +132,6 @@ ee_u32 default_num_contexts = 1;
 void
 portable_init(core_portable *p, int *argc, char *argv[])
 {
-    usleep(100);
     io->led = 0xF;
 
     ee_printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
@@ -143,11 +142,11 @@ portable_init(core_portable *p, int *argc, char *argv[])
     ee_printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
     ee_printf("\n");
     ee_printf("uart0: 115200 bps (div=%d)\n",io->uart.baud);
-    ee_printf("timr0: frequency=%dHz (io->timer=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
+    ee_printf("timr0: frequency=%dHz (io.timer=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
     
     ee_printf("\n\n");
     
-    ee_printf("CoreMark start in %d us.\n",io->timeus);
+    ee_printf("CoreMark start in %d ms.\n",io->timeus);
       
 // #error "Call board initialization routines in portable init (if needed), in particular initialize UART!\n"
     if (sizeof(ee_ptr_int) != sizeof(ee_u8 *))
@@ -169,7 +168,7 @@ void
 portable_fini(core_portable *p)
 {
     io->led = 0;
-    ee_printf("CoreMark finish in %d us.\n\n",io->timeus);
+    ee_printf("CoreMark finish in %d ms.\n\n",io->timeus);
     p->portable_id = 0;
     
     // makes no sense return here!

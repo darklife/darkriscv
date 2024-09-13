@@ -33,15 +33,7 @@ MEMORY
         darkshell 
     */
 
-#if SMALL
-
-    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x1000
-
-#else
-
-    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = 0x2000
-
-#endif
+    MEM (rwx)  : ORIGIN = 0x00000000, LENGTH = MLEN
 }
 
 SECTIONS

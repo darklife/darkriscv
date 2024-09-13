@@ -77,6 +77,8 @@ void set_mepc(void *);
 void set_mie(int);
 void set_mstatus(int);
 void set_sp(int);
+void set_pc(int);
+void reboot(int,int);
 
 void *get_mtvec(void);
 void *get_stvec(void);

@@ -303,6 +303,8 @@ module darkriscv
 
     // C-group: CSRRW
 
+    wire EBRK = SYS && FCT3==0 && XIDATA[31:20]==12'b000000000001; // ebreak always decodable, for simulation
+
 `ifdef __CSR__
 
     wire CSRX  = SYS && FCT3[1:0];
@@ -328,7 +330,6 @@ module darkriscv
         reg [31:0] SIE      = 0;
         reg [31:0] SIP      = 0;
 
-        wire EBRK = SYS && FCT3==0 && XIDATA[31:20]==12'b000000000001;
         wire SRET = SYS && FCT3==0 && XIDATA[31:20]==12'b000100000010;
     `endif
 
@@ -705,13 +706,11 @@ module darkriscv
                 end
             end
 
-        `ifdef __EBREAK__
-            if(0 && !HLT&&!FLUSH&&EBRK)
+            if(!HLT&&!FLUSH&&EBRK)
             begin
                 $display("breakpoint at %x",PC);
                 $stop();
             end
-        `endif        
         
             if(!FLUSH && IDATA===32'dx)
             begin

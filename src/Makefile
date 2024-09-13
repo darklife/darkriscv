@@ -83,7 +83,7 @@ endif
     OD  = $(CCPATH)/$(CROSS)-objdump
     CPP = $(CCPATH)/$(CROSS)-cpp
 
-CCFLAGS = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-check
+CCFLAGS = -Wall -fcommon -ffreestanding -O2 -fno-delete-null-pointer-checks
 CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
 CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 ASFLAGS = -march=$(ARCH)
@@ -149,7 +149,7 @@ clean:
 	$(CC) $(CCFLAGS) -S $< -o $@
 
 $(PROJ).ld: $(PROJ).lds Makefile
-	$(CPP) $(CPFLAGS) $(PROJ).lds $(PROJ).ld
+	$(CPP) $(CPFLAGS) -DMLEN=$$(awk '/define MLEN/ { print 2**$$3 }' ../rtl/config.vh) $(PROJ).lds $(PROJ).ld
 	
 $(PROJ).o: $(OBJS) $(PROJ).ld $(LIBS)
 	$(RL) $(LDLIBS)

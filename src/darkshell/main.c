@@ -67,10 +67,8 @@ int main(void)
             }
             else
             {
-                void (*reboot)(void) = (void (*)(void)) 0x80000000;
                 printf("sdrm0: SDRAM done, rebooting...\n");
-                set_sp(0x80002000);
-                reboot();
+                reboot(0x80000000,0x80002000);
             }
         }
     }
@@ -223,9 +221,7 @@ int main(void)
 
               if(argv[1])
               {
-                  void (*reboot)(void) = (void (*)(void)) xtoi(argv[1]);
-                  set_sp(xtoi(argv[1])+0x2000);
-                  reboot();
+                  reboot(xtoi(argv[1]),xtoi(argv[1])+0x2000);
               }
 
               return 0;
