@@ -52,6 +52,7 @@ module darkcache
     output          DDACK,  // data ack
 
     output  [31:0]  DATAP, // pipelined data output
+    output          DDACKP, // pipelined ack  output
     
     // memory
     
@@ -71,8 +72,6 @@ module darkcache
 
 `ifdef __CDEPTH__
 
-  `ifdef __LUTCACHE__
-    
     wire [31:0] CDATO; 
     
     reg  [31:`__CDEPTH__+2] CTAG   [0:2**`__CDEPTH__-1];    
@@ -140,114 +139,26 @@ module darkcache
     assign DATAP  = DATAOFF;   
     
     assign DDACK = HIT ? 1 : XDACK;
-    
-  `else
 
-    wire [31:0] CDATO;   
-/*
-    reg  [31:`__CDEPTH__+2] CTAG   [0:2**`__CDEPTH__-1];    
-    reg  [31:0]             CDATA  [0:2**`__CDEPTH__-1];
-    reg                     CVAL   [0:2**`__CDEPTH__-1];
-*/
-    (* ram_style = "block" *) reg  [31:0]             COMBO  [0:2*2**`__CDEPTH__-1];
-    
-    integer i;
-    
-    initial
-    begin
-        $display("cache%0d: %0dx32-bits (%0d bytes)",
-            ID,
-            (2**`__CDEPTH__),
-            4*(2**`__CDEPTH__));
-            
-        for(i=0;i!=2*2**`__CDEPTH__;i=i+1) 
-        begin            
-        /*
-            CDATA [i] = 0;
-            CTAG  [i] = 0;
-            CVAL  [i] = 0;
-        */
-            COMBO [i] = 0;
-        end
-    end
+    // pipelined output
 
-    wire [`__CDEPTH__-1:0]  CINDEX = DADDR[`__CDEPTH__+1:2];
+    reg [31:0] XATAI2  = 0;
+   
+    reg HIT2   = 0;
+    reg XDACK2 = 0;
 
-    wire [`__CDEPTH__:0]  CINDEX1 = { 1'b0, CINDEX };
-    wire [`__CDEPTH__:0]  CINDEX2 = { 1'b1, CINDEX };
-
-
-    wire HIT = RES ? 0 : (DRD && CVALFF && CTAGFF==DADDR[31:`__CDEPTH__+2]);
-    wire CLR = RES ? 0 : (DWR && CVALFF && CTAGFF==DADDR[31:`__CDEPTH__+2]);
-
-    wire DTREQ = RES||HIT ? 0 : (DADDR[31:30]==0||DADDR[31:30]==2) && DRD;
-
-    reg [31:0] DATAOFF = 0;
-
-    reg [31:0] COMBOFF1 = 0;
-    reg [31:0] COMBOFF2 = 0;
-
-    wire  [31:0]             CDATAFF = COMBOFF1[31:0];
-    wire  [31:`__CDEPTH__+2] CTAGFF  = COMBOFF2[31:`__CDEPTH__+2];
-    wire  [`__CDEPTH__+1:1]  FILLER  = COMBOFF2[`__CDEPTH__+1:1];
-    wire                     CVALFF  = COMBOFF2[0];
-
-    reg HIT2 = 0;
-
-    
+    wire [31:0] CDATOP;
 
     always@(posedge CLK)
     begin
-        HIT2 <= HIT;
-        
-        if((DTREQ && XDACK)||CLR)    COMBO [CINDEX1]  <= (DTREQ && XDACK) ? /*{ DADDR[31:`__CDEPTH__+2], ~FILLER, 1'b1 }*/ DADDR|1'b1 : 0;
-        if((DTREQ && XDACK)||CLR)    COMBO [CINDEX2]  <= (DTREQ && XDACK) ? XATAI :  0;
-
-        
-        COMBOFF1 <= COMBO[CINDEX1];
-        COMBOFF2 <= COMBO[CINDEX2];
-    /*
-        CTAGFF  <= CTAG [CINDEX];
-        CDATAFF <= CDATA[CINDEX];
-        CVALFF  <= CVAL [CINDEX];
-    
-        if((DTREQ && XDACK)||CLR)
-        begin
-            //$display("cache%0d: miss_on_rd %x:%x\n",ID,DADDR,XATAI);
-            
-            CDATA [CINDEX]  <= XATAI;
-            CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
-            CVAL  [CINDEX]  <= 1;                
-        end
-        
-        else
-        if(CLR)
-        begin
-            if(DLEN==4)
-            begin
-                //$display("cache%0d: miss_on_wr %x:%x\n",ID,DADDR,DATAI);
-                CDATA [CINDEX]  <= DATAI;
-                CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
-                CVAL  [CINDEX]  <= 1;   
-            end
-            else
-            begin
-                //$display("cache%0d: flush_on_wr %x:%x\n",ID,DADDR,DATAI);
-                COMBO  [CINDEX]  <= 0;
-            end
-        end
-*/
-        // if(HIT) $display("cache%0d: hit_on_rd %x:%x\n",ID,DADDR,DATAI);
-
-        if(!HLT) DATAOFF <= CDATO;
+        // DATAOFF <= CDATA[CINDEX];
+        XATAI2  <= XATAI;
+        XDACK2  <= XDACK;
+        HIT2    <= HIT;
     end
 
-    assign CDATO  = HIT ? CDATAFF : XATAI;        
-    assign DATAP  = DATAOFF;
-
-    assign DDACK = HIT2 ? 1 : XDACK;
-    
-  `endif
+    assign CDATOP = HIT2 ? DATAOFF       : XATAI2;
+    assign DDACKP = HIT ? 0 : HIT2 ? 1 : XDACK2;
 
 `else
 
