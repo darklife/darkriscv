@@ -129,9 +129,45 @@ ee_u32 default_num_contexts = 1;
         Target specific initialization code
         Test for some common mistakes.
 */
+void main(void);
+
 void
 portable_init(core_portable *p, int *argc, char *argv[])
 {
+    printf("debug: text@%x stack@%x\n",(unsigned)portable_init,(unsigned)p);
+
+    static int sdram_init = 1;
+
+    if(sdram_init)
+    {
+        unsigned *sdram = (unsigned *)0x80000000;
+
+        sdram_init = 0;
+
+        if(*sdram!=0xdeadbeef)
+        {
+            char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;
+
+            printf("sdrm0: preparing SDRAM memory %d bytes...\n",(unsigned)&_edata);
+
+            memcpy(d,s,(unsigned)&_edata);
+    
+            printf("sdrm0: checking SDRAM memory %d bytes...\n",(unsigned)&_edata);
+    
+            ptr=memcmp(d,s,(unsigned)&_edata);
+        
+            if(ptr)
+            { 
+                printf("sdrm0: test failed at %x:%x\n",ptr,*(unsigned *)ptr);
+            }
+            else
+            {
+                printf("sdrm0: SDRAM done, rebooting...\n");
+                reboot(((unsigned)main)|0x80000000,0x80008000);
+            }
+        }
+    }
+
     io->led = 0xF;
 
     ee_printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
