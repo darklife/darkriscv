@@ -87,6 +87,7 @@ void *get_sepc(void);
 
 int  get_mie(void);
 int  get_mcause(void);
+int  get_scause(void);
 int  get_mhartid(void);
 int  get_mstatus(void);
 

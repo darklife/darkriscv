@@ -53,6 +53,7 @@
     .globl  get_mie
     .globl  get_mip
     .globl  get_mcause
+    .globl  get_scause
     .globl  get_mhartid
 
 check4rv32i:
@@ -77,6 +78,11 @@ get_mstatus:
 get_mcause:
     addi  a0,x0,0
     csrr  a0,mcause
+    ret
+
+get_scause:
+    addi  a0,x0,0
+    csrr  a0,scause
     ret
 
 get_mhartid:

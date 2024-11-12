@@ -97,10 +97,20 @@ void irq_handler(void)
 __attribute__ ((interrupt ("supervisor")))
 void dbg_handler(void)
 {
-    static int debug = 1;
+    unsigned cause = get_scause();
     
-    if(debug) printf("dbug0: ebreak @%x, skipped\n",get_sepc());
-    debug=0;
+    printf("debug: *** exception at %x w/ mcause=%x/[%s] ***\n",
+        get_sepc(),cause,
+        cause==0?"instruction address align":
+        cause==1?"instruction data fault":
+        cause==2?"illegal instruction":
+        cause==3?"breakpoint":
+        cause==4?"load address align":
+        cause==5?"load data fault":
+        cause==6?"store address align":
+        cause==7?"store data fault":
+                 "unknown");
+
     set_sepc(get_sepc()+4);
 }
 

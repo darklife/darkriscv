@@ -79,6 +79,8 @@ module darkriscv
     output            DRD,  // data read
     output            DWR,  // data write
     output            DAS,  // address strobe
+
+    input             BERR, // bus error
     
 `ifdef SIMULATION
     input             ESIMREQ,  // end simulation req
@@ -305,6 +307,15 @@ module darkriscv
 
     wire EBRK = SYS && FCT3==0 && XIDATA[31:20]==12'b000000000001; // ebreak always decodable, for simulation
 
+    // exceptions
+
+    wire IERR = FLUSH ? 0 : !(XLUI||XAUIPC||XJAL||XJALR||XBCC||XLCC||XSCC||XMCC||XRCC||XCUS||XSYS);
+
+    wire DBER = BERR&&(DRD||DWR);
+    wire IBER = BERR&&!(DRD||DWR);
+    wire DAER = DLEN==2 ? DADDR[0]!=0 : DLEN==4 ? DADDR[1:0]!=0 : 0;
+    wire IAER = IADDR[1:0]!=0;
+
 `ifdef __CSR__
 
     wire CSRX  = SYS && FCT3[1:0];
@@ -429,8 +440,9 @@ module darkriscv
 	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt
 	                       FLUSH ? FLUSH-1 :
     `ifdef __EBREAK__
-                            EBRK ? 2 : // ebreak jmps to system level, i.e. sepc = PC; PC = stvec
-                            SRET ? 2 : // sret returns from system level, i.e. PC = sepc
+          IERR||DBER||IBER||IAER||DAER ? 2 : // misc errors
+                                  EBRK ? 2 : // ebreak jmps to system level, i.e. sepc = PC; PC = stvec
+                                  SRET ? 2 : // sret returns from system level, i.e. PC = sepc
     `endif
     `ifdef __INTERRUPT__
                             MRET ? 2 : // mret returns from interrupt, i.e. PC = mepc
@@ -503,12 +515,22 @@ module darkriscv
         else
         if(!HLT||!FLUSH)
         begin
-            if(EBRK) // ebreak cannot be blocked!
+            if(IAER||IBER||IERR||EBRK||DAER||DBER) // ebreak cannot be blocked!
             begin
                 SEPC   <= PC;               // ebreak saves the current PC!
                 SSTATUS[1] <= 0;            // no interrupts when handling ebreak!
                 SSTATUS[5] <= SSTATUS[1];   // copy old MIE bit
-                SCAUSE <= 32'h00000003;     // ebreak
+                
+                SCAUSE <=      IAER ? 32'd0 :
+                               IBER ? 32'd1 :
+                               IERR ? 32'd2 :
+                               EBRK ? 32'd3 : 
+                          DAER&&DRD ? 32'd4 :
+                          DBER&&DRD ? 32'd5 :
+                          DAER&&DWR ? 32'd6 :
+                          DBER&&DWR ? 32'd7 :
+                                    -1;
+                          
                 SIP[1] <= 1;                // set when ebreak!
             end
             else
@@ -574,7 +596,13 @@ module darkriscv
 	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
         `ifdef __EBREAK__
                      SRET ? SEPC :  // return from system call
-                     EBRK ? STVEC : // ebreak causes an system call                     
+                     STVEC&&
+                     (IAER||
+                     IBER||
+                     IERR||
+                     EBRK||
+                     DAER||
+                     DBER) ? STVEC : // ebreak causes an system call                     
         `endif
 
         `ifdef __INTERRUPT__
@@ -705,13 +733,13 @@ module darkriscv
                     $finish();
                 end
             end
-
+        `ifndef __EBREAK__
             if(!HLT&&!FLUSH&&EBRK)
             begin
                 $display("breakpoint at %x",PC);
                 $stop();
             end
-        
+        `endif        
             if(!FLUSH && IDATA===32'dx)
             begin
                 $display("invalid IDATA at %x",PC);

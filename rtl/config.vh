@@ -164,7 +164,7 @@
 // classic von neumann architecture, which is useful for single-port memory, 
 // such as SDRAMs, PSRAM, etc. when multiplexed, the instruction fetch turns
 // to be very slow, so caches are essential with this scenario!
-//`define __HARVARD__
+`define __HARVARD__
 
 // cache depth
 // 
@@ -173,10 +173,12 @@
 // specially applicable to non-harvard SoC configuration, since that the
 // harvard SoC configuration is faster than the cache!
 // the cache depth N means that the each cache will be 32-bit x 2^N
-`define __LUTCACHE__
-`define __CDEPTH__ 6
-`define __ICACHE__
-`define __DCACHE__
+`ifndef __HARVARD__
+    `define __LUTCACHE__
+    `define __CDEPTH__ 6
+    `define __ICACHE__
+    `define __DCACHE__
+`endif
 
 // interactive simulation:
 //
@@ -435,7 +437,7 @@
 `ifndef BOARD_ID
     `define BOARD_ID 0
     `define BOARD_CK 100000000
-    `define __SDRAM__ 1
+    //`define __SDRAM__ 1
 `endif
 
 `ifdef BOARD_CK_REF

@@ -78,28 +78,6 @@ int main(void)
     void *mtvec=0;
     void *stvec=0;
 
-    printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
-    printf("build: %s for %s\n",BUILD,ARCH);
-
-    printf("core%d: ",              io->core_id);                 // core id
-    printf("darkriscv@%dMHz w/ ",io->board_cm*2);              // board clock MHz
-    printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
-    if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
-    printf("\n");
-
-    printf("bram0: text@%x+%d data@%x+%d stack@%x\n",
-        (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
-        (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
-        (unsigned)&_stack);
-
-    printf("bram0: %d bytes free\n",
-        (unsigned)&_stack-(unsigned)&_edata);
-
-    _edata = 0xdeadbeef;
-
-    printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
-    printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
-
 #ifndef SMALL
 
     int csr = csr_test(0xFFFF0000,0xFFFF,0x00FFFF00);
@@ -137,7 +115,33 @@ int main(void)
     io->irq = IRQ_TIMR; // clear interrupts
     utimers = 0;
 
-    // EBREAK;
+    printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
+    printf("build: %s for %s\n",BUILD,ARCH);
+
+    printf("core%d: ",              io->core_id);                 // core id
+    printf("darkriscv@%dMHz w/ ",io->board_cm*2);              // board clock MHz
+    printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
+    if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
+    printf("\n");
+
+    printf("bram0: text@%x+%d data@%x+%d stack@%x\n",
+        (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
+        (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
+        (unsigned)&_stack);
+
+    printf("bram0: %d bytes free\n",
+        (unsigned)&_stack-(unsigned)&_edata);
+
+    _edata = 0xdeadbeef;
+
+    printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
+    printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
+
+    // simulate a 32-bit load in a invalid address
+
+    asm("   ebreak;     \
+            li t0,1;    \
+            lw t0,0(t0);");
 
     printf("\n");
 

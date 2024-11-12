@@ -113,6 +113,7 @@ module darkbridge
         .DWR    (DWR),
         .DRD    (DRD),
         .DAS    (DAS),
+        .BERR   (1'b0),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
