@@ -61,6 +61,7 @@ SECTIONS
         *(.bss*)
         *(.sdata*)
         *(.*)
+        . = ALIGN(4);
 	    _edata = .;
 
     } > MEM
