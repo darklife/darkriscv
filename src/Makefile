@@ -45,7 +45,7 @@ endif
 
 ifndef CROSS
 
-    export ARCH = rv32e
+    export ARCH = rv32e_zicsr
     #ARCH = rv32i
     
     export ABI = ilp32e
