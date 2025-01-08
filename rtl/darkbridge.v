@@ -125,10 +125,12 @@ module darkbridge
 
     // instruction cache
 
+`ifndef __HARVARD__
     wire         YDREQ;
     wire  [31:0] YADDR;
     wire  [31:0] YDATA;
     wire         YDACK;
+`endif
 
 `ifdef __ICACHE__
   
