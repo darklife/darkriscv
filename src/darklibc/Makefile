@@ -26,73 +26,9 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-SHELL := /bin/bash
+include ../config.mk
 
-ifndef HOST_CC
-    HOST_CC = gcc
-    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I../common -O2
-endif
-
-ifndef CROSS
-
-    ARCH = rv32e
-    #ARCH = rv32i
-    
-    ABI = ilp32e
-    #ABI = ilp32
-    
-    #TODO: better way to switch little/big-endian:
-    #ENDIAN = _le # gcc for little-endian
-    #ENDIAN = _be # gcc for big-endian
-
-    CROSS = riscv32-embedded$(ENDIAN)-elf
-    #CROSS = riscv-elf
-    #CROSS = riscv32-unknown-elf
-    #CROSS = riscv32-embedded-elf
-    
-    CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
-    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-    #HARVARD = 1
-endif
-
-ifndef BUILD
-    BUILD = $(shell date -R)
-endif
-
-    CC = $(CCPATH)/$(CROSS)-gcc
-    AS = $(CCPATH)/$(CROSS)-as
-    AR = $(CCPATH)/$(CROSS)-ar
-    RL = $(CCPATH)/$(CROSS)-ranlib
-    LD = $(CCPATH)/$(CROSS)-ld
-    OC = $(CCPATH)/$(CROSS)-objcopy
-    OD = $(CCPATH)/$(CROSS)-objdump
-   CPP = $(CCPATH)/$(CROSS)-cpp
-
-CCFLAGS = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks
-CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I./include
-CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-CCFLAGS += -ffunction-sections -fdata-sections # enable this to make the FW smaller!
-ASFLAGS = -march=$(ARCH)
-ARFLAGS = -rcs
-LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -gc-sections # -Ttext=0
-CPFLAGS = -P 
-
-ifdef SMALL
-    CCFLAGS += -DSMALL=1
-endif
-
-ifdef MAC
-    CCFLAGS += -DMAC=1
-endif
-
-CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
-
-ifdef HARVARD
-	CPFLAGS +=  -DHARVARD=1
-endif
-
-OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
-ODFLAGS = -D
+CCFLAGS += -Iinclude
 
 PROJ = darklibc
 OBJS = stdio.o io.o util.o #small.o # start.o

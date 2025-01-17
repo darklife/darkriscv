@@ -26,80 +26,14 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
+include config.mk
+
 # Add your application here:
 
 APPLICATION = darkshell
 #APPLICATION = coremark
 #APPLICATION = badapple
 #APPLICATION = mandelbrot
-
-# un-select SMALL for coremark!
-#export SMALL = 1# uncomment for smaller firmware
-
-SHELL := /bin/bash
-
-ifndef HOST_CC
-    HOST_CC = gcc
-    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I../common -O2
-endif
-
-ifndef CROSS
-
-    export ARCH = rv32e_zicsr
-    #ARCH = rv32i
-    
-    export ABI = ilp32e
-    #ABI = ilp32
-    
-    #TODO: better way to switch little/big-endian:
-    #ENDIAN = _le # gcc for little-endian
-    #ENDIAN = _be # gcc for big-endian
-
-    #export CROSS = riscv32-unknown-elf
-    export CROSS = riscv32-embedded$(ENDIAN)-elf
-    #CROSS = riscv-elf
-    #CROSS = riscv32-unknown-elf
-    #CROSS = riscv32-embedded-elf
-    
-    #export CCPATH = /opt/riscv/bin
-    export CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
-    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-    #HARVARD = 1
-endif
-
-ifndef BUILD
-    BUILD = $(shell date -R)
-endif
-
-ifndef DARKLIBC
-    DARKLIBC = darklibc
-endif
-
-    CC  = $(CCPATH)/$(CROSS)-gcc
-    AS  = $(CCPATH)/$(CROSS)-as
-    RL = $(CCPATH)/$(CROSS)-ranlib
-    LD  = $(CCPATH)/$(CROSS)-ld
-    OC  = $(CCPATH)/$(CROSS)-objcopy
-    OD  = $(CCPATH)/$(CROSS)-objdump
-    CPP = $(CCPATH)/$(CROSS)-cpp
-
-CCFLAGS = -Wall -fcommon -ffreestanding -O2 -fno-delete-null-pointer-checks
-CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
-CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-ASFLAGS = -march=$(ARCH)
-LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -static -gc-sections --entry=_start # -Ttext=0
-LDLIBS  = $(LIBS)
-CPFLAGS = -P 
-
-CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
-
-ifdef HARVARD
-	CPFLAGS +=  -DHARVARD=1
-	export HARVARD
-endif
-
-OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
-ODFLAGS = -D
 
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
@@ -152,7 +86,7 @@ $(PROJ).ld: $(PROJ).lds Makefile
 	$(CPP) $(CPFLAGS) -DMLEN=$$(awk '/define MLEN/ { print 2**$$3 }' ../rtl/config.vh) $(PROJ).lds $(PROJ).ld
 	
 $(PROJ).o: $(OBJS) $(PROJ).ld $(LIBS)
-	$(RL) $(LDLIBS)
+	#$(RL) $(LDLIBS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 	$(OD) $(ODFLAGS) $@ > $(PROJ).S
 
