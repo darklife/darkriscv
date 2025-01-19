@@ -139,10 +139,13 @@ int main(void)
 
     // simulate a 32-bit load in a invalid address
 
-    asm("   ebreak;     \
-            li t0,1;    \
-            lw t0,0(t0);");
-
+    if(stvec)
+    {
+        asm("   ebreak;     \
+                li t0,1;    \
+                lw t0,0(t0);");
+    }
+    
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n\n");

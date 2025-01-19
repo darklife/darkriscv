@@ -71,6 +71,7 @@ endif
     export LD  = $(CCPATH)/$(CROSS)ld
     export OC  = $(CCPATH)/$(CROSS)objcopy
     export OD  = $(CCPATH)/$(CROSS)objdump
+    export AR  = $(CCPATH)/$(CROSS)ar
     export CPP = $(CCPATH)/$(CROSS)cpp
 
        CCFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
