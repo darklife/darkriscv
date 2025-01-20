@@ -26,70 +26,11 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
 
-SHELL := /bin/bash
-
-ifndef HOST_CC
-    HOST_CC = gcc
-    HOST_CFLAGS = -Wall -Wno-incompatible-library-redeclaration -I./include -O2
-endif
-
-ifndef CROSS
-
-    ARCH = rv32e
-    # ARCH = rv32i
-
-    ABI = ilp32e
-    #ABI = ilp32
-    
-    #TODO: better way to switch little/big-endian:
-    #ENDIAN = _le # gcc for little-endian
-    #ENDIAN = _be # gcc for big-endian
-
-    CROSS = riscv32-embedded$(ENDIAN)-elf
-    #CROSS = riscv-elf
-    #CROSS = riscv32-unknown-elf
-    #CROSS = riscv32-embedded-elf
-    
-    CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
-    #CCPATH = /opt/riscv32-gcc/bin/
-    #CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
-    #HARVARD = 1
-endif
-
-ifndef BUILD
-    BUILD = $(shell date -R)
-endif
-
-ifndef DARKLIBC
-    DARKLIBC = ../darklibc
-endif
-
-    CC = $(CCPATH)/$(CROSS)-gcc
-    AS = $(CCPATH)/$(CROSS)-as
-    LD = $(CCPATH)/$(CROSS)-ld
-    AR = $(CCPATH)/$(CROSS)-ar
-    RL = $(CCPATH)/$(CROSS)-ranlib
-    OC = $(CCPATH)/$(CROSS)-objcopy
-    OD = $(CCPATH)/$(CROSS)-objdump
-   CPP = $(CCPATH)/$(CROSS)-cpp
+include ../config.mk
 
 DFLAGS_STR = -DFLAGS_STR=\""-O2 -DPERFORMANCE_RUN=1"\"
 
-CCFLAGS = -Wall -fcommon -ffreestanding -O2 
-CCFLAGS += -I. -I./src -I$(DARKLIBC)/include $(DFLAGS_STR) -DITERATIONS=4000 -DPERFORMANCE_RUN=1 
-CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-ASFLAGS = -march=$(ARCH)
-LDFLAGS = -Map=$(PROJ).map -m elf32lriscv # -Ttext=0 -T$(PROJ).ld
-CPFLAGS = -P 
-
-CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
-
-ifdef HARVARD
-	CPFLAGS +=  -DHARVARD=1
-endif
-
-OCFLAGS = -O binary # --reverse-bytes=4 # workaround for darkriscv big-endian blockrams
-ODFLAGS = -D
+CCFLAGS += -I. -I./src $(DFLAGS_STR) -DITERATIONS=4000 -DPERFORMANCE_RUN=1 
 
 PROJ = coremark
 OBJS = ./src/core_main.o ./src/core_matrix.o ./src/core_list_join.o ./src/core_state.o ./src/core_util.o core_portme.o ee_printf.o 

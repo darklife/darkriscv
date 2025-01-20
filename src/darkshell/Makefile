@@ -40,8 +40,6 @@ OBJS = main.o
 ASMS = main.s
 SRCS = main.c
 
-CCFLAGS += -I../darklibc/include
-
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(LIBS) # $(PROJ).ld $(PROJ).lds $(DARKLIBC)/darklibc.a
 
 TARGETS = $(PROJ).a

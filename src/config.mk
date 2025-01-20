@@ -75,7 +75,7 @@ endif
     export CPP = $(CCPATH)/$(CROSS)cpp
 
        CCFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
-       CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include
+       CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
        CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 export CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
 export ASFLAGS = -march=$(ARCH)
