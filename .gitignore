@@ -12,3 +12,5 @@ boards/*/darksocv.sim
 fusesoc.conf
 build
 iseconfig
+*.a
+*.bin
