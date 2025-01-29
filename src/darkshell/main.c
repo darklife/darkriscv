@@ -30,6 +30,8 @@
 
 #include <io.h>
 #include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 unsigned csr_test(unsigned,unsigned,unsigned);
 

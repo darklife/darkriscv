@@ -28,24 +28,29 @@
 
 include ../config.mk
 
-CCFLAGS += -Iinclude
+# to make it smaller!
+# SMALL = 1
 
-PROJ = darklibc
-OBJS = stdio.o io.o string.o misc.o unistd.o util.o #small.o # start.o
-ASMS = stdio.s io.s string.s misc.s unistd.s
-SRCS = stdio.c io.c string.c misc.c unistd.c util.s #small.s # start.s
+ifdef SMALL
+    CCFLAGS += -DSMALL
+endif
 
-DEPS = $(SRCS) $(ASMS) $(OBJS)
+PROJ = donut
+OBJS = main.o
+ASMS = main.s
+SRCS = main.c
+
+DEPS = $(SRCS) $(ASMS) $(OBJS) $(LIBS) # $(PROJ).ld $(PROJ).lds $(DARKLIBC)/darklibc.a
 
 TARGETS = $(PROJ).a
 
 .PHONY: all
 
-all: $(DEPS) $(TARGETS)
+all: $(TARGETS) $(DEPS)
 	@echo sources ok for $(TARGETS).
 
 clean:
-	-rm -f $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a}
+	-rm -f $(ASMS) $(OBJS) $(PROJ).{S,bin,lst,map,ram,rom,x86,text,data,bin,ld,o,mem,rom.mem,ram.mem,a} $(PROJ)_uart.bin
 
 %.o: %.s Makefile
 	$(AS) $(ASFLAGS) -c $< -o $@
@@ -53,6 +58,10 @@ clean:
 %.s: %.c Makefile
 	$(CC) $(CCFLAGS) -S $< -o $@
 
-%.a: $(OBJS) Makefile
+$(PROJ).a: $(OBJS) Makefile
 	$(AR) $(ARFLAGS) $@ $(OBJS)
 	$(RL) $@
+	
+$(PROJ).x86: $(SRCS)
+	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""
+	@echo x86 ok.

@@ -28,80 +28,88 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef __IO__
-#define __IO__
+// mul/div
 
-extern volatile int utimers; // microsecond timer
+unsigned __umulsi3(unsigned x,unsigned y)
+{
+    unsigned acc;
 
-struct DARKIO {
+#ifdef MAC
 
-    unsigned char board_id; // 00
-    unsigned char board_cm; // 01
-    unsigned char core_id;  // 02
-    unsigned char irq;      // 03
+    unsigned short xh,xl,yh,yl;
 
-    struct DARKUART {
-        
-        unsigned char  stat; // 04
-        unsigned char  fifo; // 05
-        unsigned short baud; // 06/07
+    xh = x>>16;
+    yh = y>>16;
+    xl = x&0xffff;
+    yl = y&0xffff;
 
-    } uart;
+    acc = mac(0,xl,yl) + 
+          (mac(0,xh,yl)<<16) + 
+          (mac(0,xl,yh)<<16);
 
-    unsigned short led;     // 08/09
-    unsigned short gpio;    // 0a/0b
-
-    unsigned int timer;     // 0c
-    unsigned int timeus;    // 10
-};
-
-extern volatile struct DARKIO *io;
-
-extern char *board_name(int);
-
-#ifdef __RISCV__
-#define kmem 0
 #else
-extern unsigned char kmem[8192];
+    if(x<y) { unsigned z = x; x = y; y = z; }
+    
+    for(acc=0;y;x<<=1,y>>=1) if (y & 1) acc += x;
 #endif
+    return acc;
+}
 
-#define IRQ_TIMR 0x80
-#define IRQ_UART 0x02
+int __mulsi3(int x, int y)
+{
+    unsigned acc,xs,ys;
+    
+    if(x<0) { xs=1; x=-x; } else xs=0;
+    if(y<0) { ys=1; y=-y; } else ys=0;
 
-int  check4rv32i(void);
+    acc = __umulsi3(x,y);
+    
+    return xs^ys ? -acc : acc;
+}
 
-void set_stvec(void *f);
-void set_mtvec(void *f);
-void set_sepc(void *);
-void set_mepc(void *);
-void set_mie(int);
-void set_mstatus(int);
-void set_sp(int);
-void set_pc(int);
-void reboot(int,int);
+unsigned __udiv_umod_si3(unsigned x,unsigned y,int opt)
+{
+    unsigned acc,aux;
 
-void *get_mtvec(void);
-void *get_stvec(void);
-void *get_mepc(void);
-void *get_sepc(void);
+    if(!y) return 0;
 
-int  get_mie(void);
-int  get_mcause(void);
-int  get_scause(void);
-int  get_mhartid(void);
-int  get_mstatus(void);
+    for(aux=1;y<x&&!(y&(1<<31));aux<<=1,y<<=1);
+    for(acc=0;x&&aux;aux>>=1,y>>=1) if(y<=x) x-=y,acc+=aux;
 
-void banner(void);
+    return opt ? acc : x;
+}
 
-__attribute__ ((interrupt ("machine")))    void irq_handler(void);
-__attribute__ ((interrupt ("supervisor"))) void dbg_handler(void);
+int __udivsi3(int x, int y)
+{
+    return __udiv_umod_si3(x,y,1);
+}
 
-extern unsigned _text;
-extern unsigned _data;
-extern unsigned _etext; 
-extern unsigned _edata; 
-extern unsigned _stack;
+int __umodsi3(int x,int y)
+{
+    return __udiv_umod_si3(x,y,0);
+}
 
-#define EBREAK asm("ebreak")
+int __div_mod_si3(int x,int y,int opt)
+{
+    unsigned acc,xs,ys;
 
-#endif
+    if(!y) return 0;
+
+    if(x<0) { xs=1; x=-x; } else xs=0;
+    if(y<0) { ys=1; y=-y; } else ys=0;
+
+    acc = __udiv_umod_si3(x,y,opt);
+
+    if(opt) return xs^ys ? -acc : acc;
+    else    return xs    ? -acc : acc;
+}
+
+int __divsi3(int x, int y)
+{
+    return __div_mod_si3(x,y,1);
+}
+
+int __modsi3(int x,int y)
+{
+    return __div_mod_si3(x,y,0);
+}
