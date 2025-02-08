@@ -56,7 +56,7 @@ clean:
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 %.s: %.c Makefile
-	$(C) $(CFLAGS) -S $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
 
 $(PROJ).a: $(OBJS) Makefile
 	$(AR) $(ARFLAGS) $@ $(OBJS)
