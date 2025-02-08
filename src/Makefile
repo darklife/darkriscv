@@ -81,7 +81,7 @@ clean:
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 %.s: %.c Makefile
-	$(CC) $(CCFLAGS) -S $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
 
 $(PROJ).ld: $(PROJ).lds Makefile
 	$(CPP) $(CPFLAGS) -DMLEN=$$(awk '/define MLEN/ { print 2**$$3 }' ../rtl/config.vh) $(PROJ).lds $(PROJ).ld

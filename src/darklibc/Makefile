@@ -28,7 +28,7 @@
 
 include ../config.mk
 
-CCFLAGS += -Iinclude
+CFLAGS += -Iinclude
 
 PROJ = darklibc
 OBJS = stdio.o io.o string.o misc.o unistd.o util.o #small.o # start.o
@@ -51,7 +51,7 @@ clean:
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 %.s: %.c Makefile
-	$(CC) $(CCFLAGS) -S $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
 
 %.a: $(OBJS) Makefile
 	$(AR) $(ARFLAGS) $@ $(OBJS)

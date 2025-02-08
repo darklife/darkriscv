@@ -17,6 +17,8 @@ Original Author: Shay Gal-on
 */
 #include <io.h>
 #include <stdio.h>
+#include <string.h>     // memcpy..
+#include <unistd.h>     // usleep..
 #include "coremark.h"
 #include "core_portme.h"
 

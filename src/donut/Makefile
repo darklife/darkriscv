@@ -32,7 +32,7 @@ include ../config.mk
 # SMALL = 1
 
 ifdef SMALL
-    CCFLAGS += -DSMALL
+    CFLAGS += -DSMALL
 endif
 
 PROJ = donut
@@ -56,7 +56,7 @@ clean:
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 %.s: %.c Makefile
-	$(CC) $(CCFLAGS) -S $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
 
 $(PROJ).a: $(OBJS) Makefile
 	$(AR) $(ARFLAGS) $@ $(OBJS)

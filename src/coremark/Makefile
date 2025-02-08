@@ -30,7 +30,7 @@ include ../config.mk
 
 DFLAGS_STR = -DFLAGS_STR=\""-O2 -DPERFORMANCE_RUN=1"\"
 
-CCFLAGS += -I. -I./src $(DFLAGS_STR) -DITERATIONS=4000 -DPERFORMANCE_RUN=1 
+CFLAGS += -I. -I./src $(DFLAGS_STR) -DITERATIONS=4000 -DPERFORMANCE_RUN=1
 
 PROJ = coremark
 OBJS = ./src/core_main.o ./src/core_matrix.o ./src/core_list_join.o ./src/core_state.o ./src/core_util.o core_portme.o ee_printf.o 
@@ -53,7 +53,7 @@ clean:
 	$(AS) $(ASFLAGS) -c $< -o $@
 
 %.s: %.c Makefile
-	$(CC) $(CCFLAGS) -S $< -o $@
+	$(CC) $(CFLAGS) -S $< -o $@
 
 $(PROJ).a: $(OBJS) Makefile
 	$(AR) $(ARFLAGS) $@ $(OBJS)
