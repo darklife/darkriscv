@@ -61,7 +61,7 @@ all: $(VCDS)
 	@echo simulation ok.
 
 clean:
-	-rm $(VCDS) $(XSIM) $(TRCE)
+	-rm -f $(VCDS) $(XSIM) $(TRCE)
 
 $(VCDS): $(XSIM)
 	@echo finish |                                          \

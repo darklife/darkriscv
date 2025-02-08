@@ -44,16 +44,16 @@ ifndef CROSS
     export ENDIAN = little
     #export ENDIAN = big
 
-    export CROSS = riscv64-unknown-elf-
-    #export CROSS = riscv32-unknown-elf-
-    #export CROSS = riscv32-embedded$(ENDIAN)-elf-
-    #export CROSS = riscv-elf-
-    #export CROSS = riscv32-unknown-elf-
-    #export CROSS = riscv32-embedded-elf-
+    #export CROSS = riscv64-unknown-elf
+    #export CROSS = riscv32-unknown-elf
+    #export CROSS = riscv32-embedded$(ENDIAN)-elf
+    #export CROSS = riscv-elf
+    #export CROSS = riscv32-unknown-elf
+    export CROSS = riscv32-embedded-elf
     
-    export CCPATH = /usr/local/bin
+    #export CCPATH = /usr/local/bin
     #export CCPATH = /opt/riscv/bin
-    #export CCPATH = /usr/local/share/gcc-$(CROSS)/bin/
+    export CCPATH = /usr/local/share/gcc-$(CROSS)/bin
     #export CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
 endif
 
@@ -65,19 +65,19 @@ ifndef DARKLIBC
     export DARKLIBC = darklibc
 endif
 
-    export CC  = $(CCPATH)/$(CROSS)gcc
-    export AS  = $(CCPATH)/$(CROSS)as
-    export RL  = $(CCPATH)/$(CROSS)ranlib
-    export LD  = $(CCPATH)/$(CROSS)ld
-    export OC  = $(CCPATH)/$(CROSS)objcopy
-    export OD  = $(CCPATH)/$(CROSS)objdump
-    export AR  = $(CCPATH)/$(CROSS)ar
-    export CPP = $(CCPATH)/$(CROSS)cpp
+    export CC  = $(CCPATH)/$(CROSS)-gcc
+    export AS  = $(CCPATH)/$(CROSS)-as
+    export RL  = $(CCPATH)/$(CROSS)-ranlib
+    export LD  = $(CCPATH)/$(CROSS)-ld
+    export OC  = $(CCPATH)/$(CROSS)-objcopy
+    export OD  = $(CCPATH)/$(CROSS)-objdump
+    export AR  = $(CCPATH)/$(CROSS)-ar
+    export CPP = $(CCPATH)/$(CROSS)-cpp
 
-       CCFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
-       CCFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
-       CCFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-export CCFLAGS += -mcmodel=medany -mexplicit-relocs # relocable clode
+       CFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
+       CFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
+       CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+export CFLAGS += -mcmodel=medany -mexplicit-relocs # relocatable code
 export ASFLAGS = -march=$(ARCH)
 
 ifdef ENDIAN==big
