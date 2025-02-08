@@ -29,7 +29,7 @@ Opensource RISC-V implemented from scratch in one night!
 
 Developed in a magic night of 19 Aug, 2018 between 2am and 8am, the
 *DarkRISCV* softcore started as an proof of concept for the opensource
-RISC-V instruction set.  
+RISC-V instruction set.
 
 Although the code is small and crude when compared with other RISC-V
 implementations, the *DarkRISCV* has lots of impressive features:
@@ -46,7 +46,7 @@ implementations, the *DarkRISCV* has lots of impressive features:
 - works fine with gcc 9.0.0 and above for RISC-V (no patches required!)
 - uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
 - optional RV32E support (works better with LUT4 FPGAs)
-- optional 16x16-bit MAC instruction (for digital signal processing) 
+- optional 16x16-bit MAC instruction (for digital signal processing)
 - optional coarse-grained multi-threading (MT)
 - no interlock between pipeline stages!
 - optional interrupt handled on machine level
@@ -66,7 +66,7 @@ Some extra features are planned for the future or under development:
 - dynamic bus sizing and big-endian support
 - user/supervisor modes
 - misaligned memory access
-- bridge for 8/16/32-bit buses 
+- bridge for 8/16/32-bit buses
 
 And much other features!
 
@@ -98,7 +98,7 @@ instruction is fetch in the first clock from a blockram, decoded in the
 second clock and executed in the third clock.
 
 As long the load instruction cannot load the data from a blockram in a
-single clock, the external logic inserts one extra clock in IO operations. 
+single clock, the external logic inserts one extra clock in IO operations.
 Also, there are two extra clocks in order to flush the pipeline in the case
 of taken branches.  The impact of the pipeline flush depends of the compiler
 optimizations, but according to the lastest measurements, the 3-stage
@@ -111,10 +111,10 @@ more performance when compared with the 2-stage pipeline version (typically
 50MHz).
 
 In order to celebrate six of the project, some effort was done in order to
-organize the SoC in a better way, breaking it in separate modules and 
-introducing new bus concepts in order to support large systems.  As result 
-DarkRISCV continue to support very well the small and high performance DSP-like 
-Harvard architecture systems, as well large and computer-like von Neumann 
+organize the SoC in a better way, breaking it in separate modules and
+introducing new bus concepts in order to support large systems.  As result
+DarkRISCV continue to support very well the small and high performance DSP-like
+Harvard architecture systems, as well large and computer-like von Neumann
 architecture systems.
 
 ## Project Background
@@ -135,11 +135,11 @@ opensource option to replace the 68000.
 Anyway, it does not match my requirements regarding space and
 performance.  As part of the investigation, I tested other cores, but I
 found no much options as good as the TG68 and I even started design a
-risclized-68000 core, in order to try find a solution.  
+risclized-68000 core, in order to try find a solution.
 
 Unfortunately, due to compiler requirements (standard GCC), I found no much
 ways to reduce the space and increase the performance, in a way that I
-started investigate about non-680x0 cores.  
+started investigate about non-680x0 cores.
 
 After lots of tests with different cores, I found the *picorv32* core and
 the all the ecosystem around the RISC-V.  The *picorv32* is a very nice
@@ -150,7 +150,7 @@ performance of 50MIPS, which is very impressive.
 
 Although the *picorv32* is a very good option to directly replace the 680x0
 family, it is not powerful enough to replace some Coldfire processors (more
-than 75MIPS).  
+than 75MIPS).
 
 As long I had some good experience with experimental 16-bit RISC cores for
 DSP-like applications, I started code the *DarkRISCV* only to check the
@@ -165,10 +165,10 @@ fix small details in the hardware and software implementation.
 
 ## Directory Description
 
-Although the *DarkRISCV* is only a small processor core, a small eco-system 
+Although the *DarkRISCV* is only a small processor core, a small eco-system
 is required in order to test the core, including RISCV compatible software,
-support for simulations and support for peripherals, in a way that the 
-processor core produces observable results. Each element is stored with 
+support for simulations and support for peripherals, in a way that the
+processor core produces observable results. Each element is stored with
 similar elements in directories, in a way that the top level has the
 following organization:
 
@@ -201,12 +201,12 @@ by using below two methods:
 
 a) WineSkin, which is a kind of Windows emulator that runs the Windows
 application natively but intercepts and emulate the Windows calls to map
-directly in the macOS.  
+directly in the macOS.
 
 b) VirtualBox (or VMware, Parallels, etc) in order to run a complete Windows
 OS or Linux, which appears to be far better than the WineSkin option.
 
-I used the second method and installed VMware Fusion to install Linux Mint. 
+I used the second method and installed VMware Fusion to install Linux Mint.
 Please find below the links I used to obtain download files.
 
 Dependencies:
@@ -227,7 +227,7 @@ for all other OS platforms are available on
 https://iverilog.fandom.com/wiki/Installation_Guide.
 
 Step 1: Download Verilog download tar file from
-ftp://ftp.icarus.com/pub/eda/verilog/ .  Always install the latest version. 
+ftp://ftp.icarus.com/pub/eda/verilog/ .  Always install the latest version.
 Verilog-10.3 is the latest version as of now.
 
 Step 2: Extract the tar file using ‘% tar -zxvf verilog-version.tar.gz’.
@@ -254,7 +254,7 @@ Follow the below video on youtube for complete installation.
 
 https://www.youtube.com/watch?v=meO-b6Ib17Y
 
-Note: Make sure you have libncurses libraries installed in linux. 
+Note: Make sure you have libncurses libraries installed in linux.
 
 If not use the below codes:
 
@@ -270,8 +270,8 @@ cd darkriscv
 make (use sudo if required)
 
 
-The top level *Makefile* is responsible to build everything, but it must 
-be edited first, in a way that the user at least must select the compiler 
+The top level *Makefile* is responsible to build everything, but it must
+be edited first, in a way that the user at least must select the compiler
 path and the target board.
 
 By default, the top level *Makefile* uses:
@@ -289,7 +289,7 @@ but it will eventually work.
 And, when everything is correctly configured, the result will be something
 like this:
 
-```$ 
+```$
 # make
 make -C src all             CROSS=riscv32-embedded-elf CCPATH=/usr/local/share/gcc-riscv32-embedded-elf/bin/ ARCH=rv32e HARVARD=1
 make[1]: Entering directory `/home/marcelo/Documents/Verilog/darkriscv/v38/src'
@@ -307,7 +307,7 @@ make[1]: Entering directory `/home/marcelo/Documents/Verilog/darkriscv/v38/src'
 /usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-ld -Tdarksocv.ld -Map=darksocv.map -m elf32lriscv  boot.o stdio.o main.o io.o banner.o -o darksocv.o
 /usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-ld: warning: section `.data' type changed to PROGBITS
 /usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objdump -d darksocv.o > darksocv.lst
-/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objcopy -O binary  darksocv.o darksocv.text --only-section .text* 
+/usr/local/share/gcc-riscv32-embedded-elf/bin//riscv32-embedded-elf-objcopy -O binary  darksocv.o darksocv.text --only-section .text*
 hexdump -ve '1/4 "%08x\n"' darksocv.text > darksocv.rom.mem
 #xxd -p -c 4 -g 4 darksocv.o > darksocv.rom.mem
 rm darksocv.text
@@ -342,9 +342,9 @@ rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
-rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
-rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
-rr                vvvvvvvvvvvvvvvvvvvvvv      
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv
+rr                vvvvvvvvvvvvvvvvvvvvvv
 rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
 rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
 rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
@@ -376,15 +376,15 @@ make[1]: Entering directory `/home/marcelo/Documents/Verilog/darkriscv/v38/board
 cd ../tmp && xst -intstyle ise -ifn ../boards/piswords_rs485_lx9/darksocv.xst -ofn ../tmp/darksocv.syr
 Reading design: ../boards/piswords_rs485_lx9/darksocv.prj
 
-*** lots of weird FPGA related messages here *** 
+*** lots of weird FPGA related messages here ***
 
 cd ../tmp && bitgen -intstyle ise -f ../boards/avnet_microboard_lx9/darksocv.ut ../tmp/darksocv.ncd
 echo done.
 done.
 ```
 
-Which means that the software compiled and liked correctly, the simulation 
-worked correctly and the FPGA build produced a image that can be loaded in 
+Which means that the software compiled and liked correctly, the simulation
+worked correctly and the FPGA build produced a image that can be loaded in
 your FPGA board with a *make install* (case you has a FPGA board and, of
 course, you have a JTAG support script in the board directory).
 
@@ -400,9 +400,9 @@ rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
-rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
-rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
-rr                vvvvvvvvvvvvvvvvvvvvvv      
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv
+rr                vvvvvvvvvvvvvvvvvvvvvv
 rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
 rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
 rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
@@ -425,7 +425,7 @@ uart0: 115200 bps (div=868)
 timr0: periodic timer=1000000Hz (io.timer=99)
 
 Welcome to DarkRISCV!
-> 
+>
 ```
 
 The beautiful ASCII RISCV logo was produced by Andrew Waterman! [6]
@@ -441,19 +441,19 @@ sure where the problem is.
 
 ### "src" Directory
 
-The *src* directory contains the source code for the test firmware, which 
+The *src* directory contains the source code for the test firmware, which
 includes the boot code, the main process and auxiliary libraries. The code is
-compiled via *gcc* in a way that some auxiliary files are produced, 
+compiled via *gcc* in a way that some auxiliary files are produced,
 for example:
 
 - boot.c: the original C code for the boot process
 - boot.s: the assembler version of the C code, generated automatically by the gcc
 - boot.o: the compiled version of the C code, generated automatically by the gcc
 
-When all .o files are produced, the result is linked in a *darksocv.o* ELF 
-file, which is used to produce the *darksocv.bin* file, which is converted to 
+When all .o files are produced, the result is linked in a *darksocv.o* ELF
+file, which is used to produce the *darksocv.bin* file, which is converted to
 hexadecimal and separated in ROM and RAM files (which are loaded by the Verilog
-code in the blockRAMs). The linker also produces a *darksocv.lst* with a 
+code in the blockRAMs). The linker also produces a *darksocv.lst* with a
 complete list of the code generated and the *darsocv.map*, which shows the
 map of all functions and variables in the produced code.
 
@@ -474,20 +474,20 @@ Makefile knows that we need the *lz.s* and *lz.o*:
 	ASMS = boot.s stdio.s main.s io.s banner.s lz.s
 	SRCS = boot.c stdio.c main.c io.c banner.c lz.c
 
-And add a "lz" command in the *main.c*, in a way that is possible call 
+And add a "lz" command in the *main.c*, in a way that is possible call
 the function via the prompt. Alternatively, it is possible entirely replace
 the provided firmware and use your own firmware.
 
 ### "sim" Directory
 
 The simulation, in the other hand will show some waveforms and is possible
-check the *DarkRISCV* operation when running the example code.  
+check the *DarkRISCV* operation when running the example code.
 
 The main simulation tool for *DarkRISCV* is the iSIM from Xilinx ISE 14.7,
 but the Icarus simulator is also supported via the Makefile in the *sim*
 directory (the changes regarding Icarus are active when the symbol
-__ICARUS__ is detected). I also included a workaround for ModelSim, as 
-pointed by our friend HYF (the changes regarding ModelSim are active when the 
+__ICARUS__ is detected). I also included a workaround for ModelSim, as
+pointed by our friend HYF (the changes regarding ModelSim are active when the
 symbol MODEL_TECH is detected).
 
 The simulation runs the same firmware as in the real FPGA, but in order to
@@ -525,15 +525,15 @@ The current supported boards are:
 - id==16  ulx3s_ecp5-85f
 
 The organization is self-explained, w/ the vender, board and FPGA model
-in the name of the directory. Each  *board* directory contains the project 
+in the name of the directory. Each  *board* directory contains the project
 files to be open in the Xilinx ISE 14.x, as well Makefiles to build the
-FPGA image regarding that board model. Although a *ucf* file is provided in 
-order to generate a complete build with a UART and some LEDs, the FPGA is 
-NOT fully wired in any particular configuration and you must add the 
+FPGA image regarding that board model. Although a *ucf* file is provided in
+order to generate a complete build with a UART and some LEDs, the FPGA is
+NOT fully wired in any particular configuration and you must add the
 pins that you will use in your FPGA board.
 
-Anyway, although not wired, the build always gives you a good estimation 
-about the FPGA utilization and about the timing (because the UART output 
+Anyway, although not wired, the build always gives you a good estimation
+about the FPGA utilization and about the timing (because the UART output
 ensures that the complete processor must be synthesized).
 
 As long there are much supported boards, there is no way to test all boards
@@ -605,7 +605,7 @@ pipeline:
 
 - 1/2 stage for instruction pre-fetch (rom)
 - 1/2 stage for static instruction decode (core)
-- 1/2 stage for address generation, register read and data read/write (ram) 
+- 1/2 stage for address generation, register read and data read/write (ram)
 - 1/2 stage for data write (register write)
 
 From the processor point of view, there are only 2 stages and from the
@@ -629,12 +629,12 @@ a hit ratio of only 68%), will be a requirement in order to access external
 memory and reduce the impact of slow SDRAMs and FLASHes.
 
 Both the use of the cache and a 2-phase clock does not perform well, on the
-point of view of combinational timing.  By this way, a 3-stage pipeline version 
+point of view of combinational timing.  By this way, a 3-stage pipeline version
 is provided, in order to use a single clock phase with blockrams.
 
 The concept in this case is separate the pre-fetch and decode, in a way that
 the pre-fetch can be done entirely in the blockram side for the instruction
-bus. The decode, in a different stage, provides extra performance and the 
+bus. The decode, in a different stage, provides extra performance and the
 execute stage works with one clock almost all the time, except when the load
 instruction is executed. In this case, the external memory logic inserts one
 wait-state. The write operation, however, is executed in a single clock.
@@ -674,7 +674,7 @@ number of peripherals and the complexity increases.
 
 Of course, the best performance setup uses a 3-state pipeline and a
 single-clock phase (posedge) in the entire logic, in a way that the 2-stage
-pipeline and dual-clock phase will be kept only for reference.  
+pipeline and dual-clock phase will be kept only for reference.
 
 The only disadvantage of the 3-state pipeline is one extra wait-state in the
 load operation and the longer pipeline flush of two clocks in the taken
@@ -700,7 +700,7 @@ the -O1 option, which produced 70MIPS in the 3-stage version and 85MIPS in
 the 2-stage version.
 
 By this way, case the performance is a requirement, the src/Makefile must be
-changed in order to use the -O1 optimization instead of the -Os default. 
+changed in order to use the -O1 optimization instead of the -Os default.
 
 And although the 2-stage version is 15% faster than the 3-stage version, the
 3-stage version can reach better clocks and, by this way, will provide
@@ -718,7 +718,7 @@ interrupts.  As long the interrupt handling and, in a general way, threading
 requires flush the current pipelines in order to change context, by this
 way, match the interrupt/threading with the pipeline flush makes some sense!
 
-With the option __THREADING__ is possible test this feature. 
+With the option __THREADING__ is possible test this feature.
 
 The implementation is in very early stages of development and does not
 handle correctly the initial SP and PC.  Anyway, it works and enables the
@@ -727,7 +727,7 @@ at a rate of more than 1 million interrupts per second without affecting the
 execution and with little impact in the performance!  :)
 
 The interrupt support can be expanded to a more complete threading support,
-but requires some tricks in the hardware and in the software, in order to 
+but requires some tricks in the hardware and in the software, in order to
 populate the different threads with the correct SP and PC.
 
 The interrupt handling use a concept around threading and, with some extra
@@ -742,10 +742,10 @@ the maximum empirical number of context switches per second is around 2.94
 million.
 
 About the new MAC instruction, it is implemented in a very preliminary way
-with the opcode 7'b0001011 (custom-0 opcode).  I am checking about the possibility 
-to use the p.mac instruction, but at this time the instruction is hand encoded 
-in the mac() function available in the stdio.c (i.e.  the darkriscv libc).  
-The details about include new instructions and make it work with GCC can be 
+with the opcode 7'b0001011 (custom-0 opcode).  I am checking about the possibility
+to use the p.mac instruction, but at this time the instruction is hand encoded
+in the mac() function available in the stdio.c (i.e.  the darkriscv libc).
+The details about include new instructions and make it work with GCC can be
 found in the reference [5].
 
 The preliminary tests pointed, as expected, that the performance decreases
@@ -787,7 +787,7 @@ guess it is working. As long the MAC instruction is better defined in the
 syntax and features, I think is possible optimize the mul/div/mod in order
 to try use it and increase the performance.
 
-Here some additional performance results (synthesis only, 3-stage 
+Here some additional performance results (synthesis only, 3-stage
 version) for other Xilinx devices available in the ISE for speed grade 2:
 
 - Spartan-6:	100MHz (measured 70MIPS w/ gcc -O1)
@@ -864,18 +864,18 @@ prediction solve lots of problems regarding the performance, but introduce
 lots of other problems, so the best solution may not implement it but try
 hand optimizations when possible, such as unroll loops.
 
-Another possible enhancement tested was the DBNZ instruction, well known 
+Another possible enhancement tested was the DBNZ instruction, well known
 on Z80 and 68000, basically a loop instruction which decrements a counter
 test for zero and branch, repeating a loop until the counter is not zero...
 
 In the case of RISC-V, a DBNZ intruction impact is very small, basically
 replacing a SUBI+BNE, but with no effect on the real problem, which is
-the pipeline flush on branches. So, it was tested in the DarkRISCV a 
+the pipeline flush on branches. So, it was tested in the DarkRISCV a
 special variant of DBNZD w/ delayed branch, in a way was possible run 2
-extra instructions after the DBNZ on 3-stage pipeline version (the 
+extra instructions after the DBNZ on 3-stage pipeline version (the
 DBNZ was not included in the 2-stage pipeline version).
 
-Although the code w/ DBNZD was 3-clocks faster than SUBI+BNE, hand 
+Although the code w/ DBNZD was 3-clocks faster than SUBI+BNE, hand
 optimized schemes, such as code unroll, may reach similar results and
 the DBNZD was not included in DarkRISCV.
 
@@ -946,12 +946,12 @@ When the cache controller is activated, the cache controller provides
 separate memories for instruction and data, but provides a interface for a
 more conventional von neumann memory architecture.
 
-In both cases, a proper designed linker script (darksocv.ld) probably solves 
-the problem! 
+In both cases, a proper designed linker script (darksocv.ld) probably solves
+the problem!
 
 The current memory map in the linker script is the follow:
 
-- 0x00000000: 4KB ROM 
+- 0x00000000: 4KB ROM
 - 0x00001000: 4KB RAM
 
 Also, the linker maps the IO in the following positions:
@@ -960,7 +960,7 @@ Also, the linker maps the IO in the following positions:
 - 0x80000004: UART xmit/recv buffer
 - 0x80000008: LED buffer
 
-The RAM memory contains the .data area, the .bss area (after the .data 
+The RAM memory contains the .data area, the .bss area (after the .data
 and initialized with zero), the .rodada and the stack area at the end of RAM.
 
 Although the RISCV is defined as little-endian, appears to be easy change
@@ -1035,7 +1035,7 @@ In the case of QMTECH boards, that does not include the JTAG neither the
 UART/USB port, and external USB/UART converter and a low-cost JTAG adapter
 can solve the problem easily!
 
-The Lattice Brevia is clocked by the on-board 50MHz oscillator, with the 
+The Lattice Brevia is clocked by the on-board 50MHz oscillator, with the
 UART operating at 115200bps and the LED and DEBUG ports wired to the on-
 board LEDs.
 
@@ -1054,7 +1054,7 @@ In the software side, a small shell is available with some basic commands:
 The proposal of the shell is provide some basic test features which can
 provide a go/non-go status about the current hardware status.
 
-Useful memory areas: 
+Useful memory areas:
 
 - 4096: the start of RAM (data)
 - 4608: the start of RAM (data)
@@ -1091,34 +1091,34 @@ At this moment, not all boards are really supported yet. Supported boards are:
 
 ## Yosys support
 
-Our colleague Hirosh Dabui (from KianRiscV project) added support for 
-Lattice FPGAs via Yosys, in a way that is possible use makefiles to build 
+Our colleague Hirosh Dabui (from KianRiscV project) added support for
+Lattice FPGAs via Yosys, in a way that is possible use makefiles to build
 and program the FPGA directly from Linux!
 
 ## Creating a RISCV from scratch
 
-I found that some people are very reticent about the possibility of 
-designing a RISC-V processor in one night. Of course, it is not so easy 
-as it appears and, in fact, it require a lot of experience, planning and 
-lucky. Also, the fact that the processor correctly run some few instructions 
-and put some garbage in the serial port does not really means that the 
-design is perfect, instead you will need lots and lots of debug time 
+I found that some people are very reticent about the possibility of
+designing a RISC-V processor in one night. Of course, it is not so easy
+as it appears and, in fact, it require a lot of experience, planning and
+lucky. Also, the fact that the processor correctly run some few instructions
+and put some garbage in the serial port does not really means that the
+design is perfect, instead you will need lots and lots of debug time
 in order to fix all hidden problems.
 
-As reference, I released some time ago the code from the 16-bit "microrisc" 
+As reference, I released some time ago the code from the 16-bit "microrisc"
 core that I designed before DarkRISCV:
 
 - https://github.com/darklife/udarkrisc
 
-Although far more simple, it is very close to some original DarkRISCV 
-concepts and was the case for other cores from the same era, targeting small 
+Although far more simple, it is very close to some original DarkRISCV
+concepts and was the case for other cores from the same era, targeting small
 Xilinx Spartan-3 FPGAs. Oh, since there are lots of "micro"-something,
 I renamed it as micro-DarkRISC -- not RISCV -- so it is now part of Dark
 family! :)
 
-There are also other good projects that can be used as reference: 
+There are also other good projects that can be used as reference:
 
-I found a set of online videos from my friend (Lucas Teske) that shows the 
+I found a set of online videos from my friend (Lucas Teske) that shows the
 design of a RISC-V processor from scratch (playlist with 9 videos):
 
 - https://www.youtube.com/playlist?list=PLEP_M2UAh9q52a-w3ZUEChEoG_ROeMa88
@@ -1127,7 +1127,7 @@ Alternatively, there are the original videos in the twitch:
 
 - https://www.twitch.tv/videos/840983740 Register bank (4h50)
 - https://www.twitch.tv/videos/845651672 Program counter and ALU (3h49)
-- https://www.twitch.tv/videos/846763347 ALU tests, CPU top level (3h47) 
+- https://www.twitch.tv/videos/846763347 ALU tests, CPU top level (3h47)
 - https://www.twitch.tv/videos/848921415 Computer problems and microcode planning (08h19)
 - https://www.twitch.tv/videos/850859857 instruction decode and execute - part 1/3 (08h56)
 - https://www.twitch.tv/videos/852082786 instruction decode and execute - part 2/3 (10h56)
@@ -1148,7 +1148,7 @@ tools, such as Icarus, Yosys and gtkWave!
 
 Although not finished yet (95% done!), I think it is very illustrative about the RISC-V design:
 
-- rv32e instruction set: very reduced (37) and very ortogonal bit patterns (6) 
+- rv32e instruction set: very reduced (37) and very ortogonal bit patterns (6)
 - rv32e register set: 16x32-bit register bank and a 32-bit program counter
 - rv32e ALU with basic operations for reg/imm and reg/reg instructions
 - rv32e instruction decode: very simple to understand, very direct to implement
@@ -1174,7 +1174,7 @@ In a funny way, the DarkRISCV appears in some academic papers, sometimes in a co
 
 - ReCon: From the Bitstream to Piracy Detection -- Interesting paper about IP piracy detection, basically how detect an IP inside an bitstream, they used the PicoRV32, OpenRISC and DarkRISCV as IPs to be detected. https://homes.luddy.indiana.edu/lukefahr/papers/skipper_paine20.pdf
 
-- A Low-Cost Fault-Tolerant RISC-V Processor for Space Systems -- Here we found an interesting comparison between low-cost RISCV cores, but in this case the DarkRISCV performs very badly against the PicoRV32, mRISCV, Ibex and a radiation hardned RISCV core. Not sure about the tools and the target, as long I have no access to the paper, just some pictures. https://www.semanticscholar.org/paper/A-Low-Cost-Fault-Tolerant-RISC-V-Processor-for-Santos-Luza/b8cd0b62ac914678f1999df09a4b77b857178d33 
+- A Low-Cost Fault-Tolerant RISC-V Processor for Space Systems -- Here we found an interesting comparison between low-cost RISCV cores, but in this case the DarkRISCV performs very badly against the PicoRV32, mRISCV, Ibex and a radiation hardned RISCV core. Not sure about the tools and the target, as long I have no access to the paper, just some pictures. https://www.semanticscholar.org/paper/A-Low-Cost-Fault-Tolerant-RISC-V-Processor-for-Santos-Luza/b8cd0b62ac914678f1999df09a4b77b857178d33
 
 - Fault Classification and Vulnerability Analysis of Microprocessors -- No much information, since the paper will released only in 2022, but the abstract is very interesting, basically they will inject lots of faults in the PicoRV32 and DarkRISCV in order to see what happens. https://repository.tudelft.nl/islandora/object/uuid:4c85a1ba-2721-4563-bb13-31d506d9c906?collection=education
 
@@ -1223,7 +1223,7 @@ Also, special thanks to the "friends of darkriscv" that found the project in
 the internet and contributed in any way to make it better:
 
 - Guilherme Barile (technology guru and first guy to post anything about the darkriscv! [2]).
-- Alasdair Allan (technology guru, posted an article about the darkriscv [3]) 
+- Alasdair Allan (technology guru, posted an article about the darkriscv [3])
 - Gareth Halfacree (technology guru, posted an article about the DarkRISCV [4])
 - Ivan Vasilev (ported DarkRISCV for Lattice Brevia XP2!)
 - timdudu from github (fix in the LDATA and found a bug in the BCC instruction)

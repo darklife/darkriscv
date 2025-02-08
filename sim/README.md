@@ -1,6 +1,6 @@
 ## Simulation
 
-This directory provides support for simulation tools.  
+This directory provides support for simulation tools.
 
 The main simulation tool is the opensource tools Icarus Verilog and the
 gtkWave.  Alternatively, it is possible use proprietary simulation tools, as

@@ -53,9 +53,9 @@ module darkcache
 
     output  [31:0]  DATAP, // pipelined data output
     output          DDACKP, // pipelined ack  output
-    
+
     // memory
-    
+
     output          XDREQ,    // address valid
     output          XRD,    // data read
     output          XWR,    // data write
@@ -72,23 +72,23 @@ module darkcache
 
 `ifdef __CDEPTH__
 
-    wire [31:0] CDATO; 
-    
-    reg  [31:`__CDEPTH__+2] CTAG   [0:2**`__CDEPTH__-1];    
+    wire [31:0] CDATO;
+
+    reg  [31:`__CDEPTH__+2] CTAG   [0:2**`__CDEPTH__-1];
     reg  [31:0]             CDATA  [0:2**`__CDEPTH__-1];
     reg                     CVAL   [0:2**`__CDEPTH__-1];
-    
+
     integer i;
-    
+
     initial
     begin
         $display("cache%0d: %0dx32-bits (%0d bytes)",
             ID,
             (2**`__CDEPTH__),
             4*(2**`__CDEPTH__));
-            
-        for(i=0;i!=2**`__CDEPTH__;i=i+1) 
-        begin            
+
+        for(i=0;i!=2**`__CDEPTH__;i=i+1)
+        begin
             CDATA [i] = 0;
             CTAG  [i] = 0;
             CVAL  [i] = 0;
@@ -121,7 +121,7 @@ module darkcache
                 //$display("cache%0d: miss_on_wr %x:%x\n",ID,DADDR,DATAI);
                 CDATA [CINDEX]  <= DATAI;
                 CTAG  [CINDEX]  <= DADDR[31:`__CDEPTH__+2];
-                CVAL  [CINDEX]  <= 1;   
+                CVAL  [CINDEX]  <= 1;
             end
             else
             begin
@@ -135,15 +135,15 @@ module darkcache
         if(!HLT) DATAOFF <= CDATO;
     end
 
-    assign CDATO  = HIT ? CDATA[CINDEX] : XATAI;        
-    assign DATAP  = DATAOFF;   
-    
+    assign CDATO  = HIT ? CDATA[CINDEX] : XATAI;
+    assign DATAP  = DATAOFF;
+
     assign DDACK = HIT ? 1 : XDACK;
 
     // pipelined output
 
     reg [31:0] XATAI2  = 0;
-   
+
     reg HIT2   = 0;
     reg XDACK2 = 0;
 
@@ -184,7 +184,7 @@ module darkcache
                              DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
                                                          4'b0011 ) :
                                                          4'b1111;  // 32-bit
-    
+
     assign XATAO = HIT ? 0 : DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAI[ 7: 0], 24'd0 } :
                                          DADDR[1:0]==2 ? {  8'd0, DATAI[ 7: 0], 16'd0 } :
                                          DADDR[1:0]==1 ? { 16'd0, DATAI[ 7: 0],  8'd0 } :

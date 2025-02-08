@@ -16,8 +16,8 @@
  *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  */
- 
-//`default_nettype none 
+
+//`default_nettype none
 `timescale 1ns / 1ps
 
 // ===============================

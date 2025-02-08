@@ -71,7 +71,7 @@ module darkbridge
     wire [31:0] IADDR;
     wire [31:0] IDATA;
     wire        IDACK;
-    
+
     wire [31:0] DADDR;
     wire [31:0] DATAO;
     wire [31:0] DATAI;
@@ -83,11 +83,11 @@ module darkbridge
                 DAS;
     wire        DDACK;
 
-   
+
     // darkriscv
 
     wire [3:0]  KDEBUG;
-    
+
     darkriscv
     #(
         .CPTR(0)
@@ -133,18 +133,18 @@ module darkbridge
 `endif
 
 `ifdef __ICACHE__
-  
+
     darkcache #(.ID(0)) l1_inst
     (
         .CLK    (CLK),
         .RES    (RES),
         .HLT    (HLT),
-        
+
         .DAS    (!RES),
         .DRD    (1'b1),
         .DWR    (1'b0),
         .DLEN   (3'd4),
-        .DADDR  (IADDR),    
+        .DADDR  (IADDR),
         .DATAI  (32'd0),
         .DATAP  (IDATA),
         .DDACK  (IDACK),
@@ -153,7 +153,7 @@ module darkbridge
         //.XRD    (XRD),
         //.XWR    (XWR),
         //.XBE    (XBE),
-        .XADDR  (YADDR),    
+        .XADDR  (YADDR),
         .XATAI  (YDATA),
         //.XATAO  (XDATO),
         .XDACK  (YDACK)
@@ -178,25 +178,25 @@ module darkbridge
     wire [31:0] XATAO;
     wire        XDACK;
     wire [31:0] XATAI;
-    
+
 `ifndef __HARVARD__
-    reg [31:0] XATAI2 = 0;   
+    reg [31:0] XATAI2 = 0;
     reg        XDACK2 = 0;
 `endif
 
 `ifdef __DCACHE__
-    
-    darkcache #(.ID(1)) l1_data    
+
+    darkcache #(.ID(1)) l1_data
     (
         .CLK    (CLK),
         .RES    (RES),
         .HLT    (HLT),
-        
+
         .DAS    (DAS),
         .DRD    (DRD),
         .DWR    (DWR),
         .DLEN   (DLEN),
-        .DADDR  (DADDR),    
+        .DADDR  (DADDR),
         .DATAI  (DATAO),
         .DATAO  (DATAI),
         .DDACK  (DDACK),
@@ -205,7 +205,7 @@ module darkbridge
         .XRD    (XRD),
         .XWR    (XWR),
         .XBE    (XBE),
-        .XADDR  (XADDR),    
+        .XADDR  (XADDR),
         .XATAI  (XATAI),
         .XATAO  (XATAO),
         .XDACK  (XDACK)
@@ -226,7 +226,7 @@ module darkbridge
                    DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
                                                4'b0011 ) :
                                                4'b1111;  // 32-bit
-    
+
     assign XATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAO[ 7: 0], 24'd0 } :
                                DADDR[1:0]==2 ? {  8'd0, DATAO[ 7: 0], 16'd0 } :
                                DADDR[1:0]==1 ? { 16'd0, DATAO[ 7: 0],  8'd0 } :
@@ -260,26 +260,26 @@ module darkbridge
     assign XDACK  = XXDACK;
 
     assign IHLT = (!RES && !IDACK) || (DAS && !DDACK);
-    
-    assign HLT  = IHLT; 
 
-`else 
+    assign HLT  = IHLT;
+
+`else
 
     reg [1:0] XSTATE = 0;
-    
+
     always@(posedge CLK)
     begin
-        XSTATE <=   RES                          ? 0 : 
+        XSTATE <=   RES                          ? 0 :
                     XSTATE==0 && XDREQ           ? 2 : // idle to data
                     XSTATE==0 && YDREQ           ? 1 : // idle to instr
                     XSTATE==2 && XXDACK && YDREQ ? 1 : // data to instr
-                    XSTATE==2 && XXDACK          ? 0 : // data to idle                   
+                    XSTATE==2 && XXDACK          ? 0 : // data to idle
                     XSTATE==1 && XXDACK          ? 0 : // instr to idle
-                                                   XSTATE; // no change        
-                                                   
+                                                   XSTATE; // no change
+
             XATAI2 <= (XSTATE==2 && XXDACK) ? XXATAI : XATAI2;
 
-            XDACK2 <= XDREQ && (XSTATE==2 && XXDACK) ? XXDACK : 
+            XDACK2 <= XDREQ && (XSTATE==2 && XXDACK) ? XXDACK :
                       YDREQ && (XSTATE==1 && XXDACK) ? 0      : XDACK2;
 
     end
@@ -298,11 +298,11 @@ module darkbridge
     assign XDACK = XSTATE==1 ? XDACK2 : XXDACK;
 
     assign IHLT = (!RES && !IDACK) || (DAS && !DDACK);
-    
+
     assign HLT  = 0;
 
 `endif
-    
+
     assign DEBUG = { XDREQ, HLT, XDACK, IDACK };
 
 endmodule

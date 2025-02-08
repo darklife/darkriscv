@@ -81,7 +81,7 @@ module darkriscv
     output            DAS,  // address strobe
 
     input             BERR, // bus error
-    
+
 `ifdef SIMULATION
     input             ESIMREQ,  // end simulation req
     output reg        ESIMACK = 0,  // end simulation ack
@@ -109,8 +109,8 @@ module darkriscv
     always@(posedge CLK)
     begin
         HLT2 <= HLT;
-        
-        if(HLT2^HLT) IDATA2 <= IDATA;    
+
+        if(HLT2^HLT) IDATA2 <= IDATA;
     end
 
     wire[31:0] IDATAX = XRES ? 0 : HLT2 ? IDATA2 : IDATA;
@@ -195,7 +195,7 @@ module darkriscv
 
     // signal extended immediate, according to the instruction type:
 
-    assign XSIMM  = 
+    assign XSIMM  =
                      IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
                      IDATAX[6:0]==`BCC ? { IDATAX[31] ? ALL1[31:13]:ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
                      IDATAX[6:0]==`JAL ? { IDATAX[31] ? ALL1[31:21]:ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
@@ -204,7 +204,7 @@ module darkriscv
                                           { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
         // non-signal extended immediate, according to the instruction type:
 
-    assign XUIMM  = 
+    assign XUIMM  =
                      IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
                      IDATAX[6:0]==`BCC ? { ALL0[31:13], IDATAX[31],IDATAX[7],IDATAX[30:25],IDATAX[11:8],ALL0[0] } : // b-type
                      IDATAX[6:0]==`JAL ? { ALL0[31:21], IDATAX[31], IDATAX[19:12], IDATAX[20], IDATAX[30:21], ALL0[0] } : // j-type
@@ -284,7 +284,7 @@ module darkriscv
 
 `ifdef SIMULATION
     integer i;
-    
+
     initial for(i=0;i!=`RLEN;i=i+1) REGS[i] = 0;
 `endif
 
@@ -344,12 +344,12 @@ module darkriscv
         wire SRET = SYS && FCT3==0 && XIDATA[31:20]==12'b000100000010;
     `endif
 
-    wire [31:0] CRDATA = 
-    `ifdef __THREADS__    
+    wire [31:0] CRDATA =
+    `ifdef __THREADS__
                         XIDATA[31:20]==12'hf14 ? { CPTR, TPTR } : // core/thread number
     `else
                         XIDATA[31:20]==12'hf14 ? CPTR  : // core number
-    `endif    
+    `endif
     `ifdef __INTERRUPT__
                         XIDATA[31:20]==12'h344 ? MIP      : // machine interrupt pending
                         XIDATA[31:20]==12'h304 ? MIE      : // machine interrupt enable
@@ -372,7 +372,7 @@ module darkriscv
 
     wire [31:0] WRDATA = FCT3[1:0]==3 ? (CRDATA & ~CRMASK) : FCT3[1:0]==2 ? (CRDATA | CRMASK) : CRMASK;
     wire [31:0] CRMASK = FCT3[2] ? XIDATA[19:15] : U1REG;
-   
+
 `endif
 
 
@@ -461,7 +461,7 @@ module darkriscv
     `else
         MIP[11] <= IRQ&&MSTATUS[3]&&MIE[11];
     `endif
-    
+
         if(XRES)
         begin
             MTVEC    <= 0;
@@ -501,7 +501,7 @@ module darkriscv
 `endif
 
 `ifdef __EBREAK__
-   
+
         if(XRES)
         begin
             STVEC    <= 0;
@@ -520,17 +520,17 @@ module darkriscv
                 SEPC   <= PC;               // ebreak saves the current PC!
                 SSTATUS[1] <= 0;            // no interrupts when handling ebreak!
                 SSTATUS[5] <= SSTATUS[1];   // copy old MIE bit
-                
+
                 SCAUSE <=      IAER ? 32'd0 :
                                IBER ? 32'd1 :
                                IERR ? 32'd2 :
-                               EBRK ? 32'd3 : 
+                               EBRK ? 32'd3 :
                           DAER&&DRD ? 32'd4 :
                           DBER&&DRD ? 32'd5 :
                           DAER&&DWR ? 32'd6 :
                           DBER&&DWR ? 32'd7 :
                                     -1;
-                          
+
                 SIP[1] <= 1;                // set when ebreak!
             end
             else
@@ -551,7 +551,7 @@ module darkriscv
                 SIP[1] <= 0;              //return from ebreak
             end
         end
-        
+
 `endif
 
 `ifdef __RV32E__
@@ -602,7 +602,7 @@ module darkriscv
                      IERR||
                      EBRK||
                      DAER||
-                     DBER) ? STVEC : // ebreak causes an system call                     
+                     DBER) ? STVEC : // ebreak causes an system call
         `endif
 
         `ifdef __INTERRUPT__
@@ -616,7 +616,7 @@ module darkriscv
 
 `else
         NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
-        
+
         `ifdef __EBREAK__
                      MRET ? MEPC :
                      EBRK ? MTVEC : // ebreak causes an interrupt
@@ -656,7 +656,7 @@ module darkriscv
 `else
     assign IADDR = NXPC;
 `endif
-    
+
 `ifdef __INTERRUPT__
     assign DEBUG = { IRQ, MIP, MIE, MRET };
 `else
@@ -739,13 +739,13 @@ module darkriscv
                 $display("breakpoint at %x",PC);
                 $stop();
             end
-        `endif        
+        `endif
             if(!FLUSH && IDATA===32'dx)
             begin
                 $display("invalid IDATA at %x",PC);
-                $stop();  
+                $stop();
             end
-            
+
             if(LCC&&!HLT&&!FLUSH&&( (DLEN==4 && DATAI[31:0]===32'dx)||
                                     (DLEN==2 && DATAI[15:0]===16'dx)||
                                     (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
@@ -753,7 +753,7 @@ module darkriscv
                 $display("invalid DATAI@%x at %x",DADDR,PC);
                 $stop();
             end
-            
+
         `ifdef __TRACE__
             if(!XRES)
             begin
@@ -786,9 +786,9 @@ module darkriscv
                         default:  $display("trace: %x:%x ???   (no decode)",               PC,XIDATA);
                     endcase
                 end
-            end        
+            end
         `endif
-        
+
         end
 
     `else

@@ -31,7 +31,7 @@
 #include <stdio.h>
 //#include <unistd.h>
 
-// rle file here! 
+// rle file here!
 #ifdef ENCODE
     unsigned char *rle=0;
 #else
@@ -44,7 +44,7 @@ int main()
     // to generate the rle file:
     // ./badapple < badapple.txt > badapple.h
     // note:
-    // 
+    //
     //     the badapple.txt is a scalled down version from the file found on the application:
     //
     //          https://github.com/kisekied/BadAppleStringAnimation
@@ -64,44 +64,44 @@ int main()
                 else if(l=='@') s=2;
                 else if(l=='!') s=1;
                 else s=0;
-                
+
                 printf("0x%02x, ", (s<<6) + count);
                 if((i%16)==15) printf("\n"); i++;
                 count = 0;
                 if(i==24576) break; // limit to 24KB
-            }            
-            
+            }
+
             l = c;
         }
-        
+
         count++;
     }
-    
+
     printf("0x00\n};\n");
 #else
     int s,count=0,f=0;
-    
+
     char *t="\n!@.";
 
     // while((s=getchar())!=EOF) // from rle file
     unsigned char *p=rle;
-    
+
     printf("\0337\n"); // save current cursor
-    
+
     while((s=*p++))
     {
         count = s & 63;
         s = s>>6;
 
         if(s==1)
-        {   
-            //usleep(1000000/12);  
+        {
+            //usleep(1000000/12);
             //printf("\033[H\033[2Jframe %d\n",f++);
             printf("\0338frame %d\n",f++);
         }
         else
         while(count--)
-        { 
+        {
             putchar(t[s]);
         }
     }
@@ -109,4 +109,3 @@ int main()
 #endif
     return 0;
 }
-    

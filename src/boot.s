@@ -1,21 +1,21 @@
 /*
  * Copyright (c) 2018, Marcelo Samsoniuk
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -25,7 +25,7 @@
  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 	.option pic
@@ -37,7 +37,7 @@
     start:
     - read and increent thread counter
     - case not zero, jump to multi thread boot
-    - otherwise continue    
+    - otherwise continue
 */
 
 _start:
@@ -53,7 +53,7 @@ _thread_lock:
     j _thread_lock
 
 _uart_boot:
-    
+
     /* check simulation, skip uart boot */
 
     la  a1,0x40000000
@@ -62,7 +62,7 @@ _uart_boot:
 
 /*
     uart boot here:
-    
+
     - check for uart 3x w/ 1s timeout
     - case there is data, download it to main()
     - otherwise, go to normal boot
@@ -117,12 +117,12 @@ _normal_boot:
 
     register int c,s;
     register char *p = rle_logo; // = a3
-   
+
     while(*p)
     {
         c = *p++; // = a0
         s = *p++; // = a4
-      
+
         while(s--) putchar(c); // uses a0, a1, a2
     }
 */
@@ -134,9 +134,9 @@ _normal_boot:
     lla a5,_rle_dict
 
      lbu a4,0(a3)
-   
+
     _rle_banner_loop1:
- 
+
         srli a0,a4,6
         add a0,a0,a5
         lbu a0,0(a0)
@@ -152,7 +152,7 @@ _normal_boot:
             bgt a4,x0,_rle_banner_loop2
 
         lbu a4,0(a3)
-        bne a4,x0,_rle_banner_loop1        
+        bne a4,x0,_rle_banner_loop1
 
     lla a3,_str_banner
 
@@ -179,9 +179,9 @@ _normal_boot:
 
 	j	_start
 
-/* 
+/*
     uart_putchar:
-    
+
     - wait until not busy
     - a0 = char to print
     - a1 = soc.uart0.stat
@@ -212,7 +212,7 @@ _uart_putchar:
 
         ret
 
-/* 
+/*
     uart_getchar:
 
     - a0 = time out in loops
@@ -251,19 +251,19 @@ _uart_getchar:
 */
 _rle_banner:
 
-    .byte 0x0e, 0xa0, 0xc1, 0x12, 0x9c, 0xc1, 0x4d, 0x07, 0x9a, 0xc1, 0x50 
-    .byte 0x06, 0x98, 0xc1, 0x52, 0x04, 0x98, 0xc1, 0x52, 0x04, 0x98, 0xc1 
-    .byte 0x52, 0x04, 0x98, 0xc1, 0x50, 0x06, 0x96, 0x02, 0xc1, 0x4d, 0x07 
-    .byte 0x96, 0x04, 0xc1, 0x42, 0x10, 0x96, 0x06, 0xc1, 0x42, 0x0c, 0x98 
-    .byte 0x06, 0x42, 0xc1, 0x44, 0x06, 0x9a, 0x06, 0x44, 0xc1, 0x46, 0x06 
-    .byte 0x96, 0x06, 0x46, 0xc1, 0x48, 0x06, 0x92, 0x06, 0x48, 0xc1, 0x4a 
-    .byte 0x06, 0x8e, 0x06, 0x4a, 0xc1, 0x4c, 0x06, 0x8a, 0x06, 0x4c, 0xc1 
-    .byte 0x4e, 0x06, 0x86, 0x06, 0x4e, 0xc1, 0x50, 0x06, 0x82, 0x06, 0x50 
-    .byte 0xc1, 0x52, 0x0a, 0x52, 0xc1, 0x54, 0x06, 0x54, 0xc1, 0x56, 0x02 
+    .byte 0x0e, 0xa0, 0xc1, 0x12, 0x9c, 0xc1, 0x4d, 0x07, 0x9a, 0xc1, 0x50
+    .byte 0x06, 0x98, 0xc1, 0x52, 0x04, 0x98, 0xc1, 0x52, 0x04, 0x98, 0xc1
+    .byte 0x52, 0x04, 0x98, 0xc1, 0x50, 0x06, 0x96, 0x02, 0xc1, 0x4d, 0x07
+    .byte 0x96, 0x04, 0xc1, 0x42, 0x10, 0x96, 0x06, 0xc1, 0x42, 0x0c, 0x98
+    .byte 0x06, 0x42, 0xc1, 0x44, 0x06, 0x9a, 0x06, 0x44, 0xc1, 0x46, 0x06
+    .byte 0x96, 0x06, 0x46, 0xc1, 0x48, 0x06, 0x92, 0x06, 0x48, 0xc1, 0x4a
+    .byte 0x06, 0x8e, 0x06, 0x4a, 0xc1, 0x4c, 0x06, 0x8a, 0x06, 0x4c, 0xc1
+    .byte 0x4e, 0x06, 0x86, 0x06, 0x4e, 0xc1, 0x50, 0x06, 0x82, 0x06, 0x50
+    .byte 0xc1, 0x52, 0x0a, 0x52, 0xc1, 0x54, 0x06, 0x54, 0xc1, 0x56, 0x02
     .byte 0x56, 0xc2, 0x07, 0x00
 
 _rle_dict:
-    
+
     .byte 0x20, 0x72, 0x76, 0x0a
 
 _str_banner:

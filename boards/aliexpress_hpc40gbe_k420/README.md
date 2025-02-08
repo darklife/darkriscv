@@ -20,7 +20,7 @@ The Kintex-7 HPC V2 board includes:
 - SATA interface
 - PCIe 8x
 - 3x different JTAG connectors (you need an external JTAG adapter!)
-- support for darkriscv running at 240MHz (single-thread) 
+- support for darkriscv running at 240MHz (single-thread)
 - multithread support up to 128 threads (120MHz)
 
 Unfortunately, there is no information yet about the HPC V3, but I guess the

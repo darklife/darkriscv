@@ -2,7 +2,7 @@
 
 The old AVNET Microboard LX9 is my preferred development board because is
 small, easy to connect to the development environment and very complete,
-with integrated JTAG, USB/serial and Ethernet! 
+with integrated JTAG, USB/serial and Ethernet!
 
 The board includes:
 

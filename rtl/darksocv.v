@@ -63,7 +63,7 @@ module darksocv
     wire CLK,RES;
 
 `ifdef BOARD_CK
-    
+
     darkpll darkpll0
     (
         .XCLK(XCLK),
@@ -90,9 +90,9 @@ module darksocv
 `endif
 
 `ifdef __TESTMODE__
-	 
+
     // tips to port darkriscv for a new target:
-	 // 
+	 //
 	 // - 1st of all, test the blink code to confirms the reset
 	 //   polarity, i.e. the LEDs must blink at startup when
 	 //   the reset button *is not pressed*
@@ -101,12 +101,12 @@ module darksocv
 	 //   50% of this period
 
 	 reg [31:0] BLINK = 0;
-	 
+
 	 always@(posedge CLK)
 	 begin
         BLINK <= RES ? 0 : BLINK ? BLINK-1 : `BOARD_CK;
 	 end
-	 
+
 	 assign LED      = (BLINK < (`BOARD_CK/2)) ? -1 : 0;
 	 assign UART_TXD = UART_RXD;
 `endif
@@ -118,10 +118,10 @@ module darksocv
     wire [31:0] XADDR;
     wire [31:0] XATAO;
     wire        XWR,
-                XRD;                
+                XRD;
     wire [3:0]  XBE;
     wire [3:0]  XDREQMUX;
-    
+
     assign XDREQMUX[0] = XDREQ && XADDR[31:30]==0;
     assign XDREQMUX[1] = XDREQ && XADDR[31:30]==1;
     assign XDREQMUX[2] = XDREQ && XADDR[31:30]==2;
@@ -129,14 +129,14 @@ module darksocv
 
     wire [31:0] XATAIMUX [0:3];
     wire        XDACKMUX [0:3];
-    
+
     // darkriscv
 
     wire [3:0]  KDEBUG;
-    
+
     wire        ESIMREQ,ESIMACK;
 
-    wire        HLT;  
+    wire        HLT;
 
     wire        IDREQ;
     wire [31:0] IADDR;
@@ -165,7 +165,7 @@ module darksocv
         .XXATAI  (XATAIMUX[XADDR[31:30]]),
         .XXATAO  (XATAO),
         .XXRD    (XRD),
-        .XXWR    (XWR),        
+        .XXWR    (XWR),
         .XXBE    (XBE),
         .XXDACK  (XDACKMUX[XADDR[31:30]]),
 
@@ -191,12 +191,12 @@ module darksocv
         .CLK    (CLK),
         .RES    (RES),
         .HLT    (HLT),
-        
+
         .IDREQ  (IDREQ),
         .IADDR  (IADDR),
         .IDATA  (IDATA),
         .IDACK  (IDACK),
-        
+
         .XDREQ  (XDREQMUX[0]),
         .XRD    (XRD),
         .XWR    (XWR),
@@ -220,7 +220,7 @@ module darksocv
 `ifdef __INTERRUPT__
         .XIRQ    (XIRQ),
 `endif
-       
+
         .XDREQ  (XDREQMUX[1]),
         .XRD    (XRD),
         .XWR    (XWR),
@@ -228,8 +228,8 @@ module darksocv
         .XADDR  (XADDR),
         .XATAI  (XATAO),
         .XATAO  (XATAIMUX[1]),
-        .XDACK  (XDACKMUX[1]),        
-        
+        .XDACK  (XDACKMUX[1]),
+
         .RXD    (UART_RXD),
         .TXD    (UART_TXD),
 
@@ -244,22 +244,22 @@ module darksocv
     );
 
     // sdram w/ CS==2
-    
+
 `ifdef __SDRAM__
 
     // sdram interface, thanks to my good friend Hirosh Dabui!
 
     wire READY;
 
-    mt48lc16m16a2_ctrl 
+    mt48lc16m16a2_ctrl
     #(
         .SDRAM_CLK_FREQ(`BOARD_CK/1000000)
-    ) 
-    sdram0 
+    )
+    sdram0
     (
         .clk        (CLK),
         .resetn     (!RES),
-        
+
         .addr       (XADDR[24:0]),
         .din        (XATAO),
         .dout       (XATAIMUX[2]),
@@ -276,7 +276,7 @@ module darksocv
         .sdram_wen  (S_NWE),
         .sdram_rasn (S_NRAS),
         .sdram_casn (S_NCAS),
-        .sdram_dq   (S_DB) 
+        .sdram_dq   (S_DB)
     );
 
     assign XDACKMUX[2] = READY;
@@ -289,7 +289,7 @@ module darksocv
     always@(posedge CLK)
     begin
         DTACK2 <= RES ? 0 : DTACK2 ? DTACK2-1 : XDREQMUX[2] ? 13 : 0;
-        if(XDREQMUX[2] && PRINT2) 
+        if(XDREQMUX[2] && PRINT2)
         begin
             $display("sdram: unmapped addr=%x",XADDR);
             PRINT2 <= 0;
@@ -309,7 +309,7 @@ module darksocv
     always@(posedge CLK)
     begin
         DTACK3 <= RES ? 0 : DTACK3 ? DTACK3-1 : XDREQMUX[3] ? 1 : 0;
-        if(XDREQMUX[3] && PRINT3) 
+        if(XDREQMUX[3] && PRINT3)
         begin
             $display("sdram: unmapped addr=%x",XADDR);
             PRINT3 <= 0;
@@ -318,7 +318,7 @@ module darksocv
 
     assign XATAIMUX[3] = 32'hdeadbeef;
     assign XDACKMUX[3] = DTACK3==1;
-	 
+
     assign DEBUG = KDEBUG;
 
 endmodule

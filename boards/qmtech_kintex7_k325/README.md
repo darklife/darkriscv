@@ -7,7 +7,7 @@ available both in DDR and SDRAM setups.  As in the case of other QMTech
 boards, the Kintex-7 K325 lacks an on-board JTAG, so a cheap Chinese JTAG
 adapter is also required.  However, although the core board also lacks an
 USB/serial, the carrier board provides a cp2102, so no additional USB/serial
-adapter is required.  
+adapter is required.
 
 Regarding the software, you will need ISE 14.7 or Vivado for Windows or
 Linux to build and program the FPGA.  Also, you will need a temporary 30-day

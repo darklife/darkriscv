@@ -153,13 +153,13 @@ portable_init(core_portable *p, int *argc, char *argv[])
             printf("sdrm0: preparing SDRAM memory %d bytes...\n",(unsigned)&_edata);
 
             memcpy(d,s,(unsigned)&_edata);
-    
+
             printf("sdrm0: checking SDRAM memory %d bytes...\n",(unsigned)&_edata);
-    
+
             ptr=memcmp(d,s,(unsigned)&_edata);
-        
+
             if(ptr)
-            { 
+            {
                 printf("sdrm0: test failed at %x:%x\n",ptr,*(unsigned *)ptr);
             }
             else
@@ -181,11 +181,11 @@ portable_init(core_portable *p, int *argc, char *argv[])
     ee_printf("\n");
     ee_printf("uart0: 115200 bps (div=%d)\n",io->uart.baud);
     ee_printf("timr0: frequency=%dHz (io.timer=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
-    
+
     ee_printf("\n\n");
-    
+
     ee_printf("CoreMark start in %d ms.\n",io->timeus);
-      
+
 // #error "Call board initialization routines in portable init (if needed), in particular initialize UART!\n"
     if (sizeof(ee_ptr_int) != sizeof(ee_u8 *))
     {
@@ -208,12 +208,12 @@ portable_fini(core_portable *p)
     io->led = 0;
     ee_printf("CoreMark finish in %d ms.\n\n",io->timeus);
     p->portable_id = 0;
-    
+
     // makes no sense return here!
 
     while(1)
     {
         usleep(500000);
-        io->led++;    
+        io->led++;
     }
 }

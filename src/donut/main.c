@@ -167,7 +167,7 @@ void main() {
     R(6, cAcB, cAsB);
     R(6, sAcB, sAsB);
 
-    if(frame==3) 
+    if(frame==3)
     {   printf("done> ");
         getchar();
     }

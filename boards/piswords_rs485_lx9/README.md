@@ -7,7 +7,7 @@ include lots of interesting features:
 - 50MHz clock
 - RS232 serial
 - RS485 serial (of course)
-- 16MB SPI FLASH 
+- 16MB SPI FLASH
 - eigth LEDs
 - four keys
 - lots of GPIO pins

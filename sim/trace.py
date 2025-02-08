@@ -26,7 +26,7 @@ class addr2line:
         try:
             self.process.stdin.write((addr + "\n").encode('utf-8'))
             self.process.stdin.flush()
-            dbg_info = self.process.stdout.readline().decode("utf-8") 
+            dbg_info = self.process.stdout.readline().decode("utf-8")
             dbg_info = dbg_info.rstrip("\n")
         except IOError:
             raise Error(
@@ -36,7 +36,7 @@ class addr2line:
             if ret != None:
                 raise Error(
                     "addr2line terminated unexpectedly (%i)." % (ret))
-            
+
         return dbg_info
 
 class source_printer:

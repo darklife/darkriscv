@@ -13,12 +13,12 @@ thinking about preserve memory space. However, sometimes the code does not
 help us... anyway, is possible check the memory space used by each function
 in the firmware with the following script:
 
-    awk '{ 
+    awk '{
             if($0~/>:/) PTR=$2
-            else 
-            if($0~/:/) DB[PTR]++ 
-          } END { 
-            for(i in DB) print DB[i],i 
+            else
+            if($0~/:/) DB[PTR]++
+          } END {
+            for(i in DB) print DB[i],i
           }' src/darksocv.lst | sort -nr
 
 The script will calculate how many instructions each funcion needs and will
@@ -37,7 +37,7 @@ print and sort it, producing something like this:
 So, with those information, is possible try optimize better the large
 funcions.
 
-TODO: 
+TODO:
 
 - add a gdb-stub in order to support UART debug
 - add a SREC decoder in order to support application upload via UART

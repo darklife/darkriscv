@@ -1,20 +1,20 @@
 # Copyright (c) 2018, Marcelo Samsoniuk
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
+#
 # * Redistributions of source code must retain the above copyright notice, this
 #   list of conditions and the following disclaimer.
-# 
+#
 # * Redistributions in binary form must reproduce the above copyright notice,
 #   this list of conditions and the following disclaimer in the documentation
 #   and/or other materials provided with the distribution.
-# 
+#
 # * Neither the name of the copyright holder nor the names of its
 #   contributors may be used to endorse or promote products derived from
 #   this software without specific prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -24,7 +24,7 @@
 # SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 # CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 include config.mk
 
@@ -37,10 +37,10 @@ APPLICATION = darkshell
 #APPLICATION = donut
 
 PROJ = darksocv
-LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
+LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a
 OBJS = boot.o
 ASMS = boot.s
-SRCS = 
+SRCS =
 
 ifdef SMALL
     CPFLAGS += -DSMALL=1
@@ -85,14 +85,14 @@ clean:
 
 $(PROJ).ld: $(PROJ).lds Makefile
 	$(CPP) $(CPFLAGS) -DMLEN=$$(awk '/define MLEN/ { print 2**$$3 }' ../rtl/config.vh) $(PROJ).lds $(PROJ).ld
-	
+
 $(PROJ).o: $(OBJS) $(PROJ).ld $(LIBS)
 	#$(RL) $(LDLIBS)
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
 	$(OD) $(ODFLAGS) $@ > $(PROJ).S
 
 $(PROJ).rom.mem: $(PROJ).o
-	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .*text* 
+	$(OC) $(OCFLAGS) $< $(PROJ).text --only-section .*text*
 	hexdump -ve '1/4 "%08x\n"' $(PROJ).text > $@
 	#xxd -p -c 4 -g 4 $< > $@
 	rm $(PROJ).text
@@ -118,7 +118,7 @@ $(PROJ).mem: $(PROJ).o
 	#awk 'BEGIN { print "DEPTH = 1024;\nWIDTH = 32;\nADDRESS_RADIX = HEX;\nDATA_RADIX = HEX;\nCONTENT\nBEGIN" } { printf("%08x : %s\n",NR-1,$1); } END { print "END;" }' < $(PROJ).mem > $(PROJ).mif
 	wc -l $@
 	@echo mem ok.
-	
+
 $(PROJ).x86: $(SRCS)
 	$(HOST_CC) $(HOST_CFLAGS) $(SRCS) -o $(PROJ).x86 -DBUILD="\"$(BUILD)\"" -DARCH="\"x86\""
 	@echo x86 ok.

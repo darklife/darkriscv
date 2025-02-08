@@ -52,19 +52,19 @@ int main(void)
         sdram_init = 0;
 
         if(*sdram!=0xdeadbeef)
-        {    
-            char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;        
+        {
+            char *ptr,*d=(char *)0x80000000,*s=(char *)0x0;
 
             printf("sdrm0: preparing SDRAM memory %d bytes...\n",(unsigned)&_edata);
 
             memcpy(d,s,(unsigned)&_edata);
-    
+
             printf("sdrm0: checking SDRAM memory %d bytes...\n",(unsigned)&_edata);
-    
+
             ptr=memcmp(d,s,(unsigned)&_edata);
-        
+
             if(ptr)
-            { 
+            {
                 printf("sdrm0: test failed at %x:%x\n",ptr,*(unsigned *)ptr);
             }
             else
@@ -83,14 +83,14 @@ int main(void)
 #ifndef SMALL
 
     int csr = csr_test(0xFFFF0000,0xFFFF,0x00FFFF00);
-    
+
     if(csr) printf("csrxx: csr_test=%x\n",csr);
     else    printf("csrxx: not found.\n");
 
     set_stvec(dbg_handler);
-    
+
     stvec = get_stvec();
-    
+
     if(stvec)
         printf("stvec: handler@%x, debug enabled...\n",stvec);
     else
@@ -147,7 +147,7 @@ int main(void)
                 li t0,1;    \
                 lw t0,0(t0);");
     }
-    
+
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n\n");
@@ -161,7 +161,7 @@ int main(void)
         memset(buffer,0,sizeof(buffer));
 
         t = io->timeus;
-        
+
         printf("%d> ",t-t0);
 
         if(mtvec==0)

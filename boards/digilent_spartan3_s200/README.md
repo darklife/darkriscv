@@ -14,7 +14,7 @@ include lots of anscient peripherals, such as:
 - on-board SRAM (static SRAM)
 - 4x 8-segment displays
 - 8 LEDs
-- 8 on/off switches 
+- 8 on/off switches
 - 4 switches
 - lots of GPIO pins
 

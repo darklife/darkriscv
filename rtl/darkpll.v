@@ -186,7 +186,7 @@ module darkpll
         .clki(XCLK),
         .clko(CLK)
     );
-    
+
     assign LOCKED = 1;
 
 `elsif LATTICE_ICE40_BREAKOUT_HX8K
@@ -201,7 +201,7 @@ module darkpll
 `else
 
     // when there is no need for a clock generator:
-    
+
    assign CLK = XCLK;
    assign LOCKED = !IRES[7];
 

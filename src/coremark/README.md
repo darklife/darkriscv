@@ -21,9 +21,9 @@ make <install> <CROSS=riscv32-unknown-elf CCPATH=/opt/riscv32-gcc/bin ARCH=rv32e
 ##### GCC -O1:
 ```
 boot0: text@0+13512 data@16384+2732 stack@32768 (13652 bytes free)
-board: scarab minispartan6-plus lx9 (id=13)             
-build: Tue, 31 May 2022 10:46:38 +0800 for rv32e        
-core0: darkriscv@100MHz with: rv32e 
+board: scarab minispartan6-plus lx9 (id=13)
+build: Tue, 31 May 2022 10:46:38 +0800 for rv32e
+core0: darkriscv@100MHz with: rv32e
 uart0: 115200 bps (div=868)
 timr0: frequency=1000000Hz (io.timer=99)
 
@@ -53,7 +53,7 @@ CoreMark start in 24020 us.
 boot0: text@0+15848 data@16384+2700 stack@32768 (13684 bytes free)
 board: scarab minispartan6-plus lx9 (id=13)
 build: Mon, 30 May 2022 22:35:55 +0800 for rv32e
-core0: darkriscv@100MHz with: rv32e 
+core0: darkriscv@100MHz with: rv32e
 uart0: 115200 bps (div=868)
 timr0: frequency=1000000Hz (io.timer=99)
 

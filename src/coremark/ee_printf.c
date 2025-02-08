@@ -665,9 +665,9 @@ uart_send_char(char c)
     if(c=='\n')
     {
         while(io->uart.stat&1); // uart busy, wait...
-    io->uart.fifo = '\r';  
+    io->uart.fifo = '\r';
     }
-    
+
     while(io->uart.stat&1); // uart busy, wait...
     io->uart.fifo = c;
 // #error "You must implement the method uart_send_char to use this file!\n";

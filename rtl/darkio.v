@@ -117,7 +117,7 @@ module darkio
                 5'b01100:   TIMERFF <= XATAI[31:0];
             endcase
         end
-        
+
         if(RES)
             IREQ <= 0;
         else
@@ -153,9 +153,9 @@ module darkio
     assign XDACK = DTACK==1||(XDREQ&&XWR);
 
     assign BOARD_IRQ = IREQ^IACK;
-    
+
     assign XIRQ = |BOARD_IRQ;
-    
+
 `ifndef __TESTMODE__
     assign LED = LEDFF[3:0];
 `endif
@@ -179,7 +179,7 @@ module darkio
 `ifndef __TESTMODE__
       .RXD(RXD),
       .TXD(TXD),
-`endif		
+`endif
 `ifdef SIMULATION
       .ESIMREQ(ESIMREQ),
       .ESIMACK(ESIMACK),

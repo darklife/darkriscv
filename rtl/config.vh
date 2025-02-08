@@ -108,7 +108,7 @@
 //`define __INTERRUPT__
 
 // ebreak support
-// 
+//
 // ebreak enable live debug w/ gdb, with break points, single-step, etc...
 // it basically consists in a single instruction that replace the normal
 // instruction, so an exception will be triggered, which is like an interrupt,
@@ -116,10 +116,10 @@
 //`define __EBREAK__
 
 // CSR support
-// 
+//
 // enable this to use CSR registers...  INTERRUPT and EBREAK use this in
 // order to read some special exception registers.  Also, THREADS use this in
-// order to identify the core number.  
+// order to identify the core number.
 //`define __CSR__
 
 // instruction trace:
@@ -158,17 +158,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // harvard architecture
-// 
-// darkriscv core is *always* harvard, but it possible multiplex the instr. 
-// and data buses over the time on the SoC level, in a way that it mimics a 
-// classic von neumann architecture, which is useful for single-port memory, 
+//
+// darkriscv core is *always* harvard, but it possible multiplex the instr.
+// and data buses over the time on the SoC level, in a way that it mimics a
+// classic von neumann architecture, which is useful for single-port memory,
 // such as SDRAMs, PSRAM, etc. when multiplexed, the instruction fetch turns
 // to be very slow, so caches are essential with this scenario!
 `define __HARVARD__
 
 // cache depth
-// 
-// when enabled, the caches will try map and store the read operations, in a 
+//
+// when enabled, the caches will try map and store the read operations, in a
 // way that future read operations in the same address will be faster! it is
 // specially applicable to non-harvard SoC configuration, since that the
 // harvard SoC configuration is faster than the cache!
@@ -219,7 +219,7 @@
 //`define __RMW_CYCLE__
 
 // bram wait states
-// 
+//
 // to simulate high latency memories, is possible set the number of wait-states
 // for bram here! case not configured, wait-states defaults to 1.
 //`define __WAITSTATE__ 3
@@ -430,7 +430,7 @@
     `else
         `define BOARD_CK 50000000
     `endif
-    `define INVRES 1    
+    `define INVRES 1
     `define __SDRAM__ 1
 `endif
 
@@ -461,8 +461,8 @@
     `else
         `define RLEN 32*(2**`__THREADS__)
     `endif
-    
-    `define __CSR__ 
+
+    `define __CSR__
 `else
     `ifdef __RV32E__
         `define RLEN 16

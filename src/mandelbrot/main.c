@@ -1,4 +1,4 @@
-/* 
+/*
  * Ported to C language by Marcelo Samsoniuk
  * based on BASIC code published by Satoshi Okue:
  * https://twitter.com/S_Okue/status/1705175021000458592
@@ -13,31 +13,31 @@ int main()
     int f,c,d,a,b,p,q,s,t,i,x,y;
     char *hex="0123456789ABCDEF";
 
-        f=50; y=-12;    
+        f=50; y=-12;
 
     loop30:
-    
+
         x=-39;
-    
+
     loop40:
-    
+
         c=x*229/100; d=y*416/100; a=c; b=d; i=0;
 
     loop90:
-    
-        q=b/f; s=b-q*f; t=(a*a-b*b)/f+c; b=2*(a*q+a*s/f)+d; a=t; p=a/f; q=b/f; 
-        if((p*p+q*q)>4) goto loop180; 
-        i++; 
+
+        q=b/f; s=b-q*f; t=(a*a-b*b)/f+c; b=2*(a*q+a*s/f)+d; a=t; p=a/f; q=b/f;
+        if((p*p+q*q)>4) goto loop180;
+        i++;
         if(i<=15) goto loop90;
-        printf(" ");        
+        printf(" ");
         goto loop250;
-        
+
     loop180:
-                
+
         putchar(hex[(int)i]); // this line replace the BASIC lines 180-240
 
     loop250:
-        
+
         x++;
         if(x<=39) goto loop40;
         printf("\n"); y++;

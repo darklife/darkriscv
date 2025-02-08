@@ -13,12 +13,12 @@ The Kintex Ultrascale HPC board includes:
 - on-board USB/serial (CH340)
 - on-board SPI FLASH (N25QL256)
 - on-board 2xQSFP (for up to 2x40Gbps)
-- 8 LEDs 
+- 8 LEDs
 - 1 swiches
 - PCIe 8x
 - TAG connector (you need an external JTAG adapter!)
 - support for darkriscv running at 250MHz (single-thread)
-- tested up to 300MHz w/ overclock 
+- tested up to 300MHz w/ overclock
 - 2x I2C setup memories (AT24C04), probably one for each QSFP?!
 
 Unfortunately, there is no scheatic for this board, just an Excel with the
@@ -26,7 +26,7 @@ pins, with some labels in chinese and some small errors, but not bad at all.
 
 This board appears to work well when overclocked and, in fact, it exceeds
 the darkriscv frequency register, so the frequencies above 250MHz will
-appears weird! 
+appears weird!
 
 For example, when working at 400MHz::
 

@@ -2,7 +2,7 @@
 
 [miniSpartan6-plus on github](https://github.com/scarabhardware/miniSpartan6-plus)
 * The Spartan6 LX9 FPGA from Xilinx , one of the best FPGAs on the market.
-* An on-board USB JTAG Programmer to power and program your FPGA with any open source programmer, like the one inside our own Scarab IDE .  
+* An on-board USB JTAG Programmer to power and program your FPGA with any open source programmer, like the one inside our own Scarab IDE .
 * An on board USB interface that powers the board and allows communication with the PC at speeds up to 480Mbps . (That's fast enough to make a logic analyzer. * Check our website for updates on projects and tutorials).
 * An on-board HDMI port . Instead of using VGA output on your projects, now you can go HDMI.
 * An 8-channel analog to digital converter running at 1 MSPS with 8 bit resolution. So you can start connecting real world sensors to your FPGA kit.
@@ -57,9 +57,9 @@ rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
 rrrrrrrrrrrrrrrrrr    vvvvvvvvvvvvvvvvvvvvvvvv
-rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv  
-rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv    
-rr                vvvvvvvvvvvvvvvvvvvvvv      
+rrrrrrrrrrrrrrrr      vvvvvvvvvvvvvvvvvvvvvv
+rrrrrrrrrrrrr       vvvvvvvvvvvvvvvvvvvvvv
+rr                vvvvvvvvvvvvvvvvvvvvvv
 rr            vvvvvvvvvvvvvvvvvvvvvvvv      rr
 rrrr      vvvvvvvvvvvvvvvvvvvvvvvvvv      rrrr
 rrrrrr      vvvvvvvvvvvvvvvvvvvvvv      rrrrrr
@@ -90,5 +90,5 @@ valid commands: clear, dump [hex], led [hex], timer [dec], gpio [hex]
                 mul [dec] [dec], div [dec] [dec], mac [dec] [dec] [dec]
                 reboot, wr[m][bwl] [hex] [hex] [[hex] when m],
                 rd[m][bwl] [hex] [[hex] when m]
-> 
+>
 ```

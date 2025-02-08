@@ -15,5 +15,5 @@ Description of current Verilog files:
 TODO:
 
 - add a cache controller
-- add a SPI controller 
+- add a SPI controller
 - add a GbE controller
