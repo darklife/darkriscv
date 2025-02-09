@@ -1247,5 +1247,5 @@ tested the *DarkRISCV*.
 	[5] http://quasilyte.dev/blog/post/riscv32-custom-instruction-and-its-simulation/
 	[6] https://github.com/riscv/riscv-pk/blob/master/bbl/riscv_logo.txt
 
-[WorkflowBadgeLinux]: https://github.com/nsauzede/darkriscv/workflows/Linux/badge.svg
-[WorkflowUrlLinux]: https://github.com/nsauzede/darkriscv/actions/workflows/Linux.yml
+[WorkflowBadgeLinux]: https://github.com/darklife/darkriscv/workflows/Linux/badge.svg
+[WorkflowUrlLinux]: https://github.com/darklife/darkriscv/actions/workflows/Linux.yml
