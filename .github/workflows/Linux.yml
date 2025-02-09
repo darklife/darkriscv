@@ -1,0 +1,39 @@
+name: Linux
+
+on:
+  - push
+  - pull_request
+  - workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install prerequisites
+        run: |
+          pacman -Sy --noconfirm base-devel git wget iverilog
+          useradd -m builduser
+          echo 'builduser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+          chown -R builduser /home/builduser
+
+      - name: Clone AUR package
+        run: |
+          sudo -u builduser git clone https://aur.archlinux.org/riscv32-gnu-toolchain-elf-bin.git /home/builduser/riscv32-toolchain
+
+      - name: Build and install toolchain
+        run: |
+          cd /home/builduser/riscv32-toolchain
+          sudo -u builduser makepkg -si --noconfirm
+          riscv32-unknown-elf-gcc -v
+
+      - name: Test
+        run: |
+          make
+
+      - name: Build and test
+        run: |
+          export CCPATH=$(dirname `command -v riscv32-unknown-elf-gcc`)
+          make clean all CROSS=riscv32-unknown-elf CCPATH=$CCPATH ARCH=rv32e_zicsr ABI=ilp32e ENDIAN=little

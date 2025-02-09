@@ -1,4 +1,6 @@
 # DarkRISCV
+[![Build Status][WorkflowBadgeLinux]][WorkflowUrlLinux]
+
 Opensource RISC-V implemented from scratch in one night!
 
 ![darkriscv](https://user-images.githubusercontent.com/42520878/109411184-01075f80-797f-11eb-8932-5b916133561a.jpg)
@@ -1244,3 +1246,6 @@ tested the *DarkRISCV*.
 	[4] https://abopen.com/news/darkriscv-an-overnight-bsd-licensed-risc-v-implementation/
 	[5] http://quasilyte.dev/blog/post/riscv32-custom-instruction-and-its-simulation/
 	[6] https://github.com/riscv/riscv-pk/blob/master/bbl/riscv_logo.txt
+
+[WorkflowBadgeLinux]: https://github.com/nsauzede/darkriscv/workflows/Linux/badge.svg
+[WorkflowUrlLinux]: https://github.com/nsauzede/darkriscv/actions/workflows/Linux.yml
