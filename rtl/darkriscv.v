@@ -141,7 +141,7 @@ module darkriscv
         XMCC   <= HLT ? XMCC   : IDATAX[6:0]==`MCC;
 
         XRCC   <= HLT ? XRCC   : IDATAX[6:0]==`RCC;
-        XCUS   <= HLT ? XRCC   : IDATAX[6:0]==`CUS;
+        XCUS   <= HLT ? XCUS   : IDATAX[6:0]==`CUS;
         //XFCC   <= HLT ? XFCC   : IDATAX[6:0]==`FCC;
         XSYS   <= HLT ? XSYS   : IDATAX[6:0]==`SYS;
 
