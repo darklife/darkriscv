@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE pinplan>
+<pinplan intended_family="MAX 10" variation_name="pll" megafunction_name="ALTPLL" specifies="all_ports">
+<global>
+<pin name="inclk0" direction="input" scope="external" source="clock"  />
+<pin name="c0" direction="output" scope="external" source="clock"  />
+
+</global>
+</pinplan>
