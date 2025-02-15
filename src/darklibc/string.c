@@ -33,6 +33,21 @@
 
 // string manipulation
 
+char *strncpy(char *s1,char *s2,int len)
+{
+    char *ret = s1;
+
+    while(--len && (*s1++=*s2++));
+    
+    return ret;
+}
+
+
+char *strcpy(char *s1,char *s2)
+{
+    return strncpy(s1,s2,-1);
+}
+
 int strncmp(char *s1,char *s2,int len)
 {
     while(--len && *s1 && *s2 && (*s1==*s2)) s1++, s2++;

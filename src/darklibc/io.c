@@ -30,6 +30,7 @@
 
 #include <io.h>
 #include <stdio.h>
+#include <time.h>
 
 #ifdef __RISCV__
 
@@ -264,3 +265,13 @@ int mac(int acc,short x,short y)
     return acc;
 }
 
+// time() in seconds
+
+int time(int *t)
+{
+    int tt = io->timeus/1000;
+
+    if(t) *t = tt;
+
+    return tt;
+}
