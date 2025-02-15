@@ -35,6 +35,7 @@ APPLICATION = darkshell
 #APPLICATION = badapple
 #APPLICATION = mandelbrot
 #APPLICATION = donut
+#APPLICATION = dhrystone
 
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
