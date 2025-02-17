@@ -229,7 +229,7 @@ main ()
   printf ("        should be:   %d\n", 7);
   printf ("Arr_2_Glob[8][7]:    %d\n", Arr_2_Glob[8][7]);
   printf ("        should be:   Number_Of_Runs + 10\n");
-  printf ("Ptr_Glob->\n");
+  printf ("Ptr_Glob.\n");
   printf ("  Ptr_Comp:          %d\n", (int) Ptr_Glob->Ptr_Comp);
   printf ("        should be:   (implementation-dependent)\n");
   printf ("  Discr:             %d\n", Ptr_Glob->Discr);
@@ -240,7 +240,7 @@ main ()
   printf ("        should be:   %d\n", 17);
   printf ("  Str_Comp:          %s\n", Ptr_Glob->variant.var_1.Str_Comp);
   printf ("        should be:   DHRYSTONE PROGRAM, SOME STRING\n");
-  printf ("Next_Ptr_Glob->\n");
+  printf ("Next_Ptr_Glob.\n");
   printf ("  Ptr_Comp:          %d\n", (int) Next_Ptr_Glob->Ptr_Comp);
   printf ("        should be:   (implementation-dependent), same as above\n");
   printf ("  Discr:             %d\n", Next_Ptr_Glob->Discr);
@@ -293,8 +293,9 @@ main ()
     //printf ("%6.1f \n", Dhrystones_Per_Second);
     printf ("%d \n", (int)Dhrystones_Per_Second);
     printf ("DMIPS (Dhrystones/1757):                    ");
-    printf ("%d \n", (int)Dhrystones_Per_Second/1757);
-    printf ("\n");
+    printf ("%d \n\n", (int)Dhrystones_Per_Second/1757);
+    printf ("> ");
+    getchar();
   }
   
 }
