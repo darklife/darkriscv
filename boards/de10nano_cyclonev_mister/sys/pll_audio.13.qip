@@ -1,0 +1,17 @@
+set_global_assignment -entity "pll_audio" -library "pll_audio" -name IP_TOOL_NAME "altera_pll"
+set_global_assignment -entity "pll_audio" -library "pll_audio" -name IP_TOOL_VERSION "13.1"
+set_global_assignment -entity "pll_audio" -library "pll_audio" -name IP_TOOL_ENV "mwpim"
+set_global_assignment -library "pll_audio" -name MISC_FILE [file join $::quartus(qip_path) "pll_audio.cmp"]
+set_global_assignment -name SYNTHESIS_ONLY_QIP ON
+
+set_global_assignment -library "pll_audio" -name VERILOG_FILE [file join $::quartus(qip_path) "pll_audio.v"]
+set_global_assignment -library "pll_audio" -name VERILOG_FILE [file join $::quartus(qip_path) "pll_audio/pll_audio_0002.v"]
+
+set_instance_assignment -name PLL_COMPENSATION_MODE DIRECT -to "*pll_audio_0002*|altera_pll:altera_pll_i*|*"
+set_instance_assignment -name PLL_CHANNEL_SPACING "0.0 KHz" -to "*pll_audio_0002*|altera_pll:altera_pll_i*|*"
+set_instance_assignment -name PLL_AUTO_RESET ON -to "*pll_audio_0002*|altera_pll:altera_pll_i*|*"
+set_instance_assignment -name PLL_BANDWIDTH_PRESET AUTO -to "*pll_audio_0002*|altera_pll:altera_pll_i*|*"
+
+set_global_assignment -entity "pll_audio_0002" -library "pll_audio" -name IP_TOOL_NAME "altera_pll"
+set_global_assignment -entity "pll_audio_0002" -library "pll_audio" -name IP_TOOL_VERSION "13.1"
+set_global_assignment -entity "pll_audio_0002" -library "pll_audio" -name IP_TOOL_ENV "mwpim"
