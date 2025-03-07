@@ -9,7 +9,7 @@ It has a 10M08SAU169C8G chip and also includes the following peripherals:
 * 8 LEDs + 2 push-buttons
 * 12 MHz MEMS Oscillator
 * 3-axis accelerometer + thermal sensor
-* Many headers: PMOD, Arduino MKR, JTAG, I/O
+* Many headers: PMOD, Arduino MKR, JTAG, I/O..
 
 For more detailed information, see here:\
 https://wiki.trenz-electronic.de/display/PD/TEI0001+Getting+Started
@@ -41,7 +41,7 @@ board: max1000 max10 (id=19)
 led = aa55
 1>
 ```
-You should see DEBUG on upper 4 leds, and LED on the lower ones.
+You should see 0x55 on the 8 leds.
 
 To clean the board-related objects:
 ```

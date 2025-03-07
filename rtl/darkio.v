@@ -55,7 +55,7 @@ module darkio
     input         ESIMACK,
 `endif
 
-    output [3:0]  LED,       // on-board leds
+    output [15:0]  LED,       // on-board leds
     output [3:0]  DEBUG      // osciloscope
 );
 
@@ -157,7 +157,7 @@ module darkio
     assign XIRQ = |BOARD_IRQ;
     
 `ifndef __TESTMODE__
-    assign LED = LEDFF[3:0];
+    assign LED = LEDFF;
 `endif
 
     // darkuart

@@ -14,10 +14,12 @@ module top (
         .inclk0(CLK12M),
         .c0(clk)
     );
+    wire [15:0] leds;
+    assign LED = leds[7:0];
     dut dut1 (
         .rx(BDBUS[0]),          // BDBUS[0] is USB UART TX (FPGA RX)
         .tx(BDBUS[1]),          // BDBUS[1] is USB UART RX (FPGA TX)
-        .leds(LED),
+        .leds(leds),
         .reset(~USER_BTN),
         .clk(clk)
     );

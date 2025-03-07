@@ -3,7 +3,7 @@
 ## General information
 The DE10-Nano board is a robust development board based on Intel/Altera Cyclone V family of FPGAs.\
 It has an Intel Cyclone® V SE 5CSEBA6U23I7 device (110K LEs) and also includes the following peripherals:
-* 64Mbit Flash Memory (EPCS64)
+* 64/128Mbit Flash Memory (EPCS64/128)
 * 800MHz Dual-core ARM Cortex-A9 processor (HPS)
 * 1GB DDR3 SDRAM (32-bit data bus, HPS)
 * 1 Gigabit Ethernet PHY with RJ45 connector (HPS)
@@ -11,8 +11,8 @@ It has an Intel Cyclone® V SE 5CSEBA6U23I7 device (110K LEs) and also includes 
 * HDMI TX, compatible with DVI 1.0 and HDCP v1.4
 * 8 LEDs + 2 push-buttons
 * Three 50 MHz clock sources
+* 3-axis accelerometer
 * Many headers: 40pins, Arduino R3, JTAG..
-* And more..
 
 NOTE: This Darkriscv port targets/integrates the MiSTer framework around the DE10-Nano.
 Some of their files are licensed under GPL v2+ (See LICENSE).
@@ -53,7 +53,7 @@ board: de10nano cyclonev mister (id=20)
 led = aa55
 1>
 ```
-You should see DEBUG on upper 4 leds, and LED on the lower ones.
+You should see 0x55 on the 8 leds.
 
 To clean the board-related objects:
 ```
