@@ -54,7 +54,7 @@ module darksocv
 
 `endif
 
-    output [3:0] LED,       // on-board leds
+    output [15:0] LED,       // on-board leds
     output [3:0] DEBUG      // osciloscope
 );
 

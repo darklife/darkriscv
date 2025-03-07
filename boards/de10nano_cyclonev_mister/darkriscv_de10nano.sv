@@ -173,7 +173,9 @@ module emu
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 //assign {UART_RTS, UART_TXD, UART_DTR} = 0;
+wire [15:0] the_16leds;
 wire [7:0] the_8leds;
+assign the_8leds = the_16leds[7:0];
 wire from_dut;
 wire to_dut;
 assign UART_TXD = from_dut;
@@ -182,7 +184,7 @@ assign {UART_RTS, UART_DTR} = 0;
     dut dut1 (
         .clk(CLK_50M),
         .reset(RESET),
-        .leds(the_8leds),
+        .leds(the_16leds),
         .tx(from_dut),
         .rx(to_dut)
     );
