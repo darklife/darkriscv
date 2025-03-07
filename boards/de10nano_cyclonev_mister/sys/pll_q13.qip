@@ -1,0 +1,6 @@
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) pll.13.qip ]
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) pll_hdmi.13.qip ]
+set_global_assignment -name QIP_FILE           [file join $::quartus(qip_path) pll_audio.13.qip ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) pll_cfg.v ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) pll_cfg/altera_pll_reconfig_core.v ]
+set_global_assignment -name VERILOG_FILE       [file join $::quartus(qip_path) pll_cfg/altera_pll_reconfig_top.v ]

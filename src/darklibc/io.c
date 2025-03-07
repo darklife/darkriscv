@@ -77,6 +77,7 @@ char *board_name(int id)
            id==17 ? "qmtech cyclone 10lp c016" :
            id==18 ? "piswords ch34x lx16" :
            id==19 ? "max1000 max10" :
+           id==20 ? "de10nano cyclonev mister" :
                     "unknown";
 }
 

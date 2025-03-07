@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2025, Nicolas Sauzede <nicolas.sauzede@gmail.com>
+# Copyright (c) 2025, Nicolas Sauzede <nicolas.sauzedegmail.com>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 #
 # ===8<--------------------------------------------------------- cut here!
 
-BOARD:=max1000_max10
+BOARD:=de10nano_cyclonev_mister
 
 BRD:=../boards/$(BOARD)
 RTL:=../rtl
@@ -43,12 +43,12 @@ RTLS+=$(RTL)/darkuart.v
 RTLS+=$(RTL)/darkriscv.v
 RTLS+=$(RTL)/darkbridge.v
 RTLS+=$(BRD)/dut.v
-RTLS+=$(BRD)/top.v
+RTLS+=$(BRD)/darkriscv_de10nano.sv
 RTLS+=$(BRD)/_darkram.v
 
 BOOT:=$(BRD)/memory_init.mif
 
-BIT:=$(BRD)/output_files/max1000.sof
+BIT:=$(BRD)/output_files/darkriscv_de10nano.rbf
 
 QUARTUS:=~/intelFPGA_lite/17.0
 QBIN:=$(QUARTUS)/quartus/bin
@@ -56,7 +56,7 @@ QBIN:=$(QUARTUS)/quartus/bin
 default: all
 
 $(BIT): $(RTLS) $(BOOT)
-	(cd $(BRD) ; $(QBIN)/quartus_sh --flow compile max1000)
+	(cd $(BRD) ; $(QBIN)/quartus_sh --flow compile darkriscv_de10nano)
 
 $(BRD)/memory_init.mem: $(SRC)/darksocv.mem
 	cp $< $@
@@ -70,7 +70,9 @@ $(BOOT): $(BRD)/memory_init.bin
 all: $(BIT)
 
 install: $(BIT)
-	(cd $(BRD) ; $(QBIN)/quartus_pgm -c Arrow-USB-Blaster max1000.cdf)
+	echo "To program the DE10-Nano, manually transfer the RBF to the device,"
+	echo "then use the MiSTer menu to configure the FPGA."
+	false
 
 clean:
 	rm -f $(BRD)/memory_init.mif $(BRD)/memory_init.mem $(BRD)/memory_init.bin

@@ -439,6 +439,11 @@
     `define BOARD_CK 32000000
 `endif
 
+`ifdef DE10NANO_CYCLONEV_MISTER
+    `define BOARD_ID 20
+    `define BOARD_CK 50000000
+`endif
+
 `ifndef BOARD_ID
     `define BOARD_ID 0
     `define BOARD_CK 100000000

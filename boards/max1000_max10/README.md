@@ -15,7 +15,7 @@ For more detailed information, see here:\
 https://wiki.trenz-electronic.de/display/PD/TEI0001+Getting+Started
 
 The DarkRISCV/darksoc builds out-of-the box using Quartus command-line,
-taking about ~40% of the on-chip LUTs for the SoC demo.
+taking about ~40% of the on-chip logic for the SoC demo.
 - It uses an altera pll QIP to transform 12=>32MHz (TODO: maybe integrate it into darkpll),
 - and a simplified darkram based on altsyncram to properly infer BRAM (TODO: maybe integrate it into darkram).
 
