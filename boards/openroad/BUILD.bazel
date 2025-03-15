@@ -35,7 +35,8 @@ orfs_flow(
             "//:verilog_include",
         ],
     },
-    verilog_files = ["//:rtl/darkram.v"],
+    # OpenROAD version of the darkram.v file
+    verilog_files = [":darkram.v"],
 )
 
 orfs_flow(
