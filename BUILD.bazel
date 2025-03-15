@@ -10,31 +10,8 @@ exports_files(
 
 filegroup(
     name = "verilog",
-    srcs = glob(
-        ["rtl/**/*.v"],
-        # FIXME delete this on next upgrade of ORFS
-        exclude = ["rtl/darksocv.v"],
-    ) + [
-        ":darksocv_cleaned",
-    ],
+    srcs = glob(["rtl/**/*.v"]),
     visibility = [":__subpackages__"],
-)
-
-# FIXME delete this on next upgrade of ORFS, it handles $display() statements
-genrule(
-    name = "darksocv_cleaned",
-    srcs = [
-        ":rtl/darksocv.v",
-        ":rtl/config.vh",
-    ],
-    outs = [
-        ":cleaned/rtl/darksocv_cleaned.v",
-        ":cleaned/rtl/config.vh",
-    ],
-    cmd = """
-    sed -e "/\\$$display/d" $(location :rtl/darksocv.v) > $(location :cleaned/rtl/darksocv_cleaned.v)
-    cp $(location :rtl/config.vh) $(location :cleaned/rtl/config.vh)
-    """,
 )
 
 filegroup(
