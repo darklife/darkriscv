@@ -14,3 +14,7 @@ build
 iseconfig
 *.a
 *.bin
+bazel-bin
+bazel-darkriscv
+bazel-out
+bazel-testlogs
