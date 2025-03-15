@@ -289,11 +289,13 @@ module darksocv
     always@(posedge CLK)
     begin
         DTACK2 <= RES ? 0 : DTACK2 ? DTACK2-1 : XDREQMUX[2] ? 13 : 0;
+`ifdef SIMULATION
         if(XDREQMUX[2] && PRINT2) 
         begin
             $display("sdram: unmapped addr=%x",XADDR);
             PRINT2 <= 0;
         end
+`endif
     end
 
     assign XATAIMUX[2] = 32'hdeadbeef;
@@ -309,11 +311,13 @@ module darksocv
     always@(posedge CLK)
     begin
         DTACK3 <= RES ? 0 : DTACK3 ? DTACK3-1 : XDREQMUX[3] ? 1 : 0;
+`ifdef SIMULATION
         if(XDREQMUX[3] && PRINT3) 
         begin
             $display("sdram: unmapped addr=%x",XADDR);
             PRINT3 <= 0;
         end
+`endif
     end
 
     assign XATAIMUX[3] = 32'hdeadbeef;

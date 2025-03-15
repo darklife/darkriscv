@@ -82,11 +82,12 @@ module darkcache
     
     initial
     begin
+`ifdef SIMULATION
         $display("cache%0d: %0dx32-bits (%0d bytes)",
             ID,
             (2**`__CDEPTH__),
             4*(2**`__CDEPTH__));
-            
+`endif            
         for(i=0;i!=2**`__CDEPTH__;i=i+1) 
         begin            
             CDATA [i] = 0;
