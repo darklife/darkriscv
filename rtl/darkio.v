@@ -112,7 +112,7 @@ module darkio
                                 IACK[1] <= XATAI[1+24] ? IREQ[1] : IACK[1];
                                 IACK[0] <= XATAI[0+24] ? IREQ[0] : IACK[0];
                             end
-                5'b01000:   LEDFF   <= XATAI[15:0];
+                5'b01000:   LEDFF   <= XBE == 4'b0001 ? {LEDFF[15:8], XATAI[7:0]} : XATAI[15:0];
                 5'b01010:   GPIOFF  <= XATAI[31:16];
                 5'b01100:   TIMERFF <= XATAI[31:0];
             endcase
