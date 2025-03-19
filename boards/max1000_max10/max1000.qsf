@@ -265,12 +265,16 @@ set_global_assignment -name EDA_DESIGN_INSTANCE_NAME NA -section_id dut_tb
 set_global_assignment -name EDA_TEST_BENCH_MODULE_NAME dut_tb -section_id dut_tb
 set_global_assignment -name EDA_TEST_BENCH_FILE dut_tb.v -section_id dut_tb
 set_global_assignment -name VERILOG_MACRO "QUARTUS=1"
+set_global_assignment -name VERILOG_MACRO "MAX1000_MAX10=1"
+set_global_assignment -name VERILOG_MACRO "SPI=1"
 set_global_assignment -name VERILOG_FILE ../../rtl/darksocv.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkio.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkpll.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkuart.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkriscv.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkbridge.v
+set_global_assignment -name VERILOG_FILE ../../rtl/darkspi.v
+set_global_assignment -name VERILOG_FILE ../../rtl/lib/spi/spi_master.v
 set_global_assignment -name VERILOG_FILE dut.v
 set_global_assignment -name VERILOG_FILE top.v
 set_global_assignment -name VERILOG_FILE _darkram.v
@@ -285,7 +289,6 @@ set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_NEAR_END_VMEAS "HALF VCCIO" -fall
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -rise
 set_global_assignment -name OUTPUT_IO_TIMING_FAR_END_VMEAS "HALF SIGNAL SWING" -fall
-set_global_assignment -name VERILOG_MACRO "MAX1000_MAX10=1"
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 set_global_assignment -name CDF_FILE output_files/max1000.cdf
 

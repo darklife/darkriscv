@@ -47,3 +47,33 @@ To clean the board-related objects:
 ```
 make clean BOARD=max1000_max10
 ```
+
+# SPI Support
+Builtin SPI accelerometer sensor can be accessed by enabling the Verilog macro and selecting the spidemo application.
+```shell
+make clean all BOARD=max1000_max10 APPLICATION=spidemo
+make install BOARD=max1000_max10
+```
+In putty:
+```
+...
+       INSTRUCTION SETS WANT TO BE FREE
+
+Welcome to DarkRISCV!
+
+10335> sensor
+out_x=0f10
+out_x=0f10
+out_x=0ef0
+out_x=0ef0
+out_x=0ef0
+out_x=0f60
+out_x=0f60
+out_x=0ec0
+out_x=0ec0
+out_x=0e70
+out_x=0e70
+out_x=0e70
+...
+```
+The sensor OUT_X reading is output on the serial port and drawn visually on the 8 leds.

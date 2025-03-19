@@ -40,7 +40,7 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="6"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="6"/>
     </file>
-    <file xil_pn:name="../../rtl/lib/mt48lc16m16a2_ctrl.v" xil_pn:type="FILE_VERILOG">
+    <file xil_pn:name="../../rtl/lib/sdram/mt48lc16m16a2_ctrl.v" xil_pn:type="FILE_VERILOG">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="4"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
     </file>

@@ -66,6 +66,9 @@ module darksimv;
 
     wire TX;
     wire RX = 1;
+`ifdef SPI
+    wire SPI_MISO = 1'bz;
+`endif
 
 `ifdef __SDRAM__
 
@@ -94,6 +97,9 @@ module darksimv;
         .S_DQM(S_DQM),
         .S_DB (S_DB),
 `endif        
+`ifdef SPI
+        .SPI_MISO(SPI_MISO),
+`endif
         .UART_RXD(RX),
         .UART_TXD(TX)
     );
