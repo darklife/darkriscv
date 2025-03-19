@@ -39,8 +39,15 @@ RTLS =  darksimv.v                      \
         ../rtl/darkram.v                \
         ../rtl/darkio.v                 \
         ../rtl/darkcache.v              \
-        ../rtl/lib/mt48lc16m16a2_ctrl.v
-        
+        ../rtl/lib/sdram/mt48lc16m16a2_ctrl.v
+
+ifeq ($(APPLICATION),spidemo)
+ICARUS += -DSPI=1
+RTLS += ../rtl/darkspi.v                \
+        ../rtl/lib/spi/spi_master.v     \
+        ../rtl/lib/spi/lis3dh_stub.v
+endif
+
 INCS = ../rtl/config.vh
 XSIM = darksocv
 VCDS = darksocv.vcd

@@ -41,6 +41,9 @@
 */
 
 _start:
+#ifdef SPI
+    j _str_banner_loop4        /* TEMPORARY HACK: get sim signals of interest early on */
+#endif
 
     /* check core id, boot only core 0 */
 
