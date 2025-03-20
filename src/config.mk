@@ -78,7 +78,7 @@ endif
        CFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
        CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
 export CFLAGS += -mcmodel=medany -mexplicit-relocs # relocatable code
-export ASFLAGS = -march=$(ARCH)
+export ASFLAGS = -march=$(ARCH) -mabi=$(ABI)
 
 ifdef ENDIAN==big
     export LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32briscv -static -gc-sections --entry=_start # -Ttext=0

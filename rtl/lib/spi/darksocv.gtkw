@@ -1,0 +1,64 @@
+[*]
+[*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
+[*] Thu Mar 20 14:59:26 2025
+[*]
+[dumpfile] "sim/darksocv.vcd"
+[dumpfile_mtime] "Thu Mar 20 14:57:06 2025"
+[dumpfile_size] 1892907
+[savefile] "darksocv.gtkw"
+[timestart] 3477900
+[size] 1920 1033
+[pos] -1 -1
+*-16.654913 4015000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] darksimv.
+[treeopen] darksimv.soc0.
+[treeopen] darksimv.soc0.bridge0.
+[treeopen] darksimv.soc0.io0.
+[treeopen] darksimv.soc0.io0.uart0.
+[sst_width] 273
+[signals_width] 239
+[sst_expanded] 1
+[sst_vpaned_height] 304
+@820
+darksimv.soc0.io0.uart0.LASTCHAR[7:0]
+@22
+darksimv.soc0.io0.XADDR[31:0]
+darksimv.soc0.io0.XATAI[31:0]
+darksimv.soc0.io0.XATAO[31:0]
+darksimv.soc0.io0.XBE[3:0]
+@28
+darksimv.soc0.io0.spi0.CLK
+darksimv.soc0.io0.spi0.CSN
+@22
+darksimv.soc0.io0.spi0.DATAI[31:0]
+darksimv.soc0.io0.spi0.DATAO[31:0]
+darksimv.soc0.io0.spi0.DEBUG[3:0]
+@420
+darksimv.soc0.io0.spi0.DIV_COEF
+@28
+darksimv.soc0.io0.spi0.ESIMACK
+darksimv.soc0.io0.spi0.ESIMREQ
+darksimv.soc0.io0.spi0.IRQ
+darksimv.soc0.io0.spi0.MISO
+darksimv.soc0.io0.spi0.MOSI
+@22
+darksimv.soc0.io0.spi0.NWR[8:0]
+@28
+darksimv.soc0.io0.spi0.RD
+darksimv.soc0.io0.spi0.RES
+darksimv.soc0.io0.spi0.SCK
+@29
+darksimv.soc0.io0.spi0.WR
+@28
+darksimv.soc0.io0.spi0.spi_busy
+@22
+darksimv.soc0.io0.spi0.spi_miso_data[31:0]
+darksimv.soc0.io0.spi0.spi_mosi_data[31:0]
+darksimv.soc0.io0.spi0.spi_nbits[5:0]
+@28
+darksimv.soc0.io0.spi0.spi_ready
+darksimv.soc0.io0.spi0.spi_request
+@22
+darksimv.soc0.io0.spi0.status[7:0]
+[pattern_trace] 1
+[pattern_trace] 0

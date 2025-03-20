@@ -32,12 +32,21 @@
 `include "../rtl/config.vh"
 
 module darksocv
+`ifdef SPI
+#(parameter integer SPI_DIV_COEF = 0)
+`endif
 (
     input        XCLK,      // external clock
     input        XRES,      // external reset
 
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
+`ifdef SPI
+    output        SPI_SCK,  // SPI clock output
+    output       SPI_MOSI,  // SPI master data output, slave data input
+    input        SPI_MISO,  // SPI master data input, slave data output
+    output        SPI_CSN,  // SPI CSN output (active LOW)
+`endif
 
 `ifdef __SDRAM__
 
@@ -211,8 +220,11 @@ module darksocv
 
     wire [3:0] IODEBUG;
 
-    darkio io0
-    (
+    darkio
+`ifdef SPI
+    #(.SPI_DIV_COEF(SPI_DIV_COEF))
+`endif
+    io0 (
         .CLK    (CLK),
         .RES    (RES),
         .HLT    (HLT),
@@ -233,6 +245,12 @@ module darksocv
         .RXD    (UART_RXD),
         .TXD    (UART_TXD),
 
+`ifdef SPI
+        .SCK    (SPI_SCK),
+        .MOSI   (SPI_MOSI),
+        .MISO   (SPI_MISO),
+        .CSN    (SPI_CSN),
+`endif
         .LED    (LED),
 
 `ifdef SIMULATION
