@@ -32,6 +32,9 @@
 `include "../rtl/config.vh"
 
 module darkio
+`ifdef SPI
+#(parameter integer SPI_DIV_COEF = 0)
+`endif
 (
     input         CLK,      // clock
     input         RES,      // reset
@@ -49,6 +52,12 @@ module darkio
 
     input         RXD,  // UART receive line
     output        TXD,  // UART transmit line
+`ifdef SPI
+    output        SCK,  // SPI clock output
+    output        MOSI, // SPI master data output, slave data input
+    input         MISO, // SPI master data input, slave data output
+    output        CSN,  // SPI CSN output (active LOW)
+`endif
 
 `ifdef SIMULATION
     output        ESIMREQ,
@@ -80,6 +89,9 @@ module darkio
     wire [7:0] CORE_ID = 0;                       // core id, unused
 
     wire [31:0] UDATA; // uart data
+`ifdef SPI
+    wire [31:0] SDATA; // spi data
+`endif
 
     reg [31:0] TIMER = 0;
 
@@ -87,6 +99,11 @@ module darkio
 
     reg [1:0] DTACK  = 0;
 
+`ifdef SPI
+`ifdef SIMULATION
+    reg [15:0] out_x_l_response = 0;
+`endif
+`endif
     always@(posedge CLK)
     begin
         DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XDREQ && XRD) ? 1 : 0; // wait-states
@@ -115,6 +132,11 @@ module darkio
                 5'b01000:   LEDFF   <= XBE == 4'b0001 ? {LEDFF[15:8], XATAI[7:0]} : XATAI[15:0];
                 5'b01010:   GPIOFF  <= XATAI[31:16];
                 5'b01100:   TIMERFF <= XATAI[31:0];
+`ifdef SPI
+`ifdef SIMULATION
+                5'b11000:   out_x_l_response <= XATAI[15:0];    // SPI slave LIS3DH stub
+`endif
+`endif
             endcase
         end
         
@@ -145,6 +167,9 @@ module darkio
                 5'b0101x:   IOMUXFF <= GPIOFF;
                 5'b011xx:   IOMUXFF <= TIMERFF;
                 5'b100xx:   IOMUXFF <= TIMEUS;
+`ifdef SPI
+                5'b101xx:   IOMUXFF <= SDATA; // from spi
+`endif
             endcase
         end
     end
@@ -186,6 +211,59 @@ module darkio
 `endif
       .DEBUG(UDEBUG)
     );
+
+`ifdef SPI
+`ifdef SIMULATION
+    wire miso;
+`endif
+    // darkspi
+
+    wire [3:0] SDEBUG;
+
+    darkspi
+//    #(.DIV_COEF(SPI_DIV_COEF))
+    #(.DIV_COEF(1))
+    spi0
+    (
+      .CLK(CLK),
+      .RES(RES),
+      .RD(!HLT && XRD && XDREQ && XADDR[4:2]==5),
+      .WR(!HLT && XWR && XDREQ && XADDR[4:2]==5),
+      .BE(XBE),
+      .DATAI(XATAI),
+      .DATAO(SDATA),
+      //.IRQ(SPI_IRQ),
+
+      .SCK(SCK),        // SPI clock output
+      .MOSI(MOSI),      // SPI master data output, slave data input
+`ifdef SIMULATION
+      .MISO(miso),      // SPI master data input, slave data output
+`else
+      .MISO(MISO),      // SPI master data input, slave data output
+`endif
+      .CSN(CSN),        // SPI CSN output (active LOW)
+
+`ifdef SIMULATION
+//      .ESIMREQ(ESIMREQ),
+      .ESIMACK(ESIMACK),
+`endif
+      .DEBUG(SDEBUG)
+    );
+
+`ifdef SIMULATION
+    lis3dh_stub lis3dh_stub0 (
+`ifdef SIMULATION
+//        .out_x_l_flag(out_x_l_flag),
+        .out_x_l_response(out_x_l_response),
+`endif
+        .clk(CLK),
+        .sck(SCK),
+        .cs(CSN),
+        .mosi(MOSI),
+        .miso(miso)
+    );
+`endif
+`endif
 
     assign DEBUG = { XDREQ,XRD,XWR,XDACK };
 

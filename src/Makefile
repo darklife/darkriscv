@@ -36,11 +36,12 @@ APPLICATION = darkshell
 #APPLICATION = mandelbrot
 #APPLICATION = donut
 #APPLICATION = dhrystone
+#APPLICATION = spidemo
 
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
 OBJS = boot.o
-ASMS = boot.s
+ASMS = boot.S
 SRCS = 
 
 ifdef SMALL
@@ -52,6 +53,11 @@ endif
 
 ifdef MAC
     CFLAGS += -DMAC=1
+endif
+
+ifeq ($(APPLICATION),spidemo)
+    CFLAGS += -DSPI=1
+    ASFLAGS += -DSPI=1
 endif
 
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS) $(APPLICATION)/$(APPLICATION).a
