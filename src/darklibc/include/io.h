@@ -56,17 +56,20 @@ struct DARKIO {
 
     struct DARKSPI {
         union {
-            unsigned char      spi8;           // 14                                                   r: {data}
-            unsigned short      spi16;          // 14/15/16/17        w: {command,data}                 r: {datalo,datahi}
-            unsigned int        spi24;          // 14/15/16/17        w: {00,command,datalo,datahi}     r: {status,00,datalo,datahi}
-            unsigned int        spi32;          // 14/15/16/17        w: {00,command,datalo,datahi}     r: {status,00,datalo,datahi}
-//            struct {
-//                unsigned char ignore__[3];
-//                unsigned char status;           // 17                                                   r: {status}
-//            };
+            unsigned char      spi8;                    // 14                                           r: {data}
+            unsigned short      spi16;                  // 14/15        w: {command,data}               r: {datalo,datahi}
+            unsigned int        spi32;                  // 14/15/16/17  w: {00,command,datalo,datahi}   r: {status,00,datalo,datahi}
+/*          struct {
+                unsigned char ignore0__[3];
+                unsigned char status;                   // 17                                           r: {status}
+            };*/
+            struct {
+                unsigned char ignore1__[2];
+                unsigned short out_x_l_response;        // 16/17        ONLY FOR SIMULATION : LIS3DH stub out_x_l_response
+            };
         };
-        unsigned short out_x_l_response;    // 18/19        ONLY FOR SIMULATION : LIS3DH stub out_x_l_response
     } spi;
+    unsigned int iport;     // 18
 };
 
 extern volatile struct DARKIO *io;

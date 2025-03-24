@@ -55,8 +55,7 @@ unsigned short spi_transfer16(unsigned short command_data) {
 
 unsigned int spi_transfer24(unsigned int command_data) {
     unsigned int ret = -1;
-//    io->spi.spi32 = command_data & 0xffffff;
-    io->spi.spi24 = command_data & 0xffffff;
+    io->spi.spi32 = command_data & 0xffffff;
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
 //        status = io->spi.spi32;

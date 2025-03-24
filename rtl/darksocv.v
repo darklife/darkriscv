@@ -46,7 +46,10 @@ module darksocv
     output       SPI_MOSI,  // SPI master data output, slave data input
     input        SPI_MISO,  // SPI master data input, slave data output
     output        SPI_CSN,  // SPI CSN output (active LOW)
+`else
+    input [31:0]  IPORT,
 `endif
+    output [15:0] GPIO,
 
 `ifdef __SDRAM__
 

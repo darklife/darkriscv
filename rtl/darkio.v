@@ -64,8 +64,12 @@ module darkio
     input         ESIMACK,
 `endif
 
-    output [15:0]  LED,       // on-board leds
-    output [3:0]  DEBUG      // osciloscope
+    output [15:0] LED,  // on-board leds / general-purpose outputs lo
+    output [15:0] GPIO, // general-purpose outputs hi
+`ifndef SPI
+    input [31:0]  IPORT,// general-purpose inputs
+`endif
+    output [3:0]  DEBUG // osciloscope
 );
 
     // io block
@@ -101,7 +105,7 @@ module darkio
 
 `ifdef SPI
 `ifdef SIMULATION
-    reg [15:0] out_x_l_response = 0;
+    reg [15:0] out_x_l_response = 0;    // SPI slave LIS3DH stub
 `endif
 `endif
     always@(posedge CLK)
@@ -129,14 +133,18 @@ module darkio
                                 IACK[1] <= XATAI[1+24] ? IREQ[1] : IACK[1];
                                 IACK[0] <= XATAI[0+24] ? IREQ[0] : IACK[0];
                             end
-                5'b010xx:   { GPIOFF, LEDFF } <= {  XBE[3] ? XATAI[31:24] : GPIOFF[15:8],
+                5'b010xx:   begin { GPIOFF, LEDFF } <= {  XBE[3] ? XATAI[31:24] : GPIOFF[15:8],
                                                     XBE[2] ? XATAI[23:16] : GPIOFF[ 7:0],
                                                     XBE[1] ? XATAI[15: 8] : LEDFF [15:8],
                                                     XBE[0] ? XATAI[ 7: 0] : LEDFF [ 7:0] };
+                            $display("*** SIM: current GPIO=%x LED=%x bus %x XBE=%b XADDR=%x",GPIOFF,LEDFF,XATAI,XBE,XADDR);
+                            end
                 5'b01100:   TIMERFF <= XATAI[31:0];
 `ifdef SPI
 `ifdef SIMULATION
-                5'b11000:   out_x_l_response <= XATAI[15:0];    // SPI slave LIS3DH stub
+                5'b10110:   begin out_x_l_response <= XATAI[31:16];    // SPI slave LIS3DH stub
+                            $display("*** SIM: current out_x_l_response=%x bus %x XBE=%b XADDR=%x",out_x_l_response,XATAI,XBE,XADDR);
+                            end
 `endif
 `endif
             endcase
@@ -170,6 +178,8 @@ module darkio
                 5'b100xx:   IOMUXFF <= TIMEUS;
 `ifdef SPI
                 5'b101xx:   IOMUXFF <= SDATA; // from spi
+`else
+                5'b101xx:   IOMUXFF <= IPORT;
 `endif
             endcase
         end
