@@ -116,7 +116,7 @@ module darkio
         else
         if(XDREQ && XWR)
         begin
-            case(XADDR[4:0])
+            casex(XADDR[4:0])
                 5'b00011:   begin
                                 //$display("clear io.irq = %x (ireq=%x, iack=%x)",XATAI[32:24],IREQ,IACK);
 
@@ -129,8 +129,10 @@ module darkio
                                 IACK[1] <= XATAI[1+24] ? IREQ[1] : IACK[1];
                                 IACK[0] <= XATAI[0+24] ? IREQ[0] : IACK[0];
                             end
-                5'b01000:   LEDFF   <= XBE == 4'b0001 ? {LEDFF[15:8], XATAI[7:0]} : XATAI[15:0];
-                5'b01010:   GPIOFF  <= XATAI[31:16];
+                5'b010xx:   { GPIOFF, LEDFF } <= {  XBE[3] ? XATAI[31:24] : GPIOFF[15:8],
+                                                    XBE[2] ? XATAI[23:16] : GPIOFF[ 7:0],
+                                                    XBE[1] ? XATAI[15: 8] : LEDFF [15:8],
+                                                    XBE[0] ? XATAI[ 7: 0] : LEDFF [ 7:0] };
                 5'b01100:   TIMERFF <= XATAI[31:0];
 `ifdef SPI
 `ifdef SIMULATION
@@ -163,8 +165,7 @@ module darkio
             casex(XADDR[4:0])
                 5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
                 5'b001xx:   IOMUXFF <= UDATA; // from uart
-                5'b0100x:   IOMUXFF <= LEDFF;
-                5'b0101x:   IOMUXFF <= GPIOFF;
+                5'b010xx:   IOMUXFF <= { GPIOFF, LEDFF };
                 5'b011xx:   IOMUXFF <= TIMERFF;
                 5'b100xx:   IOMUXFF <= TIMEUS;
 `ifdef SPI

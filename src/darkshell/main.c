@@ -138,7 +138,25 @@ int main(void)
 
     printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
+/*
+    // gpio/led test code! :)
 
+    printf("*** gpio=%x, led=%x\n",io->gpio,io->led);
+    
+    io->gpio = 0x5555;
+    io->led  = 0xaaaa;
+
+    printf("*** gpio=%x, led=%x\n",io->gpio,io->led);
+
+    volatile char *p = (char *)&io->led;
+
+    p[0] = 0;
+    p[1] = 1;
+    p[2] = 2;
+    p[3] = 3;
+    
+    printf("*** gpio=%x, led=%x\n",io->gpio,io->led);
+*/
     // simulate a 32-bit load in a invalid address
 
     if(stvec)
