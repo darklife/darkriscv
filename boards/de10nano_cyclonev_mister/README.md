@@ -42,8 +42,9 @@ One way to do this is to copy the RBF to your MiSTer via Ethernet, or using an U
 Finally to connect to the serial port, first ensure that the VT52 core SerialPort=ConsolePort;
 then you can use `screen` on the MiSTer via ssh:
 ```
-TERM=linux ssh -t root@<MiSTer_IP_Address> screen /dev/ttyS1 115200
+TERM=linux ssh -t root@mister screen /dev/ttyS1 115200
 ```
+(just replace `mister` by `<MiSTer_IP_Address>`)
 and you should see DarkRISCV booting up:
 ```
 ...

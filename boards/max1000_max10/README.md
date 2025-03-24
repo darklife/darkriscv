@@ -31,7 +31,10 @@ Program the device like this:
 ```
 make install BOARD=max1000_max10
 ```
-Finally connect to the serial port, eg: with Putty on /dev/ttyUSB0 (baudrate=115200)
+Finally connect at baudrate=115200 to the serial port (eg: /dev/ttyUSB0 or /dev/ttyUSB1) with `screen` (or any other terminal like Putty, etc..):
+```shell
+screen /dev/ttyUSB? 115200
+```
 and you should see DarkRISCV booting up:
 ```
 ...

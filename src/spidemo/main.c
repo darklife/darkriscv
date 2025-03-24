@@ -36,9 +36,9 @@
 unsigned csr_test(unsigned,unsigned,unsigned);
 
 unsigned short spi_transfer16(unsigned short command_data) {
-    unsigned short ret = 0;
+    unsigned short ret = -1;
     io->spi.spi16 = command_data;
-    while (1) {
+    for (int i = 0; i < 1000000; i++) {
         int status = 0;
         status = *(volatile unsigned char *)((volatile char *)io + 0x14 + 3);
 //        if (status & 0x2000000) {
@@ -54,10 +54,10 @@ unsigned short spi_transfer16(unsigned short command_data) {
 }
 
 unsigned int spi_transfer24(unsigned int command_data) {
-    unsigned int ret = 0;
+    unsigned int ret = -1;
 //    io->spi.spi32 = command_data & 0xffffff;
     io->spi.spi24 = command_data & 0xffffff;
-    while (1) {
+    for (int i = 0; i < 1000000; i++) {
         int status = 0;
 //        status = io->spi.spi32;
         status = *(volatile unsigned char *)((volatile char *)io + 0x14 + 3);
@@ -124,13 +124,53 @@ int sensor() {
     spi_transfer16(0x1fc0);
     io->led = 0xfb;
     spi_transfer16(0x2388);
+    printf("Reading OUT_X.. (press a key to stop)\n");
     while (1) {
+        if (io->uart.stat&2) {
+            break;
+        }
         ret = spi_transfer24(0xe80000);
-        printf("out_x=%x\n", ret);
-        unsigned char led_out = 1 << (((ret & 0xff00) >> 8) >> 5);
+        unsigned char acc = ((ret & 0xff00) >> 8) + 0x20 * 4;
+        static unsigned char accmin = 0, accmax = 0;
+        if (!accmin && !accmax) {
+            accmin = acc;
+            accmax = acc;
+        } else {
+            if (acc < accmin) {
+                accmin = acc;
+            }
+            if (acc > accmax) {
+                accmax = acc;
+            }
+        }
+        int range = accmax - accmin;
+        if (!range) range++;
+        unsigned char val = (int)(acc - accmin) * 8 / range;
+        if (val > 7) val = 7;
+        static unsigned char oldval = -1;
+        if (oldval != val) {
+            printf("out_x=%x acc=%x min=%x max=%x val=%x\n", ret, acc, accmin, accmax, val);
+        }
+        oldval = val;
+        unsigned char led_out = 1 << val;
         io->led = led_out;
     }
     return 0;
+}
+int whoami() {
+    io->led = 0x55;
+    unsigned short ret = 0;
+    unsigned short exp;
+    exp = 0x33;
+    ret = spi_transfer16(0x8f00);
+    io->led = ret;
+    if ((ret & 0xff) != exp) {
+        printf("Bad Whoami %x expected %x\n", ret, exp);
+        return 1;
+    } else {
+        printf("Whoami returned %x\n", ret);
+        return 0;
+    }
 }
 int main(void)
 {
@@ -140,6 +180,9 @@ int main(void)
 
     unsigned t=0,t0=0;
     printf("Welcome to DarkRISCV!\n\n");
+    if (!whoami()) {
+        sensor();
+    }
     // main loop
     while(1)
     {
@@ -150,22 +193,15 @@ int main(void)
         gets(buffer,sizeof(buffer));
         printf("You entered [%s]\n", buffer);
         if (!strncmp("whoami", buffer, 6)) {
-            io->led = 0x55;
-            unsigned short ret = 0;
-            unsigned short exp;
-            exp = 0x33;
-            ret = spi_transfer16(0x8f00);
-            io->led = ret;
-            if ((ret & 0xff) != exp) {
-                printf("Bad Whoami %x expected %x\n", ret, exp);
-            } else {
-                printf("Whoami returned %x\n", ret);
-            }
+            whoami();
         } else if (!strncmp("led", buffer, 3)) {
             printf("led was %x\n", io->led);
             io->led = ~io->led;
         } else if (!strncmp("sensor", buffer, 6)) {
             sensor();
+        } else if(!strcmp(buffer,"reboot")) {
+            printf("rebooting...\n");
+            break;
         }
         t0 = t;
     }
