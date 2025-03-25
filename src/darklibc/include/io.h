@@ -48,33 +48,32 @@ struct DARKIO {
 
     } uart;
 
-    unsigned short led;     // 08/09
-    unsigned short gpio;    // 0a/0b
-
-    unsigned int timer;     // 0c
-    unsigned int timeus;    // 10
+    unsigned int led;        // 08
+    unsigned int timer;      // 0c
+    unsigned int timeus;     // 10
+    unsigned int iport;      // 14
+    unsigned int oport;      // 18
 
     struct DARKSPI {
         union {
-            unsigned char      spi8;                    // 14                                           r: {data}
-            unsigned short      spi16;                  // 14/15        w: {command,data}               r: {datalo,datahi}
-            unsigned int        spi32;                  // 14/15/16/17  w: {00,command,datalo,datahi}   r: {status,00,datalo,datahi}
+            unsigned char      spi8;                   // 1c                                           r: {data}
+            unsigned short     spi16;                  // 1c/1d        w: {command,data}               r: {datalo,datahi}
+            unsigned int       spi32;                  // 1c/1d/1e/1f  w: {00,command,datalo,datahi}   r: {status,00,datalo,datahi}
 /*          struct {
                 unsigned char ignore0__[3];
-                unsigned char status;                   // 17                                           r: {status}
+                unsigned char status;                  // 1f                                           r: {status}
             };*/
             struct {
-                unsigned char ignore1__[2];
+                unsigned char  ignore1__[2];
                 // This is hack to feed an SPI (simulation) stub with an expected value.
                 // It is voluntarily embedded/hidden within the regular SPI master address range.
                 // In order to write to it, we must generate special XBE=1100, which is ignored by SPI master ofc.
                 // It is then fed to the SPI stub within darkio itself.
-                unsigned short out_x_l_response;        // 16/17        ONLY FOR SIMULATION : LIS3DH stub out_x_l_response
+                unsigned short out_x_l_response;       // 1e/1f     ONLY FOR SIMULATION : LIS3DH stub out_x_l_response
             };
         };
     } spi;
 
-    unsigned int iport;     // 18
 };
 
 extern volatile struct DARKIO *io;

@@ -29,11 +29,11 @@ jobs:
           sudo -u builduser makepkg -si --noconfirm
           riscv32-unknown-elf-gcc -v
 
-      - name: Test
+      - name: Test (darksocv.mem already built)
         run: |
           make
 
-      - name: Build and test
+      - name: Rebuild and test
         run: |
           export CCPATH=$(dirname `command -v riscv32-unknown-elf-gcc`)
           make clean all CROSS=riscv32-unknown-elf CCPATH=$CCPATH ARCH=rv32e_zicsr ABI=ilp32e ENDIAN=little

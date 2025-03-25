@@ -38,7 +38,7 @@ unsigned short spi_transfer16(unsigned short command_data) {
     io->spi.spi16 = command_data;
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
-        status = *(volatile unsigned char *)((volatile char *)io + 0x14 + 3);
+        status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
 //        if (status & 0x2000000) {
         if (status & 0x2) {
             ret = io->spi.spi8;
@@ -57,7 +57,7 @@ unsigned int spi_transfer24(unsigned int command_data) {
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
 //        status = io->spi.spi32;
-        status = *(volatile unsigned char *)((volatile char *)io + 0x14 + 3);
+        status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
 //        if (status & 0x2000000) {
         if (status & 0x2) {
 //            ret = status & 0xffffff;

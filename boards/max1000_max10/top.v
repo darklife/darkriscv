@@ -20,7 +20,7 @@ module top (
         .inclk0(CLK12M),
         .c0(clk)
     );
-    wire [15:0] leds;
+    wire [31:0] leds;
     assign LED = leds[7:0];
     dut dut1 (
         .rx(BDBUS[0]),          // BDBUS[0] is USB UART TX (FPGA RX)

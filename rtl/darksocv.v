@@ -63,9 +63,9 @@ module darksocv
 
 `endif
 
-    output [15:0] LED,       // on-board leds
-    output [15:0] GPIO,
+    output [31:0] LED,       // on-board leds
     input  [31:0] IPORT,
+    output [31:0] OPORT,
     output [3:0] DEBUG      // osciloscope
 );
 
@@ -254,8 +254,8 @@ module darksocv
         .CSN    (SPI_CSN),
 `endif
         .LED    (LED),
-        .GPIO   (GPIO),
         .IPORT  (IPORT),
+        .OPORT  (OPORT),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
