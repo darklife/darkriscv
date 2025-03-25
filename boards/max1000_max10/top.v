@@ -32,7 +32,7 @@ module top (
         .spi_csn(SEN_CS),
         .spi_miso(SEN_SDO),
 `endif
-        .gpio(PIO),
+        .pio(PIO),
         .reset(~USER_BTN),
         .clk(clk)
     );

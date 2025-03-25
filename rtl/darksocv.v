@@ -46,10 +46,7 @@ module darksocv
     output       SPI_MOSI,  // SPI master data output, slave data input
     input        SPI_MISO,  // SPI master data input, slave data output
     output        SPI_CSN,  // SPI CSN output (active LOW)
-`else
-    input [31:0]  IPORT,
 `endif
-    output [15:0] GPIO,
 
 `ifdef __SDRAM__
 
@@ -67,6 +64,8 @@ module darksocv
 `endif
 
     output [15:0] LED,       // on-board leds
+    output [15:0] GPIO,
+    input  [31:0] IPORT,
     output [3:0] DEBUG      // osciloscope
 );
 
@@ -255,6 +254,8 @@ module darksocv
         .CSN    (SPI_CSN),
 `endif
         .LED    (LED),
+        .GPIO   (GPIO),
+        .IPORT  (IPORT),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),

@@ -331,6 +331,11 @@ int main(void)
               printf("gpio = %x\n",io->gpio);
           }
           else
+          if(!strcmp(argv[0],"iport"))
+          {
+              printf("iport = %x\n",io->iport);
+          }
+          else
           if(!strcmp(argv[0],"mul"))
           {
               int x = atoi(argv[1]);

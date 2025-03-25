@@ -33,8 +33,6 @@
 #include <string.h>
 #include <math.h>
 
-unsigned csr_test(unsigned,unsigned,unsigned);
-
 unsigned short spi_transfer16(unsigned short command_data) {
     unsigned short ret = -1;
     io->spi.spi16 = command_data;
@@ -91,7 +89,7 @@ int simu() {
     spi_transfer16(0x2388);
     exp = 0x9a00;
     for (int i = 0; i < 1000000; i++) {
-        printf("i=%d\n", i);
+        //printf("i=%d\n", i);
         io->spi.out_x_l_response = exp;
         ret = spi_transfer24(0xe80000);
         if (ret != exp) {

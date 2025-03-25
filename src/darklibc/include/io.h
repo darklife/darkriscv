@@ -65,10 +65,15 @@ struct DARKIO {
             };*/
             struct {
                 unsigned char ignore1__[2];
+                // This is hack to feed an SPI (simulation) stub with an expected value.
+                // It is voluntarily embedded/hidden within the regular SPI master address range.
+                // In order to write to it, we must generate special XBE=1100, which is ignored by SPI master ofc.
+                // It is then fed to the SPI stub within darkio itself.
                 unsigned short out_x_l_response;        // 16/17        ONLY FOR SIMULATION : LIS3DH stub out_x_l_response
             };
         };
     } spi;
+
     unsigned int iport;     // 18
 };
 
