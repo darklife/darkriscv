@@ -432,6 +432,11 @@
     `endif
     `define INVRES 1    
     `define __SDRAM__ 1
+    `define __LUTCACHE__
+    `define __CDEPTH__ 6
+    `define __ICACHE__
+    `define __DCACHE__
+    `undef __HARVARD__
 `endif
 
 `ifdef MAX1000_MAX10
