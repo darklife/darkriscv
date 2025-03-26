@@ -64,14 +64,16 @@ module darkio
     input         ESIMACK,
 `endif
 
-    output [15:0]  LED,       // on-board leds
-    output [3:0]  DEBUG      // osciloscope
+    output [31:0] LED,  // on-board leds
+    input  [31:0] IPORT,// general-purpose inputs
+    output [31:0] OPORT,// general-purpose outputs
+    output  [3:0] DEBUG // osciloscope
 );
 
     // io block
 
-    reg [15:0] GPIOFF = 0;
-    reg [15:0] LEDFF  = 0;
+    reg [31:0] OPORTFF = 0;
+    reg [31:0] LEDFF  = 0;
 
     reg  [7:0] IREQ = 0;
     reg  [7:0] IACK = 0;
@@ -101,7 +103,7 @@ module darkio
 
 `ifdef SPI
 `ifdef SIMULATION
-    reg [15:0] out_x_l_response = 0;
+    reg [15:0] out_x_l_response = 0;    // SPI slave LIS3DH stub
 `endif
 `endif
     always@(posedge CLK)
@@ -129,14 +131,21 @@ module darkio
                                 IACK[1] <= XATAI[1+24] ? IREQ[1] : IACK[1];
                                 IACK[0] <= XATAI[0+24] ? IREQ[0] : IACK[0];
                             end
-                5'b010xx:   { GPIOFF, LEDFF } <= {  XBE[3] ? XATAI[31:24] : GPIOFF[15:8],
-                                                    XBE[2] ? XATAI[23:16] : GPIOFF[ 7:0],
-                                                    XBE[1] ? XATAI[15: 8] : LEDFF [15:8],
-                                                    XBE[0] ? XATAI[ 7: 0] : LEDFF [ 7:0] };
+                5'b010xx:   begin
+                                LEDFF <= XATAI;
+                                //$display("*** SIM: current LED=%x bus %x XBE=%b XADDR=%x",LEDFF,XATAI,XBE,XADDR);
+                            end
                 5'b01100:   TIMERFF <= XATAI[31:0];
+                5'b110xx:   begin
+                                OPORTFF <= XATAI;
+                                //$display("*** SIM: current OPORT=%x bus %x XBE=%b XADDR=%x",OPORTFF,XATAI,XBE,XADDR);
+                            end
 `ifdef SPI
 `ifdef SIMULATION
-                5'b11000:   out_x_l_response <= XATAI[15:0];    // SPI slave LIS3DH stub
+                5'b11110:   begin
+                                out_x_l_response <= XATAI[31:16];    // SPI slave LIS3DH stub
+                                //$display("*** SIM: current out_x_l_response=%x bus %x XBE=%b XADDR=%x",out_x_l_response,XATAI,XBE,XADDR);
+                            end
 `endif
 `endif
             endcase
@@ -165,11 +174,13 @@ module darkio
             casex(XADDR[4:0])
                 5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
                 5'b001xx:   IOMUXFF <= UDATA; // from uart
-                5'b010xx:   IOMUXFF <= { GPIOFF, LEDFF };
+                5'b010xx:   IOMUXFF <= LEDFF;
                 5'b011xx:   IOMUXFF <= TIMERFF;
                 5'b100xx:   IOMUXFF <= TIMEUS;
+                5'b101xx:   IOMUXFF <= IPORT;
+                5'b110xx:   IOMUXFF <= OPORTFF;
 `ifdef SPI
-                5'b101xx:   IOMUXFF <= SDATA; // from spi
+                5'b111xx:   IOMUXFF <= SDATA; // from spi
 `endif
             endcase
         end
@@ -185,6 +196,7 @@ module darkio
 `ifndef __TESTMODE__
     assign LED = LEDFF;
 `endif
+    assign OPORT = OPORTFF;
 
     // darkuart
 
@@ -228,8 +240,8 @@ module darkio
     (
       .CLK(CLK),
       .RES(RES),
-      .RD(!HLT && XRD && XDREQ && XADDR[4:2]==5),
-      .WR(!HLT && XWR && XDREQ && XADDR[4:2]==5),
+      .RD(!HLT && XRD && XDREQ && XADDR[4:2]==7),
+      .WR(!HLT && XWR && XDREQ && XADDR[4:2]==7),
       .BE(XBE),
       .DATAI(XATAI),
       .DATAO(SDATA),

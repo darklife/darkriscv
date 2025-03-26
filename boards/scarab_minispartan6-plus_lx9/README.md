@@ -86,7 +86,7 @@ mtvec: interrupts enabled!
 Welcome to DarkRISCV!
 > ?
 command: [?] not found.
-valid commands: clear, dump [hex], led [hex], timer [dec], gpio [hex]
+valid commands: clear, dump [hex], led [hex], timer [dec], oport [hex]
                 mul [dec] [dec], div [dec] [dec], mac [dec] [dec] [dec]
                 reboot, wr[m][bwl] [hex] [hex] [[hex] when m],
                 rd[m][bwl] [hex] [[hex] when m]

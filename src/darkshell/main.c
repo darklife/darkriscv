@@ -138,15 +138,14 @@ int main(void)
 
     printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
-/*
-    // gpio/led test code! :)
+#if 0
+    // led test code! :)
 
-    printf("*** gpio=%x, led=%x\n",io->gpio,io->led);
+    printf("*** led=%x\n",io->led);
     
-    io->gpio = 0x5555;
-    io->led  = 0xaaaa;
+    io->led  = 0x5555aaaa;
 
-    printf("*** gpio=%x, led=%x\n",io->gpio,io->led);
+    printf("*** led=%x\n",io->led);
 
     volatile char *p = (char *)&io->led;
 
@@ -155,8 +154,8 @@ int main(void)
     p[2] = 2;
     p[3] = 3;
     
-    printf("*** gpio=%x, led=%x\n",io->gpio,io->led);
-*/
+    printf("*** led=%x\n",io->led);
+#endif
     // simulate a 32-bit load in a invalid address
 
     if(stvec)
@@ -324,11 +323,16 @@ int main(void)
               printf("timer = %d\n",io->timer);
           }
           else
-          if(!strcmp(argv[0],"gpio"))
+          if(!strcmp(argv[0],"oport"))
           {
-              if(argv[1]) io->gpio = xtoi(argv[1]);
+              if(argv[1]) io->oport = xtoi(argv[1]);
 
-              printf("gpio = %x\n",io->gpio);
+              printf("oport = %x\n",io->oport);
+          }
+          else
+          if(!strcmp(argv[0],"iport"))
+          {
+              printf("iport = %x\n",io->iport);
           }
           else
           if(!strcmp(argv[0],"mul"))
@@ -365,10 +369,10 @@ int main(void)
           if(argv[0][0])
           {
               printf("command: [%s] not found.\n"
-                     "valid commands: clear, dump [hex], led [hex], timer [dec], gpio [hex]\n"
+                     "valid commands: clear, dump [hex], led [hex], timer [dec], oport [hex]\n"
                      "                mul [dec] [dec], div [dec] [dec], mac [dec] [dec] [dec]\n"
                      "                reboot, wr[m][bwl] [hex] [hex] [[hex] when m],\n"
-                     "                rd[m][bwl] [hex] [[hex] when m]\n",
+                     "                rd[m][bwl] [hex] [[hex] when m], iport\n",
                      argv[0]);
           }
 

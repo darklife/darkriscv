@@ -113,14 +113,14 @@ module darkspi #(parameter integer DIV_COEF = 0) (
                 NWR <= NWR + 1;
                 spi_request <= 1;
                 if (BE == 4'b1111) begin
-                    spi_nbits <= 6'd23;
+                    spi_nbits <= 6'd23;                 // 24 bits
                     spi_mosi_data <= DATAI;
                 end else if (BE == 4'b0011) begin
-                    spi_nbits <= 6'd15;
+                    spi_nbits <= 6'd15;                 // 16 bits
                     spi_mosi_data <= DATAI[15:0];
 //                    spi_mosi_data <= {DATAI[7:0], DATAI[15:8]};
                 end else begin
-                    spi_request <= 0;
+                    spi_request <= 0;                   // ignore any other writes
                 end
             end else begin
                 spi_request <= 0;

@@ -724,7 +724,7 @@ With the option __THREADING__ is possible test this feature.
 
 The implementation is in very early stages of development and does not
 handle correctly the initial SP and PC.  Anyway, it works and enables the
-main() code stop in a gets() while the interrupt handling changes the GPIO
+main() code stop in a gets() while the interrupt handling changes the OPORT
 at a rate of more than 1 million interrupts per second without affecting the
 execution and with little impact in the performance!  :)
 
@@ -1051,7 +1051,8 @@ In the software side, a small shell is available with some basic commands:
 - dump <val>: dumps an area of the RAM
 - led <val>: change the LED register (which turns on/off the LEDs)
 - timer <val>: change the timer prescaler, which affects the interrupt rate
-- gpio <val>: change the GPIO register (which changes the DEBUG lines)
+- oport <val>: change the OPORT register (which changes the DEBUG lines)
+- iport: print the OPORT register
 
 The proposal of the shell is provide some basic test features which can
 provide a go/non-go status about the current hardware status.

@@ -76,4 +76,5 @@ install: $(BIT)
 
 clean:
 	rm -f $(BRD)/memory_init.mif $(BRD)/memory_init.mem $(BRD)/memory_init.bin
+	rm -f $(BRD)/build_id.v $(BRD)/c5_pin_model_dump.txt
 	rm -rf $(BRD)/db $(BRD)/incremental_db $(BRD)/output_files

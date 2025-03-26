@@ -33,14 +33,12 @@
 #include <string.h>
 #include <math.h>
 
-unsigned csr_test(unsigned,unsigned,unsigned);
-
 unsigned short spi_transfer16(unsigned short command_data) {
     unsigned short ret = -1;
     io->spi.spi16 = command_data;
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
-        status = *(volatile unsigned char *)((volatile char *)io + 0x14 + 3);
+        status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
 //        if (status & 0x2000000) {
         if (status & 0x2) {
             ret = io->spi.spi8;
@@ -55,12 +53,11 @@ unsigned short spi_transfer16(unsigned short command_data) {
 
 unsigned int spi_transfer24(unsigned int command_data) {
     unsigned int ret = -1;
-//    io->spi.spi32 = command_data & 0xffffff;
-    io->spi.spi24 = command_data & 0xffffff;
+    io->spi.spi32 = command_data & 0xffffff;
     for (int i = 0; i < 1000000; i++) {
         int status = 0;
 //        status = io->spi.spi32;
-        status = *(volatile unsigned char *)((volatile char *)io + 0x14 + 3);
+        status = *(volatile unsigned char *)((volatile char *)io + 0x1c + 3);
 //        if (status & 0x2000000) {
         if (status & 0x2) {
 //            ret = status & 0xffffff;
@@ -92,7 +89,7 @@ int simu() {
     spi_transfer16(0x2388);
     exp = 0x9a00;
     for (int i = 0; i < 1000000; i++) {
-        printf("i=%d\n", i);
+        //printf("i=%d\n", i);
         io->spi.out_x_l_response = exp;
         ret = spi_transfer24(0xe80000);
         if (ret != exp) {

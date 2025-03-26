@@ -74,7 +74,7 @@
 // a) threading is currently supported only in the 3-stage pipeline version.
 // b) the old experimental "interrupt mode" was removed, which means that
 //    the multi-thread mode does not make anything "visible" other than
-//    increment the gpio register.
+//    increment the oport register.
 // c) the threading in the non-interrupt mode switches when the program flow
 //    changes, i.e. every jal instruction. When the core is idle, it is
 //    probably in a jal loop.

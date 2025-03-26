@@ -10,10 +10,13 @@ module dut (
     output spi_csn,
     output spi_sck,
 `endif
-    output [15:0] leds,
+    inout [8:1] pio,
+    output [31:0] leds,
     input reset,
     input clk
 );
+    wire [31:0] oport;
+    wire [31:0] iport;
     darksocv soc0 (
         .UART_RXD(rx),  // UART receive line
         .UART_TXD(tx),  // UART transmit line
@@ -24,8 +27,20 @@ module dut (
         .SPI_CSN(spi_csn),      // SPI CSN output (active LOW)
 `endif
         .LED(leds),       // on-board leds
+        .IPORT(iport),
+        .OPORT(oport),
 
         .XCLK(clk),      // external clock
         .XRES(reset)      // external reset
     );
+    wire [3:0] pmbuttons;
+    wire [3:0] pmleds;
+    assign pmleds = oport[3:0];
+    assign iport = {24'b0, pmbuttons};
+    pmodbutled pmodbutled1(
+        .pio(pio),
+        .buttons(pmbuttons),
+        .leds(pmleds)
+    );
+
 endmodule
