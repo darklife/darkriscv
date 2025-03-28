@@ -66,9 +66,6 @@ module darksimv;
 
     wire TX;
     wire RX = 1;
-`ifdef SPI
-    wire SPI_MISO = 1'bz;
-`endif
 
 `ifdef __SDRAM__
 
@@ -87,18 +84,19 @@ module darksimv;
 
 `endif
 
-    darksocv soc0
+    darksocv
+`ifdef SPI
+    #(.SPI_DIV_COEF(1))
+`endif
+    soc0
     (
         .XCLK(CLK),
         .XRES(|RES),
-`ifdef __SDRAM__        
+`ifdef __SDRAM__
         .S_CLK(S_CLK),
         .S_NWE(S_NWE),
         .S_DQM(S_DQM),
         .S_DB (S_DB),
-`endif        
-`ifdef SPI
-        .SPI_MISO(SPI_MISO),
 `endif
         .UART_RXD(RX),
         .UART_TXD(TX)

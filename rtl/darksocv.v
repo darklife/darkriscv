@@ -42,10 +42,10 @@ module darksocv
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
 `ifdef SPI
-    output        SPI_SCK,  // SPI clock output
-    output       SPI_MOSI,  // SPI master data output, slave data input
-    input        SPI_MISO,  // SPI master data input, slave data output
-    output        SPI_CSN,  // SPI CSN output (active LOW)
+    inout        SPI_CSN,   // SPI CSN output (active LOW)
+    inout        SPI_SCK,   // SPI clock output
+    inout        SPI_MOSI,  // SPI master data output, slave data input
+    inout        SPI_MISO,  // SPI master data input, slave data output
 `endif
 
 `ifdef __SDRAM__
@@ -64,9 +64,13 @@ module darksocv
 `endif
 
     output [31:0] LED,       // on-board leds
+`ifdef SPIBB
+    inout  [31:0] IPORT,     // local spi_master_bb will write here
+`else
     input  [31:0] IPORT,
+`endif
     output [31:0] OPORT,
-    output [3:0] DEBUG      // osciloscope
+    output [3:0]  DEBUG      // osciloscope
 );
 
     // clock and reset
@@ -344,7 +348,35 @@ module darksocv
 
     assign XATAIMUX[3] = 32'hdeadbeef;
     assign XDACKMUX[3] = DTACK3==1;
-	 
+
+`ifdef SPI
+`ifdef SPIBB
+    spi_master_bb spi_master_bb0(
+        .CLK(CLK),
+        .RES(RES),
+        .IPORT(IPORT),
+        .OPORT(OPORT),
+        .CSN(SPI_CSN),
+        .SCK(SPI_SCK),
+        .MOSI(SPI_MOSI),
+        .MISO(SPI_MISO)
+    );
+`endif
+`ifdef SIMULATION
+    wire [15:0] out_x_resp;
+    assign out_x_resp = OPORT[31:16];
+    lis3dh_stub lis3dh_stub0 (
+        .out_x_resp(out_x_resp),
+        .clk(CLK),
+        .sck(SPI_SCK),
+        .csn(SPI_CSN),
+        .mosi(SPI_MOSI),
+        .miso(SPI_MISO)
+    );
+`endif
+`endif
+
+
     assign DEBUG = KDEBUG;
 
 endmodule

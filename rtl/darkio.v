@@ -53,10 +53,10 @@ module darkio
     input         RXD,  // UART receive line
     output        TXD,  // UART transmit line
 `ifdef SPI
-    output        SCK,  // SPI clock output
-    output        MOSI, // SPI master data output, slave data input
+    inout         CSN,  // SPI CSN output (active LOW)
+    inout         SCK,  // SPI clock output
+    inout         MOSI, // SPI master data output, slave data input
     input         MISO, // SPI master data input, slave data output
-    output        CSN,  // SPI CSN output (active LOW)
 `endif
 
 `ifdef SIMULATION
@@ -101,11 +101,6 @@ module darkio
 
     reg [1:0] DTACK  = 0;
 
-`ifdef SPI
-`ifdef SIMULATION
-    reg [15:0] out_x_l_response = 0;    // SPI slave LIS3DH stub
-`endif
-`endif
     always@(posedge CLK)
     begin
         DTACK <= RES ? 0 : DTACK ? DTACK-1 : (XDREQ && XRD) ? 1 : 0; // wait-states
@@ -140,17 +135,9 @@ module darkio
                                 OPORTFF <= XATAI;
                                 //$display("*** SIM: current OPORT=%x bus %x XBE=%b XADDR=%x",OPORTFF,XATAI,XBE,XADDR);
                             end
-`ifdef SPI
-`ifdef SIMULATION
-                5'b11110:   begin
-                                out_x_l_response <= XATAI[31:16];    // SPI slave LIS3DH stub
-                                //$display("*** SIM: current out_x_l_response=%x bus %x XBE=%b XADDR=%x",out_x_l_response,XATAI,XBE,XADDR);
-                            end
-`endif
-`endif
             endcase
         end
-        
+
         if(RES)
             IREQ <= 0;
         else
@@ -226,16 +213,12 @@ module darkio
     );
 
 `ifdef SPI
-`ifdef SIMULATION
-    wire miso;
-`endif
     // darkspi
 
     wire [3:0] SDEBUG;
 
     darkspi
-//    #(.DIV_COEF(SPI_DIV_COEF))
-    #(.DIV_COEF(1))
+    #(.DIV_COEF(SPI_DIV_COEF))
     spi0
     (
       .CLK(CLK),
@@ -247,14 +230,10 @@ module darkio
       .DATAO(SDATA),
       //.IRQ(SPI_IRQ),
 
+      .CSN(CSN),        // SPI CSN output (active LOW)
       .SCK(SCK),        // SPI clock output
       .MOSI(MOSI),      // SPI master data output, slave data input
-`ifdef SIMULATION
-      .MISO(miso),      // SPI master data input, slave data output
-`else
       .MISO(MISO),      // SPI master data input, slave data output
-`endif
-      .CSN(CSN),        // SPI CSN output (active LOW)
 
 `ifdef SIMULATION
 //      .ESIMREQ(ESIMREQ),
@@ -262,20 +241,6 @@ module darkio
 `endif
       .DEBUG(SDEBUG)
     );
-
-`ifdef SIMULATION
-    lis3dh_stub lis3dh_stub0 (
-`ifdef SIMULATION
-//        .out_x_l_flag(out_x_l_flag),
-        .out_x_l_response(out_x_l_response),
-`endif
-        .clk(CLK),
-        .sck(SCK),
-        .cs(CSN),
-        .mosi(MOSI),
-        .miso(miso)
-    );
-`endif
 `endif
 
     assign DEBUG = { XDREQ,XRD,XWR,XDACK };

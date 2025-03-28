@@ -46,6 +46,12 @@ ICARUS += -DSPI=1
 RTLS += ../rtl/darkspi.v                \
         ../rtl/lib/spi/spi_master.v     \
         ../rtl/lib/spi/lis3dh_stub.v
+SPIBB := 1
+ifdef SPIBB
+ICARUS += -DSPIBB=1
+RTLS += \
+        ../rtl/lib/spi/spi_master_bb.v
+endif
 endif
 
 INCS = ../rtl/config.vh

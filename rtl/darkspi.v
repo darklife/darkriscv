@@ -65,27 +65,27 @@
 // short swapped_out_x = *((volatile short *)SPI_MMADDR); // Note that the returned value is byte-swapped: 0xLOHI
 
 module darkspi #(parameter integer DIV_COEF = 0) (
-    input           CLK,            // clock
-    input           RES,            // reset
+    input         CLK,          // clock
+    input         RES,          // reset
 
-    input           RD,             // bus read
-    input           WR,             // bus write
-    input  [ 3:0]   BE,             // byte enable
-    input  [31:0]   DATAI,          // data input
-    output [31:0]   DATAO,          // data output
-    output          IRQ,            // interrupt req
+    input         RD,           // bus read
+    input         WR,           // bus write
+    input  [ 3:0] BE,           // byte enable
+    input  [31:0] DATAI,        // data input
+    output [31:0] DATAO,        // data output
+    output        IRQ,          // interrupt req
 
-    output          SCK,            // SPI clock output
-    output         MOSI,            // SPI master data output, slave data input
-    input          MISO,            // SPI master data input, slave data output
-    output          CSN,            // SPI CSN output (active LOW)
+    inout         CSN,          // SPI CSN output (active LOW)
+    inout         SCK,          // SPI clock output
+    inout         MOSI,         // SPI master data output, slave data input
+    input         MISO,         // SPI master data input, slave data output
 
 `ifdef SIMULATION
     output reg    ESIMREQ = 0,
-    input           ESIMACK,
+    input         ESIMACK,
 `endif
 
-    output [3:0]    DEBUG           // osc debug
+    output [3:0]  DEBUG         // osc debug
 );
 
     reg [8:0] NWR = 0;
@@ -118,7 +118,6 @@ module darkspi #(parameter integer DIV_COEF = 0) (
                 end else if (BE == 4'b0011) begin
                     spi_nbits <= 6'd15;                 // 16 bits
                     spi_mosi_data <= DATAI[15:0];
-//                    spi_mosi_data <= {DATAI[7:0], DATAI[15:8]};
                 end else begin
                     spi_request <= 0;                   // ignore any other writes
                 end

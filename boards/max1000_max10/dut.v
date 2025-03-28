@@ -5,10 +5,10 @@ module dut (
     input rx,
     output tx,
 `ifdef SPI
-    input spi_miso,
-    output spi_mosi,
     output spi_csn,
     output spi_sck,
+    output spi_mosi,
+    input spi_miso,
 `endif
     inout [8:1] pio,
     output [31:0] leds,
@@ -33,6 +33,7 @@ module dut (
         .XCLK(clk),      // external clock
         .XRES(reset)      // external reset
     );
+`ifndef SPIBB
     wire [3:0] pmbuttons;
     wire [3:0] pmleds;
     assign pmleds = oport[3:0];
@@ -42,5 +43,6 @@ module dut (
         .buttons(pmbuttons),
         .leds(pmleds)
     );
+`endif
 
 endmodule
