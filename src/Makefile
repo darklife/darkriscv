@@ -37,6 +37,7 @@ APPLICATION = darkshell
 #APPLICATION = donut
 #APPLICATION = dhrystone
 #APPLICATION = spidemo
+#APPLICATION = primes
 
 PROJ = darksocv
 LIBS = $(APPLICATION)/$(APPLICATION).a $(DARKLIBC)/$(DARKLIBC).a 
