@@ -59,7 +59,7 @@ barebones_clock()
    does not occur. If there are issues with the return value overflowing,
    increase this value.
         */
-#define CLOCKS_PER_SEC             1000
+#define CLOCKS_PER_SEC             1000000
 #define GETMYTIME(_t)              (*_t = barebones_clock())
 #define MYTIMEDIFF(fin, ini)       ((fin) - (ini))
 #define TIMER_RES_DIVIDER          1
@@ -184,7 +184,7 @@ portable_init(core_portable *p, int *argc, char *argv[])
     
     ee_printf("\n\n");
     
-    ee_printf("CoreMark start in %d ms.\n",io->timeus);
+    ee_printf("CoreMark start in %d us.\n",io->timeus);
       
 // #error "Call board initialization routines in portable init (if needed), in particular initialize UART!\n"
     if (sizeof(ee_ptr_int) != sizeof(ee_u8 *))
@@ -206,7 +206,7 @@ void
 portable_fini(core_portable *p)
 {
     io->led = 0;
-    ee_printf("CoreMark finish in %d ms.\n\n",io->timeus);
+    ee_printf("CoreMark finish in %d us.\n\n",io->timeus);
     p->portable_id = 0;
     
     // makes no sense return here!

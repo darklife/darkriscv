@@ -271,11 +271,34 @@ int mac(int acc,short x,short y)
 
 // time() in seconds
 
-int time(int *t)
+time_t time(time_t *t)
 {
-    int tt = io->timeus/1000;
+    int tt = io->timeus/1000000;
 
     if(t) *t = tt;
 
     return tt;
+}
+
+// clock() in microseconds
+
+clock_t clock()
+{
+    return io->timeus;
+}
+
+// get time of day in sec/usec
+
+int gettimeofday(struct timeval *t)
+{
+    unsigned io_timeus = io->timeus;
+
+    if(t)
+    {
+        t->tv_sec  = io_timeus/1000000;
+        t->tv_usec = io_timeus%1000000;
+        return 0;
+    }
+    
+    return -1;
 }

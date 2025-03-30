@@ -28,23 +28,15 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#ifndef __TIMEH__
-#define __TIMEH__
+#ifndef __STDINT__
+#define __STDINT__
 
-#define CLOCKS_PER_SEC 1000000
+typedef int   int32_t;
+typedef short int16_t;
+typedef char  int8_t;
 
-typedef unsigned int clock_t;
-typedef unsigned int time_t;
-
-struct timeval
-{
-    time_t       tv_sec;
-    clock_t      tv_usec;
-};
-
-time_t time(time_t *);
-clock_t clock();
-
-int gettimeofday(struct timeval *);
+typedef unsigned int   uint32_t;
+typedef unsigned short uint16_t;
+typedef unsigned char  uint8_t;
 
 #endif

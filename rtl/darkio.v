@@ -80,6 +80,7 @@ module darkio
 
     reg [31:0] TIMERFF = 0;
     reg [31:0] TIMEUS = 0;
+    reg [31:0] TIMEUSFF = 0;
 
     reg [31:0] IOMUXFF = 0;
 
@@ -152,7 +153,10 @@ module darkio
         end
         
         if(RES)
+        begin
             IREQ <= 0;
+            TIMEUSFF <= (`BOARD_CK/1000000)-1; // usec timer
+        end
         else
         if(TIMERFF)
         begin
@@ -165,8 +169,9 @@ module darkio
                 //$display("timr0 set");
             end
 
-            XTIMER  <= XTIMER+(TIMER==0);
-            TIMEUS <= (TIMER == TIMERFF) ? TIMEUS + 1'b1 : TIMEUS;
+            XTIMER   <= XTIMER+(TIMER==0);
+            TIMEUSFF <= TIMEUSFF ? TIMEUSFF-1 : (`BOARD_CK/1000000)-1; // usec timer
+            TIMEUS   <= !TIMEUSFF ? TIMEUS + 1'b1 : TIMEUS;
         end
 
         if(XDREQ && XRD)

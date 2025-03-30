@@ -28,25 +28,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-#include <io.h>
+#include <time.h>
 #include <unistd.h>
 
 // time management
 
 void usleep(int delay)
 {
-    if(get_mtvec()) 
-    {
-        while(delay--)
-        {
-            for(int t=utimers;t==utimers;); // with interrupts
-        }
-    }
-    else
-    {
-        while(delay--) 
-        {
-            for(io->irq=IRQ_TIMR;!io->irq;); // without interrupts
-        }
-    }
+    clock_t t = clock() + delay;
+    
+    while(clock()<t);
 }
