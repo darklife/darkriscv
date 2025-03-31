@@ -30,6 +30,8 @@
 
 // mul/div
 
+int mac(int,int,int);
+
 unsigned __umulsi3(unsigned x,unsigned y)
 {
     unsigned acc;
@@ -38,14 +40,16 @@ unsigned __umulsi3(unsigned x,unsigned y)
 
     unsigned short xh,xl,yh,yl;
 
-    xh = x>>16;
-    yh = y>>16;
     xl = x&0xffff;
     yl = y&0xffff;
 
-    acc = mac(0,xl,yl) + 
-          (mac(0,xh,yl)<<16) + 
-          (mac(0,xl,yh)<<16);
+    acc = mac(0,xl,yl);
+
+    xh = x>>16;
+    yh = y>>16;
+
+    if(xh) acc += mac(0,xh,yl)<<16;
+    if(yh) acc += mac(0,xl,yh)<<16;
 
 #else
     if(x<y) { unsigned z = x; x = y; y = z; }

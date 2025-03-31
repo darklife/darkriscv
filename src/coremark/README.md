@@ -82,3 +82,31 @@ CoreMark finish in 44333828 us.
 [How to calculate the coremark score i.e. coremark/MHz ?](https://github.com/eembc/coremark/issues/41)
 
 coremark code from [coremark@b24e397](https://github.com/eembc/coremark/tree/b24e397f7103061b3673261d292a0667bd3bc1b8).
+
+### MAC instruction
+
+With MAC instruction enabled on both rtl/config.vh and src/config.mk, the
+coremark increases to 102 interactions/second at 100MHz, which means 1.02
+coremarks/MHz:
+
+```CoreMark start in 3388960 us.
+2K performance run parameters for coremark.
+CoreMark Size    : 666
+Total ticks      : 39218724
+Total time (secs): 39
+Iterations/Sec   : 102
+Iterations       : 4000
+Compiler version : GCC12.2.0
+Compiler flags   : -O2 -DPERFORMANCE_RUN=1
+Memory location  : STACK
+seedcrc          : 0xe9f5
+[0]crclist       : 0xe714
+[0]crcmatrix     : 0x1fd7
+[0]crcstate      : 0x8e3a
+[0]crcfinal      : 0x65c5
+Correct operation validated. See README.md for run and reporting rules.
+CoreMark finish in 42652156 us.
+```
+
+Even better improvement is possible with hand coded 32x32 mul and/or with a
+kind of 32x32 mul accelerator.
