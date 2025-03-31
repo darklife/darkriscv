@@ -56,21 +56,9 @@ struct DARKIO {
 
     struct DARKSPI {
         union {
-            unsigned char      spi8;                   // 1c                                           r: {data}
-            unsigned short     spi16;                  // 1c/1d        w: {command,data}               r: {datalo,datahi}
-            unsigned int       spi32;                  // 1c/1d/1e/1f  w: {00,command,datalo,datahi}   r: {status,00,datalo,datahi}
-/*          struct {
-                unsigned char ignore0__[3];
-                unsigned char status;                  // 1f                                           r: {status}
-            };*/
-            struct {
-                unsigned char  ignore1__[2];
-                // This is hack to feed an SPI (simulation) stub with an expected value.
-                // It is voluntarily embedded/hidden within the regular SPI master address range.
-                // In order to write to it, we must generate special XBE=1100, which is ignored by SPI master ofc.
-                // It is then fed to the SPI stub within darkio itself.
-                unsigned short out_x_l_response;       // 1e/1f     ONLY FOR SIMULATION : LIS3DH stub out_x_l_response
-            };
+            unsigned char  spi8;  // 1c                              r: {data}
+            unsigned short spi16; // 1c/1d       w: {cmd,data}       r: {dlo,dhi}
+            unsigned int   spi32; // 1c/1d/1e/1f w: {00,cmd,dlo,dhi} r: {status,00,dlo,dhi}
         };
     } spi;
 

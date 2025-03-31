@@ -59,6 +59,11 @@ endif
 ifeq ($(APPLICATION),spidemo)
     CFLAGS += -DSPI=1
     ASFLAGS += -DSPI=1
+SPIBB := 1
+ifdef SPIBB
+    CFLAGS += -DSPIBB=1
+    ASFLAGS += -DSPIBB=1
+endif
 endif
 
 DEPS = $(SRCS) $(ASMS) $(OBJS) $(PROJ).ld $(PROJ).lds $(LIBS) $(APPLICATION)/$(APPLICATION).a

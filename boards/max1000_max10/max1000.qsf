@@ -267,6 +267,7 @@ set_global_assignment -name EDA_TEST_BENCH_FILE dut_tb.v -section_id dut_tb
 set_global_assignment -name VERILOG_MACRO "QUARTUS=1"
 set_global_assignment -name VERILOG_MACRO "MAX1000_MAX10=1"
 set_global_assignment -name VERILOG_MACRO "SPI=1"
+set_global_assignment -name VERILOG_MACRO "SPIBB=1"
 set_global_assignment -name VERILOG_FILE ../../rtl/darksocv.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkio.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkpll.v
@@ -275,6 +276,7 @@ set_global_assignment -name VERILOG_FILE ../../rtl/darkriscv.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkbridge.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkspi.v
 set_global_assignment -name VERILOG_FILE ../../rtl/lib/spi/spi_master.v
+set_global_assignment -name VERILOG_FILE ../../rtl/lib/spi/spi_master_bb.v
 set_global_assignment -name VERILOG_FILE dut.v
 set_global_assignment -name VERILOG_FILE top.v
 set_global_assignment -name VERILOG_FILE _darkram.v
