@@ -41,23 +41,34 @@ RTLS =  darksimv.v                      \
         ../rtl/darkcache.v              \
         ../rtl/lib/sdram/mt48lc16m16a2_ctrl.v
 
-ifeq ($(APPLICATION),spidemo)
-ICARUS += -DSPI=1
-RTLS += ../rtl/darkspi.v                \
-        ../rtl/lib/spi/spi_master.v     \
-        ../rtl/lib/spi/lis3dh_stub.v
-SPIBB := 1
-ifdef SPIBB
-ICARUS += -DSPIBB=1
-RTLS += \
-        ../rtl/lib/spi/spi_master_bb.v
-endif
-endif
-
 INCS = ../rtl/config.vh
 XSIM = darksocv
 VCDS = darksocv.vcd
 TRCE = darksocv.txt
+
+ifeq ($(APPLICATION),spidemo)
+ICARUS += -DSPI=1
+RTLS += ../rtl/darkspi.v                \
+        ../rtl/lib/spi/lis3dh_stub.v
+RTLS += ../rtl/lib/spi/spi_master.v
+#SPIBB := 1
+ifdef SPIBB
+ICARUS += -DSPIBB=1
+RTLS += ../rtl/lib/spi/spi_master_bb.v
+endif
+DUT:=darksocv
+include cosim.mk
+COSIM_SRC := $(RTLS)
+ifdef VLATOR
+VOPT+=-DSIMULATION=1 -DSPI=1 -GSPI_DIV_COEF=1
+ifdef SPIBB
+VOPT+=-DSPIBB=1
+endif
+ifdef COSIM
+COSIM_TARGET := $(DUT).cosim
+endif
+endif
+endif
 
 .PRECIOUS: $(VCDS)	# Do not delete the trace file if simulation is aborted
 .PHONY: $(VCDS)		# Always run the simulation
@@ -70,13 +81,15 @@ endif
 
 DEPS = $(SRCS) $(RTLS) $(INCS)
 
-all: $(VCDS)
+all: $(VCDS) $(COSIM_TARGET)
 	@echo simulation ok.
 
 clean:
-	-rm -f $(VCDS) $(XSIM) $(TRCE)
+	-rm -f $(VCDS) $(XSIM) $(TRCE) $(GUI_VCD_FILE) imgui.ini
+	-rm -rf tmp_gui
 
 $(VCDS): $(XSIM)
+	echo "VCDS=$(VCDS): XSIM=$(XSIM)"
 	@echo finish |                                          \
 	awk '/^`define __TRACE__/{ exit(-1) }' ../rtl/config.vh \
 	&& ./$(XSIM)                                            \

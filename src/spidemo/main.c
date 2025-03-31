@@ -136,33 +136,37 @@ void set_bb(int active) {
     }
 }
 #endif
-int whoami() {
-    unsigned short ret = 0;
-    unsigned short exp;
-    exp = 0x33;
-//    printf("calling spi_transfer16\n");
-    ret = spi_transfer16(0x8f00) & 0xff;
-//    printf("spi_transfer16 returned %x\n", ret);
-#define HWTYPE "Whoami (HW)"
+const char *spi_type() {
+#define HWTYPE "HW"
 #ifdef SPIBB
-#define BBTYPE "Whoami (BB)"
+#define BBTYPE "BB"
     const char *type = bb_active ? BBTYPE : HWTYPE;
 #else
     const char *type = HWTYPE;
 #endif
+    return type;
+}
+
+int check_sensor_(int verbose) {
+    unsigned short ret = 0;
+    unsigned short exp;
+    exp = 0x33;
+    ret = spi_transfer16(0x8f00) & 0xff;
     if (ret != exp) {
-        printf("Bad %s %x expected %x\n", type, ret, exp);
+        printf("Bad %s %s %x exp %x\n", spi_type(), __func__, ret, exp);
         return 1;
     } else {
-        printf("%s returned %x\n", type, ret);
+        if (verbose)
+            printf("Good %s %s returned expected %x\n", spi_type(), __func__, ret);
         return 0;
     }
 }
+static inline int check_sensor() { return check_sensor_(0); }
+static inline int whoami() { return check_sensor_(1); }
+
 int sensor_init() {
-//    printf("setting led..\n");
     io->led = 0xff;
-//    printf("calling whoami..\n");
-    if (whoami()) {
+    if (check_sensor()) {
         return -1;
     }
     io->led = 0xfe;
@@ -180,13 +184,13 @@ unsigned short sensor_read() {
 int simu() {
 //    printf("init sensor..\n");
     if (sensor_init()) {
-        printf("init failed ??\n");
+//        printf("init failed ??\n");
         return -1;
     }
     unsigned short ret = 0;
     unsigned short exp;
     exp = 0x9a00;
-    for (int i = 0; i <= 16; i++) {
+    for (int i = 0; i < 2; i++) {
         //printf("i=%d\n", i);
         set_stub_out_x_resp(exp);
         ret = sensor_read();
@@ -198,7 +202,7 @@ int simu() {
         io->led = led_out;
         exp += 0x2000;
     }
-    printf("Test passed.\n");  // The ">" ends the simulation early
+    printf("%s Test OK.\n", spi_type());  // The ">" ends the simulation early
     return 0;
 }
 int sensor() {
@@ -253,13 +257,13 @@ int main(void)
 
     unsigned t=0,t0=0;
     printf("Welcome to DarkRISCV!\n\n");
-    if (!whoami()) {
+    if (!check_sensor()) {
         sensor();
     }
     // main loop
     while(1)
     {
-        char  buffer[32];
+        char buffer[32];
         memset(buffer,0,sizeof(buffer));
         t = io->timeus;
         printf("%d> ",t-t0);

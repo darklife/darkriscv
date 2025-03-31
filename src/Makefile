@@ -56,6 +56,11 @@ ifdef MAC
     CFLAGS += -DMAC=1
 endif
 
+ifdef NOBANNER
+    CFLAGS += -DNOBANNER=1
+    ASFLAGS += -DNOBANNER=1
+endif
+
 ifeq ($(APPLICATION),spidemo)
     CFLAGS += -DSPI=1
     ASFLAGS += -DSPI=1
