@@ -29,19 +29,23 @@ module spi_master #( parameter integer DIV_COEF = 0 ) (
     input wire        request,          // Request to start transfer: Active HIGH
     output reg        ready,            // Active HIGH when transfer has finished
 
-    inout             spi_csn,          // SPI CSN output (active LOW)
-    inout             spi_sck,          // SPI clock output
-    inout             spi_mosi,         // SPI master data output, slave data input
+    output            spi_csn,          // SPI CSN output (active LOW)
+    output            spi_sck,          // SPI clock output
+    output            spi_mosi,         // SPI master data output, slave data input
     input             spi_miso          // SPI master data input, slave data output
 );
 
+`ifdef SPI_DIV_COEF
+localparam div_coef = `SPI_DIV_COEF;
+`else
 localparam div_coef = (DIV_COEF == 0) ? 32'd10000 : DIV_COEF;
-reg spi_csnff = 1'bz;
-reg spi_sckff = 1'bz;
-reg spi_mosiff = 1'bz;
-assign spi_csn = nrst ? spi_csnff : 1'bz;
-assign spi_sck = nrst ? spi_sckff : 1'bz;
-assign spi_mosi = nrst ? spi_mosiff : 1'bz;
+`endif
+reg spi_csnff = 1'b1;
+reg spi_sckff = 1'b1;
+reg spi_mosiff = 1'b1;
+assign spi_csn = nrst ? spi_csnff : 1'b1;
+assign spi_sck = nrst ? spi_sckff : 1'b1;
+assign spi_mosi = nrst ? spi_mosiff : 1'b1;
 
 // Frequency divider
 reg [31:0] divider;
@@ -76,9 +80,9 @@ reg [5:0] bit_counter;
 
 always @(posedge clk_in or negedge nrst)
     if (nrst == 1'b0) begin
-        spi_csnff <= 1'bz;
-        spi_sckff <= 1'bz;
-        spi_mosiff <= 1'bz;
+        spi_csnff <= 1'b1;
+        spi_sckff <= 1'b1;
+        spi_mosiff <= 1'b1;
         ready <= 1'b0;
         miso_data <= 32'b0;
 
@@ -90,9 +94,9 @@ always @(posedge clk_in or negedge nrst)
     end else begin
         case (state)
             STATE_Idle: begin
-                spi_csnff <= 1'bz;
-                spi_sckff <= 1'bz;
-                spi_mosiff <= 1'bz;
+                spi_csnff <= 1'b1;
+                spi_sckff <= 1'b1;
+                spi_mosiff <= 1'b1;
                 if (request) begin
                     state <= STATE_Run;
                     ready <= 1'b0;

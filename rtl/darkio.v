@@ -53,9 +53,9 @@ module darkio
     input         RXD,  // UART receive line
     output        TXD,  // UART transmit line
 `ifdef SPI
-    inout         CSN,  // SPI CSN output (active LOW)
-    inout         SCK,  // SPI clock output
-    inout         MOSI, // SPI master data output, slave data input
+    output        CSN,  // SPI CSN output (active LOW)
+    output        SCK,  // SPI clock output
+    output        MOSI, // SPI master data output, slave data input
     input         MISO, // SPI master data input, slave data output
 `endif
 

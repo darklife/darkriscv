@@ -111,7 +111,7 @@ _uart_boot:
 */
 
 _normal_boot:
-
+#ifndef NOBANNER
 /*
     RLE code start here:
 
@@ -166,6 +166,7 @@ _normal_boot:
 
     _str_banner_loop4:
 
+#endif
     /* RLL banner code end */
 
 	la	sp,_stack

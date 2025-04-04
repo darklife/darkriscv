@@ -38,12 +38,12 @@ module lis3dh_stub (
     input               clk,                    // System clock
 
     input [15:0]        out_x_resp,
-    inout               out_x_l_flag,
+    output              out_x_l_flag,
 
     input               csn,                    // SPI chip select (active low)
     input               sck,                    // SPI clock
     input               mosi,                   // SPI master out slave in
-    inout               miso                    // SPI master in slave out
+    output              miso                    // SPI master in slave out
 );
 
     localparam
@@ -60,9 +60,9 @@ module lis3dh_stub (
     reg csn_d;          // previous CSN values
     reg misoff = 1'b1;
     reg out_x_l_flagff = 1'b0;
-//    assign miso = ~csn & state == RESPONDING ? misoff : 1'bz;
-    assign miso = state == IDLE ? 1'bz : misoff;
-    assign out_x_l_flag = ~csn ? out_x_l_flagff : 1'bz;
+//    assign miso = ~csn & state == RESPONDING ? misoff : 1'b1;
+    assign miso = state == IDLE ? 1'b1 : misoff;
+    assign out_x_l_flag = ~csn ? out_x_l_flagff : 1'b0;
 
     always @(posedge clk) begin
         // Synchronize inputs to system clock

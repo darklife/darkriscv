@@ -34,26 +34,26 @@ module spi_master_bb (
     input               CLK,    // clock
     input               RES,    // reset
 
-    inout [31:0]        IPORT,
-    input [31:0]        OPORT,
+    output [31:0]       IPORT,
+    input  [31:0]       OPORT,
 
-    inout               CSN,    // SPI CSN output (active LOW)
-    inout               SCK,    // SPI clock output
-    inout               MOSI,   // SPI master data output, slave data input
-    inout               MISO    // SPI master data input, slave data output
+    output              CSN,    // SPI CSN output (active LOW)
+    output              SCK,    // SPI clock output
+    output              MOSI,   // SPI master data output, slave data input
+    input               MISO    // SPI master data input, slave data output
 );
 
     wire spibb_ena;
-    reg [15:0] out_x_resp = 16'bz;
-    reg [31:0] IPORTFF = 32'bz;
+    reg [15:0] out_x_resp = 16'b0;
+    reg [31:0] IPORTFF = 32'b0;
     assign spibb_ena = OPORT[3];
-    assign IPORT = spibb_ena ? IPORTFF : 32'bz;
-    assign CSN = spibb_ena ? OPORT[2] : 1'bz;
-    assign SCK = spibb_ena ? OPORT[1] : 1'bz;
-    assign MOSI = spibb_ena ? OPORT[0] : 1'bz;
+    assign IPORT = spibb_ena ? IPORTFF : 32'b0;
+    assign CSN = spibb_ena ? OPORT[2] : 1'b1;
+    assign SCK = spibb_ena ? OPORT[1] : 1'b1;
+    assign MOSI = spibb_ena ? OPORT[0] : 1'b1;
     always@(posedge CLK) begin
         if (RES) begin
-            out_x_resp <= 16'bz;
+            out_x_resp <= 16'b0;
         end else if (spibb_ena) begin
             out_x_resp <= OPORT[31:16];
         end

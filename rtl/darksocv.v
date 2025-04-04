@@ -42,10 +42,10 @@ module darksocv
     input        UART_RXD,  // UART receive line
     output       UART_TXD,  // UART transmit line
 `ifdef SPI
-    inout        SPI_CSN,   // SPI CSN output (active LOW)
-    inout        SPI_SCK,   // SPI clock output
-    inout        SPI_MOSI,  // SPI master data output, slave data input
-    inout        SPI_MISO,  // SPI master data input, slave data output
+    output       SPI_CSN,   // SPI CSN output (active LOW)
+    output       SPI_SCK,   // SPI clock output
+    output       SPI_MOSI,  // SPI master data output, slave data input
+    input        SPI_MISO,  // SPI master data input, slave data output
 `endif
 
 `ifdef __SDRAM__
@@ -64,15 +64,29 @@ module darksocv
 `endif
 
     output [31:0] LED,       // on-board leds
-`ifdef SPIBB
-    inout  [31:0] IPORT,     // local spi_master_bb will write here
-`else
     input  [31:0] IPORT,
-`endif
     output [31:0] OPORT,
     output [3:0]  DEBUG      // osciloscope
 );
 
+    wire [31:0] iport;
+    wire [31:0] oport;
+    assign OPORT = oport;
+`ifndef SPIBB
+    assign iport = IPORT;
+`endif
+`ifdef SPI
+    wire spi_csn;   // SPI CSN output (active LOW)
+    wire spi_sck;   // SPI clock output
+    wire spi_mosi;  // SPI master data output, slave data input
+    wire spi_miso;  // SPI master data input, slave data output
+    assign SPI_CSN = spi_csn;
+    assign SPI_SCK = spi_sck;
+    assign SPI_MOSI = spi_mosi;
+`ifndef SIMULATION
+    assign spi_miso = SPI_MISO;
+`endif
+`endif
     // clock and reset
 
     wire CLK,RES;
@@ -226,6 +240,12 @@ module darksocv
 
     wire [3:0] IODEBUG;
 
+`ifdef SPI
+    wire spihw_csn;   // SPI CSN output (active LOW)
+    wire spihw_sck;   // SPI clock output
+    wire spihw_mosi;  // SPI master data output, slave data input
+    wire spihw_miso;  // SPI master data input, slave data output
+`endif
     darkio
 `ifdef SPI
     #(.SPI_DIV_COEF(SPI_DIV_COEF))
@@ -252,14 +272,14 @@ module darksocv
         .TXD    (UART_TXD),
 
 `ifdef SPI
-        .SCK    (SPI_SCK),
-        .MOSI   (SPI_MOSI),
-        .MISO   (SPI_MISO),
-        .CSN    (SPI_CSN),
+        .SCK    (spihw_sck),
+        .MOSI   (spihw_mosi),
+        .MISO   (spihw_miso),
+        .CSN    (spihw_csn),
 `endif
         .LED    (LED),
-        .IPORT  (IPORT),
-        .OPORT  (OPORT),
+        .IPORT  (iport),
+        .OPORT  (oport),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
@@ -350,28 +370,43 @@ module darksocv
     assign XDACKMUX[3] = DTACK3==1;
 
 `ifdef SPI
-`ifdef SPIBB
+`ifndef SPIBB
+    assign spi_sck = spihw_sck;
+    assign spi_csn = spihw_csn;
+    assign spi_mosi = spihw_mosi;
+    assign spihw_miso = spi_miso;
+`else
+    wire spibb_csn;   // SPI CSN output (active LOW)
+    wire spibb_sck;   // SPI clock output
+    wire spibb_mosi;  // SPI master data output, slave data input
+    wire spibb_miso;  // SPI master data input, slave data output
+    wire spibb_ena = oport[3];
+    assign spi_sck = spibb_ena ? spibb_sck : spihw_sck;
+    assign spi_csn = spibb_ena ? spibb_csn : spihw_csn;
+    assign spi_mosi = spibb_ena ? spibb_mosi : spihw_mosi;
+    assign spihw_miso = spi_miso;
+    assign spibb_miso = spi_miso;
     spi_master_bb spi_master_bb0(
         .CLK(CLK),
         .RES(RES),
-        .IPORT(IPORT),
-        .OPORT(OPORT),
-        .CSN(SPI_CSN),
-        .SCK(SPI_SCK),
-        .MOSI(SPI_MOSI),
-        .MISO(SPI_MISO)
+        .IPORT(iport),
+        .OPORT(oport),
+        .CSN(spibb_csn),
+        .SCK(spibb_sck),
+        .MOSI(spibb_mosi),
+        .MISO(spibb_miso)
     );
 `endif
 `ifdef SIMULATION
     wire [15:0] out_x_resp;
-    assign out_x_resp = OPORT[31:16];
+    assign out_x_resp = oport[31:16];
     lis3dh_stub lis3dh_stub0 (
         .out_x_resp(out_x_resp),
         .clk(CLK),
-        .sck(SPI_SCK),
-        .csn(SPI_CSN),
-        .mosi(SPI_MOSI),
-        .miso(SPI_MISO)
+        .sck(spi_sck),
+        .csn(spi_csn),
+        .mosi(spi_mosi),
+        .miso(spi_miso)
     );
 `endif
 `endif
