@@ -34,28 +34,26 @@ ifndef HOST_CC
 endif
 
 ifndef CROSS
-    export ARCH = rv32e_zicsr
-    #export ARCH = rv32i
-    #export ARCH = rv32e
-    
-    export ABI = ilp32e
-    #export ABI = ilp32
-    
-    export ENDIAN = little
-    #export ENDIAN = big
-
+    export CROSS = riscv32-embedded-elf
     #export CROSS = riscv64-unknown-elf
     #export CROSS = riscv32-unknown-elf
-    #export CROSS = riscv32-embedded$(ENDIAN)-elf
     #export CROSS = riscv-elf
     #export CROSS = riscv32-unknown-elf
-    export CROSS = riscv32-embedded-elf
-    
+
+    export CCPATH = /usr/local/share/gcc-$(CROSS)/bin
     #export CCPATH = /usr/local/bin
     #export CCPATH = /opt/riscv/bin
-    export CCPATH = /usr/local/share/gcc-$(CROSS)/bin
     #export CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
 endif
+
+    export ARCH = rv32e_zicsr
+    #export ARCH = rv32i_zicsr
+
+    export ABI = ilp32e
+    #export ABI = ilp32
+
+    export ENDIAN = little
+    #export ENDIAN = big
 
 ifndef BUILD
     export BUILD = $(shell date -R)
