@@ -51,7 +51,7 @@ ICARUS += -DSPI=1
 RTLS += ../rtl/darkspi.v                \
         ../rtl/lib/spi/lis3dh_stub.v
 RTLS += ../rtl/lib/spi/spi_master.v
-#SPIBB := 1
+SPIBB := 1
 ifdef SPIBB
 ICARUS += -DSPIBB=1
 RTLS += ../rtl/lib/spi/spi_master_bb.v

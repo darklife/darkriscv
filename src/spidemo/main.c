@@ -268,34 +268,50 @@ int main(void)
         t = io->timeus;
         printf("%d> ",t-t0);
         gets(buffer,sizeof(buffer));
-        printf("You entered [%s]\n", buffer);
-        if (!strcmp("whoami", buffer)) {
-            whoami();
-        } else if (!strcmp("led", buffer)) {
-            printf("led was %x\n", io->led);
-            io->led = ~io->led;
-        } else if (!strcmp("simu", buffer)) {
-            simu();
-        } else if (!strcmp("sensor", buffer)) {
-            sensor();
-        } else if(!strcmp("iport", buffer)) {
-              printf("iport = %x\n",io->iport);
-        } else if(!strcmp("oport", buffer)) {
-              printf("oport = %x\n",io->oport);
-        } else if (!strcmp("read", buffer)) {
-            unsigned short ret = sensor_read();
-            printf("%s: ret=%x\n", __func__, ret);
+        char *argv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+        int   argc;
+        for(argc=0;argc<8 && (argv[argc]=strtok(argc==0?buffer:NULL," "));argc++);
+        if(argv[0] && *argv[0]) {
+            if (!strcmp("whoami", argv[0])) {
+                whoami();
+            } else if (!strcmp("led", argv[0])) {
+                printf("led was %x\n", io->led);
+                io->led = ~io->led;
+            } else if (!strcmp("simu", argv[0])) {
+                simu();
+            } else if (!strcmp("sensor", argv[0])) {
+                sensor();
+            } else if (!strcmp("iport", argv[0])) {
+                printf("iport = %x\n",io->iport);
+            } else if (!strcmp("oport", argv[0])) {
+                if (argv[1]) io->oport = xtoi(argv[1]);
+                printf("oport = %x\n",io->oport);
+            } else if (!strcmp("ioport", argv[0])) {
+                if (argv[1]) {
+                    io->oport = xtoi(argv[1]);
+                } else {
+                    printf("oport = %x\n",io->oport);
+                }
+                printf("iport = %x\n",io->iport);
+            } else if (!strcmp("read", argv[0])) {
+                unsigned short ret = sensor_read();
+                printf("%s: ret=%x\n", __func__, ret);
 #ifdef SPIBB
-        } else if (!strncmp("set_bb ", buffer, 7)) {
-            if (buffer[7]) {
-                int active = atoi(buffer+7);
-                printf("%s: set bb active=%x\n", __func__, active);
-                set_bb(active);
-            }
+            } else if (!strcmp("set_bb", argv[0])) {
+                if (argv[1]) {
+                    int active = atoi(argv[1]);
+                    printf("%s: set bb_active=%x\n", __func__, active);
+                    set_bb(active);
+                }
+            } else if (!strcmp("get_bb", argv[0])) {
+                printf("bb_active = %x\n", __func__, bb_active);
 #endif
-        } else if(!strcmp(buffer,"reboot")) {
-            printf("rebooting...\n");
-            break;
+            } else if(!strcmp("reboot", argv[0])) {
+                printf("rebooting...\n");
+                break;
+            } else {
+                printf("Error: you entered [%s]\n", buffer);
+            }
         }
         t0 = t;
     }
