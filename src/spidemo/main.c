@@ -40,14 +40,22 @@ static inline void spibb_waste_time(int n) {
         spibb_waste_counter++;
     }
 }
+static int verbose = 0; // WR_RD WR_ WR RD
 static inline int spibb_read_do_(void) {
 //    return 1 & (io->iport >> 31);
-    return !!(io->iport & (1 << 4));
+    int val = io->iport;
+    int ret = !!(val & (1 << 4));
+    if (verbose & 1) { printf("%s: read %x from iport (returning %d)\n", __func__, val, ret); }
+    return ret;
 }
 volatile unsigned short g_spibb_out_x_resp = 0;
 static inline void spibb_write_oe_es_cl_di_(unsigned char oe_es_cl_di) {
 //    printf("%s: g_spibb_out_x_resp=%x\n", __func__, g_spibb_out_x_resp);
-    io->oport = ((unsigned int)g_spibb_out_x_resp << 16) | oe_es_cl_di;
+    unsigned int val = ((unsigned int)g_spibb_out_x_resp << 16) | oe_es_cl_di;
+    if (verbose & 2) { printf("%s: write %x to oport\n", __func__, val); }
+    if (verbose & 4) { printf(" %x", val); }
+    if (verbose & 8) { printf(" %x:%x", val, io->iport); }
+    io->oport = val;
 }
 unsigned int spibb_transfer_(unsigned int command_data, int nbits) {
 //    printf("%s: command_data=%x nbits=%d\n", __func__, command_data, nbits);
@@ -120,9 +128,11 @@ void (*set_stub_out_x_resp)(unsigned short exp) = hwset_stub_out_x_resp;
 unsigned short (*spi_transfer16)(unsigned short command_data) = spihw_transfer16;
 unsigned int (*spi_transfer24)(unsigned int command_data) = spihw_transfer24;
 #ifdef SPIBB
-int bb_active = 0;
+static int bb_active = 0;
+int get_bb() {
+    return bb_active;
+}
 void set_bb(int active) {
-    bb_active = active;
     if (active) {
         bb_active = 1;
         set_stub_out_x_resp = bbset_stub_out_x_resp;
@@ -140,7 +150,7 @@ const char *spi_type() {
 #define HWTYPE "HW"
 #ifdef SPIBB
 #define BBTYPE "BB"
-    const char *type = bb_active ? BBTYPE : HWTYPE;
+    const char *type = get_bb() ? BBTYPE : HWTYPE;
 #else
     const char *type = HWTYPE;
 #endif
@@ -153,11 +163,11 @@ int check_sensor_(int verbose) {
     exp = 0x33;
     ret = spi_transfer16(0x8f00) & 0xff;
     if (ret != exp) {
-        printf("Bad %s %s %x exp %x\n", spi_type(), __func__, ret, exp);
+        printf("Bad %s whoami %x exp %x\n", spi_type(), ret, exp);
         return 1;
     } else {
         if (verbose)
-            printf("Good %s %s returned expected %x\n", spi_type(), __func__, ret);
+            printf("Good %s whoami returned expected %x\n", spi_type(), ret);
         return 0;
     }
 }
@@ -261,41 +271,97 @@ int main(void)
         sensor();
     }
     // main loop
-    while(1)
-    {
-        char buffer[32];
+    while(1) {
+        char buffer[128];
         memset(buffer,0,sizeof(buffer));
         t = io->timeus;
         printf("%d> ",t-t0);
         gets(buffer,sizeof(buffer));
-        printf("You entered [%s]\n", buffer);
-        if (!strcmp("whoami", buffer)) {
-            whoami();
-        } else if (!strcmp("led", buffer)) {
-            printf("led was %x\n", io->led);
-            io->led = ~io->led;
-        } else if (!strcmp("simu", buffer)) {
-            simu();
-        } else if (!strcmp("sensor", buffer)) {
-            sensor();
-        } else if(!strcmp("iport", buffer)) {
-              printf("iport = %x\n",io->iport);
-        } else if(!strcmp("oport", buffer)) {
-              printf("oport = %x\n",io->oport);
-        } else if (!strcmp("read", buffer)) {
-            unsigned short ret = sensor_read();
-            printf("%s: ret=%x\n", __func__, ret);
+#define NARGS 64
+        char *argv[NARGS];
+        memset((void*)argv,0,sizeof(argv));
+        int argc;
+        for(argc=0;argc<NARGS && (argv[argc]=strtok(argc==0?buffer:NULL," "));argc++);
+        if(argv[0] && *argv[0]) {
+            if (!strcmp("whoami", argv[0])) {
+                whoami();
+            } else if (!strcmp("led", argv[0])) {
+                printf("led was %x\n", io->led);
+                io->led = ~io->led;
+            } else if (!strcmp("simu", argv[0])) {
+                simu();
+            } else if (!strcmp("sensor", argv[0])) {
+                sensor();
+            } else if (!strcmp("iport", argv[0])) {
+                printf("iport = %x\n",io->iport);
+            } else if (!strcmp("oport", argv[0])) {
+                if (argv[1]) io->oport = xtoi(argv[1]);
+                printf("oport = %x\n",io->oport);
+            } else if (!strcmp("ioport", argv[0])) {
+                if (argv[1]) {
+                    int val = xtoi(argv[1]);
+                    io->oport = val;
+                    int ret = io->iport;
+                    printf("oport = %x => ", val);
+                    printf("iport = %x\n", ret);
+                }
+            } else if (!strcmp("read", argv[0])) {
+                unsigned short ret = sensor_read();
+                printf("%s: ret=%x\n", __func__, ret);
 #ifdef SPIBB
-        } else if (!strncmp("set_bb ", buffer, 7)) {
-            if (buffer[7]) {
-                int active = atoi(buffer+7);
-                printf("%s: set bb active=%x\n", __func__, active);
-                set_bb(active);
-            }
+            } else if (!strcmp("bb", argv[0])) {
+#define BBMAX NARGS
+#define READ_BIT 0
+                unsigned char bbs[BBMAX];
+                int nbb = 0;
+                while (argv[nbb + 1]) {
+                    if (nbb >= BBMAX) break;
+                    bbs[nbb] = xtoi(argv[nbb + 1]);
+                    nbb++;
+                }
+                unsigned int ret = 0;
+                unsigned char last = -1;
+                for (int i = 0; i < nbb; i++) {
+                    if (READ_BIT == bbs[i]) {
+                        spibb_waste_time(3);
+                    } else {
+                        spibb_write_oe_es_cl_di_(bbs[i]);
+                    }
+                    if ((READ_BIT == last) || (!(last & 2) && (bbs[i] & 2))) {
+                        ret = (ret << 1) | spibb_read_do_();
+                    }
+                    last = bbs[i];
+                }
+                unsigned short ret_ = ((ret >> 8) & 0xff) | ((ret & 0xff) << 8);
+                printf("%x\n", ret_);
+            } else if (!strcmp("spi16", argv[0])) {
+                if (argv[1]) {
+                    int val = xtoi(argv[1]);
+                    int ret = spi_transfer16(val) & 0xff;
+                    printf("spi16 %x returned %x\n", val, ret);
+                }
+            } else if (!strcmp("set_bb", argv[0])) {
+                if (argv[1]) {
+                    int active = atoi(argv[1]);
+                    //printf("set bb_active=%x\n", active);
+                    set_bb(active);
+                }
+            } else if (!strcmp("get_bb", argv[0])) {
+                printf("bb_active = %x\n", get_bb());
+            } else if (!strcmp("get_verbose", argv[0])) {
+                printf("verbose = %x\n", verbose);
+            } else if (!strcmp("set_verbose", argv[0])) {
+                if (argv[1]) {
+                    int val = atoi(argv[1]);
+                    verbose = val;
+                }
 #endif
-        } else if(!strcmp(buffer,"reboot")) {
-            printf("rebooting...\n");
-            break;
+            } else if(!strcmp("reboot", argv[0])) {
+                printf("rebooting...\n");
+                break;
+            } else {
+                printf("Error: you entered [%s]\n", buffer);
+            }
         }
         t0 = t;
     }
