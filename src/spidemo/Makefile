@@ -48,6 +48,9 @@ SPIBB := 1
 ifdef SPIBB
 CFLAGS += -DSPIBB=1
 endif
+ifdef SPI3WIRE
+CFLAGS += -DSPI3WIRE=1
+endif
 
 .PHONY: all
 

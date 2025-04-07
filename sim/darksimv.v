@@ -98,6 +98,10 @@ module darksimv;
         .S_DQM(S_DQM),
         .S_DB (S_DB),
 `endif
+        .IPORT(0),
+`ifdef SPI
+//        .SPI_MISO(1'b0),
+`endif
         .UART_RXD(RX),
         .UART_TXD(TX)
     );

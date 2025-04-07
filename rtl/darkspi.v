@@ -46,6 +46,9 @@
 // R 1111 STATUS,00,datalo,datahi
 // Where STATUS is: {6'b0, spi_ready, spi_busy} and can be polled for SPI transfer completion.
 //
+// Special internal 32 bit write, directing to custom spi_master reset-glitch
+// W 1111 <MSB different from 0> (refer spi_master documentation)
+//
 // Examples below are for STMicro LIS3DH sensor SPI target.
 //
 // - One byte transfer:
@@ -77,7 +80,11 @@ module darkspi #(parameter integer DIV_COEF = 0) (
 
     output        CSN,          // SPI CSN output (active LOW)
     output        SCK,          // SPI clock output
-    output        MOSI,         // SPI master data output, slave data input
+//`ifdef SPI3WIRE
+    inout         MOSI,         // SPI master data output, slave data input; or SDI/O (3-wire mode)
+//`else
+//    output        MOSI,         // SPI master data output, slave data input
+//`endif
     input         MISO,         // SPI master data input, slave data output
 
 `ifdef SIMULATION
@@ -88,14 +95,15 @@ module darkspi #(parameter integer DIV_COEF = 0) (
     output [3:0]  DEBUG         // osc debug
 );
 
-    reg [8:0] NWR = 0;
+//    reg [8:0] NWR = 0;
     reg [31:0] spi_mosi_data = 0;
     wire [31:0] spi_miso_data;
-    reg [5:0] spi_nbits = 0;
+    reg [4:0] spi_nbits = 0;
     reg spi_request = 0;
     wire spi_ready;
     wire [7:0] status;
-    wire spi_busy = ~CSN;
+//    wire spi_busy = ~CSN;
+    wire spi_busy = 0;
     assign status = {6'b0, spi_ready & ~WR & ~spi_request, spi_busy};
     assign DATAO = {status, spi_miso_data[23:16], spi_miso_data[15:8], spi_miso_data[7:0]};
 `ifdef NO_SPI_IRQ
@@ -103,33 +111,42 @@ module darkspi #(parameter integer DIV_COEF = 0) (
 `else
     assign IRQ = spi_busy;
 `endif
+    reg spimaster_nreset = 1'b1;
     always @(posedge CLK) begin
         if (RES) begin
             spi_mosi_data <= 0;
             spi_nbits <= 0;
             spi_request <= 0;
+            spimaster_nreset <= 1'b1;
         end else begin
             if (WR) begin
-                NWR <= NWR + 1;
+//                NWR <= NWR + 1;
                 spi_request <= 1;
                 if (BE == 4'b1111) begin
-                    spi_nbits <= 6'd23;                 // 24 bits
                     spi_mosi_data <= DATAI;
+                    if (DATAI[31:24] == 8'b0) begin
+                        spi_nbits <= 5'd23;             // 24 bits
+                    end else begin
+                        spi_nbits <= 5'd31;             // 32 bits internal reset-glitch trick
+                        spimaster_nreset <= 1'b0;
+                    end
                 end else if (BE == 4'b0011) begin
-                    spi_nbits <= 6'd15;                 // 16 bits
+                    spi_nbits <= 5'd15;                 // 16 bits
                     spi_mosi_data <= DATAI[15:0];
                 end else begin
                     spi_request <= 0;                   // ignore any other writes
                 end
             end else begin
                 spi_request <= 0;
+                //spi_nbits <= 0;
+                spimaster_nreset <= 1'b1;
             end
         end
     end
 
     spi_master #(.DIV_COEF(DIV_COEF)) spi_master1 (
         .clk_in(CLK),
-        .nrst(~RES),
+        .nrst(~RES && spimaster_nreset),
 
         .spi_sck(SCK),
         .spi_mosi(MOSI),

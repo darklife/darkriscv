@@ -7,7 +7,7 @@ module dut (
 `ifdef SPI
     output spi_csn,
     output spi_sck,
-    output spi_mosi,
+    inout spi_mosi,
     input spi_miso,
 `endif
     inout [8:1] pio,
@@ -22,7 +22,7 @@ module dut (
         .UART_TXD(tx),  // UART transmit line
 `ifdef SPI
         .SPI_SCK(spi_sck),      // SPI clock output
-        .SPI_MOSI(spi_mosi),    // SPI master data output, slave data input
+        .SPI_MOSI(spi_mosi),    // SPI master data output, slave data input;  or SDI/O (3-wire mode)
         .SPI_MISO(spi_miso),    // SPI master data input, slave data output
         .SPI_CSN(spi_csn),      // SPI CSN output (active LOW)
 `endif

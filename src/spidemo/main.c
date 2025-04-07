@@ -33,6 +33,10 @@
 #include <string.h>
 #include <math.h>
 
+#ifdef SPI3WIRE
+static int spi3w = 0;
+#endif
+
 #ifdef SPIBB
 volatile int spibb_waste_counter = 0;
 static inline void spibb_waste_time(int n) {
@@ -44,14 +48,18 @@ static int verbose = 0; // WR_RD WR_ WR RD
 static inline int spibb_read_do_(void) {
 //    return 1 & (io->iport >> 31);
     int val = io->iport;
-    int ret = !!(val & (1 << 4));
+#ifdef SPI3WIRE
+    int ret = !!(val & (1 << (spi3w ? 0 : 6)));
+#else
+    int ret = !!(val & (1 << 6));
+#endif
     if (verbose & 1) { printf("%s: read %x from iport (returning %d)\n", __func__, val, ret); }
     return ret;
 }
 volatile unsigned short g_spibb_out_x_resp = 0;
-static inline void spibb_write_oe_es_cl_di_(unsigned char oe_es_cl_di) {
+static inline void spibb_write_rd_tr_oe_es_cl_di_(unsigned char rd_tr_oe_es_cl_di) {
 //    printf("%s: g_spibb_out_x_resp=%x\n", __func__, g_spibb_out_x_resp);
-    unsigned int val = ((unsigned int)g_spibb_out_x_resp << 16) | oe_es_cl_di;
+    unsigned int val = ((unsigned int)g_spibb_out_x_resp << 16) | rd_tr_oe_es_cl_di;
     if (verbose & 2) { printf("%s: write %x to oport\n", __func__, val); }
     if (verbose & 4) { printf(" %x", val); }
     if (verbose & 8) { printf(" %x:%x", val, io->iport); }
@@ -60,22 +68,24 @@ static inline void spibb_write_oe_es_cl_di_(unsigned char oe_es_cl_di) {
 unsigned int spibb_transfer_(unsigned int command_data, int nbits) {
 //    printf("%s: command_data=%x nbits=%d\n", __func__, command_data, nbits);
     unsigned int ret = 0;
-    spibb_write_oe_es_cl_di_(0x7);    // output disabled / tristate       0111
-    spibb_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle        1111
-    spibb_write_oe_es_cl_di_(0xb);    // output enabled / SPI Active      1011
+    int rd = command_data & 1;
+    spibb_write_rd_tr_oe_es_cl_di_((rd << 5) | (spi3w << 4) | 0x7);    // output disabled / tristate       0111
+    spibb_write_rd_tr_oe_es_cl_di_((rd << 5) | (spi3w << 4) | 0xf);    // output enabled / SPI Idle        1111
+    spibb_write_rd_tr_oe_es_cl_di_((rd << 5) | (spi3w << 4) | 0xb);    // output enabled / SPI Active      1011
     for (int i = nbits; i >= 0; i--) {
         int bit;
+        int mosi_tri = spi3w && (i >= 8);
         bit = !!(command_data & (1 << i));
-        spibb_write_oe_es_cl_di_(0x8 | bit);                      //      100?
+        spibb_write_rd_tr_oe_es_cl_di_(0x8 | (rd << 5) | (mosi_tri << 4) | bit);    //      100?
         spibb_waste_time(3);
-        spibb_write_oe_es_cl_di_(0xa | bit);                      //      101?
+        spibb_write_rd_tr_oe_es_cl_di_(0xa | (rd << 5) | (mosi_tri << 4) | bit);    //      101?
         bit = spibb_read_do_();
         ret = (ret << 1) | bit;
 //        ret <<= 1;
 //        if (bit) ret++;
     }
-    spibb_write_oe_es_cl_di_(0xf);    // output enabled / SPI Idle
-    spibb_write_oe_es_cl_di_(0x7);    // output disabled / tristate
+    spibb_write_rd_tr_oe_es_cl_di_(0xf);    // output enabled / SPI Idle
+    spibb_write_rd_tr_oe_es_cl_di_(0x7);    // output disabled / tristate
 //    printf("%s: returning %x\n", __func__, ret);
     return ret;
 }
@@ -146,28 +156,90 @@ void set_bb(int active) {
     }
 }
 #endif
-const char *spi_type() {
+#ifdef SPI3WIRE
+int get_spi3w() {
+    return spi3w;
+}
+void set_spi3w(int val) {
+/* Begin switch the slave to 3-wire mode */
+        // write SIM=1 (01h) in CTRL_REG4 (23h) to set slave to 3-wire mode
+//        nbits = 15;
+//        mosi_data = 32'h2301;
+//        #50       request = 1;
+//        #10 request = 0;
+//        wait (ready)
+    spi3w = val;
+    if (spi3w) {
+        spi_transfer16(0x2301);         // spi slave LIS3DH: CTRL_REG4, SIM=1: set 3-wire interface
+#ifdef SPIBB
+        if (get_bb()) {
+            // something to set BB to 3-wire ?
+        }
+        else
+#endif
+        io->spi.spi32 = 0x81010000;     // spi_master reset-glitch: `set 3-wire on`
+    } else {
+        io->spi.spi32 = 0x81000000;     // spi_master reset-glitch: `set 3-wire off (default 4-wire)`
+#ifdef SPIBB
+        if (get_bb()) {
+            // something to set BB to 4-wire ?
+        }
+        else
+#endif
+        spi_transfer16(0x2300);         // spi slave LIS3DH: CTRL_REG4, SIM=0: set 4-wire interface
+    }
+/* End switch the slave to 3-wire mode */
+/* Begin switch the master to 3-wire mode */
+/*        #5
+        spimaster_nreset = 0;
+        request = 1;
+        nbits = 5'd31;
+        mosi_data[31:0] = 32'h81010000;    // `set 3-wire on`
+        #5
+        request = 0;
+        #5
+        spimaster_nreset = 1;
+        nbits = 0;
+        mosi_data = 0;
+        #5*/
+/* End switch the master to 3-wire mode */
+}
+#endif
+
+void print_spi_type() {
 #define HWTYPE "HW"
 #ifdef SPIBB
 #define BBTYPE "BB"
-    const char *type = get_bb() ? BBTYPE : HWTYPE;
-#else
-    const char *type = HWTYPE;
 #endif
-    return type;
+#ifdef SPI3WIRE
+#define SPI3WTYPE "3W"
+#endif
+#ifdef SPIBB
+    printf("%s", get_bb() ? BBTYPE : HWTYPE);
+#else
+    printf("%s", HWTYPE);
+#endif
+#ifdef SPI3WIRE
+#define BBTYPE "BB"
+    if (get_spi3w()) printf(" %s", SPI3WTYPE);
+#endif
+    printf(" ");
 }
 
 int check_sensor_(int verbose) {
     unsigned short ret = 0;
     unsigned short exp;
     exp = 0x33;
-    ret = spi_transfer16(0x8f00) & 0xff;
+    ret = spi_transfer16(0x8f00) & 0xff;        // Read WHO_AM_I register (Addr 0x0F)
     if (ret != exp) {
-        printf("Bad %s whoami %x exp %x\n", spi_type(), ret, exp);
+        print_spi_type();
+        printf("Bad whoami %x exp %x\n", ret, exp);
         return 1;
     } else {
-        if (verbose)
-            printf("Good %s whoami returned expected %x\n", spi_type(), ret);
+        if (verbose) {
+            print_spi_type();
+            printf("Good whoami returned expected %x\n", ret);
+        }
         return 0;
     }
 }
@@ -180,11 +252,17 @@ int sensor_init() {
         return -1;
     }
     io->led = 0xfe;
-    spi_transfer16(0x2077);
+    spi_transfer16(0x2077);                     // Write ODR in CTRL_REG1 (Addr 0x20)
     io->led = 0xfd;
-    spi_transfer16(0x1fc0);
+    spi_transfer16(0x1fc0);                     // Enable temperature sensor (Addr 0x1F)
     io->led = 0xfb;
-    spi_transfer16(0x2388);
+    unsigned short ctrl_reg4 = 0x2388;          // Enable BDU, High resolution (Addr 0x23)
+#ifdef SPI3WIRE
+    if (get_spi3w()) {
+        ctrl_reg4 |= 1;          // preserve SIM=1
+    }
+#endif
+    spi_transfer16(ctrl_reg4);
     return 0;
 }
 unsigned short sensor_read() {
@@ -212,7 +290,8 @@ int simu() {
         io->led = led_out;
         exp += 0x2000;
     }
-    printf("%s Test OK.\n", spi_type());  // The ">" ends the simulation early
+    print_spi_type();
+    printf("Test OK.\n");  // The ">" ends the simulation early
     return 0;
 }
 int sensor() {
@@ -257,10 +336,18 @@ int main(void)
 {
     if (!io->board_id) {
 //        printf("running simu..\n");
+#ifdef SPI3WIRE
+        for (int i = 0; i < 2; i++) {
+        set_spi3w(i);
+#endif
         simu();
 #ifdef SPIBB
         set_bb(1);
         simu();
+        set_bb(0);
+#endif
+#ifdef SPI3WIRE
+        }
 #endif
         printf(">");  // The ">" ends the simulation early
     }
@@ -325,7 +412,7 @@ int main(void)
                     if (READ_BIT == bbs[i]) {
                         spibb_waste_time(3);
                     } else {
-                        spibb_write_oe_es_cl_di_(bbs[i]);
+                        spibb_write_rd_tr_oe_es_cl_di_(bbs[i]);
                     }
                     if ((READ_BIT == last) || (!(last & 2) && (bbs[i] & 2))) {
                         ret = (ret << 1) | spibb_read_do_();
