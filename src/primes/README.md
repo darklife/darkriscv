@@ -1,6 +1,6 @@
 # "primes" benchmark
 
-The "primes" from Bruce Holt is a small benchmark with a huge index of
+The "primes" from Bruce Holt [1] is a small benchmark with a huge index of
 different machines and processor there.  In order to make the different
 implementations comparable, the main rule is that the code must be compiled
 w/ -O1, so it will not be much optimized.
@@ -50,3 +50,9 @@ of the PS2 processor, the MIPS R5900.
 With the MAC instruction, the DarkRISCV can outperform the VexRISCV when
 running at the same clock and, running with 400MHz overclock, it would
 outperform the Renesas RX71M.
+
+
+
+
+---
+[1] https://hoult.org/primes.txt
