@@ -20,6 +20,7 @@ path worse, there are no improvement on the performance: 618s.
 
 Checking the current ranking of small processors:
 
+```
 //    50.241 sec PowerPC 750CL Wii 729 MHz             332 bytes  36.6 billion clocks
 //   112.163 sec HiFive1 RISCV E31 @ 320 MHz           178 bytes  35.9 billion clocks
 //   176.2   sec Renesas RX71M RXv2 @ 240 MHz          184 bytes  42.3 billion clocks
@@ -33,6 +34,8 @@ Checking the current ranking of small processors:
 //   920.858 sec kianvSoc Artix7 FPGA @ 90 MHz         272 bytes  82.9 billion clocks
 //   927.547 sec BluePill Cortex M3 @ 72 MHz           228 bytes  66.8 billion clocks
 // 13449.513 sec AVR ATmega2560 @ 20 MHz               318 bytes 269.0 billion clocks
+```
+
 
 The DarkRISCV@100MHz w/ 712s result will be between the VexRISCV@200MHz and
 kianRiscv@90MHz. Note that, when we scale down the VexRISCV to 100MHz it
