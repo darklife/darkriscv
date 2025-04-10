@@ -48,6 +48,7 @@ SPIBB := 1
 ifdef SPIBB
 CFLAGS += -DSPIBB=1
 endif
+SPI3WIRE:=1
 ifdef SPI3WIRE
 CFLAGS += -DSPI3WIRE=1
 endif

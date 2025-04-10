@@ -52,12 +52,13 @@ RTLS += ../rtl/darkspi.v                \
         ../rtl/lib/spi/lis3dh_stub.v
 RTLS += ../rtl/lib/spi/spi_master.v
 SPIBB := 1
-ifdef SPI3WIRE
-ICARUS += -DSPI3WIRE=1
-endif
 ifdef SPIBB
 ICARUS += -DSPIBB=1
 RTLS += ../rtl/lib/spi/spi_master_bb.v
+endif
+SPI3WIRE:=1
+ifdef SPI3WIRE
+ICARUS += -DSPI3WIRE=1
 endif
 DUT:=darksocv
 include cosim.mk
@@ -96,7 +97,7 @@ $(VCDS): $(XSIM)
 	@echo finish |                                          \
 	awk '/^`define __TRACE__/{ exit(-1) }' ../rtl/config.vh \
 	&& ./$(XSIM)                                            \
-	|| echo ./$(XSIM) |                                          \
+	|| ./$(XSIM) |                                          \
 	    awk '{  if($$0~/trace:/) {                          \
 	        print > "$(TRCE)";                              \
 	        if($$0~/40000005:/) {                           \

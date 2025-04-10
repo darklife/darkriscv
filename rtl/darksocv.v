@@ -44,13 +44,8 @@ module darksocv
 `ifdef SPI
     output       SPI_CSN,   // SPI CSN output (active LOW)
     output       SPI_SCK,   // SPI clock output
-//`ifdef SPI3WIRE
     inout        SPI_MOSI,  // SPI master data output, slave data input;  or SDI/O (3-wire mode)
-//`else
-//    output       SPI_MOSI,  // SPI master data output, slave data input
-//`endif
-//    input        SPI_MISO,  // SPI master data input, slave data output
-    inout        SPI_MISO,  // SPI master data input, slave data output
+    inout        SPI_MISO,  // SPI master data input, slave data output - inout because of local slave stub (simulation)
 `endif
 
 `ifdef __SDRAM__
@@ -83,16 +78,9 @@ module darksocv
 `ifdef SPI
     wire spi_csn;   // SPI CSN output (active LOW)
     wire spi_sck;   // SPI clock output
-//`ifndef SPI3WIRE
-//    wire spi_mosi;  // SPI master data output, slave data input
-//    assign SPI_MOSI = spi_mosi;
-//`endif
     wire spi_miso;  // SPI master data input, slave data output
     assign SPI_CSN = spi_csn;
     assign SPI_SCK = spi_sck;
-//`ifndef SIMULATION
-//    assign spi_miso = SPI_MISO;
-//`endif
 `endif
     // clock and reset
 
@@ -280,13 +268,7 @@ module darksocv
 
 `ifdef SPI
         .SCK    (spihw_sck),
-//`ifndef SPI3WIRE
-////        .mosi(spi_mosi),
-//        .MOSI   (spihw_mosi),
-//`else
         .MOSI(SPI_MOSI),
-//`endif
-//        .MISO   (spihw_miso),
         .MISO   (SPI_MISO),
         .CSN    (spihw_csn),
 `endif
@@ -386,9 +368,6 @@ module darksocv
 `ifndef SPIBB
     assign spi_sck = spihw_sck;
     assign spi_csn = spihw_csn;
-`ifndef SPI3WIRE
-//    assign spi_mosi = spihw_mosi;
-`endif
     assign spihw_miso = spi_miso;
 `else
     wire spibb_csn;   // SPI CSN output (active LOW)
@@ -398,9 +377,6 @@ module darksocv
     wire spibb_ena = oport[3];
     assign spi_sck = spibb_ena ? spibb_sck : spihw_sck;
     assign spi_csn = spibb_ena ? spibb_csn : spihw_csn;
-`ifndef SPI3WIRE
-//    assign spi_mosi = spibb_ena ? spibb_mosi : spihw_mosi;
-`endif
     assign spihw_miso = spi_miso;
     assign spibb_miso = spi_miso;
     spi_master_bb spi_master_bb0(
@@ -410,12 +386,7 @@ module darksocv
         .OPORT(oport),
         .CSN(spibb_csn),
         .SCK(spibb_sck),
-//`ifndef SPI3WIRE
-//        .MOSI(spibb_mosi),
-//`else
         .MOSI(SPI_MOSI),
-//`endif
-//        .MISO(spibb_miso)
         .MISO(SPI_MISO)
     );
 `endif
@@ -427,17 +398,11 @@ module darksocv
         .clk(CLK),
         .sck(spi_sck),
         .csn(spi_csn),
-//`ifndef SPI3WIRE
-//        .mosi(spi_mosi),
-//`else
         .mosi(SPI_MOSI),
-//`endif
-//        .miso(spi_miso)
         .miso(SPI_MISO)
     );
 `endif
 `endif
-
 
     assign DEBUG = KDEBUG;
 

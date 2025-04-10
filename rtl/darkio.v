@@ -55,11 +55,7 @@ module darkio
 `ifdef SPI
     output        CSN,  // SPI CSN output (active LOW)
     output        SCK,  // SPI clock output
-//`ifdef SPI3WIRE
     inout         MOSI, // SPI master output slave input (default 4-wire); or m/s i/o (3-wire enabled)
-//`else
-//    output        MOSI, // SPI master data output, slave data input
-//`endif
     input         MISO, // SPI master data input, slave data output
 `endif
 

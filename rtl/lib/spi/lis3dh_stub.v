@@ -44,12 +44,7 @@ module lis3dh_stub (
 
     input               csn,                    // SPI chip select (active low)
     input               sck,                    // SPI clock
-//`ifdef SPI3WIRE
     inout               mosi,                   // 4-wire: SPI master out slave in (default/standard)
-                                                // 3-wire: SPI master/slave data output/input
-//`else
-//    input               mosi,                   // SPI master out slave in
-//`endif
     output              miso                    // SPI master in slave out
 );
 
@@ -78,6 +73,7 @@ module lis3dh_stub (
 //    assign miso = state == IDLE ? 1'b1 : misoff;
 //    assign miso = !spi3w && (state != IDLE) ? misoff : 1'b1;
     assign miso = !spi3w && oe && rd ? misoff : !spi3w && !oe && rd ? 1'b0 : 1'bz;
+//    assign miso = state == IDLE ? 1'bz : misoff;
 //    assign miso = !spi3w && oe && rd ? misoff : 1'bz;
 `else
     reg spi3w_flag = 1'b0;      // should remove
@@ -128,9 +124,6 @@ module lis3dh_stub (
                 end else begin
                     response <= 8'h00; // Default response
                 end
-`ifdef SPI3WIRE
-                oe <= 1'b1;
-`endif
                 state <= RESPONDING;
                 bit_count <= 0;
             end
@@ -151,6 +144,9 @@ module lis3dh_stub (
                     end
                     out_x_l_flagff <= 1'b0;
                 end else if (!sck && sck_d) begin // Rising edge of SCK
+`ifdef SPI3WIRE
+                    oe <= 1'b1;
+`endif
                     misoff <= response[7];
                     response <= {response[6:0], 1'b0};
                     bit_count <= bit_count + 1;

@@ -31,8 +31,8 @@
 `timescale 1ns / 1ps
 
 /*
-    Simple bit-banging 4-wire SPI master
-    - 3-wire support not functional yet
+    Simple bit-banging SPI master
+    Early 3/4-wire support
 */
 
 module spi_master_bb (
@@ -44,11 +44,7 @@ module spi_master_bb (
 
     output              CSN,    // SPI CSN output (active LOW)
     output              SCK,    // SPI clock output
-//`ifdef SPI3WIRE
     inout               MOSI,   // SPI master data output, slave data input; or m/s i/o (3-wire enabled)
-//`else
-//    output              MOSI,   // SPI master data output, slave data input
-//`endif
     input               MISO    // SPI master data input, slave data output
 );
 
@@ -63,7 +59,7 @@ module spi_master_bb (
     wire mosi_tri;
     assign mosi_tri = OPORT[4];
     wire rd;
-    assign rd = OPORT[5];
+    assign rd = spibb_ena ? OPORT[5] : 1'b0;
     assign MOSI = !spibb_ena || (rd && mosi_tri) ? 1'bz : OPORT[0];
 `else
     reg mosi_tri = 0;           // should remove
@@ -82,7 +78,9 @@ module spi_master_bb (
             IPORTFF <= 32'b0;
         end else if (spibb_ena & !CSN) begin
 `ifdef SPI3WIRE
-            IPORTFF <= {out_x_resp, 11'b0, rd ? MISO : 1'b1, rd, mosi_tri, spibb_ena, CSN, SCK, MOSI};
+//            IPORTFF <= {out_x_resp, 11'b0, rd ? MISO : 1'b1, rd, mosi_tri, spibb_ena, CSN, SCK, MOSI};
+            IPORTFF <= {out_x_resp, 11'b0, mosi_tri ? 1'b1 : MISO, rd, mosi_tri, spibb_ena, CSN, SCK, MOSI};
+//            IPORTFF <= {out_x_resp, 11'b0, MISO, rd, mosi_tri, spibb_ena, CSN, SCK, MOSI};
 `else
             IPORTFF <= {out_x_resp, 11'b0, MISO, rd, mosi_tri, spibb_ena, CSN, SCK, MOSI};
 `endif
