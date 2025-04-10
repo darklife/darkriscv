@@ -31,8 +31,8 @@ Checking the current ranking of small processors:
 //   309.251 sec BlackPill Cortex M4F @ 168 MHz        228 bytes  52.0 billion clocks
 //   319.155 sec WCH32V307 @ 144 MHz                   202 bytes  46.0 billion clocks
 //   337.962 sec VexRiscv "full" RV32IM 200 MHz        236 bytes  67.6 billion clocks
-//   920.858 sec kianvSoc Artix7 FPGA @ 90 MHz         272 bytes  82.9 billion clocks
 //   927.547 sec BluePill Cortex M3 @ 72 MHz           228 bytes  66.8 billion clocks
+//  5414.040 sec kianvSoC (14 CPI) @ 90 MHz            ??? bytes 487.3 billion clocks
 // 13449.513 sec AVR ATmega2560 @ 20 MHz               318 bytes 269.0 billion clocks
 ```
 
