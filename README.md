@@ -7,7 +7,7 @@ Opensource RISC-V implemented from scratch in one night!
 
 ## Quick Start!
 
-Case you already have the Icarus Verilog isntalled, just clone the code and type make!
+Case you already have the Icarus Verilog installed, just clone the code and type make!
 
     git clone git@github.com:darklife/darkriscv.git
     cd darkriscv
@@ -19,7 +19,7 @@ and generate a VCD file!
 
 The VCD file can be checked with GTKWave:
 
-    gtkwave sim/darkrsocv.vcd
+    gtkwave sim/darksocv.vcd
 
 So, you can add the signals from each module and explore the waveforms! :)
 
