@@ -28,8 +28,8 @@
 // Original x86 & ARM data 2016, received user contributions 2019-2024.
 //
 // SZ = 1000 -> 3713160 primes, all primes up to 7919^2 = 62710561
-//     1.808 sec i9-14900K  @ 5.8 GHz                  276 bytes  10.5 billion clocks
-//     1.955 sec i9-13900HX @ 5.4 GHz                  276 bytes  10.6 billion clocks
+//     1.808 sec i9-14900K @ 5.9 GHz                   276 bytes  10.7 billion clocks
+//     1.990 sec i9-13900HX @ 5.4 GHz                  276 bytes  10.7 billion clocks
 //     2.284 sec i7 9700K @ 4.9 GHz                    243 bytes  11.2 billion clocks
 //     2.735 sec i7 8650U @ 4.2 GHz                    242 bytes  11.5 billion clocks
 //     2.740 sec Apple M2 Max @ 3.4 GHz                264 bytes   9.3 billion clocks
@@ -37,12 +37,10 @@
 //     2.810 sec Mac Mini M1 arm64 Ubuntu in VM        280 bytes   9.0 billion clocks
 //     2.872 sec i7 6700K @ 4.2 GHz                    240 bytes  12.1 billion clocks
 //     2.925 sec Mac Mini M1 @ 3.2 GHz x86_64 Rosetta  208 bytes   9.4 billion clocks
-//     3.070 sec i9-14900K E core @ 4.4 GHz            276 bytes  13.5 billion clocks
 //     3.075 sec AWS c8g Graviton4 A64 @3.0 GHz        268 bytes   9.2 billion clocks
 //     3.132 sec Ryzen 4900H @ 4.4 GHz                 272 bytes  13.8 billion clocks
 //     3.230 sec Threadripper 2990WX @ 4.2 GHz         276 bytes  13.8 billion clocks
 //     3.448 sec Ryzen 5 4500U @ 4.0 GHz WSL2          242 bytes  13.8 billion clocks
-//     3.470 sec i9-13900HX E core @ 3.9 GHz           276 bytes  13.5 billion clocks
 //     3.505 sec Xeon Plat 8151 @ 4.0 GHz (AWS z1d)    244 bytes  14.0 billion clocks
 //     3.725 sec AWS c7g graviton3 A64 @ 2.6 GHz       256 bytes   9.7 billion clocks
 //     3.836 sec i7 4700MQ @ 3.4 GHz                   258 bytes  13.0 billion clocks
@@ -51,7 +49,6 @@
 //     5.052 sec i9-13900HX, qemu-riscv64 @ 5.1 GHz    216 bytes  25.8 billion clocks
 //     5.110 sec Blackbird POWER9 Sforza @ 3.8 GHz     380 bytes  19.4 billion clocks
 //     5.331 sec Snapdragon 8 gen 2 Cortex-X2 3.0 GHz  280 bytes  16.0 billion clocks
-//     6.478 sec Mac Pro 2008 2x Xeon E5462 @ 2.8 GHz  246 bytes  18.1 billion clocks
 //     6.531 sec AWS c6g graviton2 A64 @ 2.5 GHz       256 bytes  16.3 billion clocks
 //     6.560 sec SPARC T7-4 4.13 GHz                   348 bytes  27.1 billion clocks
 //     6.757 sec M1 Mini, qemu-riscv64 in UbuntuVM     216 bytes  23.0 billion clocks
@@ -59,6 +56,7 @@
 //     7.700 sec SPARC T5-4 3.6 GHz                    348 bytes  27.7 billion clocks
 //     8.005 sec AWS Graviton 1 a1.medium 2.26 GHz     268 bytes  18.1 billion clocks
 //     8.538 sec NXP LX2160A A72 @ 2 GHz               260 bytes  17.1 billion clocks
+//     8.890 sec Milk-V Megrez P550 @ 1.8 GHz          210 bytes  16.0 billion clocks
 //     8.964 sec SiFive HiFive Premier P550 @1.8 GHz   210 bytes  16.1 billion clocks
 //     9.622 sec Milk-V Pioneer SG2042 C910 @2.0 GHz   192 bytes  19.3 billion clocks
 //     9.692 sec RISC-V Fedora in qemu in VM on M1     208 bytes  31.0 billion clocks
@@ -88,13 +86,16 @@
 //    28.110 sec Elbrus-8SV Raiko 1.55 GHz             984 bytes  43.6 billion clocks
 //    30.420 sec Pi3 Cortex A53 @ 1.2 GHz T32          204 bytes  36.5 billion clocks
 //    36.652 sec Allwinner D1 C906 RV64 @ 1.008 GHz    224 bytes  36.9 billion clocks
-//    39.840 sec HiFive Unl RISCV U54 @ 1.0 GHz        228 bytes  39.8 billion clocks
+//    39.840 sec HiFive Unl RISC-V U54 @ 1.0 GHz       228 bytes  39.8 billion clocks
+//    43.048 sec Milk-V Duo C906 @ 850 MHz             204 bytes  36.6 billion clocks
 //    43.516 sec Teensy 4.0 Cortex M7 @ 600 MHz        228 bytes  26.1 billion clocks
 //    47.910 sec Pi2 Cortex A7 @ 900 MHz T32           204 bytes  42.1 billion clocks
 //    48.206 sec Zynq-7010 Cortex A9 @ 650MHz          248 bytes  31.3 billion clocks
 //    50.241 sec PowerPC 750CL Wii 729 MHz             332 bytes  36.6 billion clocks
-//   112.163 sec HiFive1 RISCV E31 @ 320 MHz           178 bytes  35.9 billion clocks
+//   112.163 sec HiFive1 RISC-V E31 @ 320 MHz          178 bytes  35.9 billion clocks
 //   176.2   sec Renesas RX71M RXv2 @ 240 MHz          184 bytes  42.3 billion clocks
+//   178.424 sec RP2350B RISC-V Hazard3 @ 250 MHz      ??? bytes  44.6 billion clocks
+//   206.142 sec RP2350B Arm M33 @ 250 MHz             ??? bytes  51.5 billion clocks
 //   210.230 sec PS2 MIPS III R5900 @ 295 MHz          400 bytes  62.0 billion clocks
 //   261.068 sec esp32/Arduino @ 240 MHz               ??? bytes  62.7 billion clocks
 //   294.749 sec chipKIT Pro MZ pic32 @ 200 MHz        ??? bytes  58.9 billion clocks
@@ -102,8 +103,9 @@
 //   309.251 sec BlackPill Cortex M4F @ 168 MHz        228 bytes  52.0 billion clocks
 //   319.155 sec WCH32V307 @ 144 MHz                   202 bytes  46.0 billion clocks
 //   337.962 sec VexRiscv "full" RV32IM 200 MHz        236 bytes  67.6 billion clocks
-//   920.858 sec kianvSoc Artix7 FPGA @ 90 MHz         272 bytes  82.9 billion clocks
+//   712     sec DarkRISCV @ 100 MHz                   ??? bytes  71.2 billion clocks
 //   927.547 sec BluePill Cortex M3 @ 72 MHz           228 bytes  66.8 billion clocks
+//  5414.040 sec kianvSoC (14 CPI) @ 90 MHz            ??? bytes 487.3 billion clocks
 // 13449.513 sec AVR ATmega2560 @ 20 MHz               318 bytes 269.0 billion clocks
 
 #include <stdio.h>
