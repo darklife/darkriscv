@@ -44,9 +44,13 @@ DEPS = $(SRCS) $(ASMS) $(OBJS) $(LIBS) # $(PROJ).ld $(PROJ).lds $(DARKLIBC)/dark
 
 TARGETS = $(PROJ).a
 
-#SPIBB := 1
+SPIBB := 1
 ifdef SPIBB
 CFLAGS += -DSPIBB=1
+endif
+SPI3WIRE:=1
+ifdef SPI3WIRE
+CFLAGS += -DSPI3WIRE=1
 endif
 
 .PHONY: all

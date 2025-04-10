@@ -98,6 +98,7 @@ module darksimv;
         .S_DQM(S_DQM),
         .S_DB (S_DB),
 `endif
+        .IPORT(0),
         .UART_RXD(RX),
         .UART_TXD(TX)
     );

@@ -6,7 +6,7 @@ module top (
     input USER_BTN,
     output [7:0] LED,
 `ifdef SPI
-    output SEN_SDI,
+    inout SEN_SDI,
     output SEN_SPC,
     output SEN_CS,
     input SEN_SDO,

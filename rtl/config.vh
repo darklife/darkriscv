@@ -459,11 +459,6 @@
     `define BOARD_CK (`BOARD_CK_REF * `BOARD_CK_MUL / `BOARD_CK_DIV)
 `endif
 
-`ifdef SPI
-`define SPI_POLLING 1
-`define NO_SPI_IRQ 1
-`endif
-
 // darkuart baudrate automtically calculated according to board clock:
 
 `ifndef __UARTSPEED__

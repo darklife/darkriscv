@@ -268,6 +268,7 @@ set_global_assignment -name VERILOG_MACRO "QUARTUS=1"
 set_global_assignment -name VERILOG_MACRO "MAX1000_MAX10=1"
 set_global_assignment -name VERILOG_MACRO "SPI=1"
 set_global_assignment -name VERILOG_MACRO "SPIBB=1"
+set_global_assignment -name VERILOG_MACRO "SPI3WIRE=1"
 set_global_assignment -name VERILOG_FILE ../../rtl/darksocv.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkio.v
 set_global_assignment -name VERILOG_FILE ../../rtl/darkpll.v

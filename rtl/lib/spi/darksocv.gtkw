@@ -1,65 +1,131 @@
 [*]
-[*] GTKWave Analyzer v3.3.121 (w)1999-2024 BSI
-[*] Sat Mar 22 21:44:02 2025
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Thu Apr 10 14:20:38 2025
 [*]
 [dumpfile] "sim/darksocv.vcd"
-[dumpfile_mtime] "Sat Mar 22 21:43:31 2025"
-[dumpfile_size] 3687622
+[dumpfile_mtime] "Thu Apr 10 14:19:40 2025"
+[dumpfile_size] 49449560
 [savefile] "rtl/lib/spi/darksocv.gtkw"
 [timestart] 0
-[size] 1920 1001
+[size] 1920 1043
 [pos] -1 -1
-*-22.215801 12075000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-26.206505 439475000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] darksimv.
 [treeopen] darksimv.soc0.
 [treeopen] darksimv.soc0.bridge0.
 [treeopen] darksimv.soc0.io0.
+[treeopen] darksimv.soc0.io0.spi0.
+[treeopen] darksimv.soc0.io0.spi0.spi_master1.
 [treeopen] darksimv.soc0.io0.uart0.
-[sst_width] 40
+[treeopen] darksimv.soc0.lis3dh_stub0.
+[treeopen] darksimv.soc0.spi_master_bb0.
+[sst_width] 290
 [signals_width] 239
-[sst_expanded] 0
-[sst_vpaned_height] 293
+[sst_expanded] 1
+[sst_vpaned_height] 292
 @820
 darksimv.soc0.io0.uart0.LASTCHAR[7:0]
 @22
+darksimv.soc0.bridge0.core0.IADDR[31:0]
 darksimv.soc0.io0.XADDR[31:0]
 darksimv.soc0.io0.XATAI[31:0]
 darksimv.soc0.io0.XATAO[31:0]
-@23
 darksimv.soc0.io0.XBE[3:0]
-@22
-darksimv.soc0.io0.LEDFF[15:0]
-darksimv.soc0.io0.LED[15:0]
 @28
 darksimv.soc0.io0.spi0.CLK
 @22
 darksimv.soc0.io0.spi0.DATAI[31:0]
 darksimv.soc0.io0.spi0.DATAO[31:0]
 darksimv.soc0.io0.spi0.DEBUG[3:0]
-@420
-darksimv.soc0.io0.spi0.DIV_COEF
-@28
-darksimv.soc0.io0.spi0.ESIMACK
-darksimv.soc0.io0.spi0.ESIMREQ
-darksimv.soc0.io0.spi0.IRQ
-darksimv.soc0.io0.spi0.MISO
-darksimv.soc0.io0.spi0.MOSI
-@22
-darksimv.soc0.io0.spi0.NWR[8:0]
 @28
 darksimv.soc0.io0.spi0.RD
 darksimv.soc0.io0.spi0.RES
-darksimv.soc0.io0.spi0.SCK
 darksimv.soc0.io0.spi0.WR
-darksimv.soc0.io0.spi0.spi_busy
-@22
-darksimv.soc0.io0.spi0.spi_miso_data[31:0]
-darksimv.soc0.io0.spi0.spi_mosi_data[31:0]
-darksimv.soc0.io0.spi0.spi_nbits[5:0]
-@28
-darksimv.soc0.io0.spi0.spi_ready
-darksimv.soc0.io0.spi0.spi_request
 @22
 darksimv.soc0.io0.spi0.status[7:0]
+@28
+darksimv.soc0.io0.spi0.spimaster_nreset
+@200
+-spi_master
+@22
+darksimv.soc0.io0.spi0.spi_master1.mosi_data[31:0]
+@28
+darksimv.soc0.io0.spi0.spi_master1.nrst
+darksimv.soc0.io0.spi0.spi_master1.request
+darksimv.soc0.io0.spi0.spi_master1.spi3w
+darksimv.soc0.io0.spi0.spi_master1.oe
+darksimv.soc0.io0.spi0.spi_master1.rd
+darksimv.soc0.io0.spi0.spi_master1.rd_tri
+darksimv.soc0.io0.spi0.spi_master1.spi_csn
+darksimv.soc0.io0.spi0.spi_master1.spi_sck
+darksimv.soc0.io0.spi0.spi_master1.spi_mosi
+darksimv.soc0.io0.spi0.spi_master1.spi_miso
+@200
+-lis3dh_stub
+@28
+darksimv.soc0.lis3dh_stub0.spi3w_flag
+@22
+darksimv.soc0.lis3dh_stub0.shift_reg[7:0]
+@28
+darksimv.soc0.lis3dh_stub0.spi3w
+@29
+darksimv.soc0.lis3dh_stub0.oe
+@28
+darksimv.soc0.lis3dh_stub0.rd
+darksimv.soc0.lis3dh_stub0.misoff
+darksimv.soc0.lis3dh_stub0.state[1:0]
+darksimv.soc0.lis3dh_stub0.mosi
+darksimv.soc0.lis3dh_stub0.miso
+@200
+-spi_master_bb
+@28
+darksimv.soc0.spi_master_bb0.RES
+@c00022
+darksimv.soc0.spi_master_bb0.IPORT[31:0]
+@28
+(0)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(1)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(2)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(3)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(4)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(5)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(6)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(7)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(8)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(9)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(10)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(11)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(12)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(13)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(14)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(15)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(16)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(17)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(18)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(19)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(20)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(21)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(22)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(23)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(24)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(25)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(26)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(27)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(28)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(29)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(30)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+(31)darksimv.soc0.spi_master_bb0.IPORT[31:0]
+@1401200
+-group_end
+@22
+darksimv.soc0.spi_master_bb0.OPORT[31:0]
+@28
+darksimv.soc0.spi_master_bb0.spibb_ena
+darksimv.soc0.spi_master_bb0.mosi_tri
+darksimv.soc0.spi_master_bb0.rd
+darksimv.soc0.spi_master_bb0.CSN
+darksimv.soc0.spi_master_bb0.SCK
+darksimv.soc0.spi_master_bb0.MOSI
+darksimv.soc0.spi_master_bb0.MISO
 [pattern_trace] 1
 [pattern_trace] 0
