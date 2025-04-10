@@ -1,6 +1,6 @@
 # "primes" benchmark
 
-The "primes" from Bruce Holt [1] is a small benchmark with a huge index of
+The "primes" from Bruce Hoult [1] is a small benchmark with a huge index of
 different machines and processor there.  In order to make the different
 implementations comparable, the main rule is that the code must be compiled
 w/ -O1, so it will not be much optimized.
