@@ -165,7 +165,7 @@ module darkram
 
         // read-modify-write operation w/ 1 wait-state:
 
-        if(XWR && XDREQ)
+        if(XWR && XDREQ && DTACK==1)
         begin
             MEM[XADDR[`MLEN-1:2]] <=
                                 {
@@ -193,7 +193,7 @@ module darkram
 `else
     assign XDACK = DTACK==1 ||(XDREQ&&XWR);
 `endif
-	 
+
     assign DEBUG = { XDREQ,XRD,XWR,XDACK };
 
 endmodule
