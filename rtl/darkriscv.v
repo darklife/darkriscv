@@ -344,6 +344,20 @@ module darkriscv
         wire SRET = SYS && FCT3==0 && XIDATA[31:20]==12'b000100000010;
     `endif
 
+    `ifdef __CSR_ESSENTIAL__
+		reg [63:0] CSRCLK = 0;
+		reg [63:0] CSRINS = 0;
+		always@(posedge CLK)
+		begin
+			if(!XRES)
+			begin
+				CSRCLK = CSRCLK+1;
+				if(!HLT & !(|FLUSH))
+					CSRINS = CSRINS+1;
+			end
+		end
+    `endif
+
     wire [31:0] CRDATA = 
     `ifdef __THREADS__    
                         XIDATA[31:20]==12'hf14 ? { CPTR, TPTR } : // core/thread number
@@ -367,6 +381,12 @@ module darkriscv
                         XIDATA[31:20]==12'h105 ? STVEC    : // machine vector table
                         XIDATA[31:20]==12'h100 ? SSTATUS  : // machine status
                         XIDATA[31:20]==12'h140 ? SSCRATCH : // machine status
+    `endif
+    `ifdef __CSR_ESSENTIAL__
+						XIDATA[31:20]==12'hC00 ? CSRCLK[31:0]  :
+						XIDATA[31:20]==12'hC02 ? CSRINS[31:0]  :
+						XIDATA[31:20]==12'hC80 ? CSRCLK[63:32] :
+						XIDATA[31:20]==12'hC82 ? CSRINS[63:32] :
     `endif
                                                  0;	 // unknown
 

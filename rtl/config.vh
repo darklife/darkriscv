@@ -121,6 +121,7 @@
 // order to read some special exception registers.  Also, THREADS use this in
 // order to identify the core number.  
 //`define __CSR__
+//`define __CSR_ESSENTIAL__
 
 // instruction trace:
 //
