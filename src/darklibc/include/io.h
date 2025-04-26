@@ -100,6 +100,9 @@ int  get_scause(void);
 int  get_mhartid(void);
 int  get_mstatus(void);
 
+long long get_mcycle(void);
+long long get_minstret(void);
+
 void banner(void);
 
 __attribute__ ((interrupt ("machine")))    void irq_handler(void);

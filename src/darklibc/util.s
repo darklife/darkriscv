@@ -55,6 +55,8 @@
     .globl  get_mcause
     .globl  get_scause
     .globl  get_mhartid
+    .globl  get_mcycle
+    .globl  get_minstret
 
 check4rv32i:
 
@@ -118,6 +120,25 @@ get_mie:
 get_mip:
     addi a0,x0,0
     csrr a0,mip
+    ret
+
+get_mcycle:
+    addi a0,x0,0
+    addi a1,x0,0
+    csrr a1,cycleh
+    csrr a0,cycle
+    ebreak
+    csrr a2,cycleh
+    bne      a1,a2,get_mcycle
+    ret
+
+get_minstret:
+    addi a0,x0,0
+    addi a1,x0,0
+    csrr a1,instreth
+    csrr a0,instret
+    csrr a2,instreth
+    bne        a1,a2,get_minstret
     ret
 
 set_mstatus:

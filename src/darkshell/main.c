@@ -168,7 +168,14 @@ int main(void)
     printf("\n");
 
     printf("Welcome to DarkRISCV!\n\n");
+/*
+    // performance counter test!
+    
+    int cycle = get_mcycle();
+    int instr = get_minstret();
 
+    printf("boot c=%d i=%d CPI=%d.%d\n",cycle,instr,cycle/instr,(cycle*1000/instr)%1000);
+*/
     // main loop
 
     while(1)
