@@ -6,21 +6,6 @@ as the DarkSoCV (a small system-on-chip with ROM, RAM and IO), the DarkUART
 enable and disable some features that are described in the Implementation
 Notes section.
 
-Description of RTL directory:
-
--rw-r--r--   1 marcelo  staff   1113 26 Apr 16:25 README.md
--rw-r--r--   1 marcelo  staff  16456 26 Apr 16:05 config.vh
--rw-r--r--   1 marcelo  staff   8294  9 Feb 15:11 darkbridge.v  
--rw-r--r--   1 marcelo  staff   6914 15 Mar 18:22 darkcache.v   
--rw-r--r--   1 marcelo  staff   7535 11 Apr 20:15 darkio.v      
--rw-r--r--   1 marcelo  staff   9717  9 Feb 15:11 darkpll.v
--rw-r--r--   1 marcelo  staff   5984 26 Apr 15:27 darkram.v
--rw-r--r--   1 marcelo  staff  29717 26 Apr 15:27 darkriscv.v
--rw-r--r--   1 marcelo  staff   9917 11 Apr 20:15 darksocv.v
--rw-r--r--   1 marcelo  staff   6003 11 Apr 20:15 darkspi.v
--rw-r--r--   1 marcelo  staff  11172 14 Sep  2024 darkuart.v
-drwxr-xr-x   4 marcelo  staff    128 23 Mar 18:21 lib
-
 The real RTL hierarchy is the following:
 
     darksocv -|
