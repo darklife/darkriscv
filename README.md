@@ -522,6 +522,8 @@ the DarkUART (a small UART for debug) and the configuration file, where is
 possible enable and disable some features that are described in the
 Implementation Notes section.
 
+For more detail, check the [README.md](https://github.com/darklife/darkriscv/edit/master/rtl/README.md) file in the rtl directory.
+
 ### "board" Directory
 
 The current supported boards are:
