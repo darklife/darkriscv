@@ -37,7 +37,9 @@
     start:
     - read and increent thread counter
     - case not zero, jump to multi thread boot
-    - otherwise continue    
+    - otherwise continue
+
+    note: a5 register points to DarkIO block!
 */
 
 _start:
@@ -56,14 +58,14 @@ _uart_boot:
     
     /* check simulation, skip uart boot */
 
-    la  a1,0x40000000
-    lb  a0,0(a1)
+    la  a5,0x40000000
+    lb  a0,0(a5)
     beq a0,x0,_normal_boot
 
 /*
     uart boot here:
     
-    - check for uart 3x w/ 1s timeout
+    - check for uart 5x w/ 1s timeout
     - case there is data, download it to main()
     - otherwise, go to normal boot
 */
@@ -71,21 +73,21 @@ _uart_boot:
     li  a0,'u'
     call _uart_putchar
 
-    la a3,main
-    li a4,5
-    li a5,8192000
+    li a1,8192000
+    la a2,main
+    li a3,5
 
     _uart_boot_loop1:
 
         _uart_boot_loop2:
 
-            addi a0,a5,0
+            addi a0,a1,0
             call _uart_getchar
 
             blt a0,x0,_uart_boot_exit
 
-            sb a0,0(a3)
-            addi a3,a3,1
+            sb a0,0(a2)
+            addi a2,a2,1
 
             j _uart_boot_loop2
 
@@ -93,11 +95,10 @@ _uart_boot:
 
         li a0,'.'
         call _uart_putchar
-        addi a4,a4,-1
-        bgt a4,x0,_uart_boot_loop1
+        addi a3,a3,-1
+        bgt a3,x0,_uart_boot_loop1
 
     li  a0,'b'
-
     call _uart_putchar
 
 /*
@@ -111,62 +112,65 @@ _uart_boot:
 */
 
 _normal_boot:
-#ifndef NOBANNER
+
 /*
     RLE code start here:
 
     register int c,s;
-    register char *p = rle_logo; // = a3
+    register char *p = rle_logo; // = a2
    
     while(*p)
     {
         c = *p++; // = a0
-        s = *p++; // = a4
+        s = *p++; // = a3
       
-        while(s--) putchar(c); // uses a0, a1, a2
+        while(s--) putchar(c); // uses a0, a5, a2
     }
 */
+
+#ifndef NOBANNER
 
     addi a0,x0,'\n'
     call _uart_putchar
 
-    lla a3,_rle_banner
-    lla a5,_rle_dict
+    lla a2,_rle_banner
+    lla a1,_rle_dict
 
-     lbu a4,0(a3)
+     lbu a3,0(a2)
    
     _rle_banner_loop1:
  
-        srli a0,a4,6
-        add a0,a0,a5
+        srli a0,a3,6
+        add a0,a0,a1
         lbu a0,0(a0)
 
-        andi a4,a4,63
-        addi a3,a3,1
+        andi a3,a3,63
+        addi a2,a2,1
 
         _rle_banner_loop2:
 
             call _uart_putchar
-            addi a4,a4,-1
+            addi a3,a3,-1
 
-            bgt a4,x0,_rle_banner_loop2
+            bgt a3,x0,_rle_banner_loop2
 
-        lbu a4,0(a3)
-        bne a4,x0,_rle_banner_loop1        
+        lbu a3,0(a2)
+        bne a3,x0,_rle_banner_loop1        
 
-    lla a3,_str_banner
+    lla a2,_str_banner
 
     _str_banner_loop3:
 
-        lbu a0,0(a3)
+        lbu a0,0(a2)
         beq a0,x0,_str_banner_loop4
         call _uart_putchar
-        addi a3,a3,1
+        addi a2,a2,1
         j _str_banner_loop3
 
     _str_banner_loop4:
 
 #endif
+
     /* RLL banner code end */
 
 	la	sp,_stack
@@ -185,26 +189,24 @@ _normal_boot:
     
     - wait until not busy
     - a0 = char to print
-    - a1 = soc.uart0.stat
-    - a2 = *soc.uart0.stat
+    - a5 = soc.uart0.stat
+    - t0 = *soc.uart0.stat
     - a0 = return the same data
 */
 
 _uart_putchar:
 
-    la a1,0x40000000
-
     _uart_putchar_busy:
 
-        lb      a2,4(a1)
-        not     a2,a2
-        andi    a2,a2,1
-        beq     a2,x0,_uart_putchar_busy
+        lb      t0,4(a5)
+        not     t0,t0
+        andi    t0,t0,1
+        beq     t0,x0,_uart_putchar_busy
 
-    sb a0,5(a1)
-    li a1,'\n'
+    sb a0,5(a5)
+    li t0,'\n'
 
-    bne a0,a1,_uart_putchar_exit
+    bne a0,t0,_uart_putchar_exit
 
     li a0,'\r'
     j _uart_putchar
@@ -217,25 +219,23 @@ _uart_putchar:
     uart_getchar:
 
     - a0 = time out in loops
-    - a1 = soc.uart0.stat
-    - a2 = *soc.uart0.stat
+    - a5 = soc.uart0.stat
+    - t0 = *soc.uart0.stat
     - a0 = return *soc.uart0.fifo or -1
 */
 
 _uart_getchar:
-
-    la  a1,0x40000000
 
     _uart_getchar_busy:
 
         beq     a0,x0,_uart_getchar_tout
         addi    a0,a0,-1
 
-        lb      a2,4(a1)
-        andi    a2,a2,2
-        beq     a2,x0,_uart_getchar_busy
+        lb      t0,4(a5)
+        andi    t0,t0,2
+        beq     t0,x0,_uart_getchar_busy
 
-    lbu a0,5(a1)
+    lbu a0,5(a5)
     ret
 
     _uart_getchar_tout:

@@ -75,7 +75,8 @@ endif
        CFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
        CFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
        CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
-export CFLAGS += -mcmodel=medany -mexplicit-relocs # relocatable code
+       #CFLAGS += -DSDRAM
+export CFLAGS += -mcmodel=medany # -mexplicit-relocs # relocatable code
 export ASFLAGS = -march=$(ARCH) -mabi=$(ABI)
 
 ifdef ENDIAN==big

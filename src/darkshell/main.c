@@ -39,9 +39,9 @@ int main(void)
 {
     unsigned t=0,t0=0;
 
-    printf("debug: main@%x stack@%x\n",(unsigned)main,(unsigned)&t);
+    printf("boot0: main@%x stack@%x\n",(unsigned)main,(unsigned)&t);
 
-#ifndef SMALL
+#ifdef SDRAM
 
     static int sdram_init = 1;
 
