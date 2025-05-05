@@ -99,8 +99,6 @@ Of course, the DarkRISCV needs external blocks around it in order to work, so th
 
 ![darkriscv SoC](https://github.com/darklife/darkriscv/blob/master/doc/darksocv.png)
 
-And that is all!
-
 Thanks to BSD license, the project is fully open, so feel free to make suggestions and good hacking! o/
 
 ## History
