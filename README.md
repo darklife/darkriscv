@@ -3,7 +3,7 @@
 
 Opensource RISC-V implemented from scratch in one night!
 
-![darkriscv](https://user-images.githubusercontent.com/42520878/109411184-01075f80-797f-11eb-8932-5b916133561a.jpg)
+![darkriscv](https://github.com/darklife/darkriscv/blob/master/doc/boot.png)
 
 ## Quick Start!
 
@@ -54,30 +54,29 @@ RISC-V instruction set.
 Although the code is small and crude when compared with other RISC-V
 implementations, the *DarkRISCV* has lots of impressive features:
 
-- implements most of the RISC-V RV32E instruction set
-- implements most of the RISC-V RV32I instruction set
+- implements the UCB RISC-V RV32E and RV32I user space instruction set
 - optional CSRs for interrupts and debug
 - works up to 250MHz in a ultrascale ku040 (400MHz w/ overclock!)
 - up to 100MHz in a cheap spartan-6, fits in small spartan-3E such as XC3S100E!
 - can sustain 1 clock per instruction most of time (typically 70% of time)
 - flexible harvard architecture (easy to integrate a cache controller, bus bridges, etc)
 - works fine in a real xilinx (spartan-3, spartan-6, spartan-7, artix-7, kintex-7 and kintex ultrascale)
-- works fine with some real altera and lattice FPGAs
-- works fine with gcc 9.0.0 and above for RISC-V (no patches required!)
+- works fine with some real Altera and Lattice FPGAs too!
+- works fine with gcc 9.0.0 or above for RISC-V (no patches required!)
 - uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
-- optional RV32E support (works better with LUT4 FPGAs)
+- optional RV32E support (smaller and faster, works better with LUT4 FPGAs)
 - optional 16x16-bit MAC instruction (for digital signal processing) 
 - optional coarse-grained multi-threading (MT)
-- no interlock between pipeline stages!
+- DSP-like pipeline: no interlock/stall/forward between pipeline stages!
 - optional interrupt handled on machine level
 - optional breakpoints handled on supervisor level
 - optional instruction and data caches
-- optional harvard to von neumann bridge
+- optional harvard to von neumann bridge (DarkBridge)
 - optional SDRAM controller (from kianRiscV project)
 - optional support for big-endian
 - BSD license: can be used anywhere with no restrictions!
 
-Some extra features are planned for the future or under development:
+Some extra features are planned for the future, under development or tested by some customers:
 
 - ethernet controller (GbE)
 - multi-processing (SMP)
@@ -90,7 +89,19 @@ Some extra features are planned for the future or under development:
 
 And much other features!
 
-Feel free to make suggestions and good hacking! o/
+The following picture shows the DarkRISCV core block diagram:
+
+![darkriscv core](https://github.com/darklife/darkriscv/blob/master/doc/darkriscv.png)
+
+The caches are added just to make easy to understand, but they are typically external, on the DarkSoCV or DarkBridge. It is easy to see that there is a huge optimization in the instruction path, so it have, in fact 3 stages: PF (pre-fetch), IF (instruction-fetch) and ID (instruction decode). In the EX (execute), there is a single stage, which explain why DarkRISCV does not need forward and does not stall on execution. Also, differently from PF/IF/ID, the EX have four ALUs: one complete ALU for reg/reg and reg/imm operations, one dedicated ALU for branch tests, one dedicated ALU for PC update and one dedicated ALU for memory address calculation, all they working in parallel. Finally, there is the register bank, which is a clocked single-path on write but combinational and multi-path on read, so it is possible feed the ALUs without forward or stall.
+
+Of course, the DarkRISCV needs external blocks around it in order to work, so the following picture shows the DarkSoCV in the mixed Harvard and von Neumann mode, when the core is working around Harvard architecture parallel caches for instruction and data but the rest of SoC is working around a von Neumann architecture, with sequential instructiona and data in the same bus, so it is possible share the main memories (BRAM and SDRAM):
+
+![darkriscv SoC](https://github.com/darklife/darkriscv/blob/master/doc/darksocv.png)
+
+And that is all!
+
+Thanks to BSD license, the project is fully open, so feel free to make suggestions and good hacking! o/
 
 ## History
 
