@@ -145,7 +145,7 @@ module darkriscv
         //XFCC   <= HLT ? XFCC   : IDATAX[6:0]==`FCC;
         XSYS   <= HLT ? XSYS   : IDATAX[6:0]==`SYS;
 
-        // signal extended immediate, according to the instruction type:
+        // sign extended immediate, according to the instruction type:
 
         XSIMM  <= HLT ? XSIMM :
                  IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
@@ -154,7 +154,8 @@ module darkriscv
                  IDATAX[6:0]==`LUI||
                  IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
                                       { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
-        // non-signal extended immediate, according to the instruction type:
+
+        // zero-extended (unsigned) immediate, according to the instruction type:
 
         XUIMM  <= HLT ? XUIMM :
                  IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
@@ -193,7 +194,7 @@ module darkriscv
     //assign XFCC   <= IDATAX[6:0]==`FCC;
     assign XSYS   = IDATAX[6:0]==`SYS;
 
-    // signal extended immediate, according to the instruction type:
+    // sign extended immediate, according to the instruction type:
 
     assign XSIMM  = 
                      IDATAX[6:0]==`SCC ? { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
@@ -202,7 +203,8 @@ module darkriscv
                      IDATAX[6:0]==`LUI||
                      IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
                                           { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
-        // non-signal extended immediate, according to the instruction type:
+	
+    // zero-extended (unsigned) immediate, according to the instruction type:
 
     assign XUIMM  = 
                      IDATAX[6:0]==`SCC ? { ALL0[31:12], IDATAX[31:25],IDATAX[11:7] } : // s-type
@@ -288,7 +290,7 @@ module darkriscv
     initial for(i=0;i!=`RLEN;i=i+1) REGS[i] = 0;
 `endif
 
-    // source-1 and source-1 register selection
+    // source-1 and source-2 register selection
 
     wire          [31:0] U1REG = REGS[S1PTR];
     wire          [31:0] U2REG = REGS[S2PTR];
