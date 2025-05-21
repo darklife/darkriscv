@@ -164,7 +164,13 @@ module darkio
         if(XDREQ && XRD)
         begin
             casex(XADDR[4:0])
+
+        `ifdef __BIG__
+                5'b000xx:   IOMUXFF <= { BOARD_ID, BOARD_CM, CORE_ID, BOARD_IRQ };
+        `else
                 5'b000xx:   IOMUXFF <= { BOARD_IRQ, CORE_ID, BOARD_CM, BOARD_ID };
+        `endif
+
                 5'b001xx:   IOMUXFF <= UDATA; // from uart
                 5'b010xx:   IOMUXFF <= LEDFF;
                 5'b011xx:   IOMUXFF <= TIMERFF;
@@ -201,9 +207,15 @@ module darkio
       .RES(RES),
       .RD(!HLT && XRD && XDREQ && XADDR[4:2]==1),
       .WR(!HLT && XWR && XDREQ && XADDR[4:2]==1),
+`ifdef __BIG__
+      .BE({XBE[0],XBE[1],XBE[2],XBE[3]}),
+      .DATAI({XATAI[7:0],XATAI[15:8],XATAI[23:16],XATAI[31:24]}),
+      .DATAO({UDATA[7:0],UDATA[15:8],UDATA[23:16],UDATA[31:24]}),
+`else
       .BE(XBE),
       .DATAI(XATAI),
       .DATAO(UDATA),
+`endif
       //.IRQ(UART_IRQ),
 
 `ifndef __TESTMODE__

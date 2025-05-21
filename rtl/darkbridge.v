@@ -102,7 +102,11 @@ module darkbridge
         .IRQ    (XIRQ),
 `endif
 
+`ifdef __BIG__
+        .IDATA  ({IDATA[7:0],IDATA[15:8],IDATA[23:16],IDATA[31:24]}),
+`else
         .IDATA  (IDATA),
+`endif
         .IADDR  (IADDR),
         .DADDR  (DADDR),
 
@@ -219,6 +223,34 @@ module darkbridge
 
     assign XADDR = DADDR;
 
+    `ifdef __BIG__
+
+    assign XBE   = DLEN[0] ? ( DADDR[1:0]==0 ? 4'b1000 : // 8-bit
+                               DADDR[1:0]==1 ? 4'b0100 :
+                               DADDR[1:0]==2 ? 4'b0010 :
+                                               4'b0001 ) :
+                   DLEN[1] ? ( DADDR[1]==0   ? 4'b1100 : // 16-bit
+                                               4'b0011 ) :
+                                               4'b1111;  // 32-bit
+
+    assign XATAO = DLEN[0] ? ( DADDR[1:0]==0 ? {        DATAO[ 7: 0], 24'd0 } :
+                               DADDR[1:0]==1 ? {  8'd0, DATAO[ 7: 0], 16'd0 } :
+                               DADDR[1:0]==2 ? { 16'd0, DATAO[ 7: 0],  8'd0 } :
+                                               { 24'd0, DATAO[ 7: 0]        } ):
+                   DLEN[1] ? ( DADDR[1]==0   ? { DATAO[15: 0], 16'd0 } :
+                                               { 16'd0, DATAO[15: 0] } ):
+                                                        DATAO;
+
+    assign DATAI = DLEN[0] ? ( DADDR[1:0]==0 ? XATAI[31:24] :
+                               DADDR[1:0]==1 ? XATAI[23:16] :
+                               DADDR[1:0]==2 ? XATAI[15: 8] :
+                                               XATAI[ 7: 0] ):
+                   DLEN[1] ? ( DADDR[1]==0   ? XATAI[31:16] :
+                                               XATAI[15: 0] ):
+                                               XATAI;
+
+    `else
+
     assign XBE   = DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
                                DADDR[1:0]==2 ? 4'b0100 :
                                DADDR[1:0]==1 ? 4'b0010 :
@@ -242,6 +274,8 @@ module darkbridge
                    DLEN[1] ? ( DADDR[1]==1   ? XATAI[31:16] :
                                                XATAI[15: 0] ):
                                                XATAI;
+
+    `endif
 
     assign DDACK = XXDACK;
 

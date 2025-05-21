@@ -62,6 +62,14 @@
 // but the RV32E is better with old 4 input LUT based FPGAs.
 `define __RV32E__
 
+// BIG-ENDIAN:
+//
+// Although the core itself is bi-endian, the SoC, peripherals and firmware
+// needs to be in sync in order to work correctly, so it is possible 
+// enable or disable the big-endian mode, which is usefull for network
+// processing and other communication related stuff.
+//`define __BIG__
+
 // muti-threading support:
 //
 // Decreases clock performance by 20% (80MHz), but enables two or more

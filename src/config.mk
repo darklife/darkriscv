@@ -55,6 +55,12 @@ endif
     export ENDIAN = little
     #export ENDIAN = big
 
+ifeq ($(ENDIAN),big)
+    ELFTYPE = elf32briscv
+else
+    ELFTYPE = elf32lriscv
+endif
+
 ifndef BUILD
     export BUILD = $(shell date -R)
 endif
@@ -77,13 +83,8 @@ endif
        CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
        #CFLAGS += -DSDRAM
 export CFLAGS += -mcmodel=medany # -mexplicit-relocs # relocatable code
-export ASFLAGS = -march=$(ARCH) -mabi=$(ABI)
-
-ifdef ENDIAN==big
-    export LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32briscv -static -gc-sections --entry=_start # -Ttext=0
-else
-    export LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m elf32lriscv -static -gc-sections --entry=_start # -Ttext=0
-endif
+export ASFLAGS = -march=$(ARCH) -mabi=$(ABI) -m$(ENDIAN)-endian
+export LDFLAGS = -T$(PROJ).ld -Map=$(PROJ).map -m $(ELFTYPE) -static -gc-sections --entry=_start # -Ttext=0
 
 export LDLIBS  = $(LIBS)
 export CPFLAGS = -P 
