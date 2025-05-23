@@ -172,6 +172,40 @@ module darkcache
 
     // convert darkriscv bus to xbus
 
+`ifdef __BIG__
+
+    assign XDREQ = HIT ? 0 : DAS;
+    assign XRD   = HIT ? 0 : DRD;
+    assign XWR   = HIT ? 0 : DWR;
+
+    assign XADDR = HIT ? 0 : DADDR;
+
+    assign XBE   = HIT ? 0 : DLEN[0] ? ( DADDR[1:0]==0 ? 4'b1000 : // 8-bit
+                                         DADDR[1:0]==1 ? 4'b0100 :
+                                         DADDR[1:0]==2 ? 4'b0010 :
+                                                         4'b0001 ) :
+                             DLEN[1] ? ( DADDR[1]==0   ? 4'b1100 : // 16-bit
+                                                         4'b0011 ) :
+                                                         4'b1111;  // 32-bit
+    
+    assign XATAO = HIT ? 0 : DLEN[0] ? ( DADDR[1:0]==0 ? {        DATAI[ 7: 0], 24'd0 } :
+                                         DADDR[1:0]==1 ? {  8'd0, DATAI[ 7: 0], 16'd0 } :
+                                         DADDR[1:0]==2 ? { 16'd0, DATAI[ 7: 0],  8'd0 } :
+                                                         { 24'd0, DATAI[ 7: 0]        } ):
+                             DLEN[1] ? ( DADDR[1]==0   ? { DATAI[15: 0], 16'd0 } :
+                                                         { 16'd0, DATAI[15: 0] } ):
+                                                                  DATAI;
+
+    assign DATAO = DLEN[0] ? ( DADDR[1:0]==0 ? CDATO[31:24] :
+                               DADDR[1:0]==1 ? CDATO[23:16] :
+                               DADDR[1:0]==2 ? CDATO[15: 8] :
+                                               CDATO[ 7: 0] ):
+                   DLEN[1] ? ( DADDR[1]==0   ? CDATO[31:16] :
+                                               CDATO[15: 0] ):
+                                               CDATO;
+
+`else
+
     assign XDREQ = HIT ? 0 : DAS;
     assign XRD   = HIT ? 0 : DRD;
     assign XWR   = HIT ? 0 : DWR;
@@ -201,6 +235,8 @@ module darkcache
                    DLEN[1] ? ( DADDR[1]==1   ? CDATO[31:16] :
                                                CDATO[15: 0] ):
                                                CDATO;
+
+`endif
 
     assign DEBUG = { DAS, HIT, XDREQ, XDACK };
 
