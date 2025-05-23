@@ -765,7 +765,7 @@ module darkriscv
             if(!HLT && !FLUSH && (XIDATA===32'dx || XIDATA[6:0]==0))
             begin
                 $display("invalid XIDATA=%x at %x %s",XIDATA,PC,XIDATA[6:0]==0?"(check for ENDIAN on rtl/config.vh and src/config.mk)":"");
-                $stop();  
+                $finish();  
             end
             
             if(LCC&&!HLT&&!FLUSH&&( (DLEN==4 && DATAI[31:0]===32'dx)||
@@ -773,7 +773,7 @@ module darkriscv
                                     (DLEN==1 && DATAI[ 7:0]=== 8'dx)))
             begin
                 $display("invalid DATAI@%x at %x",DADDR,PC);
-                $stop();
+                $finish();
             end
             
         `ifdef __TRACE__
