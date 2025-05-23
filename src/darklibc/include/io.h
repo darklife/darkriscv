@@ -79,6 +79,9 @@ extern unsigned char kmem[8192];
 
 int  check4rv32i(void);
 
+unsigned long  bswap32(unsigned long);
+unsigned short bswap16(unsigned short);
+
 void set_stvec(void *f);
 void set_mtvec(void *f);
 void set_sepc(void *);

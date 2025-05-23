@@ -104,7 +104,7 @@ int main(void)
 
     _edata = 0xdeadbeef;
 
-    printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
+    printf("uart0: 115.2kbps (div=%d)\n",bswap16(io->uart.baud));
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
 
 #if 0

@@ -35,6 +35,8 @@
 
     .globl  check4rv32i
     .globl  mac
+    .globl  bswap32
+    .globl  bswap16
 
     .globl  set_mstatus
     .globl  set_mtvec
@@ -58,6 +60,28 @@
     .globl  get_mhartid
     .globl  get_mcycle
     .globl  get_minstret
+
+bswap32:
+    slli    a2,a0,16
+    srli    a5,a0,16
+    srli    a3,a0,24
+    srli    a4,a2,24
+    andi    a5,a5,255
+    slli    a0,a0,8
+    add     a0,a4,a0
+    slli    a5,a5,8
+    or      a5,a5,a3
+    slli    a0,a0,16
+    or      a0,a5,a0
+    ret
+
+bswap16:
+    srli    a5,a0,8
+    slli    a0,a0,8
+    add     a0,a5,a0
+    slli    a0,a0,16
+    srli    a0,a0,16
+    ret
 
 mac:
     .byte   0x0b, 0x85, 0xc5, 0x00  /* mac a0,a1,a2 */
