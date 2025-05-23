@@ -15,6 +15,7 @@ jobs:
       - name: Install prerequisites
         run: |
           pacman -Sy --noconfirm base-devel git wget iverilog
+          pacman -Sy --noconfirm base-devel git wget xxd
           useradd -m builduser
           echo 'builduser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
           chown -R builduser /home/builduser
