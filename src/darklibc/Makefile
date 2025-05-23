@@ -33,7 +33,7 @@ CFLAGS += -Iinclude
 PROJ = darklibc
 OBJS = stdio.o io.o string.o misc.o unistd.o util.o #small.o # start.o
 ASMS = stdio.s io.s string.s misc.s unistd.s
-SRCS = stdio.c io.c string.c misc.c unistd.c util.s #small.s # start.s
+SRCS = stdio.c io.c string.c misc.c unistd.c util.S #small.s # start.s
 
 DEPS = $(SRCS) $(ASMS) $(OBJS)
 

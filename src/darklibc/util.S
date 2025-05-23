@@ -34,6 +34,7 @@
     .align  2
 
     .globl  check4rv32i
+    .globl  mac
 
     .globl  set_mstatus
     .globl  set_mtvec
@@ -58,12 +59,14 @@
     .globl  get_mcycle
     .globl  get_minstret
 
+mac:
+    .byte   0x0b, 0x85, 0xc5, 0x00  /* mac a0,a1,a2 */
+    ret
+
 check4rv32i:
-
-        .word   0x00000793  /* addi    x15,x0,0   */
-        .word   0x00100f93  /* addi    x31,x0,1   */
-        .word   0x40ff8533  /* sub     a0,x31,x15 */
-
+    .byte   0x93, 0x07, 0x00, 0x00  /* addi    x15,x0,0   */
+    .byte   0x93, 0x0f, 0x10, 0x00  /* addi    x31,x0,1   */
+    .byte   0x33, 0x85, 0xff, 0x40  /* sub     a0,x31,x15 */
     ret
 
 /*

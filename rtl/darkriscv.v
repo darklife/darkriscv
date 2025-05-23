@@ -762,9 +762,9 @@ module darkriscv
                 $stop();
             end
         `endif        
-            if(!FLUSH && IDATA===32'dx)
+            if(!HLT && !FLUSH && (XIDATA===32'dx || XIDATA[6:0]==0))
             begin
-                $display("invalid IDATA at %x",PC);
+                $display("invalid XIDATA=%x at %x %s",XIDATA,PC,XIDATA[6:0]==0?"(check for ENDIAN on rtl/config.vh and src/config.mk)":"");
                 $stop();  
             end
             

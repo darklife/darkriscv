@@ -77,56 +77,24 @@ int main(void)
 
 #endif
 
-    void *mtvec=0;
-    void *stvec=0;
-
-#ifndef SMALL
-
-    int csr = csr_test(0xFFFF0000,0xFFFF,0x00FFFF00);
-    
-    if(csr) printf("csrxx: csr_test=%x\n",csr);
-    else    printf("csrxx: not found.\n");
-
-    set_stvec(dbg_handler);
-    
-    stvec = get_stvec();
-    
-    if(stvec)
-        printf("stvec: handler@%x, debug enabled...\n",stvec);
-    else
-        printf("stvec: not found\n");
-
-    set_mtvec(irq_handler);
-
-    mtvec = get_mtvec();
-
-    if(mtvec)
-    {
-        printf("mtvec: handler@%x, enabling interrupts...\n",mtvec);
-
-        set_mie((1<<11)|get_mie());
-        set_mstatus((1<<3)|get_mstatus());
-
-        printf("mtvec: interrupts enabled!\n");
-    }
-    else
-        printf("mtvec: not found (polling)\n");
-
-#endif
-
     io->irq = IRQ_TIMR; // clear interrupts
     utimers = 0;
 
     printf("board: %s (id=%d)\n",board_name(io->board_id),io->board_id);
     printf("build: %s for %s\n",BUILD,ARCH);
+    
+    printf("core%d: ",              io->core_id);               // core id
+    printf("darkriscv@%dMHz ",      io->board_cm*2);            // board clock MHz
+    printf("rv32%s ",               check4rv32i()?"i":"e");     // architecture
 
-    printf("core%d: ",              io->core_id);                 // core id
-    printf("darkriscv@%dMHz w/ ",io->board_cm*2);              // board clock MHz
-    printf("rv32%s ",               check4rv32i()?"i":"e");      // architecture
-    if(mac(1000,16,16)==1256)       printf("MAC ");              // MAC support
+    printf((mac(1000,16,16)==1256)?"mac ":"");                  // MAC support
+
+    printf((*(char *)(int[]){1})?"little-endian ":             // endian
+                                 "big-endian ");
+
     printf("\n");
 
-    printf("bram0: text@%x+%d data@%x+%d stack@%x\n",
+    printf("bram0: text@%x+%x data@%x+%x stack@%x\n",
         (unsigned)&_text, (unsigned)&_etext-(unsigned)&_text,
         (unsigned)&_data, (unsigned)&_edata-(unsigned)&_data,
         (unsigned)&_stack);
@@ -138,7 +106,9 @@ int main(void)
 
     printf("uart0: 115.2kbps (div=%d)\n",io->uart.baud);
     printf("timr0: %dHz (div=%d)\n",(io->board_cm*2000000u)/(io->timer+1),io->timer);
+
 #if 0
+
     // led test code! :)
 
     printf("*** led=%x\n",io->led);
@@ -155,7 +125,30 @@ int main(void)
     p[3] = 3;
     
     printf("*** led=%x\n",io->led);
+
 #endif
+
+    void *mtvec=0;
+    void *stvec=0;
+
+#ifndef SMALL
+
+    int csr = csr_test(0xFFFF0000,0xFFFF,0x00FFFF00);
+    
+    if(csr) printf("csrxx: csr_test=%x\n",csr);
+    else    printf("csrxx: not found\n");
+
+    set_stvec(dbg_handler);
+    
+    stvec = get_stvec();
+    
+    if(stvec)
+        printf("stvec: handler@%x, debug enabled...\n",stvec);
+    else
+        printf("stvec: not found\n");
+
+    set_mtvec(irq_handler);
+
     // simulate a 32-bit load in a invalid address
 
     if(stvec)
@@ -164,6 +157,22 @@ int main(void)
                 li t0,1;    \
                 lw t0,0(t0);");
     }
+
+    mtvec = get_mtvec();
+
+    if(mtvec)
+    {
+        printf("mtvec: handler@%x, enabling interrupts...\n",mtvec);
+
+        set_mie((1<<11)|get_mie());
+        set_mstatus((1<<3)|get_mstatus());
+
+        printf("mtvec: interrupts enabled!\n");
+    }
+    else
+        printf("mtvec: not found (polling)\n");
+
+#endif
     
     printf("\n");
 
