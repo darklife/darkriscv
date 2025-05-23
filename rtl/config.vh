@@ -68,7 +68,7 @@
 // needs to be in sync in order to work correctly, so it is possible 
 // enable or disable the big-endian mode, which is usefull for network
 // processing and other communication related stuff.
-//`define __BIG__
+`define __BIG__
 
 // muti-threading support:
 //
