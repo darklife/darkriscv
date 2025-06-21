@@ -91,6 +91,7 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 //`define __MAC16X16__
+//`define __COPROCESSOR__
 
 // interrupt support
 //

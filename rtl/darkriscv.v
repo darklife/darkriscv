@@ -87,6 +87,16 @@ module darkriscv
     output reg        ESIMACK = 0,  // end simulation ack
 `endif
 
+`ifdef __COPROCESSOR__
+    output            CPR_REQ,
+    output     [ 2:0] CPR_FCT3,
+    output     [ 6:0] CPR_FCT7,
+    output     [31:0] CPR_RS1,
+    output     [31:0] CPR_RS2,
+    output     [31:0] CPR_RDR,
+    input      [31:0] CPR_RDW,
+`endif
+
     output [3:0]  DEBUG       // old-school osciloscope based debug! :)
 );
 
@@ -443,6 +453,15 @@ module darkriscv
 
 `endif
 
+`ifdef __COPROCESSOR__
+    assign CPR_REQ = CUS;
+    assign CPR_FCT3 = FCT3;
+    assign CPR_FCT7 = FCT7;
+    assign CPR_RS1 = U1REG;
+    assign CPR_RS2 = U2REG;
+    assign CPR_RDR = REGS[DPTR];
+`endif
+
     // J/B-group of instructions (OPCODE==7'b1100011)
 
     wire BMUX       = FCT3==7 && U1REG>=U2REG  || // bgeu
@@ -599,6 +618,9 @@ module darkriscv
 
 `ifdef __MAC16X16__
                        MAC ? REGS[DPTR]+KDATA :
+`endif
+`ifdef __COPROCESSOR__
+                       CUS ? CPR_RDW :
 `endif
 `ifdef __CSR__
                        CSRX ? CRDATA :
