@@ -101,8 +101,9 @@ module darkriscv
     reg [`__THREADS__-1:0] TPTR = 0;     // thread ptr
 `endif
 
-    // pipeline flow control on HLT!
+    // pipeline flow control when halted (HLT=1)
 
+    // only for halt control
     reg        HLT2   = 0;
     reg [31:0] IDATA2 = 0;
 
@@ -110,18 +111,23 @@ module darkriscv
     begin
         HLT2 <= HLT;
         
+        // clock in IDATA2 when HLT transitions
         if(HLT2^HLT) IDATA2 <= IDATA;    
     end
 
-    wire[31:0] IDATAX = XRES ? 0 : HLT2 ? IDATA2 : IDATA;
+    // HLT-aware instruction data for decode stage
+    wire[31:0] IDATAX = XRES ? 0
+                      : HLT2 ? IDATA2
+                      : IDATA;
 
     // decode: IDATA is break apart as described in the RV32I specification
 
 `ifdef __3STAGE__
 
+    // eXecute stage instruction data (next pipeline stage)
     reg [31:0] XIDATA;
 
-    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XSYS; //, XFCC, XSYS;
+    reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XSYS; //, XFCC;
 
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
@@ -166,6 +172,7 @@ module darkriscv
                                       { ALL0[31:12], IDATAX[31:20] }; // i-type
     end
 
+    // how many cycles left to start instruction execution
     reg [1:0] FLUSH = -1;  // flush instruction pipeline
 
 `else
@@ -203,7 +210,7 @@ module darkriscv
                      IDATAX[6:0]==`LUI||
                      IDATAX[6:0]==`AUIPC ? { IDATAX[31:12], ALL0[11:0] } : // u-type
                                           { IDATAX[31] ? ALL1[31:12]:ALL0[31:12], IDATAX[31:20] }; // i-type
-	
+
     // zero-extended (unsigned) immediate, according to the instruction type:
 
     assign XUIMM  = 
@@ -245,7 +252,7 @@ module darkriscv
     `endif
 `endif
 
-    wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0];
+    wire [6:0] OPCODE = FLUSH ? 0 : XIDATA[6:0]; // unused
     wire [2:0] FCT3   = XIDATA[14:12];
     wire [6:0] FCT7   = XIDATA[31:25];
 
@@ -459,21 +466,22 @@ module darkriscv
 `endif
 
 `ifdef __3STAGE__
-	    FLUSH <= XRES ? 2 : HLT ? FLUSH :        // reset and halt
-	                       FLUSH ? FLUSH-1 :
+        FLUSH <= XRES ? 2 :         // on reset wait 2 cycles (fill the pipeline)
+                  HLT ? FLUSH :     // on halt do nothing
+                FLUSH ? FLUSH-1 :   // if-nonzero -> decrement
     `ifdef __EBREAK__
           IERR||DBER||IBER||IAER||DAER ? 2 : // misc errors
                                   EBRK ? 2 : // ebreak jmps to system level, i.e. sepc = PC; PC = stvec
                                   SRET ? 2 : // sret returns from system level, i.e. PC = sepc
     `endif
     `ifdef __INTERRUPT__
-                            MRET ? 2 : // mret returns from interrupt, i.e. PC = mepc
+                 MRET ? 2 :         // mret returns from interrupt, i.e. PC = mepc
     `endif
-
-	                       JREQ ? 2 : 0;  // flush the pipeline!
+                 JREQ ? 2 : 0;      // flush the pipeline! (when jump requested)
 `else
-        FLUSH <= XRES ? 1 : HLT ? FLUSH :        // reset and halt
-                       JREQ;  // flush the pipeline!
+        FLUSH <= XRES ? 1 :         // on reset wait 1 cycle
+                  HLT ? FLUSH :     // on halt do nothing
+                  JREQ;             // flush the pipeline! (or not! when no jump)
 `endif
 
 `ifdef __INTERRUPT__
@@ -605,17 +613,17 @@ module darkriscv
 
         NXPC2[XRES ? RESMODE : TPTR] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[TPTR] :   // reset and halt
                                       JREQ ? JVAL :                            // jmp/bra
-	                                         NXPC2[TPTR]+4;                   // normal flow
+                                             NXPC2[TPTR]+4;                   // normal flow
 
         TPTR <= XRES ? 0 : HLT ? TPTR :        // reset and halt
                             JAL /*JREQ*/ ? TPTR+1 : TPTR;
-	             //TPTR==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
+                 //TPTR==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
                  //TPTR==1/*&&!IREQ*/&&JREQ ? 0 : TPTR;  // wait pipeflush to return from irq
 
     `else
         NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
 
-	    NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
+        NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
         `ifdef __EBREAK__
                      SRET ? SEPC :  // return from system call
                      STVEC&&
@@ -631,8 +639,8 @@ module darkriscv
                      MRET ? MEPC :  // return from interrupt
                     MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
-	                 JREQ ? JVAL :                    // jmp/bra
-	                        NXPC2+4;                   // normal flow
+                     JREQ ? JVAL :                    // jmp/bra
+                            NXPC2+4;                   // normal flow
 
     `endif
 
