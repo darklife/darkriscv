@@ -81,6 +81,16 @@
 // The number of threads must be 2**n (i.e. THREADS = 3 means 8 threads)
 //`define __THREADS__ 3
 
+// coprocessor interface
+//
+// The coprocessor interface allows to add new instructions to
+// the custom-0 opcode without modifying the core itself
+// the CPR_REQ is asserted when the custom opcode is matched
+// the fct3/fct7 are outputted alongside with rs1/rs2/rd current values
+// the RDW is the value written in the next cycle to the target register
+// the user may use HLT to implement multi-cycle accelerators
+//`define __COPROCESSOR__
+
 // mac instruction:
 //
 // The mac instruction is similar to other register to register
@@ -91,7 +101,6 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 //`define __MAC16X16__
-//`define __COPROCESSOR__
 
 // interrupt support
 //
