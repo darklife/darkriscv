@@ -197,6 +197,7 @@
     `define __CDEPTH__ 6
     `define __ICACHE__
     `define __DCACHE__
+    `define __RMW_CYCLE__
 `endif
 
 // interactive simulation:
