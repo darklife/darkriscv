@@ -435,24 +435,6 @@ module darkriscv
                                    $signed(S1REG>>>U2REGX[4:0]);  // (FCT7[5] ? U1REG>>>U2REG[4:0] :
 `endif
 
-`ifdef __MAC16X16__
-
-    // MAC instruction rd += s1*s2 (OPCODE==7'b1111111)
-    //
-    // 0000000 01100 01011 100 01100 0110011 xor a2,a1,a2
-    // 0000000 01010 01100 000 01010 0110011 add a0,a2,a0
-    // 0000000 01100 01011 000 01010 0001011 mac a0,a1,a2
-    //
-    // 0000 0000 1100 0101 1000 0101 0000 1011 = 00c5850b
-
-    wire MAC = CUS && FCT3==0;
-
-    wire signed [15:0] K1TMP = S1REG[15:0];
-    wire signed [15:0] K2TMP = S2REG[15:0];
-    wire signed [31:0] KDATA = K1TMP*K2TMP;
-
-`endif
-
 `ifdef __COPROCESSOR__
     assign CPR_REQ = CUS;
     assign CPR_FCT3 = FCT3;
@@ -616,9 +598,6 @@ module darkriscv
                        LUI ? SIMM :
                   MCC||RCC ? RMDATA:
 
-`ifdef __MAC16X16__
-                       MAC ? REGS[DPTR]+KDATA :
-`endif
 `ifdef __COPROCESSOR__
                        CUS ? CPR_RDW :
 `endif

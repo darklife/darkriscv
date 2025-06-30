@@ -83,6 +83,15 @@ module darkbridge
                 DAS;
     wire        DDACK;
 
+`ifdef __COPROCESSOR__
+    wire        CPR_REQ;
+    wire [ 2:0] CPR_FCT3;
+    wire [ 6:0] CPR_FCT7;
+    wire [31:0] CPR_RS1;
+    wire [31:0] CPR_RS2;
+    wire [31:0] CPR_RDR;
+    wire [31:0] CPR_RDW;
+`endif
    
     // darkriscv
 
@@ -122,6 +131,16 @@ module darkbridge
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
         .ESIMACK(ESIMACK),
+`endif
+
+`ifdef __COPROCESSOR__
+        .CPR_REQ    (CPR_REQ),
+        .CPR_FCT3   (CPR_FCT3),
+        .CPR_FCT7   (CPR_FCT7),
+        .CPR_RS1    (CPR_RS1),
+        .CPR_RS2    (CPR_RS2),
+        .CPR_RDR    (CPR_RDR),
+        .CPR_RDW    (CPR_RDW),
 `endif
 
         .DEBUG  (KDEBUG)
@@ -336,7 +355,42 @@ module darkbridge
     assign HLT  = 0;
 
 `endif
-    
+
+`ifdef __COPROCESSOR__
+
+    // Coprocessors are linked here!  Althrough there are no rules about it
+    // at this time, one suggestion is use FCT3 as coprocessor ID, in the
+    // same way the 680x0 used, so it is possible keep up to 8 independent
+    // coprocessors, with the same tipe or not.  That makes much sense in
+    // the case of stateless coprocessors, but it would make full sense in
+    // the case of statefull coprocessors with integrated registers and
+    // multi-cycle processing, in a way that is possible run complex jobs in
+    // paralell.
+
+    `ifdef __MAC16X16__
+
+        darkmac mac0
+        (
+            .CLK        (CLK),          // clock
+            .RES        (RES),          // reset
+            .HLT        (HLT),          // halt
+
+            .CPR_REQ    (CPR_REQ),      // CPR instr request
+            .CPR_FCT3   (CPR_FCT3),     // fct3 field
+            .CPR_FCT7   (CPR_FCT7),     // fct7 field
+            .CPR_RS1    (CPR_RS1),      // operand RS1
+            .CPR_RS2    (CPR_RS2),      // operand RS2
+            .CPR_RDR    (CPR_RDR),      // operand RD (read)
+            .CPR_RDW    (CPR_RDW)       // operand RD (write)
+
+            //.CPR_ACK    (CPR_ACK),      // CPR instr ack (unused)
+            //.DEBUG      (DEBUG)     // old-school osciloscope based debug! :)
+        );
+
+    `endif
+
+`endif
+
     assign DEBUG = { XDREQ, HLT, XDACK, IDACK };
 
 endmodule
