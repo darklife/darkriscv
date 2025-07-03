@@ -206,7 +206,7 @@ int main(void)
                     if(!utimers--)
                     {
                         io->led++;
-                        utimers=999999;
+                        utimers=999;
                     }
                     io->irq = IRQ_TIMR;
                 }
