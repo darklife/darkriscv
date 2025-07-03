@@ -75,6 +75,7 @@ module darkriscv
     output     [31:0] DADDR, // addr bus
 
     output     [ 2:0] DLEN, // data length
+    output     [ 3:0] DBE,  // data byte enable
     output            DRW,  // data read/write
     output            DRD,  // data read
     output            DWR,  // data write
@@ -111,6 +112,14 @@ module darkriscv
     reg [`__THREADS__-1:0] TPTR = 0;     // thread ptr
 `endif
 
+    // switch IDATA according to the endian
+
+`ifdef __BIG__
+    wire [31:0] IDATA1 = {IDATA[7:0],IDATA[15:8],IDATA[23:16],IDATA[31:24]};
+`else
+    wire [31:0] IDATA1 = IDATA;
+`endif
+
     // pipeline flow control when halted (HLT=1)
 
     // only for halt control
@@ -122,13 +131,13 @@ module darkriscv
         HLT2 <= HLT;
         
         // clock in IDATA2 when HLT transitions
-        if(HLT2^HLT) IDATA2 <= IDATA;    
+        if(HLT2^HLT) IDATA2 <= IDATA1;
     end
 
     // HLT-aware instruction data for decode stage
-    wire[31:0] IDATAX = XRES ? 0
-                      : HLT2 ? IDATA2
-                      : IDATA;
+    wire[31:0] IDATAX = XRES ? 0 :
+                        HLT2 ? IDATA2 :
+                               IDATA1;
 
     // decode: IDATA is break apart as described in the RV32I specification
 
@@ -311,16 +320,60 @@ module darkriscv
 
     wire          [31:0] U1REG = REGS[S1PTR];
     wire          [31:0] U2REG = REGS[S2PTR];
+    wire          [31:0] DREG  = REGS[DPTR];
 
     wire signed   [31:0] S1REG = U1REG;
     wire signed   [31:0] S2REG = U2REG;
 
 
-    // L-group of instructions (OPCODE==7'b0000011)
+    // SL-group of instructions (OPCODE==7'b0100011 for S, OPCODE==7'b0000011 for L)
+
+`ifdef __FLEXBUZZ__
 
     wire [31:0] LDATA = FCT3[1:0]==0 ? { FCT3[2]==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } :
                         FCT3[1:0]==1 ? { FCT3[2]==0&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } :
                                         DATAI;
+
+    wire [31:0] SDATA = U2REG;
+
+`else
+    `ifdef __BIG__
+
+        wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==0 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
+                                                 DADDR[1:0]==1 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
+                                                 DADDR[1:0]==2 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
+                                                                 { FCT3==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } ):
+                            FCT3==1||FCT3==5 ? ( DADDR[1]==0   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
+                                                                 { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
+                                                 DATAI;
+
+        wire [31:0] SDATA = FCT3==0 ? ( DADDR[1:0]==0 ? { U2REG[ 7: 0], ALL0 [23:0] } :
+                                        DADDR[1:0]==1 ? { ALL0 [31:24], U2REG[ 7:0], ALL0[15:0] } :
+                                        DADDR[1:0]==2 ? { ALL0 [31:16], U2REG[ 7:0], ALL0[7:0] } :
+                                                        { ALL0 [31: 8], U2REG[ 7:0] } ) :
+                            FCT3==1 ? ( DADDR[1]==0   ? { U2REG[15: 0], ALL0 [15:0] } :
+                                                        { ALL0 [31:16], U2REG[15:0] } ) :
+                                        U2REG;
+
+    `else
+
+        wire [31:0] LDATA = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? { FCT3==0&&DATAI[31] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[31:24] } :
+                                                 DADDR[1:0]==2 ? { FCT3==0&&DATAI[23] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[23:16] } :
+                                                 DADDR[1:0]==1 ? { FCT3==0&&DATAI[15] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[15: 8] } :
+                                                                 { FCT3==0&&DATAI[ 7] ? ALL1[31: 8]:ALL0[31: 8] , DATAI[ 7: 0] } ):
+                            FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? { FCT3==1&&DATAI[31] ? ALL1[31:16]:ALL0[31:16] , DATAI[31:16] } :
+                                                                 { FCT3==1&&DATAI[15] ? ALL1[31:16]:ALL0[31:16] , DATAI[15: 0] } ) :
+                                                 DATAI;
+
+        wire [31:0] SDATA = FCT3==0 ? ( DADDR[1:0]==3 ? { U2REG[ 7: 0], ALL0 [23:0] } :
+                                        DADDR[1:0]==2 ? { ALL0 [31:24], U2REG[ 7:0], ALL0[15:0] } :
+                                        DADDR[1:0]==1 ? { ALL0 [31:16], U2REG[ 7:0], ALL0[7:0] } :
+                                                        { ALL0 [31: 8], U2REG[ 7:0] } ) :
+                            FCT3==1 ? ( DADDR[1]==1   ? { U2REG[15: 0], ALL0 [15:0] } :
+                                                        { ALL0 [31:16], U2REG[15:0] } ) :
+                                        U2REG;
+    `endif
+`endif
 
     // C-group: CSRRW
 
@@ -441,7 +494,7 @@ module darkriscv
     assign CPR_FCT7 = FCT7;
     assign CPR_RS1 = U1REG;
     assign CPR_RS2 = U2REG;
-    assign CPR_RDR = REGS[DPTR];
+    assign CPR_RDR = DREG;
 `endif
 
     // J/B-group of instructions (OPCODE==7'b1100011)
@@ -590,7 +643,7 @@ module darkriscv
 `else
         REGS[DPTR] <=   XRES||DPTR[4:0]==0 ? 0  :        // reset x0
 `endif
-                       HLT ? REGS[DPTR] :        // halt
+                       HLT ? DREG :        // halt
                        LCC ? LDATA :
                      AUIPC ? PCSIMM :
                       JAL||
@@ -604,7 +657,7 @@ module darkriscv
 `ifdef __CSR__
                        CSRX ? CRDATA :
 `endif
-                             REGS[DPTR];
+                             DREG;
 
 `ifdef __3STAGE__
 
@@ -664,7 +717,7 @@ module darkriscv
 
     // IO and memory interface
 
-    assign DATAO = U2REG;
+    assign DATAO = SDATA;
     assign DADDR = U1REG + SIMM;
 
     // based in the Scc and Lcc
@@ -673,6 +726,25 @@ module darkriscv
     assign DLEN[0] = (SCC||LCC)&&FCT3[1:0]==0; // byte
     assign DLEN[1] = (SCC||LCC)&&FCT3[1:0]==1; // word
     assign DLEN[2] = (SCC||LCC)&&FCT3[1:0]==2; // long
+
+`ifdef __BIG__
+
+    assign DBE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==0 ? 4'b1000 : // sb/lb
+                                      DADDR[1:0]==1 ? 4'b0100 :
+                                      DADDR[1:0]==2 ? 4'b0010 :
+                                                      4'b0001 ) :
+                 FCT3==1||FCT3==5 ? ( DADDR[1]==0   ? 4'b1100 : // sh/lh
+                                                      4'b0011 ) :
+                                                      4'b1111; // sw/lw
+`else
+    assign DBE = FCT3==0||FCT3==4 ? ( DADDR[1:0]==3 ? 4'b1000 : // sb/lb
+                                      DADDR[1:0]==2 ? 4'b0100 :
+                                      DADDR[1:0]==1 ? 4'b0010 :
+                                                      4'b0001 ) :
+                 FCT3==1||FCT3==5 ? ( DADDR[1]==1   ? 4'b1100 : // sh/lh
+                                                      4'b0011 ) :
+                                                      4'b1111; // sw/lw
+`endif
 
     assign DWR     = SCC;
     assign DRD     = LCC;

@@ -110,6 +110,38 @@
 // code), it is possible peak 100MMAC/s @100MHz.
 //`define __MAC16X16__
 
+// flexbuzz interface (for compatibility):
+//
+// A new data bus interface similar to a well known c*ldfire bus interface,
+// in a way that part of the bus routing is moved to the core, in a way that
+// is possible support different bus widths (8, 16 or 32 bit) and endians
+// more easily (the new interface is natively big-endian, but the endian can
+// be adjusted in the bus interface dinamically).  Similarly to the standard
+// 32-bit interface, the external logic must detect the RD/WR operation
+// quick enough and assert HLT in order to insert wait-states and perform
+// the required multiplexing to fit the DLEN operand size in the data bus
+// width available.  As far as other blocks were added, in special
+// DarkBridge, DarkRAM and DarkCache, such bus proved not so good, since we
+// had to duplicate lots of code on that blocks, so we reverted to the
+// previous concept and keep this option only for compatibility.
+//`define __FLEXBUZZ__
+
+// CSR support
+// 
+// enable this to use CSR registers...  INTERRUPT and EBREAK use this in
+// order to read some special exception registers.  Also, THREADS use this in
+// order to identify the core number.  
+//`define __CSR__
+
+`ifdef __CSR__
+
+// Performance Counters
+//
+// The Performance Counters are a set of 64-bit registers that counts the
+//number of clocks and number of instructions executed, so is possible
+//measure the core performance.
+//`define __CSR_ESSENTIAL__
+
 // interrupt support
 //
 // The interrupt support in the core uses the machine registers mtvec and
@@ -133,13 +165,7 @@
 // but with no real interrupt source.
 //`define __EBREAK__
 
-// CSR support
-// 
-// enable this to use CSR registers...  INTERRUPT and EBREAK use this in
-// order to read some special exception registers.  Also, THREADS use this in
-// order to identify the core number.  
-//`define __CSR__
-//`define __CSR_ESSENTIAL__
+`endif
 
 // instruction trace:
 //

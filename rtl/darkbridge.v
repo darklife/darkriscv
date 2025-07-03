@@ -75,7 +75,8 @@ module darkbridge
     wire [31:0] DADDR;
     wire [31:0] DATAO;
     wire [31:0] DATAI;
-    wire [ 2:0] DLEN;
+    wire [ 3:0] DBE;
+    
     wire        IHLT,
                 DRW,
                 DWR,
@@ -111,17 +112,13 @@ module darkbridge
         .IRQ    (XIRQ),
 `endif
 
-`ifdef __BIG__
-        .IDATA  ({IDATA[7:0],IDATA[15:8],IDATA[23:16],IDATA[31:24]}),
-`else
         .IDATA  (IDATA),
-`endif
         .IADDR  (IADDR),
         .DADDR  (DADDR),
 
         .DATAI  (DATAI),
         .DATAO  (DATAO),
-        .DLEN   (DLEN),
+        .DBE    (DBE),
         .DRW    (DRW),
         .DWR    (DWR),
         .DRD    (DRD),
@@ -166,7 +163,7 @@ module darkbridge
         .DAS    (!RES),
         .DRD    (1'b1),
         .DWR    (1'b0),
-        .DLEN   (3'd4),
+        .DBE    (4'b1111),
         .DADDR  (IADDR),    
         .DATAI  (32'd0),
         .DATAP  (IDATA),
@@ -218,7 +215,7 @@ module darkbridge
         .DAS    (DAS),
         .DRD    (DRD),
         .DWR    (DWR),
-        .DLEN   (DLEN),
+        .DBE    (DBE),
         .DADDR  (DADDR),    
         .DATAI  (DATAO),
         .DATAO  (DATAI),
@@ -239,62 +236,11 @@ module darkbridge
     assign XDREQ = DAS;
     assign XRD   = DRD;
     assign XWR   = DWR;
+    assign XBE   = DBE;
 
     assign XADDR = DADDR;
-
-    `ifdef __BIG__
-
-    assign XBE   = DLEN[0] ? ( DADDR[1:0]==0 ? 4'b1000 : // 8-bit
-                               DADDR[1:0]==1 ? 4'b0100 :
-                               DADDR[1:0]==2 ? 4'b0010 :
-                                               4'b0001 ) :
-                   DLEN[1] ? ( DADDR[1]==0   ? 4'b1100 : // 16-bit
-                                               4'b0011 ) :
-                                               4'b1111;  // 32-bit
-
-    assign XATAO = DLEN[0] ? ( DADDR[1:0]==0 ? {        DATAO[ 7: 0], 24'd0 } :
-                               DADDR[1:0]==1 ? {  8'd0, DATAO[ 7: 0], 16'd0 } :
-                               DADDR[1:0]==2 ? { 16'd0, DATAO[ 7: 0],  8'd0 } :
-                                               { 24'd0, DATAO[ 7: 0]        } ):
-                   DLEN[1] ? ( DADDR[1]==0   ? { DATAO[15: 0], 16'd0 } :
-                                               { 16'd0, DATAO[15: 0] } ):
-                                                        DATAO;
-
-    assign DATAI = DLEN[0] ? ( DADDR[1:0]==0 ? XATAI[31:24] :
-                               DADDR[1:0]==1 ? XATAI[23:16] :
-                               DADDR[1:0]==2 ? XATAI[15: 8] :
-                                               XATAI[ 7: 0] ):
-                   DLEN[1] ? ( DADDR[1]==0   ? XATAI[31:16] :
-                                               XATAI[15: 0] ):
-                                               XATAI;
-
-    `else
-
-    assign XBE   = DLEN[0] ? ( DADDR[1:0]==3 ? 4'b1000 : // 8-bit
-                               DADDR[1:0]==2 ? 4'b0100 :
-                               DADDR[1:0]==1 ? 4'b0010 :
-                                               4'b0001 ) :
-                   DLEN[1] ? ( DADDR[1]==1   ? 4'b1100 : // 16-bit
-                                               4'b0011 ) :
-                                               4'b1111;  // 32-bit
-    
-    assign XATAO = DLEN[0] ? ( DADDR[1:0]==3 ? {        DATAO[ 7: 0], 24'd0 } :
-                               DADDR[1:0]==2 ? {  8'd0, DATAO[ 7: 0], 16'd0 } :
-                               DADDR[1:0]==1 ? { 16'd0, DATAO[ 7: 0],  8'd0 } :
-                                               { 24'd0, DATAO[ 7: 0]        } ):
-                   DLEN[1] ? ( DADDR[1]==1   ? { DATAO[15: 0], 16'd0 } :
-                                               { 16'd0, DATAO[15: 0] } ):
-                                                        DATAO;
-
-    assign DATAI = DLEN[0] ? ( DADDR[1:0]==3 ? XATAI[31:24] :
-                               DADDR[1:0]==2 ? XATAI[23:16] :
-                               DADDR[1:0]==1 ? XATAI[15: 8] :
-                                               XATAI[ 7: 0] ):
-                   DLEN[1] ? ( DADDR[1]==1   ? XATAI[31:16] :
-                                               XATAI[15: 0] ):
-                                               XATAI;
-
-    `endif
+    assign XATAO = DATAO;
+    assign DATAI = XATAI;
 
     assign DDACK = XXDACK;
 
