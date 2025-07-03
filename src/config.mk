@@ -46,14 +46,14 @@ ifndef CROSS
     #export CCPATH = /usr/local/share/toolchain-$(CROSS)/bin
 endif
 
-    export ARCH = rv32e_zicsr
-    #export ARCH = rv32i_zicsr
+    #export ARCH = rv32e_zicsr
+    export ARCH = rv32i_zicsr
 
-    export ABI = ilp32e
-    #export ABI = ilp32
+    #export ABI = ilp32e
+    export ABI = ilp32
 
-    #export ENDIAN = little
-    export ENDIAN = big
+    export ENDIAN = little
+    #export ENDIAN = big
 
 ifeq ($(ENDIAN),big)
     ELFTYPE = elf32briscv

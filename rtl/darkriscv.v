@@ -296,7 +296,7 @@ module darkriscv
     `endif
 `endif
 
-    reg [31:0] REGS [0:`RLEN-1];	// general-purpose 32x32-bit registers (s1)
+    reg [31:0] REGS [0:`RLEN-1];	// synthesis attribute ram_style of REGS is "distributed";
 
     reg [31:0] NXPC;        // 32-bit program counter t+1
     reg [31:0] PC;		    // 32-bit program counter t+0

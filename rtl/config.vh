@@ -60,7 +60,7 @@
 // The difference between the RV32I and RV32E regarding the logic space is
 // minimal in typical applications with modern 5 or 6 input LUT based FPGAs,
 // but the RV32E is better with old 4 input LUT based FPGAs.
-`define __RV32E__
+//`define __RV32E__
 
 // BIG-ENDIAN:
 //
@@ -68,7 +68,7 @@
 // needs to be in sync in order to work correctly, so it is possible 
 // enable or disable the big-endian mode, which is usefull for network
 // processing and other communication related stuff.
-`define __BIG__
+//`define __BIG__
 
 // muti-threading support:
 //
