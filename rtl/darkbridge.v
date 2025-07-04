@@ -70,6 +70,7 @@ module darkbridge
 
     wire [31:0] IADDR;
     wire [31:0] IDATA;
+    wire        IDREQ;
     wire        IDACK;
     
     wire [31:0] DADDR;
@@ -81,7 +82,7 @@ module darkbridge
                 DRW,
                 DWR,
                 DRD,
-                DAS;
+                DDREQ;
     wire        DDACK;
 
 `ifdef __COPROCESSOR__
@@ -92,6 +93,7 @@ module darkbridge
     wire [31:0] CPR_RS2;
     wire [31:0] CPR_RDR;
     wire [31:0] CPR_RDW;
+    wire        CPR_ACK;
 `endif
    
     // darkriscv
@@ -106,23 +108,25 @@ module darkbridge
     (
         .CLK    (CLK),
         .RES    (RES),
-        .HLT    (IHLT),
 
 `ifdef __INTERRUPT__
         .IRQ    (XIRQ),
 `endif
 
+        .IDREQ  (IDREQ),
         .IDATA  (IDATA),
         .IADDR  (IADDR),
-        .DADDR  (DADDR),
+        .IDACK  (IDACK),
 
+        .DADDR  (DADDR),
         .DATAI  (DATAI),
         .DATAO  (DATAO),
         .DBE    (DBE),
         .DRW    (DRW),
         .DWR    (DWR),
         .DRD    (DRD),
-        .DAS    (DAS),
+        .DDREQ  (DDREQ),
+        .DDACK  (DDACK),
         .BERR   (1'b0),
 
 `ifdef SIMULATION
@@ -138,6 +142,7 @@ module darkbridge
         .CPR_RS2    (CPR_RS2),
         .CPR_RDR    (CPR_RDR),
         .CPR_RDW    (CPR_RDW),
+        .CPR_ACK    (CPR_ACK),
 `endif
 
         .DEBUG  (KDEBUG)
@@ -160,7 +165,7 @@ module darkbridge
         .RES    (RES),
         .HLT    (HLT),
         
-        .DAS    (!RES),
+        .DDREQ  (IDREQ),
         .DRD    (1'b1),
         .DWR    (1'b0),
         .DBE    (4'b1111),
@@ -181,7 +186,7 @@ module darkbridge
 
 `else
 
-    assign YDREQ = !RES;
+    assign YDREQ = IDREQ;
     assign YADDR = IADDR;
     assign IDATA = YDATA;
     assign IDACK = YDACK;
@@ -212,7 +217,7 @@ module darkbridge
         .RES    (RES),
         .HLT    (HLT),
         
-        .DAS    (DAS),
+        .DDREQ  (DDREQ),
         .DRD    (DRD),
         .DWR    (DWR),
         .DBE    (DBE),
@@ -233,7 +238,7 @@ module darkbridge
 
 `else
 
-    assign XDREQ = DAS;
+    assign XDREQ = DDREQ;
     assign XRD   = DRD;
     assign XWR   = DWR;
     assign XBE   = DBE;
@@ -258,7 +263,7 @@ module darkbridge
     assign XATAI  = XXATAI;
     assign XDACK  = XXDACK;
 
-    assign IHLT = (!RES && !IDACK) || (DAS && !DDACK);
+    assign IHLT = (IDREQ && !IDACK) || (DDREQ && !DDACK);
     
     assign HLT  = IHLT; 
 
@@ -296,7 +301,7 @@ module darkbridge
     assign XATAI = XSTATE==1 ? XATAI2 : XXATAI;
     assign XDACK = XSTATE==1 ? XDACK2 : XXDACK;
 
-    assign IHLT = (!RES && !IDACK) || (DAS && !DDACK);
+    assign IHLT = (IDREQ && !IDACK) || (DDREQ && !DDACK);
     
     assign HLT  = 0;
 
@@ -327,10 +332,9 @@ module darkbridge
             .CPR_RS1    (CPR_RS1),      // operand RS1
             .CPR_RS2    (CPR_RS2),      // operand RS2
             .CPR_RDR    (CPR_RDR),      // operand RD (read)
-            .CPR_RDW    (CPR_RDW)       // operand RD (write)
-
-            //.CPR_ACK    (CPR_ACK),      // CPR instr ack (unused)
-            //.DEBUG      (DEBUG)     // old-school osciloscope based debug! :)
+            .CPR_RDW    (CPR_RDW),      // operand RD (write)
+            .CPR_ACK    (CPR_ACK)       // CPR instr ack
+            //.DEBUG      (DEBUG)       // old-school osciloscope based debug! :)
         );
 
     `endif

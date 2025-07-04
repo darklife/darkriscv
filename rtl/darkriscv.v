@@ -61,7 +61,6 @@ module darkriscv
 (
     input             CLK,   // clock
     input             RES,   // reset
-    input             HLT,   // halt
 
 `ifdef __INTERRUPT__
     input             IRQ,   // interrupt request
@@ -69,6 +68,8 @@ module darkriscv
 
     input      [31:0] IDATA, // instruction data bus
     output     [31:0] IADDR, // instruction addr bus
+    output            IDREQ, // instruction req
+    input             IDACK, // instruction ack
 
     input      [31:0] DATAI, // data bus (input)
     output     [31:0] DATAO, // data bus (output)
@@ -79,7 +80,8 @@ module darkriscv
     output            DRW,  // data read/write
     output            DRD,  // data read
     output            DWR,  // data write
-    output            DAS,  // address strobe
+    output            DDREQ,// data req
+    input             DDACK,// data ack
 
     input             BERR, // bus error
     
@@ -96,6 +98,7 @@ module darkriscv
     output     [31:0] CPR_RS2,
     output     [31:0] CPR_RDR,
     input      [31:0] CPR_RDW,
+    input             CPR_ACK,
 `endif
 
     output [3:0]  DEBUG       // old-school osciloscope based debug! :)
@@ -121,6 +124,13 @@ module darkriscv
 `endif
 
     // pipeline flow control when halted (HLT=1)
+    
+    wire HLT = 
+`ifdef __COPROCESSOR__
+                (CPR_REQ?!CPR_ACK:0)||  // when CPR_REQ=1, wait CPR_ACK
+`endif
+                (DDREQ?!DDACK:0)||      // wheh DDREQ=1, wait DDACK
+                (IDREQ?!IDACK:0);       // when IDREQ=1, wait IDACK
 
     // only for halt control
     reg        HLT2   = 0;
@@ -748,7 +758,8 @@ module darkriscv
 
     assign DWR     = SCC;
     assign DRD     = LCC;
-    assign DAS     = SCC||LCC;
+    assign DDREQ   = SCC||LCC;
+    assign IDREQ   = !XRES;
 
 `ifdef __3STAGE__
     `ifdef __THREADS__

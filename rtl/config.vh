@@ -99,6 +99,8 @@
 // the user may use HLT to implement multi-cycle accelerators
 //`define __COPROCESSOR__
 
+`ifdef __COPROCESSOR__
+
 // mac instruction:
 //
 // The mac instruction is similar to other register to register
@@ -109,6 +111,8 @@
 // designed for DSP applications.  with some effort (low level machine
 // code), it is possible peak 100MMAC/s @100MHz.
 //`define __MAC16X16__
+
+`endif
 
 // flexbuzz interface (for compatibility):
 //

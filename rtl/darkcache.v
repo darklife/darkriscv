@@ -42,7 +42,7 @@ module darkcache
 
     // darkriscv
 
-    input           DAS,    // address valid
+    input           DDREQ,  // address valid
     input           DRD,    // read/write
     input           DWR,    // read/write
     input   [3:0]   DBE,    // data byte enable
@@ -172,7 +172,7 @@ module darkcache
 
     // convert darkriscv bus to xbus
 
-    assign XDREQ = HIT ? 0 : DAS;
+    assign XDREQ = HIT ? 0 : DDREQ;
     assign XRD   = HIT ? 0 : DRD;
     assign XWR   = HIT ? 0 : DWR;
 
@@ -183,6 +183,6 @@ module darkcache
     assign XATAO = DATAI;
     assign DATAO = CDATO;
     
-    assign DEBUG = { DAS, HIT, XDREQ, XDACK };
+    assign DEBUG = { DDREQ, HIT, XDREQ, XDACK };
 
 endmodule
