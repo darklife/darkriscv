@@ -59,6 +59,8 @@ module mt48lc16m16a2_ctrl #(
 
   localparam ONE_MICROSECOND = SDRAM_CLK_FREQ;
   localparam WAIT_100US = 100 * ONE_MICROSECOND;  // 64 * 1/64e6 = 1us => 100 * 1us
+  localparam CAS_LATENCY = CAS;  // 2/3 allowed, tRCD=20ns -> 3 cycles@128MHz
+
   // command period; PRE to ACT in ns, e.g. 20ns
   parameter TRP = $rtoi((TRP_NS * ONE_MICROSECOND / 1000) + 1);
   // tRC command period (REF to REF/ACT TO ACT) in ns
@@ -80,7 +82,6 @@ module mt48lc16m16a2_ctrl #(
 
   localparam BURST_LENGTH = 3'b001;  // 000=1, 001=2, 010=4, 011=8
   localparam ACCESS_TYPE = 1'b0;  // 0=sequential, 1=interleaved
-  localparam CAS_LATENCY = CAS;  // 2/3 allowed, tRCD=20ns -> 3 cycles@128MHz
   localparam OP_MODE = 2'b00;  // only 00 (standard operation) allowed
   localparam NO_WRITE_BURST = 1'b0;  // 0= write burst enabled, 1=only single access write
   localparam sdram_mode = {1'b0, NO_WRITE_BURST, OP_MODE, CAS_LATENCY, ACCESS_TYPE, BURST_LENGTH};
@@ -149,12 +150,12 @@ module mt48lc16m16a2_ctrl #(
   reg update_ready;
   reg update_ready_nxt;
 
+  reg oe;
+  reg oe_nxt;
+
   reg [15:0] dq;
   reg [15:0] dq_nxt;
   assign sdram_dq = oe ? dq : 16'hz;
-
-  reg oe;
-  reg oe_nxt;
 
   always @(posedge clk) begin
     if (~resetn) begin
