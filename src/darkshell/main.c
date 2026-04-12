@@ -172,6 +172,16 @@ int main(void)
     else
         printf("mtvec: not found (polling)\n");
 
+    #ifdef MEXT
+
+        volatile long long a = 0x12345678LL;
+        volatile long long res = a * a;          // should use mul + mulh
+        volatile int *ptr = (volatile int *) &res;
+
+        printf("MEXT test: %x:%x\n", ptr[1], ptr[0]);
+
+    #endif
+
 #endif
     
     printf("\n");

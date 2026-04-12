@@ -483,7 +483,25 @@ module darkriscv
     wire signed [31:0] S2REGX = XMCC ? SIMM : S2REG;
     wire        [31:0] U2REGX = XMCC ? SIMM : U2REG;
 
-    wire [31:0] RMDATA = FCT3==7 ? U1REG&S2REGX :
+`ifdef __MEXT__
+
+    wire MEXT = XRCC && FCT7[0];
+
+    wire signed [63:0] MEXT_PROD_SS = S1REG*S2REG; // MUL/MULH
+    wire signed [63:0] MEXT_PROD_SU = S1REG*U2REG; // MULHSU
+    wire        [63:0] MEXT_PROD_UU = U1REG*U2REG; // MULHU
+`endif
+
+    wire [31:0] RMDATA =
+`ifdef __MEXT__
+                         MEXT ? (
+                             FCT3==3'b000 ? MEXT_PROD_SS[31:0]  :           // MUL   -> low 32 bits
+                             FCT3==3'b001 ? MEXT_PROD_SS[63:32] :           // MULH
+                             FCT3==3'b010 ? MEXT_PROD_SU[63:32] :           // MULHSU
+                             FCT3==3'b011 ? MEXT_PROD_UU[63:32] :           // MULHU
+                                            32'b0 ) :
+`endif
+                         FCT3==7 ? U1REG&S2REGX :
                          FCT3==6 ? U1REG|S2REGX :
                          FCT3==4 ? U1REG^S2REGX :
                          FCT3==3 ? U1REG<U2REGX : // unsigned

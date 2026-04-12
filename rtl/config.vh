@@ -171,6 +171,13 @@
 
 `endif
 
+// MUL support
+//
+// experimental and partial M-extension support, MUL/MULH/MULHSU/MULHU
+// only...  in case of DIV/REM, trap and emulate by software is the current
+// option!
+//`define __MEXT__
+
 // instruction trace:
 //
 // prints the PC, the respective instruction and some useful information,
@@ -256,7 +263,8 @@
 // size as the same.
 // The size is defined as 2**MLEN, i.e. the address bits used in the memory.
 // WARNING: this setup must match with the src/darksocv.ld.src file!
-`define MLEN 13 // MEM[14:0] -> 32KBytes LENGTH = 0x8000 for coremark!
+`define MLEN 13 // 13: 8kB for darkshell
+                // 15: 32kB, for coremark
 
 // read-modify-write cycle:
 //
@@ -480,13 +488,16 @@
     `else
         `define BOARD_CK 50000000
     `endif
-    `define INVRES 1    
-    `define __SDRAM__ 1
-    `define __LUTCACHE__
-    `define __CDEPTH__ 6
-    `define __ICACHE__
-    `define __DCACHE__
-    `undef __HARVARD__
+    `define INVRES 1
+    // this is the main test board! :D 
+    // so I would enable some features directly here:    
+    //`define __SDRAM__ 1
+    //`define __LUTCACHE__
+    //`define __CDEPTH__ 6
+    //`define __ICACHE__
+    //`define __DCACHE__
+    //`undef __HARVARD__
+    //`define __MEXT__
 `endif
 
 `ifdef MAX1000_MAX10

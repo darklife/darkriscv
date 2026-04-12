@@ -48,12 +48,16 @@ endif
 
     #export ARCH = rv32e_zicsr
     export ARCH = rv32i_zicsr
+    #export ARCH = rv32im_zicsr # for coremark/s=2.28
 
     #export ABI = ilp32e
     export ABI = ilp32
 
     export ENDIAN = little
     #export ENDIAN = big
+
+    export OPT = -Os
+    #export OPT = -O2
 
 ifeq ($(ENDIAN),big)
     ELFTYPE = elf32briscv
@@ -78,9 +82,9 @@ endif
     export AR  = $(CCPATH)/$(CROSS)-ar
     export CPP = $(CCPATH)/$(CROSS)-cpp
 
-       CFLAGS  = -Wall -fcommon -ffreestanding -Os -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
+       CFLAGS  = -Wall -fcommon -ffreestanding $(OPT) -fno-delete-null-pointer-checks -m$(ENDIAN)-endian
        CFLAGS += -march=$(ARCH) -mabi=$(ABI) -I$(DARKLIBC)/include -I../$(DARKLIBC)/include
-       CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\""
+       CFLAGS += -D__RISCV__ -DBUILD="\"$(BUILD)\"" -DARCH="\"$(ARCH)\"" -mno-div
        #CFLAGS += -DSDRAM
 export CFLAGS += -mcmodel=medany # -mexplicit-relocs # relocatable code
 export ASFLAGS = -march=$(ARCH) -mabi=$(ABI) -m$(ENDIAN)-endian
