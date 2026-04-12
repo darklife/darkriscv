@@ -1,5 +1,9 @@
 ## CoreMark on DarkRISCV
 
+Current coremark/MHz values for DarkRISCV:
+- 0.96 coremark/MHz for RV32I (software emulated mul/div)
+- 2.28 coremark/MHz for RV32IM (MEXT enabled)
+
 ### config example:
 **Because coremark is relatively large, it is nearly 30KB (`src/coremark/coremark.o`) after compiling with -O2 optimization level. Therefore, the following modifications need to be made before making.**
 ``` verilog
