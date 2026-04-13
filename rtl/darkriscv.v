@@ -66,24 +66,27 @@ module darkriscv
     input             IRQ,   // interrupt request
 `endif
 
-    input      [31:0] IDATA, // instruction data bus
-    output     [31:0] IADDR, // instruction addr bus
-    output            IDREQ, // instruction req
-    input             IDACK, // instruction ack
+    // instr-bus
 
-    input      [31:0] DATAI, // data bus (input)
-    output     [31:0] DATAO, // data bus (output)
-    output     [31:0] DADDR, // addr bus
+    output            IDREQ, // inst req
+    output     [31:0] IADDR, // inst addr bus
+    input      [31:0] IDATA, // inst data bus
+    input             IDACK, // inst ack
+    input             IBERR, // inst bus error
 
+    // ddata-bus
+
+    output            DDREQ,// data req
+    output     [31:0] DADDR,// data addr bus
     output     [ 2:0] DLEN, // data length
     output     [ 3:0] DBE,  // data byte enable
     output            DRW,  // data read/write
     output            DRD,  // data read
     output            DWR,  // data write
-    output            DDREQ,// data req
+    output     [31:0] DATAO,// data bus (output)
+    input      [31:0] DATAI,// data bus (input)
     input             DDACK,// data ack
-
-    input             BERR, // bus error
+    input             DBERR,// data bus error
     
 `ifdef SIMULATION
     input             ESIMREQ,  // end simulation req
@@ -109,19 +112,24 @@ module darkriscv
     wire [31:0] ALL0  = 0;
     wire [31:0] ALL1  = -1;
 
+    // core reset logic
+
     reg XRES = 1;
 
 `ifdef __THREADS__
     reg [`__THREADS__-1:0] TPTR = 0;     // thread ptr
+    reg [`__THREADS__-1:0] RESMODE = -1;
 `endif
 
-    // switch IDATA according to the endian
-
-`ifdef __BIG__
-    wire [31:0] IDATA1 = {IDATA[7:0],IDATA[15:8],IDATA[23:16],IDATA[31:24]};
+    always@(posedge CLK)
+    begin
+`ifdef __THREADS__
+        RESMODE <= RES ? -1 : RESMODE ? RESMODE-1 : 0;
+        XRES <= |RESMODE;
 `else
-    wire [31:0] IDATA1 = IDATA;
+        XRES <= RES;
 `endif
+    end
 
     // pipeline flow control when halted (HLT=1)
     
@@ -131,6 +139,32 @@ module darkriscv
 `endif
                 (DDREQ?!DDACK:0)||      // wheh DDREQ=1, wait DDACK
                 (IDREQ?!IDACK:0);       // when IDREQ=1, wait IDACK
+
+    // instruction fetch logic
+
+`ifdef __THREADS__
+        reg [31:0] IFPC [0:(2**`__THREADS__)-1];        // 32-bit program counter IF stage
+`else
+        reg [31:0] IFPC;                                // 32-bit program counter IF state
+`endif
+
+    assign IDREQ   = !XRES;
+
+    `ifdef __THREADS__
+        assign IADDR = IFPC[TPTR];
+    `else
+        assign IADDR = IFPC;
+    `endif
+
+    // switch IDATA according to the endian
+
+`ifdef __BIG__
+    wire [31:0] IDATA1 = {IDATA[7:0],IDATA[15:8],IDATA[23:16],IDATA[31:24]};
+`else
+    wire [31:0] IDATA1 = IDATA;
+`endif
+
+
 
     // only for halt control
     reg        HLT2   = 0;
@@ -256,15 +290,10 @@ module darkriscv
 
 `ifdef __THREADS__
     `ifdef __RV32E__
-
-        reg [`__THREADS__-1:0] RESMODE = -1;
-
         wire [`__THREADS__+3:0] DPTR   = XRES ? { RESMODE, 4'd0 } : { TPTR, XIDATA[10: 7] }; // set SP_RESET when RES==1
         wire [`__THREADS__+3:0] S1PTR  = { TPTR, XIDATA[18:15] };
         wire [`__THREADS__+3:0] S2PTR  = { TPTR, XIDATA[23:20] };
     `else
-        reg [`__THREADS__-1:0] RESMODE = -1;
-
         wire [`__THREADS__+4:0] DPTR   = XRES ? { RESMODE, 5'd0 } : { TPTR, XIDATA[11: 7] }; // set SP_RESET when RES==1
         wire [`__THREADS__+4:0] S1PTR  = { TPTR, XIDATA[19:15] };
         wire [`__THREADS__+4:0] S2PTR  = { TPTR, XIDATA[24:20] };
@@ -305,20 +334,20 @@ module darkriscv
     //wire    FCC = FLUSH ? 0 : XFCC; // OPCODE==7'b0001111; //FCT3
     wire    SYS = FLUSH ? 0 : XSYS; // OPCODE==7'b1110011; //FCT3
 
-`ifdef __THREADS__
-    `ifdef __3STAGE__
-        reg [31:0] NXPC2 [0:(2**`__THREADS__)-1];       // 32-bit program counter t+2
-    `endif
-`else
-    `ifdef __3STAGE__
-        reg [31:0] NXPC2;       // 32-bit program counter t+2
-    `endif
-`endif
+
 
     reg [31:0] REGS [0:`RLEN-1];	// synthesis attribute ram_style of REGS is "distributed";
 
-    reg [31:0] NXPC;        // 32-bit program counter t+1
-    reg [31:0] PC;		    // 32-bit program counter t+0
+`ifdef __3STAGE__
+    reg [31:0] IDPC;            // 32-bit program counter for ID stage
+`else
+    `ifdef __THREADS__
+        wire [31:0] IDPC = IFPC[TPTR];
+    `else
+        wire [31:0] IDPC = IFPC;    // 2-stage, combinational ID stage
+    `endif
+`endif
+    reg [31:0] PC;		            // 32-bit program counter for EX stage
 
 `ifdef SIMULATION
     integer i;
@@ -393,8 +422,8 @@ module darkriscv
 
     wire IERR = FLUSH ? 0 : !(XLUI||XAUIPC||XJAL||XJALR||XBCC||XLCC||XSCC||XMCC||XRCC||XCUS||XSYS);
 
-    wire DBER = BERR&&(DRD||DWR);
-    wire IBER = BERR&&!(DRD||DWR);
+    wire DBER = DBERR;
+    wire IBER = IBERR;
     wire DAER = DLEN==2 ? DADDR[0]!=0 : DLEN==4 ? DADDR[1:0]!=0 : 0;
     wire IAER = IADDR[1:0]!=0;
 
@@ -540,13 +569,6 @@ module darkriscv
 
     always@(posedge CLK)
     begin
-`ifdef __THREADS__
-        RESMODE <= RES ? -1 : RESMODE ? RESMODE-1 : 0;
-        XRES <= |RESMODE;
-`else
-        XRES <= RES;
-`endif
-
 `ifdef __3STAGE__
         FLUSH <= XRES ? 2 :         // on reset wait 2 cycles (fill the pipeline)
                   HLT ? FLUSH :     // on halt do nothing
@@ -675,7 +697,7 @@ module darkriscv
                        LCC ? LDATA :
                      AUIPC ? PCSIMM :
                       JAL||
-                      JALR ? NXPC :
+                      JALR ? IDPC :
                        LUI ? SIMM :
                   MCC||RCC ? RMDATA:
 
@@ -687,25 +709,27 @@ module darkriscv
 `endif
                              DREG;
 
-`ifdef __3STAGE__
-
     `ifdef __THREADS__
 
-        NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2[TPTR];
+        `ifdef __3STAGE__
+            IDPC <= HLT ? IDPC : IFPC[TPTR];
+        `endif
 
-        NXPC2[XRES ? RESMODE : TPTR] <=  XRES ? `__RESETPC__ : HLT ? NXPC2[TPTR] :   // reset and halt
-                                      JREQ ? JVAL :                            // jmp/bra
-                                             NXPC2[TPTR]+4;                   // normal flow
+        IFPC[XRES ? RESMODE : TPTR] <=  XRES ? `__RESETPC__ :
+                                         HLT ? IFPC[TPTR] :   // reset and halt
+                                        JREQ ? JVAL :         // jmp/bra
+                                               IFPC[TPTR]+4;  // normal flow
 
-        TPTR <= XRES ? 0 : HLT ? TPTR :        // reset and halt
-                            JAL /*JREQ*/ ? TPTR+1 : TPTR;
+        TPTR <= XRES ? 0 : HLT ? TPTR : JAL /*JREQ*/ ? TPTR+1 : TPTR;
                  //TPTR==0/*&& IREQ*/&&JREQ ? 1 :         // wait pipeflush to switch to irq
                  //TPTR==1/*&&!IREQ*/&&JREQ ? 0 : TPTR;  // wait pipeflush to return from irq
 
     `else
-        NXPC <= /*XRES ? `__RESETPC__ :*/ HLT ? NXPC : NXPC2;
+        `ifdef __3STAGE__
+            IDPC <= HLT ? IDPC : IFPC;
+        `endif
 
-        NXPC2 <=  XRES ? `__RESETPC__ : HLT ? NXPC2 :   // reset and halt
+        IFPC <=  XRES ? `__RESETPC__ : HLT ? IFPC :   // reset and halt
         `ifdef __EBREAK__
                      SRET ? SEPC :  // return from system call
                      STVEC&&
@@ -719,28 +743,15 @@ module darkriscv
 
         `ifdef __INTERRUPT__
                      MRET ? MEPC :  // return from interrupt
-                    MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
+                    MIP[11]&&
+                    JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
                      JREQ ? JVAL :                    // jmp/bra
-                            NXPC2+4;                   // normal flow
+                            IFPC+4;                   // normal flow
 
     `endif
 
-`else
-        NXPC <= XRES ? `__RESETPC__ : HLT ? NXPC :   // reset and halt
-        
-        `ifdef __EBREAK__
-                     MRET ? MEPC :
-                     EBRK ? MTVEC : // ebreak causes an interrupt
-        `endif
-        `ifdef __INTERRUPT__
-                     MRET ? MEPC :
-                    MIP[11]&&JREQ ? MTVEC : // pending interrupt + pipeline flush
-        `endif
-              JREQ ? JVAL :                   // jmp/bra
-                     NXPC+4;                   // normal flow
-`endif
-        PC   <= /*XRES ? `__RESETPC__ :*/ HLT ? PC : NXPC; // current program counter
+        PC   <= HLT ? PC : IDPC; // EX stage program counter
     end
 
     // IO and memory interface
@@ -777,17 +788,7 @@ module darkriscv
     assign DWR     = SCC;
     assign DRD     = LCC;
     assign DDREQ   = SCC||LCC;
-    assign IDREQ   = !XRES;
 
-`ifdef __3STAGE__
-    `ifdef __THREADS__
-        assign IADDR = NXPC2[TPTR];
-    `else
-        assign IADDR = NXPC2;
-    `endif
-`else
-    assign IADDR = NXPC;
-`endif
     
 `ifdef __INTERRUPT__
     assign DEBUG = { IRQ, MIP, MIE, MRET };

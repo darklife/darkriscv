@@ -117,6 +117,7 @@ module darkbridge
         .IDATA  (IDATA),
         .IADDR  (IADDR),
         .IDACK  (IDACK),
+        .IBERR  (1'b0),
 
         .DADDR  (DADDR),
         .DATAI  (DATAI),
@@ -127,7 +128,7 @@ module darkbridge
         .DRD    (DRD),
         .DDREQ  (DDREQ),
         .DDACK  (DDACK),
-        .BERR   (1'b0),
+        .DBERR  (1'b0),
 
 `ifdef SIMULATION
         .ESIMREQ(ESIMREQ),
