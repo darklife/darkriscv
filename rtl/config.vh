@@ -178,6 +178,27 @@
 // option!
 //`define __MEXT__
 
+// DBNZ support
+//
+// experimental custom instruction that decrement and branch if non-zero,
+// found on other popular microprocessors!  as addition, it does not flush
+// the pipeline, so it can run 1 or 2 additional instructions without
+// performance impact, depending on pipeline length configuration.  as far
+// as the tail length depends on pipeline setup, it is highly dependent of
+// hand optimizations and must be used very carefuly!
+//      jalr = imm[11:0] | rs1 | 000 | rd | 1100111
+//      dbnz = imm[11:0] | rs1 | 000 | rd | 1100111, rs1 == rd
+// example:
+//                      ; x1 = len, x2 = sptr, x3 = dptr
+//      loop:
+//      lw x4,(x2)          ; x4 = *sptr
+//      sw x4,(x3)          ; *dptr = x4
+//      .word 0xff8090e7    ; dbnz x1,x1,test
+//      addi x2,x2,4        ; sptr++
+//      addi x3,x3,4        ; dptr++
+//
+//`define __DBNZ__
+
 // instruction trace:
 //
 // prints the PC, the respective instruction and some useful information,

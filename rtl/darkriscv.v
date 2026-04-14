@@ -192,6 +192,10 @@ module darkriscv
 
     reg XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XSYS; //, XFCC;
 
+`ifdef __DBNZ__
+    reg XDBNZ;
+`endif
+
     reg [31:0] XSIMM;
     reg [31:0] XUIMM;
 
@@ -202,8 +206,12 @@ module darkriscv
         XLUI   <= HLT ? XLUI   : IDATAX[6:0]==`LUI;
         XAUIPC <= HLT ? XAUIPC : IDATAX[6:0]==`AUIPC;
         XJAL   <= HLT ? XJAL   : IDATAX[6:0]==`JAL;
+`ifdef __DBNZ__
+        XJALR  <= HLT ? XJALR  : IDATAX[6:0]==`JALR && IDATAX[14:12]==0;
+        XDBNZ  <= HLT ? XDBNZ  : IDATAX[6:0]==`JALR && IDATAX[14:12]==1;
+`else
         XJALR  <= HLT ? XJALR  : IDATAX[6:0]==`JALR;
-
+`endif
         XBCC   <= HLT ? XBCC   : IDATAX[6:0]==`BCC;
         XLCC   <= HLT ? XLCC   : IDATAX[6:0]==`LCC;
         XSCC   <= HLT ? XSCC   : IDATAX[6:0]==`SCC;
@@ -244,6 +252,10 @@ module darkriscv
 
     wire XLUI, XAUIPC, XJAL, XJALR, XBCC, XLCC, XSCC, XMCC, XRCC, XCUS, XSYS; //, XFCC, XSYS;
 
+`ifdef __DBNZ__
+    reg XDBNZ;
+`endif
+
     wire [31:0] XSIMM;
     wire [31:0] XUIMM;
 
@@ -252,8 +264,12 @@ module darkriscv
     assign XLUI   = IDATAX[6:0]==`LUI;
     assign XAUIPC = IDATAX[6:0]==`AUIPC;
     assign XJAL   = IDATAX[6:0]==`JAL;
+`ifdef __DBNZ__
+    assign XJALR  = IDATAX[6:0]==`JALR && IDATAX[14:12]==0;
+    assign XDBNZ  = IDATAX[6:0]==`JALR && IDATAX[14:12]==1;
+`else
     assign XJALR  = IDATAX[6:0]==`JALR;
-
+`endif
     assign XBCC   = IDATAX[6:0]==`BCC;
     assign XLCC   = IDATAX[6:0]==`LCC;
     assign XSCC   = IDATAX[6:0]==`SCC;
@@ -323,7 +339,9 @@ module darkriscv
     wire  AUIPC = FLUSH ? 0 : XAUIPC; // OPCODE==7'b0010111;
     wire    JAL = FLUSH ? 0 : XJAL;   // OPCODE==7'b1101111;
     wire   JALR = FLUSH ? 0 : XJALR;  // OPCODE==7'b1100111;
-
+`ifdef __DBNZ__
+    wire   DBNZ = FLUSH ? 0 : XDBNZ;  // OPCODE==7'b1100111;
+`endif
     wire    BCC = FLUSH ? 0 : XBCC; // OPCODE==7'b1100011; //FCT3
     wire    LCC = FLUSH ? 0 : XLCC; // OPCODE==7'b0000011; //FCT3
     wire    SCC = FLUSH ? 0 : XSCC; // OPCODE==7'b0100011; //FCT3
@@ -567,6 +585,10 @@ module darkriscv
     wire        JREQ = JAL||JALR||(BCC && BMUX);
     wire [31:0] JVAL = JALR ? DADDR : PCSIMM; // SIMM + (JALR ? U1REG : PC);
 
+`ifdef __DBNZ__
+    wire DBNZT = DBNZ && S1REG!=0; // branch when not zero!
+`endif
+
     always@(posedge CLK)
     begin
 `ifdef __3STAGE__
@@ -696,6 +718,9 @@ module darkriscv
                        HLT ? DREG :        // halt
                        LCC ? LDATA :
                      AUIPC ? PCSIMM :
+`ifdef __DBNZ__
+                    DBNZT ? S1REG-1 :      // DBNZ decrement register
+`endif
                       JAL||
                       JALR ? IDPC :
                        LUI ? SIMM :
@@ -718,6 +743,9 @@ module darkriscv
         IFPC[XRES ? RESMODE : TPTR] <=  XRES ? `__RESETPC__ :
                                          HLT ? IFPC[TPTR] :   // reset and halt
                                         JREQ ? JVAL :         // jmp/bra
+        `ifdef __DBNZ__
+                                       DBNZT ? JVAL :      // dbnz
+        `endif
                                                IFPC[TPTR]+4;  // normal flow
 
         TPTR <= XRES ? 0 : HLT ? TPTR : JAL /*JREQ*/ ? TPTR+1 : TPTR;
@@ -747,6 +775,9 @@ module darkriscv
                     JREQ ? MTVEC : // pending interrupt + pipeline flush
         `endif
                      JREQ ? JVAL :                    // jmp/bra
+        `ifdef __DBNZ__
+                    DBNZT ? JVAL :                    // dbnz
+        `endif
                             IFPC+4;                   // normal flow
 
     `endif
