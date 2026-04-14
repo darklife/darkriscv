@@ -103,7 +103,9 @@ $(VCDS): $(XSIM)
 	        print > "$(TRCE)";                              \
 	        if($$0~/40000005:/) {                           \
 	            split($$NF,A,":");                          \
-	            printf("%c",("0x"A[2])+0); } }              \
+	            VAL=("0x"A[2])+0;                           \
+	            if(VAL>65536) VAL=VAL/256;                  \
+	            printf("%c",VAL/256); } }                   \
 	        else print }'                                   
 
 $(XSIM): $(DEPS)
