@@ -65,7 +65,8 @@ implementations, the *DarkRISCV* has lots of impressive features:
 - works fine with gcc 9.0.0 or above for RISC-V (no patches required!)
 - uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
 - optional RV32E support (smaller and faster, works better with LUT4 FPGAs)
-- optional 16x16-bit MAC instruction (for digital signal processing) 
+- optional 16x16-bit MAC instruction (for digital signal processing)
+- optional DBNZ for decrement and branch when not zero, with delay slots!
 - optional coarse-grained multi-threading (MT)
 - DSP-like pipeline: no interlock/stall/forward between pipeline stages!
 - optional interrupt handled on machine level
@@ -903,13 +904,36 @@ test for zero and branch, repeating a loop until the counter is not zero...
 In the case of RISC-V, a DBNZ intruction impact is very small, basically
 replacing a SUBI+BNE, but with no effect on the real problem, which is
 the pipeline flush on branches. So, it was tested in the DarkRISCV a 
-special variant of DBNZD w/ delayed branch, in a way was possible run 2
-extra instructions after the DBNZ on 3-stage pipeline version (the 
-DBNZ was not included in the 2-stage pipeline version).
+special variant of "DBNZD" w/ delayed branch, in a way was possible run 2
+extra instructions after the DBNZ on 3-stage pipeline version.
 
-Although the code w/ DBNZD was 3-clocks faster than SUBI+BNE, hand 
-optimized schemes, such as code unroll, may reach similar results and
-the DBNZD was not included in DarkRISCV.
+DBNZ instruction can be enabled via __DBNZ__ on config.vh and the typical 
+syntax for memcpy32 (aka MOVE16) would be like:
+
+```
+memcpy32:
+        srli    a2, a2, 4          # a2 = len >> 4   (number of 16-byte blocks)
+        beqz    a2, .done
+
+.loop:
+        lw      t0,  0(a0)
+        lw      t1,  4(a0)
+        lw      t2,  8(a0)
+        lw      t3, 12(a0)
+
+        sw      t0,  0(a1)
+        sw      t1,  4(a1)
+        sw      t2,  8(a1)
+        sw      t3, 12(a1)
+
+        dbnz    a2, .loop          # Decrement and branch (2 delay slots follow)
+
+        addi    a0, a0, 16         # Delay slot 1
+        addi    a1, a1, 16         # Delay slot 2
+
+.done:
+        ret
+```
 
 ## Development Tools
 
