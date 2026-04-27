@@ -55,28 +55,30 @@ Although the code is small and crude when compared with other RISC-V
 implementations, the *DarkRISCV* has lots of impressive features:
 
 - implements the UCB RISC-V RV32E and RV32I user space instruction set
-- optional CSRs for interrupts and debug
 - works up to 250MHz in a ultrascale ku040 (400MHz w/ overclock!)
 - up to 100MHz in a cheap spartan-6, fits in small spartan-3E such as XC3S100E!
 - can sustain 1 clock per instruction most of time (typically 70% of time)
 - flexible harvard architecture (easy to integrate a cache controller, bus bridges, etc)
+- DSP-like pipeline: no interlock/stall/forward between pipeline stages!
 - works fine in a real xilinx (spartan-3, spartan-6, spartan-7, artix-7, kintex-7 and kintex ultrascale)
 - works fine with some real Altera and Lattice FPGAs too!
-- works fine with gcc 9.0.0 or above for RISC-V (no patches required!)
+- works fine with gcc 9.0 or above for RISC-V (gcc 12.0 for big-endian support)
 - uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
+- processing density: ~233 DMIPS/1kLUT (UK040@400MHz, IPC~0.7)
+- processing eficiency: ~0.6 IPC/1kLUT (1200LUT, IPC~0.7)
+- optional CSRs for interrupts and debug
 - optional RV32E support (smaller and faster, works better with LUT4 FPGAs)
 - optional 16x16-bit MAC instruction (for digital signal processing)
 - optional DBNZ for decrement and branch when not zero, with delay slots!
 - optional coarse-grained multi-threading (MT)
-- DSP-like pipeline: no interlock/stall/forward between pipeline stages!
 - optional interrupt handled on machine level
 - optional breakpoints handled on supervisor level
-- optional instruction and data caches
+- optional instruction and data caches (DarkBridge)
 - optional harvard to von neumann bridge (DarkBridge)
 - optional SDRAM controller (from kianRiscV project)
-- optional support for big-endian
+- optional support for big-endian (defined at build time)
 - optional M-extension (single clock mul only, no div, use -mno-div)
-- BSD license: can be used anywhere with no restrictions!
+- BSD license: can be used anywhere with no restrictions! (=
 
 Some extra features are planned for the future, under development or tested by some customers:
 
