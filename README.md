@@ -64,8 +64,8 @@ implementations, the *DarkRISCV* has lots of impressive features:
 - works fine with some real Altera and Lattice FPGAs too!
 - works fine with gcc 9.0 or above for RISC-V (gcc 12.0 for big-endian support)
 - uses between 850-1500LUTs (core only with LUT6 technology, depending of enabled features and optimizations)
-- processing density: ~233 DMIPS/1kLUT (UK040@400MHz, IPC~0.7)
-- processing eficiency: ~0.6 IPC/1kLUT (1200LUT, IPC~0.7)
+- processing density: 233 DMIPS/1kLUT (UK040@400MHz, IPC ~ 0.7)
+- processing eficiency: 0.6 IPC/1kLUT (1200LUT, IPC~0.7)
 - optional CSRs for interrupts and debug
 - optional RV32E support (smaller and faster, works better with LUT4 FPGAs)
 - optional 16x16-bit MAC instruction (for digital signal processing)
