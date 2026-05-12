@@ -107,7 +107,7 @@ Thanks to BSD license, the project is fully open, so feel free to make suggestio
 
 ## History
 
-The initial concept was based in my other early 16-bit RISC processors and
+The initial concept, years ago, was based in my other early 16-bit RISC processors, like the uDarkRISCV (https://github.com/darklife/udarkrisc), and
 composed by a simplified two stage pipeline, where a instruction is fetch
 from a instruction memory in the first clock and then the instruction is
 decoded/executed in the second clock.  The pipeline is overlapped without
@@ -143,7 +143,7 @@ the *DarkRISCV* can reach up to 100MHz in a low-cost Spartan-6, which results in
 more performance when compared with the 2-stage pipeline version (typically
 50MHz).
 
-In order to celebrate six of the project, some effort was done in order to
+In order to celebrate six years of the project, some effort was done in order to
 organize the SoC in a better way, breaking it in separate modules and 
 introducing new bus concepts in order to support large systems.  As result 
 DarkRISCV continue to support very well the small and high performance DSP-like 
@@ -183,7 +183,7 @@ performance of 50MIPS, which is very impressive.
 
 Although the *picorv32* is a very good option to directly replace the 680x0
 family, it is not powerful enough to replace some Coldfire processors (more
-than 75MIPS).  
+than 70MIPS at 80MHz).  
 
 As long I had some good experience with experimental 16-bit RISC cores for
 DSP-like applications, I started code the *DarkRISCV* only to check the
