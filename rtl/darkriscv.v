@@ -214,7 +214,7 @@ module darkriscv
 `endif
         XBCC   <= HLT ? XBCC   : IDATAX[6:0]==`BCC;
         XLCC   <= HLT ? XLCC   : IDATAX[6:0]==`LCC;
-        XSCC   <= HLT ? XSCC   : IDATAX[6:0]==`SCC;
+        XSCC   <= HLT ? XSCC   : IDATAX[6:0]==`SCC && (IDATAX[14:12]==0 || IDATAX[14:12]==1 || IDATAX[14:12]==2);
         XMCC   <= HLT ? XMCC   : IDATAX[6:0]==`MCC;
 
         XRCC   <= HLT ? XRCC   : IDATAX[6:0]==`RCC;
@@ -272,7 +272,7 @@ module darkriscv
 `endif
     assign XBCC   = IDATAX[6:0]==`BCC;
     assign XLCC   = IDATAX[6:0]==`LCC;
-    assign XSCC   = IDATAX[6:0]==`SCC;
+    assign XSCC   = IDATAX[6:0]==`SCC && (IDATAX[14:12]==0 || IDATAX[14:12]==1 || IDATAX[14:12]==2);
     assign XMCC   = IDATAX[6:0]==`MCC;
 
     assign XRCC   = IDATAX[6:0]==`RCC;
