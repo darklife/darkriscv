@@ -65,7 +65,7 @@
 // BIG-ENDIAN:
 //
 // Although the core itself is bi-endian, the SoC, peripherals and firmware
-// needs to be in sync in order to work correctly, so it is possible 
+// needs to be in sync in order to work correctly, so it is possible
 // enable or disable the big-endian mode, which is usefull for network
 // processing and other communication related stuff.
 //`define __BIG__
@@ -131,11 +131,11 @@
 //`define __FLEXBUZZ__
 
 // CSR support
-// 
+//
 // enable this to use CSR registers...  INTERRUPT and EBREAK use this in
 // order to read some special exception registers.  Also, THREADS use this in
-// order to identify the core number.  
-//`define __CSR__
+// order to identify the core number.
+`define __CSR__
 
 `ifdef __CSR__
 
@@ -144,7 +144,7 @@
 // The Performance Counters are a set of 64-bit registers that counts the
 //number of clocks and number of instructions executed, so is possible
 //measure the core performance.
-//`define __CSR_ESSENTIAL__
+`define __CSR_ESSENTIAL__
 
 // interrupt support
 //
@@ -159,15 +159,15 @@
 // The interrupt support cannot be used with threading (because makes no
 // much sense?)... also, it requires the 3 stage pipeline (again, makes no
 // much sense use it with the 2-stage pipeline).
-//`define __INTERRUPT__
+`define __INTERRUPT__
 
 // ebreak support
-// 
+//
 // ebreak enable live debug w/ gdb, with break points, single-step, etc...
 // it basically consists in a single instruction that replace the normal
 // instruction, so an exception will be triggered, which is like an interrupt,
 // but with no real interrupt source.
-//`define __EBREAK__
+`define __EBREAK__
 
 `endif
 
@@ -235,17 +235,17 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // harvard architecture
-// 
-// darkriscv core is *always* harvard, but it possible multiplex the instr. 
-// and data buses over the time on the SoC level, in a way that it mimics a 
-// classic von neumann architecture, which is useful for single-port memory, 
+//
+// darkriscv core is *always* harvard, but it possible multiplex the instr.
+// and data buses over the time on the SoC level, in a way that it mimics a
+// classic von neumann architecture, which is useful for single-port memory,
 // such as SDRAMs, PSRAM, etc. when multiplexed, the instruction fetch turns
 // to be very slow, so caches are essential with this scenario!
 `define __HARVARD__
 
 // cache depth
-// 
-// when enabled, the caches will try map and store the read operations, in a 
+//
+// when enabled, the caches will try map and store the read operations, in a
 // way that future read operations in the same address will be faster! it is
 // specially applicable to non-harvard SoC configuration, since that the
 // harvard SoC configuration is faster than the cache!
@@ -298,7 +298,7 @@
 //`define __RMW_CYCLE__
 
 // bram wait states
-// 
+//
 // to simulate high latency memories, is possible set the number of wait-states
 // for bram here! case not configured, wait-states defaults to 1.
 //`define __WAITSTATE__ 3
@@ -510,8 +510,8 @@
         `define BOARD_CK 50000000
     `endif
     `define INVRES 1
-    // this is the main test board! :D 
-    // so I would enable some features directly here:    
+    // this is the main test board! :D
+    // so I would enable some features directly here:
     //`define __SDRAM__ 1
     //`define __LUTCACHE__
     //`define __CDEPTH__ 6
@@ -558,8 +558,8 @@
     `else
         `define RLEN 32*(2**`__THREADS__)
     `endif
-    
-    `define __CSR__ 
+
+    `define __CSR__
 `else
     `ifdef __RV32E__
         `define RLEN 16
