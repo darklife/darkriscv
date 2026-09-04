@@ -45,7 +45,7 @@ darksocv.json: $(SRCS)
 
 darksocv.bit: darksocv.json
 	echo routing with nextpnr...
-	nextpnr-ecp5 --timing-allow-fail --json darksocv.json --textcfg darksocv.cfg --85k --package CABGA381 --speed 6 --lpf darksocv.lpf
+	nextpnr-ecp5 --lpf-allow-unconstrained --timing-allow-fail --json darksocv.json --textcfg darksocv.cfg --85k --package CABGA381 --speed 6 --lpf darksocv.lpf
 	ecppack --compress --input darksocv.cfg --bit darksocv.bit
 
 upload:
