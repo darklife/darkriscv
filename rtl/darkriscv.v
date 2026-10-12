@@ -583,7 +583,7 @@ module darkriscv
 
     wire [31:0] PCSIMM = PC+SIMM;
     wire        JREQ = JAL||JALR||(BCC && BMUX);
-    wire [31:0] JVAL = JALR ? {DADDR[31:1],1'b0} : PCSIMM; // SIMM + (JALR ? U1REG : PC);
+    wire [31:0] JVAL = { JALR ? DADDR[31:2] : PCSIMM[31:2], 2'b00 }; // SIMM + (JALR ? U1REG : PC);
 
 `ifdef __DBNZ__
     wire DBNZT = DBNZ && S1REG!=0; // branch when not zero!
