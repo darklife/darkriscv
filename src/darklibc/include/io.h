@@ -58,7 +58,7 @@ struct DARKIO {
         union {
             unsigned char  spi8;  // 1c                              r: {data}
             unsigned short spi16; // 1c/1d       w: {cmd,data}       r: {dlo,dhi}
-            unsigned int   spi32; // 1c/1d/1e/1f w: {00,cmd,dlo,dhi} r: {status,00,dlo,dhi}
+            unsigned int   spi32; // 1c/1d/1e/1f w: {00,cmd,dlo,dhi} r: {status,xx,dlo,dhi}
         };
     } spi;
 

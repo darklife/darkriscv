@@ -45,8 +45,9 @@
 // R 1000 STATUS
 // W 1111 00,command,datalo,datahi
 // R 0011 datalo,datahi
-// R 1111 STATUS,00,datalo,datahi
+// R 1111 STATUS,xx,datalo,datahi
 // Where STATUS is: {6'b0, spi_ready, spi_busy} and can be polled for SPI transfer completion.
+// xx is whatever was shifted in during the command byte (the command itself in 3-wire mode).
 //
 // Special reserved 32 bit write to trigger spi_master internal configuration
 // W 1111 <MSB different from 0> (refer to spi_master documentation)
