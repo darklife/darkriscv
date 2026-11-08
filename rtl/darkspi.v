@@ -111,22 +111,23 @@ module darkspi #(parameter integer DIV_COEF = 0) (
             spi_request <= 0;
             spi_busy <= 0;
         end else begin
-            if (spi_ready) begin
+            if (spi_ready & ~spi_request) begin
                 spi_busy <= 0;
             end
             if (WR) begin
                 spi_request <= 1;
-                spi_busy <= 1;
                 if (BE == 4'b1111) begin
                     spi_mosi_data <= DATAI;
                     if (DATAI[31:24] == 8'b0) begin
                         spi_nbits <= 5'd23;             // 24 bits
+                        spi_busy <= 1;
                     end else begin
                         spi_nbits <= 5'd0;              // 32 bits internal config
                     end
                 end else if (BE == 4'b0011) begin
                     spi_nbits <= 5'd15;                 // 16 bits
                     spi_mosi_data <= DATAI[15:0];
+                    spi_busy <= 1;
                 end else begin
                     spi_request <= 0;                   // ignore any other writes
                 end
