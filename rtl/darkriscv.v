@@ -480,9 +480,9 @@ module darkriscv
 		begin
 			if(!XRES)
 			begin
-				CSRCLK = CSRCLK+1;
+				CSRCLK <= CSRCLK+1;
 				if(!HLT & !(|FLUSH))
-					CSRINS = CSRINS+1;
+					CSRINS <= CSRINS+1;
 			end
 		end
     `endif
